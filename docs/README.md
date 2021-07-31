@@ -5,6 +5,7 @@ Since Google started to add all pictures to the Google One quota thus limiting t
 *The overall idea is handling pictures and movies in order to preserve and being able to find old, forgotten ones. At the same time categorising them for future AI to do it automatically, set for each users individual preferences.*
 
 
+
 ## List of features
 - Sort / delete files
 
@@ -16,6 +17,7 @@ Since Google started to add all pictures to the Google One quota thus limiting t
     *For better reliability the user share some of its disk space with the network (choose globally or a set of friends). In return the user get space on the internet for some of its files through their respective shared space. All done in a safe manner, only the people the user choose shall have access to chosen files.*
 
 
+
 ## External sources
 To help up with this project I am thinking about implementing the following open source applications:
 
@@ -23,6 +25,7 @@ To help up with this project I am thinking about implementing the following open
 | ------ | ------ | ------ | ------ |
 | LabelImg | https://github.com/tzutalin/labelImg | labelling pictures | 🔴 |
 | SyncThing | https://syncthing.net/ | continuously syncing between units | 🔴 |
+
 
 
 ## The work order as for now is:
