@@ -13,12 +13,16 @@ root.withdraw()
 file_path = filedialog.askopenfilenames(initialdir=home_directory, title='Välj en eller flera filer')
 file_list = root.tk.splitlist(file_path)
 
+# TODO error handling if file not found / not chosen
+# TODO handle 2D-pictures (black/white) to 3D
+# TODO implement movie clips (4D?)
+
 # display an array of all pictures within directory
 #    Initialize files
 
 dict_of_present_pictures = {}
 
-# # # enumerate outputs a count (idx) and the actual file
+# # # enumerate outputs renders count (idx) and the actual file
 for idx, file in enumerate(file_list):
     custom_image = cv2.imread(file)
 
@@ -27,12 +31,32 @@ for idx, file in enumerate(file_list):
 
     # append the dictionary object
     dict_of_present_pictures[idx] = img
-    # print(idx, " ", file)
+
+# # Create rows and colums based on the number of pictures chosen
+counter = 0
+
+for x in range(5):
+    print(x)
+
+# for key, value in dict_of_present_pictures.items():
+#     if counter < key:
+#
+#
+#     counter += 1
+#
+# Horizontal_first_line = np.concatenate((
+#     for key, value in dict_of_present_pictures.items():
+#         print(value)
+# ))
+
+print(len(dict_of_present_pictures) % 5)
+print(dict_of_present_pictures[0].shape)
 
 # the winname in cv2.imshow(winname, ...) is a somewhat unique identifier. If creating two windows with the same winname, only the last is shown
 for key, picturedictobject in dict_of_present_pictures.items():
     winnamehere = str(key)
-    cv2.imshow(winnamehere, picturedictobject)
+    # cv2.imshow(winnamehere, picturedictobject)
+
 
 # img1 = cv2.imread(PICTUREPATH1)
 # img2 = cv2.imread(DIFFERENTSIZEPICTURE)
