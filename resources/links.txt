@@ -1,0 +1,2 @@
+Draw rectangles with cv2 and arguments parser
+https://stackoverflow.com/questions/50234485/drawing-rectangle-in-opencv-python/50235566
