@@ -4,6 +4,10 @@ import cv2
 import os
 import numpy as np
 
+# Global variables
+thumbnail_width = 150
+thumbnail_height = 150
+
 # choose directory to display pictures from - dialogue box
 # # Set starting directory for file picker dialogue
 home_directory = os.path.expanduser('~/Pictures/')
@@ -15,7 +19,6 @@ file_list = root.tk.splitlist(file_path)
 
 # TODO error handling if file not found / not chosen
 # TODO handle 2D-pictures (black/white) to 3D
-# TODO implement movie clips (4D?)
 
 # display an array of all pictures within directory
 #    Initialize files
@@ -27,17 +30,41 @@ for idx, file in enumerate(file_list):
     custom_image = cv2.imread(file)
 
     # resizing already in here to preserve memory
-    img = cv2.resize(custom_image, (150, 150))
+    img = cv2.resize(custom_image, (thumbnail_width, thumbnail_height))
 
     # append the dictionary object
     dict_of_present_pictures[idx] = img
 
-# # Create rows and colums based on the number of pictures chosen
-counter = 0
+# # Create rows and columns based on the number of pictures chosen
+len_dict_pictures = len(dict_of_present_pictures)
 
-for x in range(5):
-    print(x)
+# rowcount = 0
+# columncount = 0
+# imagecounter = 0
+imageplaceholder_id = 0
+amount_thumbnails_horizontal = 5
+amount_thumbnails_vertical = 4
+# thumbnail_row = []
 
+# # First create a standard image placeholder
+img = np.zeros([thumbnail_width, thumbnail_height, 3], dtype=np.uint8)
+img.fill(0)
+
+for row in range(amount_thumbnails_horizontal):
+    for cell in range(amount_thumbnails_vertical):
+        print(imageplaceholder_id)
+
+        if imageplaceholder_id in dict_of_present_pictures:
+            img = np.concatenate((img, dict_of_present_pictures[imageplaceholder_id]), axis=1)
+
+        imageplaceholder_id += 1
+
+cv2.imshow("visar hela bilden", img)
+
+# Create a one-coloured image:
+# img = np.zeros([100,100,3],dtype=np.uint8)
+# img.fill(0) # or img[:] = 255
+# cv2.imshow("testpic", img)
 # for key, value in dict_of_present_pictures.items():
 #     if counter < key:
 #
@@ -49,8 +76,8 @@ for x in range(5):
 #         print(value)
 # ))
 
-print(len(dict_of_present_pictures) % 5)
-print(dict_of_present_pictures[0].shape)
+# print(len(dict_of_present_pictures) % 5)
+# print(dict_of_present_pictures[0].shape)
 
 # the winname in cv2.imshow(winname, ...) is a somewhat unique identifier. If creating two windows with the same winname, only the last is shown
 for key, picturedictobject in dict_of_present_pictures.items():

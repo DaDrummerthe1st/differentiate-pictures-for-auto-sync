@@ -8,6 +8,9 @@ mark and save - move to {mark directory} and save original path to {mark directo
 later:
 button to run labellimg on mark directory
 autorun instance of labellimg when choosing "mark and save"
+implement movie clips (4D?)
+set workspace ratio, number of thumbnails and thumbnail sizes according to screen size
+    see print(screeninfo.get_monitors())
 
 classify {discard directory}, {save directory} and {mark directory} for suggestion on placement screen
 
