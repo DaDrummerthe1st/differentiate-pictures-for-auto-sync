@@ -18,6 +18,12 @@ build a class from grid creation
             amount of columns
             pixel size width / height
 buttons for discard, mark and save. Icons: red button white trashcan, yellow button white dotted square, green button white floppy
+Display number of valid, invalid pictures and movies plus number of thumbnails shown
+Choose picture from the grid
+    The three choices on each picture
+
+Phone app:
+    Swipe for discard (left) / save (right) / mark (down) / undo (up)
 
 AI:
 Classify {discard directory}, {save directory} and {mark directory} for suggestion by dividing into different directories.
