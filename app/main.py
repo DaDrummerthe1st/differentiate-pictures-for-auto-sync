@@ -19,6 +19,7 @@ file_list = root.tk.splitlist(file_path)
 
 # TODO error handling if file not found / not chosen
 # TODO handle 2D-pictures (black/white) to 3D
+# TODO error handle non-picture files or faulty pictures
 
 # display an array of all pictures within directory
 #    Initialize files
@@ -37,28 +38,56 @@ for idx, file in enumerate(file_list):
 
 # # Create rows and columns based on the number of pictures chosen
 len_dict_pictures = len(dict_of_present_pictures)
-
-# rowcount = 0
-# columncount = 0
-# imagecounter = 0
+print(len_dict_pictures, " valda bilder")
 imageplaceholder_id = 0
 amount_thumbnails_horizontal = 5
 amount_thumbnails_vertical = 4
-# thumbnail_row = []
 
 # # First create a standard image placeholder
-img = np.zeros([thumbnail_width, thumbnail_height, 3], dtype=np.uint8)
-img.fill(0)
+placeholder_img = np.zeros([thumbnail_width, thumbnail_height, 3], dtype=np.uint8)
+placeholder_img.fill(0)
 
-for row in range(amount_thumbnails_horizontal):
-    for cell in range(amount_thumbnails_vertical):
-        print(imageplaceholder_id)
+# # declare the img
+img = np.array([])
 
+# # Build the grid cell by cell, then add the built row below its preceding row
+for row in range(amount_thumbnails_vertical):
+
+    # start building the row
+    # # declare the vertical collection
+    vertical_temp_img = np.array([])
+
+    for cell in range(amount_thumbnails_horizontal):
+        # for testing purposes
+        print(imageplaceholder_id, vertical_temp_img.shape)
+
+        # see if the incremented imageplaceholder_id matches a picture in the chosen array of files
         if imageplaceholder_id in dict_of_present_pictures:
-            img = np.concatenate((img, dict_of_present_pictures[imageplaceholder_id]), axis=1)
 
+            if vertical_temp_img.size == 0:
+                vertical_temp_img = dict_of_present_pictures[imageplaceholder_id]
+            else:
+                vertical_temp_img = np.concatenate((vertical_temp_img, dict_of_present_pictures[imageplaceholder_id]), axis=1)
+
+        # if imageplaceholder_id is not found, thus end of chosen pictures, instead put up placeholders in its place
+        else:
+            if vertical_temp_img.size == 0:
+                vertical_temp_img = placeholder_img
+            else:
+                vertical_temp_img = np.concatenate((vertical_temp_img, placeholder_img), axis=1)
+
+        # increment the imageplaceholder_id to see which run next one is
         imageplaceholder_id += 1
 
+    # is the row created or not?
+    if img.size == 0:
+        # if not, create it by replacing it with the created row
+        img = vertical_temp_img
+    else:
+        # if it is present concatenate vertically
+        img = np.concatenate((img, vertical_temp_img), axis=0)
+
+# display the completed table of images
 cv2.imshow("visar hela bilden", img)
 
 # Create a one-coloured image:
