@@ -11,13 +11,24 @@ autorun instance of labellimg when choosing "mark and save"
 implement movie clips (4D?)
 set workspace ratio, number of thumbnails and thumbnail sizes according to screen size
     see print(screeninfo.get_monitors())
+build a class from grid creation
+    parameters:
+        grid size
+            amount of rows
+            amount of columns
+            pixel size width / height
+buttons for discard, mark and save. Icons: red button white trashcan, yellow button white dotted square, green button white floppy
 
-classify {discard directory}, {save directory} and {mark directory} for suggestion on placement screen
+AI:
+Classify {discard directory}, {save directory} and {mark directory} for suggestion by dividing into different directories.
+    On mobile devices not yet synced with server: rename discarded files so common gallery apps dont find it
+        Create local temp database with choices, also syncing this with server
 
 compare pictures between directories - the same picture in different directories?
     compare filenames
     compare content
         actual picture data
+            date, changed date, size
         metadata
 
 display a stacked, randomly selected and limited if more than what fits into one screen, view of the pictures in a folder
