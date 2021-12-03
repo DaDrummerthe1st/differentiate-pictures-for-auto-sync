@@ -1,5 +1,12 @@
 from exif import Image
 
+class testprint:
+    def __init__(self):
+        self.test = "test"
+
+    def printtest(self):
+        print(self.test)
+
 class handle_gps_data:
     def __init__(self):
         # Set standard file path for testing purposes

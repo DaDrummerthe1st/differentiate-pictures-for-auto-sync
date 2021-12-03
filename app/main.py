@@ -5,6 +5,7 @@ import os
 import numpy as np
 from PIL import Image
 from PIL.ExifTags import TAGS
+import sys
 
 # Global variables
 thumbnail_width = 150
@@ -128,6 +129,8 @@ for key, picture_dict_object in dict_of_present_pictures.items():
     # cv2.imshow(win_name_here, picture_dict_object)
 
 # https://www.youtube.com/watch?v=IEf0w1G_rpY
+
+
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
