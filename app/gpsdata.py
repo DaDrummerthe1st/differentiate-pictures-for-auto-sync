@@ -1,4 +1,7 @@
 from exif import Image
+import sys
+
+print("from gpsdata.py: ", sys.argv[0])
 
 class testprint:
     def __init__(self):
@@ -10,7 +13,7 @@ class testprint:
 class handle_gps_data:
     def __init__(self):
         # Set standard file path for testing purposes
-        self.filepath = '../testpics/testpic_dogs.jpeg'
+        self.filepath = '../resources/testpics/testpic_dogs.jpeg'
 
         # nested dictionary containing all files metadata
         # { filename1{ metadata_attr1{value}, metadata_attr2{value}... }, filename2{...} }
@@ -19,7 +22,7 @@ class handle_gps_data:
     def findfile(self):
         # TODO create dialoguebox for which files to be worked with
         # TODO create a new module for dialoguebox file picker or at least a self sustained class?
-        self.filepath = "/home/joakim/Pictures/20190404_140209.jpg"
+        self.filepath = "../resources/testpics/testpic_peephole.jpg"
 
     def extract_meta_data(self):
 
@@ -69,7 +72,5 @@ class handle_gps_data:
         pass
 
 
-run = handle_gps_data()
-run.findfile()  # not mandatory for testing purposes
-run.extract_meta_data()
+
 
