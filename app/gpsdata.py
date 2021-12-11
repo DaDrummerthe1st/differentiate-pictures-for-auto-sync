@@ -1,28 +1,22 @@
 from exif import Image
-import sys
 
-print("from gpsdata.py: ", sys.argv[0])
 
-class testprint:
+class TestPrint:
     def __init__(self):
         self.test = "test"
 
     def printtest(self):
         print(self.test)
 
-class handle_gps_data:
+
+class HandleGPSData:
     def __init__(self):
         # Set standard file path for testing purposes
-        self.filepath = '../resources/testpics/testpic_dogs.jpeg'
+        self.filepath = '../resources/testpics/contains_metadata_testpic_peephole.jpg'
 
         # nested dictionary containing all files metadata
         # { filename1{ metadata_attr1{value}, metadata_attr2{value}... }, filename2{...} }
         self.file_metadata = {}
-
-    def findfile(self):
-        # TODO create dialoguebox for which files to be worked with
-        # TODO create a new module for dialoguebox file picker or at least a self sustained class?
-        self.filepath = "../resources/testpics/testpic_peephole.jpg"
 
     def extract_meta_data(self):
 
@@ -52,11 +46,11 @@ class handle_gps_data:
                     continue
                 try:
                     print(getattr(img, attribute), " ", attribute)
-                    # TODO If True then fill in the self.file_metadata{}
+                    self.file_metadata[attribute] = getattr(img, attribute)
                 except:
                     pass
 
-    def create_gps_coordinates(self):
+    def extract_gps_coordinates(self):
         # GPS coordinates raw data is not fully correct, TODO needs parsing
         # (56.0, 3.0, 37.6804)   gps_latitude
         # N   gps_latitude_ref
@@ -69,8 +63,10 @@ class handle_gps_data:
         #
         # Google Maps url:
         # https://www.google.com/maps/place/56%C2%B003'37.7%22N+12%C2%B041'53.5%22E/@56.0604752,12.6960057,17z/data=!3m1!4b1!4m5!3m4!1s0x0:0xa894c6177c98a8fe!8m2!3d56.0604668!4d12.6981828
+
         pass
 
 
-
-
+run = HandleGPSData()
+run.extract_meta_data()
+print(run.file_metadata['gps_latitude'])
