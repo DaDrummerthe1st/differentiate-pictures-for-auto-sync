@@ -6,49 +6,48 @@ import numpy as np
 from PIL import Image
 from PIL.ExifTags import TAGS
 
-# Global variables
-thumbnail_width = 150
-thumbnail_height = 150
 
-# choose directory to display pictures from - dialogue box
-# # Set starting directory for file picker dialogue
-home_directory = os.path.expanduser('~/Pictures/')
-root = tk.Tk()
-root.withdraw()
-# # create the dialogue box
-file_path = filedialog.askopenfilenames(initialdir=home_directory, title='Välj en eller flera filer')
-file_list = root.tk.splitlist(file_path)
+class ChooseFiles:
+    def __init__(self):
+        # choose directory to display pictures from - dialogue box
+        # # Set starting directory for file picker dialogue
+        self.home_directory = os.path.expanduser('~/Pictures/')
+        self.root = tk.Tk()
+        self.root.withdraw()
+        # # create the dialogue box
+        self.file_path = filedialog.askopenfilenames(initialdir=self.home_directory, title='Välj en eller flera filer')
+        self.file_list = self.root.tk.splitlist(self.file_path)
 
-for file in file_list:
-    try:
-        if file.endswith('.jpg'):
-            image = Image.open(file)
-            # picture_metadata == metadata in the picture
-            picture_metadata = image.getexif()
+    def handle_list(self):
+        for file in self.file_list:
+            try:
+                if file.endswith('.jpg'):
+                    image = Image.open(file)
+                    # picture_metadata == metadata in the picture
+                    picture_metadata = image.getexif()
 
-            # Iterating over all exif-data fields making them into human-readable format
-            if picture_metadata:
-                print(f"\n \n {file.lower()}\n")
-                for (tag, value) in picture_metadata.items():
-                    # # get the tag name, instead of human unreadable tag id
-                    tag = TAGS.get(tag, tag)
-                    print(tag, " ", value)
+                    # Iterating over all exif-data fields making them into human-readable format
+                    if picture_metadata:
+                        print(f"\n \n {file.lower()}\n")
+                        for (tag, value) in picture_metadata.items():
+                            # # get the tag name, instead of human unreadable tag id
+                            tag = TAGS.get(tag, tag)
+                            print(tag, " ", value)
 
-                    # data = picture_metadata.get(tag_id)
-                    #
-                    # # decode bytes
-                    # if isinstance(data, bytes):
-                    #     data = data.decode()
-                    # print(f"{tag:25}: {data}")
-            else:
+                            # data = picture_metadata.get(tag_id)
+                            #
+                            # # decode bytes
+                            # if isinstance(data, bytes):
+                            #     data = data.decode()
+                            # print(f"{tag:25}: {data}")
+                    else:
+                        pass
+            except Exception:
+                print("An error has occured")
+                raise
                 pass
-    except Exception:
-        print("An error has occured")
-        raise
-        pass
 
 # TODO error handling if file not found / not chosen
-# TODO handle 2D-pictures (black/white) to 3D
 # TODO error handle non-picture files or faulty pictures
 
 # display an array of all pictures within directory
