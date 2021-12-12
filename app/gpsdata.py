@@ -12,6 +12,8 @@ class TestPrint:
 class HandleGPSData:
     def __init__(self):
         # Set standard file path for testing purposes
+        self.longitude = None
+        self.latitude = None
         self.filepath = '../resources/testpics/contains_metadata_testpic_peephole.jpg'
 
         # nested dictionary containing all files metadata
@@ -39,11 +41,12 @@ class HandleGPSData:
             # print(img.list_all())
             # List all available metadata
             for attribute in dir(img):
-                # TODO delete this if statement since it excludes _segments
                 # This method excludes all properties raising an error for getattr!
+
                 # exclude property _segments since it is so darn long, for testing purposes
                 if attribute == "_segments":
                     continue
+
                 try:
                     # print(getattr(img, attribute), " ", attribute)
                     self.file_metadata[attribute] = getattr(img, attribute)
@@ -65,16 +68,29 @@ class HandleGPSData:
         # https://www.google.com/maps/place/56%C2%B003'37.7%22N+12%C2%B041'53.5%22E/@56.0604752,12.6960057,17z/data=!3m1!4b1!4m5!3m4!1s0x0:0xa894c6177c98a8fe!8m2!3d56.0604668!4d12.6981828
         print("Latitude: ", self.file_metadata['gps_latitude'])
         print("Longitude: ", self.file_metadata['gps_longitude'])
-        print(f"Longitude: "
+        print(f"Latitude: "
               f"{int(self.file_metadata['gps_latitude'][0]):02d}°"
               f"{int(self.file_metadata['gps_latitude'][1]):02d}\'"
               f"{int(self.file_metadata['gps_latitude'][2]):.1f}\""
               f"{self.file_metadata['gps_latitude_ref'].upper()}"
               )
-        pass
+
+        try:
+            for gpsdata in self.file_metadata:
+                if gpsdata.find("gps") != -1 and gpsdata.find("longitude") != -1:
+                    self.longitude = "en grej"
+                    if gpsdata.find("ref") == -1:
+                        self.longitude += f"Longitude: " \
+                                        f"{int(self.file_metadata[gpsdata][0]):02d}°" \
+                                        f"{int(self.file_metadata[gpsdata][1]):02d}\'" \
+                                        f"{int(self.file_metadata[gpsdata][2]):.1f}\""
+        except ValueError as e:
+            print(e)
+        else:
+            print(self.longitude)
 
 
 run = HandleGPSData()
 run.extract_meta_data()
 run.extract_gps_coordinates()
-print(f"{run.file_metadata}")
+# print(f"{run.file_metadata}")
