@@ -45,9 +45,9 @@ class HandleGPSData:
                 if attribute == "_segments":
                     continue
                 try:
-                    print(getattr(img, attribute), " ", attribute)
+                    # print(getattr(img, attribute), " ", attribute)
                     self.file_metadata[attribute] = getattr(img, attribute)
-                except:
+                except Exception:
                     pass
 
     def extract_gps_coordinates(self):
@@ -63,10 +63,18 @@ class HandleGPSData:
         #
         # Google Maps url:
         # https://www.google.com/maps/place/56%C2%B003'37.7%22N+12%C2%B041'53.5%22E/@56.0604752,12.6960057,17z/data=!3m1!4b1!4m5!3m4!1s0x0:0xa894c6177c98a8fe!8m2!3d56.0604668!4d12.6981828
-
+        print("Latitude: ", self.file_metadata['gps_latitude'])
+        print("Longitude: ", self.file_metadata['gps_longitude'])
+        print(f"Longitude: "
+              f"{int(self.file_metadata['gps_latitude'][0]):02d}°"
+              f"{int(self.file_metadata['gps_latitude'][1]):02d}\'"
+              f"{int(self.file_metadata['gps_latitude'][2]):.1f}\""
+              f"{self.file_metadata['gps_latitude_ref'].upper()}"
+              )
         pass
 
 
 run = HandleGPSData()
 run.extract_meta_data()
-print(run.file_metadata['gps_latitude'])
+run.extract_gps_coordinates()
+print(f"{run.file_metadata}")
