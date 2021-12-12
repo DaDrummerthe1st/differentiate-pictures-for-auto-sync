@@ -2,3 +2,4 @@ opencv-python==4.5.3.56
 numpy
 Pillow==8.3.1
 exif
+pymongo
