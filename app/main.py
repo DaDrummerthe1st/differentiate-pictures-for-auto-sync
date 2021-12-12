@@ -6,6 +6,7 @@ import numpy as np
 from PIL import Image
 from PIL.ExifTags import TAGS
 
+# TODO make sure a check for Python interpreter >= 3.6, for f-strings usage (ie gps-data.py)
 
 class ChooseFiles:
     def __init__(self):
