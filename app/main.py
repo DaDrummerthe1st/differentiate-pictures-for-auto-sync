@@ -28,23 +28,22 @@ for file in file_list:
 
             # Iterating over all exif-data fields making them into human readable format
             if exifdata:
-                print(f"\n \n {file.lower()}\n")
-                for (tag, value) in exifdata.items():
-                    # # get the tag name, instead of human unreadable tag id
-                    tag = TAGS.get(tag, tag)
-                    exif
-                    print(tag, " ", value)
+                    print(f"\n \n {file.lower()}\n")
+                    for (tag, value) in exifdata.items():
+                        # # get the tag name, instead of human unreadable tag id
+                        tag = TAGS.get(tag, tag)
 
-                    # data = exifdata.get(tag_id)
-                    #
-                    # # decode bytes
-                    # if isinstance(data, bytes):
-                    #     data = data.decode()
-                    # print(f"{tag:25}: {data}")
+                        print(tag, " ", value)
             else:
+                print("Correct filetype but no exifdata found" + file)
                 pass
-    except:
-        print("An error has occured")
+        else:
+            print("Not '.jpg'. No exifdata found" + file)
+            pass
+    except FileNotFoundError as ferror:
+        print("File not found" + ferror)
+    except Exception as error:
+        print("An unknown error has occured" + error)
         pass
 
 # TODO error handling if file not found / not chosen

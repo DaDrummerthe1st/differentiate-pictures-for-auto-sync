@@ -1,18 +1,13 @@
 from exif import Image
 
 class handle_gps_data:
-    def __init__(self):
+    def __init__(self, filepath):
         # Set standard file path for testing purposes
-        self.filepath = '../testpics/testpic_dogs.jpeg'
+        self.filepath = filepath
 
         # nested dictionary containing all files metadata
         # { filename1{ metadata_attr1{value}, metadata_attr2{value}... }, filename2{...} }
         self.file_metadata = {}
-
-    def findfile(self):
-        # TODO create dialoguebox for which files to be worked with
-        # TODO create a new module for dialoguebox file picker or at least a self sustained class?
-        self.filepath = "/home/joakim/Pictures/20190404_140209.jpg"
 
     def extract_meta_data(self):
 
