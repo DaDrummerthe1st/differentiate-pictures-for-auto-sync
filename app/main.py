@@ -1,52 +1,8 @@
-import tkinter as tk
-from tkinter import filedialog
+
 import cv2
-import os
 import numpy as np
-from PIL import Image
-from PIL.ExifTags import TAGS
 
 # TODO make sure a check for Python interpreter >= 3.6, for f-strings usage (ie gps-data.py)
-
-# choose directory to display pictures from - dialogue box
-# # Set starting directory for file picker dialogue
-home_directory = os.path.expanduser('~/Pictures/')
-root = tk.Tk()
-root.withdraw()
-# # create the dialogue box
-file_path = filedialog.askopenfilenames(initialdir=home_directory, title='Välj en eller flera filer')
-file_list = root.tk.splitlist(file_path)
-
-for file in file_list:
-    try:
-        if file.endswith('.jpg'):
-            image = Image.open(file)
-            # exIfdata == metadata in the picture
-            exifdata = image.getexif()
-
-            # Iterating over all exif-data fields making them into human readable format
-            if exifdata:
-                    print(f"\n \n {file.lower()}\n")
-                    for (tag, value) in exifdata.items():
-                        # # get the tag name, instead of human unreadable tag id
-                        tag = TAGS.get(tag, tag)
-
-                        print(tag, " ", value)
-            else:
-                print("Correct filetype but no exifdata found" + file)
-                pass
-        else:
-            print("Not '.jpg'. No exifdata found" + file)
-            pass
-    except FileNotFoundError as ferror:
-        print("File not found" + ferror)
-    except Exception as error:
-        print("An unknown error has occured" + error)
-        pass
-
-# TODO error handling if file not found / not chosen
-# TODO handle 2D-pictures (black/white) to 3D
-# TODO error handle non-picture files or faulty pictures
 
 # display an array of all pictures within directory
 #    Initialize files
