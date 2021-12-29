@@ -6,9 +6,7 @@ import numpy as np
 from PIL import Image
 from PIL.ExifTags import TAGS
 
-# Global variables
-thumbnail_width = 150
-thumbnail_height = 150
+# TODO make sure a check for Python interpreter >= 3.6, for f-strings usage (ie gps-data.py)
 
 # choose directory to display pictures from - dialogue box
 # # Set starting directory for file picker dialogue
@@ -68,7 +66,7 @@ for idx, file in enumerate(file_list):
 # # Create rows and columns based on the number of pictures chosen
 len_dict_pictures = len(dict_of_present_pictures)
 print(len_dict_pictures, " valda bilder")
-imageplaceholder_id = 0
+image_placeholder_id = 0
 amount_thumbnails_horizontal = 5
 amount_thumbnails_vertical = 4
 
@@ -88,25 +86,26 @@ for row in range(amount_thumbnails_vertical):
 
     for cell in range(amount_thumbnails_horizontal):
         # for testing purposes
-        # print(imageplaceholder_id, vertical_temp_img.shape)
+        # print(image_placeholder_id, vertical_temp_img.shape)
 
-        # see if the incremented imageplaceholder_id matches a picture in the chosen array of files
-        if imageplaceholder_id in dict_of_present_pictures:
+        # see if the incremented image_placeholder_id matches a picture in the chosen array of files
+        if image_placeholder_id in dict_of_present_pictures:
 
             if vertical_temp_img.size == 0:
-                vertical_temp_img = dict_of_present_pictures[imageplaceholder_id]
+                vertical_temp_img = dict_of_present_pictures[image_placeholder_id]
             else:
-                vertical_temp_img = np.concatenate((vertical_temp_img, dict_of_present_pictures[imageplaceholder_id]), axis=1)
+                vertical_temp_img = np.concatenate((vertical_temp_img,
+                                                    dict_of_present_pictures[image_placeholder_id]), axis=1)
 
-        # if imageplaceholder_id is not found, thus end of chosen pictures, instead put up placeholders in its place
+        # if image_placeholder_id is not found, thus end of chosen pictures, instead put up placeholders in its place
         else:
             if vertical_temp_img.size == 0:
                 vertical_temp_img = placeholder_img
             else:
                 vertical_temp_img = np.concatenate((vertical_temp_img, placeholder_img), axis=1)
 
-        # increment the imageplaceholder_id to see which run next one is
-        imageplaceholder_id += 1
+        # increment the image_placeholder_id to see which run next one is
+        image_placeholder_id += 1
 
     # is the row created or not?
     if img.size == 0:
@@ -119,11 +118,11 @@ for row in range(amount_thumbnails_vertical):
 # display the completed table of images
 cv2.imshow("visar hela bilden", img)
 
-# the winname in cv2.imshow(winname, ...) is a somewhat unique identifier. If creating two windows with the same winname, only the last is shown
-for key, picturedictobject in dict_of_present_pictures.items():
-    winnamehere = str(key)
-    # cv2.imshow(winnamehere, picturedictobject)
-
+# the winname in cv2.imshow(winname, ...) is a somewhat unique identifier.
+# If creating two windows with the same winname, only the last is shown
+for key, picture_dict_object in dict_of_present_pictures.items():
+    win_name_here = str(key)
+    # cv2.imshow(win_name_here, picture_dict_object)
 
 # https://www.youtube.com/watch?v=IEf0w1G_rpY
 
