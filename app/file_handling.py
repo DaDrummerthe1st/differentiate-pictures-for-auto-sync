@@ -5,11 +5,11 @@ from PIL import Image
 from PIL.ExifTags import TAGS
 import mimetypes
 
+
 # TODO expand into more classes:
 # - check for and deliver exifdata inside a dictionary
 # - search for duplicate files
 # - choose files with dialoguebox
-
 
 
 class ChooseFilesFromDialogueBox:
@@ -26,28 +26,28 @@ class ChooseFilesFromDialogueBox:
         self.file_list = self.root.tk.splitlist(self.file_path)
 
         # A dictionary to collect all files for return
-          #   {
-          #     "with_exif":
-          #         {
-          #             "filepath1.jpg":
-          #                 {
-          #                     "GpsPos":"123, 456",
-          #                     "GpsLongitude":"N"
-          #                 },
-          #              "filepath2.jpg":
-          #                 {
-          #                     "GpsPos":"789, 101",
-          #                     "GpsLongitude":"S"
-          #                 }
-          #         },
-          #     "without_exif":
-          #             {
-          #                 "filepath3.zip":
-          #                     {"mimetype":None|mimetype}
-          #                 "filepath4.pdf":
-          #                     {"mimetype":None|mimetype}
-          #             }
-          #    }
+        #   {
+        #     "with_exif":
+        #         {
+        #             "filepath1.jpg":
+        #                 {
+        #                     "GpsPos":"123, 456",
+        #                     "GpsLongitude":"N"
+        #                 },
+        #              "filepath2.jpg":
+        #                 {
+        #                     "GpsPos":"789, 101",
+        #                     "GpsLongitude":"S"
+        #                 }
+        #         },
+        #     "without_exif":
+        #             {
+        #                 "filepath3.zip":
+        #                     {"mimetype":None|mimetype}
+        #                 "filepath4.pdf":
+        #                     {"mimetype":None|mimetype}
+        #             }
+        #    }
         self.returnable_file_list = {}
 
     def sort_files(self):
@@ -72,28 +72,30 @@ class ChooseFilesFromDialogueBox:
                                 # # get the tag name, instead of human unreadable tag id
                                 tag = TAGS.get(tag, tag)
 
-                                # print(tag, " ", value)
+                                print(tag, " ", value)
                                 # TODO append into self.returnable_file_list
+                                # print("mimetype: " + mimestart + " exifdata: " + tag + " + " + value)
                         else:
                             print("Correct filetype but no exifdata found: " + file)
 
-                            # cleanup
-                            image.close()
-
                             # Add the filepath to the dictionary
-                            self.returnable_file_list.setdefault("jpg", []).append(file)
+                            # self.returnable_file_list.setdefault("jpg", []).append(file)
+
+                        # cleanup
+                        image.close()
+
                     else:
-                    self.returnable_file_list.setdefault("no_exifdata", []).append(file)
-                    # print("no valid mimetype" + mimestart)
+                        # self.returnable_file_list.setdefault("no_exifdata", []).append(file)
+                        print("mediafile with no exifdata " + mimestart + " " + file)
                 else:
-                    print("No mimetype found!")
+                    print("No mimetype found!" + str(mimestart) + " " + file)
                     pass
 
             except FileNotFoundError as ferror:
-                print("File not found" + ferror)
+                print("File not found" + str(ferror))
                 pass
             except Exception as error:
-                print("An unknown error has occured" + error)
+                print("An unknown error has occured" + str(error))
                 pass
 
         print(self.returnable_file_list)
