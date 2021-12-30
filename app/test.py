@@ -1,14 +1,12 @@
-import sys
-import gpsdata as gp
+import mimetypes
+mimetypes.init()
 
-print(sys.path)
+mimestart = mimetypes.guess_type("/home/joakim/Pictures/Screenshots/doru_luca/doru_luca.zip")[0]
 
-# sys.path.append('../resources/modules')
+if mimestart != None:
+    mimestart = mimestart.split('/')[0]
 
-# print("from test.py: ", sys.argv[0])
-# print("from test.py: ", sys.argv)
-#
-# for root, sub_folders, file in sys.argv[1]:
-#     print("root: ", root)
-#     print("sub_folders: ", sub_folders)
-#     print("file: ", file)
+    if mimestart == 'audio' or mimestart == 'video' or mimestart == 'image':
+        print("media types " + mimestart)
+    else:
+        print("no valid mimetype " + mimestart)
