@@ -3,7 +3,6 @@ from tkinter import filedialog
 import os
 from PIL import Image
 from PIL.ExifTags import TAGS
-import mimetypes
 import magic
 
 
@@ -55,12 +54,15 @@ class ChooseFilesFromDialogueBox:
         for file in self.file_list:
             try:
                 # To sort out file types
-                my_magic = magic.from_buffer(open(file, "rb").read(4096), mime=True)
-                print(my_magic)
-                # mimetypes.init()
-                # mimestart = mimetypes.guess_type(file)[0]
-                # if mimestart is not None:
-                #     mimestart = mimestart.split('/')[0]
+                magic_file = magic.from_buffer(open(file, "rb").read(2048), mime=True)
+                mimetype = magic.from_buffer(open(file, "rb").read(2048))
+
+                # print(magic_file + " + " + mimetype + " + " + file)
+
+                if mimetype is not None:
+                    # finds out if file is a mediafile
+                    mimestart = magic_file.split('/')[0]
+                    print(mimestart)
                 #     # if file.endswith('.jpg'):
                 #     if mimestart == 'audio' or mimestart == 'video' or mimestart == 'image':
                 #
