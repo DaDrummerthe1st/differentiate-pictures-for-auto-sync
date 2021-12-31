@@ -4,6 +4,7 @@ import os
 from PIL import Image
 from PIL.ExifTags import TAGS
 import mimetypes
+import magic
 
 
 # TODO expand into more classes:
@@ -18,7 +19,7 @@ class ChooseFilesFromDialogueBox:
 
         # choose directory to display pictures from - dialogue box
         # # Set starting directory for file picker dialogue
-        self.home_directory = os.path.expanduser('~/Pictures/')
+        self.home_directory = os.path.expanduser('~/Downloads/')
         self.root = tk.Tk()
         self.root.withdraw()
         # # create the dialogue box
@@ -27,25 +28,25 @@ class ChooseFilesFromDialogueBox:
 
         # A dictionary to collect all files for return
         #   {
-        #     "with_exif":
+        #     "withExif":
         #         {
-        #             "filepath1.jpg":
+        #             "filePath1.jpg":
         #                 {
-        #                     "GpsPos":"123, 456",
-        #                     "GpsLongitude":"N"
+        #                     "gpsPos":"123, 456",
+        #                     "gpsLongitude":"N"
         #                 },
-        #              "filepath2.jpg":
+        #              "filePath2.jpg":
         #                 {
-        #                     "GpsPos":"789, 101",
-        #                     "GpsLongitude":"S"
+        #                     "gpsPos":"789, 101",
+        #                     "gpsLongitude":"S"
         #                 }
         #         },
-        #     "without_exif":
+        #     "withoutExif":
         #             {
-        #                 "filepath3.zip":
-        #                     {"mimetype":None|mimetype}
-        #                 "filepath4.pdf":
-        #                     {"mimetype":None|mimetype}
+        #                 "filePath3.zip":
+        #                     {"mimeType":None|mimetype}
+        #                 "filePath4.pdf":
+        #                     {"mimeType":None|mimetype}
         #             }
         #    }
         self.returnable_file_list = {}
@@ -54,42 +55,44 @@ class ChooseFilesFromDialogueBox:
         for file in self.file_list:
             try:
                 # To sort out file types
-                mimetypes.init()
-                mimestart = mimetypes.guess_type(file)[0]
-                if mimestart is not None:
-                    mimestart = mimestart.split('/')[0]
-                    # if file.endswith('.jpg'):
-                    if mimestart == 'audio' or mimestart == 'video' or mimestart == 'image':
-
-                        image = Image.open(file)
-                        # exIfdata == metadata in the picture
-                        exifdata = image.getexif()
-
-                        # Iterating over all exif-data fields making them into human readable format
-                        if exifdata:
-                            print(f"\n \n {file.lower()}\n")
-                            for (tag, value) in exifdata.items():
-                                # # get the tag name, instead of human unreadable tag id
-                                tag = TAGS.get(tag, tag)
-
-                                print(tag, " ", value)
-                                # TODO append into self.returnable_file_list
-                                # print("mimetype: " + mimestart + " exifdata: " + tag + " + " + value)
-                        else:
-                            print("Correct filetype but no exifdata found: " + file)
-
-                            # Add the filepath to the dictionary
-                            # self.returnable_file_list.setdefault("jpg", []).append(file)
-
-                        # cleanup
-                        image.close()
-
-                    else:
-                        # self.returnable_file_list.setdefault("no_exifdata", []).append(file)
-                        print("mediafile with no exifdata " + mimestart + " " + file)
-                else:
-                    print("No mimetype found!" + str(mimestart) + " " + file)
-                    pass
+                my_magic = magic.from_buffer(open(file, "rb").read(4096), mime=True)
+                print(my_magic)
+                # mimetypes.init()
+                # mimestart = mimetypes.guess_type(file)[0]
+                # if mimestart is not None:
+                #     mimestart = mimestart.split('/')[0]
+                #     # if file.endswith('.jpg'):
+                #     if mimestart == 'audio' or mimestart == 'video' or mimestart == 'image':
+                #
+                #         image = Image.open(file)
+                #         # exIfdata == metadata in the picture
+                #         exifdata = image.getexif()
+                #
+                #         # Iterating over all exif-data fields making them into human readable format
+                #         if exifdata:
+                #             print(f"\n \n {file.lower()}\n")
+                #             for (tag, value) in exifdata.items():
+                #                 # # get the tag name, instead of human unreadable tag id
+                #                 tag = TAGS.get(tag, tag)
+                #
+                #                 print(tag, " ", value)
+                #                 # TODO append into self.returnable_file_list
+                #                 # print("mimetype: " + mimestart + " exifdata: " + tag + " + " + value)
+                #         else:
+                #             print("Correct filetype but no exifdata found: " + file)
+                #
+                #             # Add the filepath to the dictionary
+                #             # self.returnable_file_list.setdefault("jpg", []).append(file)
+                #
+                #         # cleanup
+                #         image.close()
+                #
+                #     else:
+                #         # self.returnable_file_list.setdefault("no_exifdata", []).append(file)
+                #         print("mediafile with no exifdata " + mimestart + " " + file)
+                # else:
+                #     print("No mimetype found!" + str(mimestart) + " " + file)
+                #     pass
 
             except FileNotFoundError as ferror:
                 print("File not found" + str(ferror))
