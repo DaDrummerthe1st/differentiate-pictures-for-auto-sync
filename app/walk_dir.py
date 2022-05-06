@@ -54,6 +54,7 @@ for root, subdirs, files in os.walk(walk_dir):
         counter = counter + 1
 
 print(file_dict)
+print("number of items: ", counter)
 print(time.time() - start_time)
 
 # # print('--\nroot = ' + root)
