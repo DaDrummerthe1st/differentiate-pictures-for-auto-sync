@@ -110,6 +110,40 @@ class ChooseFilesFromDialogueBox:
 # TODO handle 2D-pictures (black/white) to 3D
 # TODO error handle non-picture files or faulty pictures
 
+class FindAndDeleteDuplicates:
+    def __int__(self):
+        # Python 2.7 script here copied ugly copied to a class:
+        # https://stackoverflow.com/questions/748675/finding-duplicate-files-and-removing-them
+        from __future__ import print_function  # py2 compatibility
+        from collections import defaultdict
+        import hashlib
+        import os
+        import sys
+
+    def chunk_reader(fobj, chunk_size=1024):
+        """Generator that reads a file in chunks of bytes"""
+        while True:
+            chunk = fobj.read(chunk_size)
+            if not chunk:
+                return
+            yield chunk
+
+    def get_hash(filename, first_chunk_only=False, hash=hashlib.sha1):
+        hashobj = hash()
+        file_object = open(filename, 'rb')
+
+        if first_chunk_only:
+            hashobj.update(file_object.read(1024))
+        else:
+            for chunk in chunk_reader(file_object):
+                hashobj.update(chunk)
+        hashed = hashobj.digest()
+
+        file_object.close()
+        return hashed
+
+    def check_for_duplicates(paths, hash=hashlib.sha1):
+
 
 o = ChooseFilesFromDialogueBox()
 o.sort_files()
