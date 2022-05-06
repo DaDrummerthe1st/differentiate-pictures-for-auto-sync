@@ -114,6 +114,9 @@ class FindAndDeleteDuplicates:
     def __int__(self):
         # Python 2.7 script here copied ugly copied to a class:
         # https://stackoverflow.com/questions/748675/finding-duplicate-files-and-removing-them
+
+        # regarding the topic of importing at __init__:
+        # https://stackoverflow.com/questions/13395116/python-import-in-init
         from __future__ import print_function  # py2 compatibility
         from collections import defaultdict
         import hashlib
