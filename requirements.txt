@@ -1,5 +1,6 @@
-opencv-python==4.5.3.56
+opencv-python
 numpy
-Pillow==8.3.1
+Pillow
 exif
-pymongo
+python-magic
+mysql-connector-python
