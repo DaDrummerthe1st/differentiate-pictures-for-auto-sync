@@ -41,6 +41,7 @@ class FindDuplicates:
         self.list_of_unique_files = {}
 
         self.create_list_of_sorted_filenames()
+        self.examine_list()
     # # duplicate = []
     # print(fileinfo_dict)
     # for key, value in fileinfo_dict.items():
@@ -61,13 +62,12 @@ class FindDuplicates:
                 self.list_of_unique_files[value[0]] = [key]
         print(self.list_of_unique_files)
 
-# def part_list():
-#     for name, occurencies in list_of_unique_files:
-#         for index, value in enumerate(occurencies):
-#             if value > 1:
-#                 print(index)
+    def examine_list(self):
+        for name, occurencies in self.list_of_unique_files:
+            for index, value in enumerate(occurencies):
+                if value > 1:
+                    print(index)
 # print(f"Length of list_of_unique_files is {enumerate(list_of_unique_files)}")
-
 
 # using enumerate in the for loop complicates things - renders a tuple with list objects:
 # first level for loop renders an item like so:
@@ -116,7 +116,7 @@ for key, value in file_dict.items():
 
 print("last known good point")
 
-find_duplicates(file_dict)
+test = FindDuplicates(file_dict)
 
 # # print('--\nroot = ' + root)
 # list_file_path = os.path.join(root, 'my-directory-list.txt')
