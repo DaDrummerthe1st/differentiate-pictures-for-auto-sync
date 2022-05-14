@@ -1,6 +1,6 @@
 ***This application has several purposes***
 
-Since Google started to add all pictures to the Google One quota thus limiting the possibilities to take pictures and later delete the ones you can discard I decided to create my own project handling pictures and movie clips thus owning the information and also the metadata.
+Since Google started to add all pictures to the Google One quota thus limiting the possibilities to take pictures and later delete the ones you can discard I decided to create my own project handling pictures and movie clips so the user itself owns the information and also the metadata.
 
 *The overall idea is handling pictures and movies in order to preserve and being able to find old, forgotten ones. At the same time categorising them for future AI to do it automatically, set for each users individual preferences.*
 
@@ -33,5 +33,5 @@ To help up with this project I am thinking about implementing the following open
 *Create an overview on a PC screen to label files for deletion, save and sort.
 Implement labelling*
 2. Syncing between devices
-3. syncing from an Android phone to a local computer using local WLAN
-4. syncing from an Android phone to a local computer using WAN
+3. Syncing from an Android phone to a local computer using local WLAN
+4. Syncing from an Android phone to a local computer using WAN
