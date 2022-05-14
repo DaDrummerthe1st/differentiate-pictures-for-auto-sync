@@ -7,10 +7,7 @@ import mysql.connector
 # https://stackoverflow.com/questions/59941858/how-to-set-root-password-in-mariadb-10-4-on-macos#59942747
 # login by: "mysql -u root -p" getting prompted for the password
 mydb = mysql.connector.connect(
-    host="mysql410.loopia.se",
-    user="cpu@r317972",
-    password="J4zMLBvqHubGQtu",
-    database="reuterborg_se_db_9"
+
 )
 
 cursor = mydb.cursor()
