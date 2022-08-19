@@ -5,6 +5,14 @@ discard - move to {discard directory}
 save - move to {save directory}, append original path to {save directory}/{filename}.original_path
 mark and save - move to {mark directory} and save original path to {mark directory}/{filename}.original_path
 
+## Database:
+1. Be able to write to database
+2. Index all picture- and moviefiles
+3. Be able to write tags to database connected to respective file
+3a. One table of different tags
+3aa. Functionality to count number of instances
+3b. Another table with tagID as primary and mediaID as information
+
 later:
 button to run labellimg on mark directory
 autorun instance of labellimg when choosing "mark and save"
