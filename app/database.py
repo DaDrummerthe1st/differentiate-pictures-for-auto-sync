@@ -1,6 +1,10 @@
 import mysql.connector
 from local_mysql import Local_MySQLUserData as credentials
 
+# TODO autoinstall Docker and create dockerfile for docker setup of mysql
+# Dockerfile: zip everything for shipment to create a new directory. docker daemon will load EVERYTHING from
+# the root of the file and recurively
+
 e = credentials
 print(e.TESTING_ENV_CREDENTIALS_LOCAL_MYSQL["USER"])
 
