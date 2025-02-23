@@ -25,6 +25,7 @@ To help up with this project I am thinking about implementing the following open
 | ------ | ------ | ------ | ------ |
 | LabelImg | https://github.com/tzutalin/labelImg | labelling pictures | 🔴 |
 | SyncThing | https://syncthing.net/ | continuously syncing between units | 🔴 |
+| rClone | https://blog.rymcg.tech/blog/linux/rclone_sync/ | auto sync of files for bash | 🔴 |
 
 
 
