@@ -1,16 +1,14 @@
 from app.object_identification.obj_id import detect_objects_in_directory
 from app.utils.directory_picker import pick_directory
 
-
 def main():
-    # Specify the directory containing images
-    #image_directory = "resources/testpics"
-
-    # User specified directory
+    # Let the user pick a directory
     image_directory = pick_directory()
     if not image_directory:
         print("No directory selected. Exiting.")
-        return ""
+        return "/home/joakim/studier/kurser/metadataWebbanalys/code/grupp2/images"
+
+    print(f"Processing images in: {image_directory}")
 
     # Call the detection function
     detection_results = detect_objects_in_directory(image_directory)
