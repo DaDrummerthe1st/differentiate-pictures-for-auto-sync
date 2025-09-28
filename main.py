@@ -1,10 +1,20 @@
 from app.object_identification.obj_id import detect_objects_in_directory
+from app.utils.directory_picker import pick_directory
+
 
 def main():
     # Specify the directory containing images
-    image_directory = "resources/testpics"
+    #image_directory = "resources/testpics"
+
+    # User specified directory
+    image_directory = pick_directory()
+    if not image_directory:
+        print("No directory selected. Exiting.")
+        return ""
+
     # Call the detection function
     detection_results = detect_objects_in_directory(image_directory)
+
     # Print or process results
     for filename, boxes in detection_results.items():
         print(f"Results for {filename}:")
