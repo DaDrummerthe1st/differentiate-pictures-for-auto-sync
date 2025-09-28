@@ -2,3 +2,4 @@
 /.idea/
 app/local_mysql.py
 /resources/potential_first_check_py_files
+resources/darknet
