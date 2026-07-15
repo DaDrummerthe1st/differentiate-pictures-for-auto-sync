@@ -2,6 +2,23 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (7)
+
+- Checked the no-auto-restart Docker rule from entry (6) against Docker's
+  own docs rather than assume it was "best practice" — it isn't one
+  Docker prescribes at all (their only stated guidance is "use restart
+  policies, avoid process managers"); it's a deliberate, stricter-than-
+  typical choice for this project's specific threat (silent re-exposure
+  on an untrusted network), not an industry default. Refined the global
+  rule (`~/.claude/CLAUDE.md`) to the actual right shape: dev base file
+  stays `restart: "no"`, production restores `unless-stopped` via a
+  separate Compose override file (`compose.prod.yaml`-style) invoked
+  only explicitly at deploy time — Compose auto-loads
+  `compose.override.yaml` and nothing else, so this can't activate by
+  accident. Added a pointer for this at TODO.md's new step 6.0, so
+  Phase 6 doesn't forget it. Char counts (codepoints): `TODO.md`
+  13154 → 13488 (+334).
+
 ## 2026-07-16 (6)
 
 - Cross-project finding: `buzzkit-api`'s `worker` container had been

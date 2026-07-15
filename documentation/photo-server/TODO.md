@@ -214,6 +214,12 @@ confirm only the new photo is in the second zip.
 
 ## Phase 6 — HTTPS and deployment
 
+6.0 Add `server/docker-compose.prod.yml`, an override restoring
+`restart: unless-stopped` on `app`/`postgres` (the dev base file
+deliberately uses `restart: "no"` — see global Docker rule) — only ever
+invoked explicitly via `docker compose -f docker-compose.yml -f
+docker-compose.prod.yml up -d` on the real host, never auto-loaded.
+
 6.1 Caddy as a Compose service, only one publishing 80/443; app and
 postgres stay internal-only. Caddyfile routes `photos.reuterborg.se`
 with automatic HTTPS.
