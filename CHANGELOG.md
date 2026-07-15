@@ -2,6 +2,32 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (6)
+
+- Cross-project finding: `buzzkit-api`'s `worker` container had been
+  crash-looping (~24h) on missing `JWT_SECRET_KEY`/`COOKIE_DOMAIN` env
+  vars. Documented (not fixed, not committed — a different repo, and
+  Joakim declined the in-session commit) in that project's own
+  `api/README.md`/`CHANGELOG.md`. Logging it here too, since the
+  cross-repo rules below only exist in `~/.claude/CLAUDE.md`, which
+  isn't tracked in any repo — this entry is the searchable, per-project
+  record of what changed and why.
+- New global rules added to `~/.claude/CLAUDE.md` (this session, prompted
+  by the buzzkit finding above): (1) no dev/test Docker service gets an
+  auto-restart policy (`restart: "no"`/omitted, not `unless-stopped`/
+  `always`) by default — a container that silently comes back after a
+  daemon restart or reboot is a real exposure risk (e.g. reconnecting on
+  open wifi without knowing something's listening); (2) committing to a
+  repo other than the one a session is rooted in always needs asking
+  first, every time, even though committing *within* the active project
+  stays standing-authorized; (3) cross-project findings go into the
+  target project's existing docs structure (README/TODO/CHANGELOG), not
+  a new dedicated inbox file — decided over standardizing one, since
+  most projects already have a place this fits.
+- Fixed `server/docker-compose.yml` to comply with rule (1) above:
+  both `app` and `postgres` were `restart: unless-stopped`, now
+  `restart: "no"`.
+
 ## 2026-07-16 (5)
 
 - Closed two documentation gaps found on an explicit audit pass ("what's

@@ -4,7 +4,7 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     mem_limit: 256m
-    restart: unless-stopped
+    restart: "no"
 
   postgres:
     image: postgres:18.4-bookworm
@@ -16,7 +16,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
     mem_limit: 512m
-    restart: unless-stopped
+    restart: "no"
 
 volumes:
   postgres_data:
