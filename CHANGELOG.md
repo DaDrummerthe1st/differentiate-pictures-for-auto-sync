@@ -2,6 +2,24 @@
 
 One entry per revision, newest first.
 
+## 2026-07-15 (13)
+
+- Wrote and built (not run) photo-server TODO.md step 0.2: `server/Dockerfile`
+  (multi-stage uv build per Astral's documented pattern, non-root
+  `appuser`, `uvicorn --no-server-header` closing 0.1's tracked header
+  leak — confirmed the flag exists via `uvicorn --help` before using it),
+  `server/docker-compose.yml` (`app` published to 127.0.0.1 only,
+  `postgres:18.4-bookworm` with no published port, both with explicit
+  `mem_limit`, `POSTGRES_PASSWORD` required via `.env` with no
+  hardcoded/blank fallback), `.dockerignore`, `.env.example`. Verified
+  postgres 18.4 is current stable via web search rather than assuming a
+  version. Image builds clean (201MB, confirmed non-root user and CMD by
+  inspecting the built image). `docker compose up` and the curl smoke
+  test are still Joakim's to run — both the standing human-checkpoint
+  rule and HARDWARE.md's unconfirmed-RAM-upgrade gate apply. Confirmed
+  with Joakim that the machine this session runs on is a separate dev
+  box from the actual target host (192.168.1.10) — see HARDWARE.md.
+
 ## 2026-07-15 (12)
 
 - Fixed two photo-server doc gaps found while explaining the deployment

@@ -8,3 +8,4 @@ resources/darknet
 tools/doc_metrics/metrics.db
 __pycache__/
 .pytest_cache/
+/server/.env

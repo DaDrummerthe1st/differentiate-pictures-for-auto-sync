@@ -1,0 +1,22 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:8000:8000"
+    mem_limit: 256m
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:18.4-bookworm
+    command: postgres -c max_connections=20 -c shared_buffers=128MB
+    environment:
+      POSTGRES_DB: photo_server
+      POSTGRES_USER: photo_server
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in server/.env, never hardcode it}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    mem_limit: 512m
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
