@@ -89,6 +89,19 @@ execute it directly:
 Everything else — local edits, running the test suite, committing to the
 current branch — is fine to do without asking each time.
 
+## Branching and merging
+
+- **New branch, ask first.** Before starting non-trivial new development
+  work (a new TODO.md step, a feature, anything beyond a small fix), ask
+  whether to create a new branch and suggest one — don't assume the
+  current branch is the right place for it.
+- **Merging into main needs confirmation, every time.** Never merge a
+  branch into main without asking first. Unlike push/force-push/history
+  rewrites above (always handed over as a copyable command, never run
+  directly), a merge can be run directly once Joakim confirms — the
+  confirmation itself is the authorization, not a request to hand over
+  the command.
+
 ## Documentation layout
 
 - `documentation/` — every subfolder (root included) has its own

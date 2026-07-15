@@ -2,6 +2,17 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (2)
+
+- Added a "Branching and merging" rule to CLAUDE.md at Joakim's request:
+  ask and suggest a new branch before starting non-trivial new dev work,
+  and never merge into main without confirmation each time. Merging
+  differs from push/force-push/history-rewrite (always handed over as a
+  copyable command) — once Joakim confirms a merge, the AI session runs
+  it directly rather than handing it back. Scoped to this repo, not the
+  new global `~/.claude/CLAUDE.md`, per Joakim's answer. Char counts
+  (codepoints): `CLAUDE.md` 6178 → 6829 (+651).
+
 ## 2026-07-16
 
 - Fixed `server/docker-compose.yml`'s postgres volume mount: it targeted
