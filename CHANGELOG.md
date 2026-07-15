@@ -2,6 +2,27 @@
 
 One entry per revision, newest first.
 
+## 2026-07-15 (9)
+
+- Fixed a scope mismatch Joakim spotted by auditing every root
+  `documentation/` folder against its own stated purpose:
+  `photo-server/DPFAS_VISION.md` opened with "the standing goal across
+  the whole project," directly contradicting its own folder's README
+  ("one narrow, closed slice... nothing here should grow toward...
+  AI-driven curation suggestions"), and its three-UX-path table
+  duplicated `DATA_DICTIONARY.md`'s Tag-dimensions table in the same
+  folder. Deleted the file (per Joakim's choice among three options
+  offered); its only non-duplicated content — the Postgres/pgvector
+  rationale — moved into `photo-server/README.md`'s existing
+  "Relationship to the wider vision" section; the "standing goal" framing
+  and three-path breakdown now live in `VISION.md`'s Pillar 2, the
+  correct project-wide home. Updated the three other files that linked
+  to the deleted file (`VISION.md`, `photo-server/DEFERRED.md`,
+  `picture-handling/TODO.md`) to point at `VISION.md` Pillar 2 instead.
+  Audited every other file in every root folder against its own folder's
+  stated scope; found no other mismatches. `documentation/`: 39,976 →
+  39,215 characters.
+
 ## 2026-07-15 (8)
 
 - Untracked 5 `.pyc` files under `app/*/__pycache__/` that were

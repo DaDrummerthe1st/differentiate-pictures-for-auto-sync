@@ -25,7 +25,6 @@ drafts.
 | [DATA_DICTIONARY.md](DATA_DICTIONARY.md) | Full schema, which columns are live now vs reserved |
 | [HARDWARE.md](HARDWARE.md) | The server this runs on |
 | [DEFERRED.md](DEFERRED.md) | What's explicitly out of scope, and why |
-| [DPFAS_VISION.md](DPFAS_VISION.md) | The longer-term metadata/inference direction this phase feeds into |
 
 ## Non-negotiables specific to this topic
 
@@ -68,7 +67,13 @@ scope stops at "browse, search, tag into an album, download a zip" — see
 ## Relationship to the wider vision
 
 This folder is one narrow, closed slice of a much larger system Joakim
-is maturing over time — see [../VISION.md](../VISION.md). Nothing here
+is maturing over time — see [../VISION.md](../VISION.md)'s Pillar 2 for
+the full metadata/curation direction this feeds into. Nothing here
 should grow toward distributed storage, cross-household sharing, or
 AI-driven curation suggestions without an explicit decision to do so;
 those are separate, not-yet-scheduled pillars, not this folder's job.
+
+This is also why Postgres was chosen as the sole database engine (see
+the "Non-negotiables" above): pgvector runs inside the same instance, so
+no second database is needed if/when Pillar 2's on-device-inference
+direction reaches this folder.

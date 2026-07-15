@@ -7,7 +7,7 @@ absence is a decision, not an oversight.
 
 - **AI content and face recognition** — inference belongs on-device, on
   the phone; the server only stores derived tags/embeddings later, once
-  there's something to sync. See [DPFAS_VISION.md](DPFAS_VISION.md).
+  there's something to sync. See [../VISION.md](../VISION.md) Pillar 2.
 - **DynDNS automation** — manual IP/DNS updates are fine at two-user
   scale; automate only if it becomes a recurring chore.
 - **Crop and soft-delete** — no destructive or edit workflow is needed

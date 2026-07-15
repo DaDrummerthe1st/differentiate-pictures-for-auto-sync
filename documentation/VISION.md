@@ -27,12 +27,17 @@ here.
 
 ## Pillar 2 — Metadata, search, and curation
 
-Make it easy to find pictures by search criteria — this is what
-photo-server/ builds first, narrowly, for one household. Longer-term:
-the system suggests photos to remove, learned globally across the
-network and personalized per user. See
-[photo-server/DPFAS_VISION.md](photo-server/DPFAS_VISION.md) for the
-on-device-inference direction this builds toward.
+The standing goal: get users to generate metadata around each photo's
+vectorized representation, through three UX paths — search/filter (what
+[photo-server/](photo-server/README.md) builds first, narrowly, for one
+household; see its DATA_DICTIONARY.md's Tag dimensions table for current
+status), manual tagging (schema now, endpoints fast-follow), and
+automated analysis via on-device face/object recognition (DPFAS phase,
+not started). Inference for that third path runs on the phone — only
+derived tags and, later, embeddings sync back to the server via
+pgvector, so raw photos never need to leave it. Longer-term: the system
+suggests photos to remove, learned globally across the network and
+personalized per user.
 
 ## Pillar 3 — Presentation and sharing
 

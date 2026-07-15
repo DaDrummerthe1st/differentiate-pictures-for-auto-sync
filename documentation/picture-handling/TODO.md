@@ -9,9 +9,10 @@ identification sections that used to live here — they're superseded by
 [../photo-server/](../photo-server/README.md), not built here. See that
 folder's TODO.md for the actual roadmap, DATA_DICTIONARY.md for the tag
 schema (tag-based albums, not move-to-directory discard/save/mark), and
-DEFERRED.md/DPFAS_VISION.md for why AI/object-identification is deferred
-to on-device, phone-side inference rather than the server-side LabelImg/
-DNN approach originally sketched here.
+DEFERRED.md / [../VISION.md](../VISION.md) Pillar 2 for why
+AI/object-identification is deferred to on-device, phone-side inference
+rather than the server-side LabelImg/DNN approach originally sketched
+here.
 
 ## Known drift
 
