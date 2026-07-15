@@ -2,6 +2,24 @@
 
 One entry per revision, newest first.
 
+## 2026-07-15 (6)
+
+- Captured Joakim's long-term system vision (four pillars: distributed
+  storage/DFS with a blockchain-like stability mechanism, metadata/
+  search/curation, presentation and event-based sharing with an opt-in
+  privilege-for-data-sharing model, and multi-angle event reconstruction)
+  in a new project-wide `documentation/VISION.md`, cross-linked from
+  `distributed-sync/README.md`, `photo-server/README.md`,
+  `photo-server/DPFAS_VISION.md`, and the top-level `documentation/
+  README.md` index, rather than duplicated into any of them. Flagged
+  Pillar 3's opt-in-sharing model as an open tension against the current
+  closed-by-default posture in `POLICY.md`'s open questions. Added the
+  Sunday deadline's real context to `photo-server/README.md`: a memorial
+  for Per, Elisabeth's mother's late partner, where she wants to pick
+  photos from ripped CDs/DVDs for a picture-frame USB stick — this is
+  why v1 stops at browse/search/tag/download and nothing more.
+  `documentation/`: 33,899 → 39,441 characters.
+
 ## 2026-07-15 (5)
 
 - Absorbed two external planning documents (a photo-server build plan and

@@ -18,4 +18,6 @@ documentation session:
   decided.
 
 **Open question**: full roadmap addendum, still pending from Joakim —
-don't treat README.md's vision as final.
+don't treat README.md's vision as final. Includes the stability
+mechanism (README.md mentions blockchain-like, undefined) and how
+redundancy/uptime get verified across nodes.

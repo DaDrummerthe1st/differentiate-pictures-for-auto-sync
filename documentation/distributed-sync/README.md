@@ -13,8 +13,17 @@ internet. Users can optionally dedicate spare storage and compute to a
 shared distributed file system (torrent-network style), gaining access to
 some shared cloud storage and AI compute in return — similar in spirit to
 volunteer-computing projects like SETI@home, but for storage/AI
-resourcing instead of signal analysis. The bottom line is autonomy: no
-single point of dependency on a third-party quota.
+resourcing instead of signal analysis. Each user's own files stay
+encrypted regardless of who else's hardware is holding a redundant copy.
+Some blockchain-like mechanism is intended for network stability
+(verifying redundancy/uptime across nodes, most likely) — mechanism
+undefined, flagged as an open question below, not a design. The bottom
+line is autonomy: no single point of dependency on a third-party quota.
+
+See [../VISION.md](../VISION.md) for how this fits alongside the other
+three long-term pillars (metadata/curation, presentation/sharing,
+multi-angle reconstruction) — this file stays scoped to the DFS piece
+only.
 
 Not yet a committed design — see [TODO.md](TODO.md)'s open question for
 what's still unresolved.

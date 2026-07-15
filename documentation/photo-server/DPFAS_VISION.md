@@ -2,7 +2,9 @@
 
 No code, this is direction only. The standing goal across the whole
 project: get users to generate metadata around each photo's vectorized
-representation, through three UX paths.
+representation, through three UX paths. This is Pillar 2 of the larger
+system direction — see [../VISION.md](../VISION.md) for how it relates
+to distributed storage, presentation/sharing, and event reconstruction.
 
 | Path | Status | Notes |
 | --- | --- | --- |

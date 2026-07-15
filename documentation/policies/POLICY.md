@@ -38,7 +38,13 @@ high-blast-radius definition), see [CLAUDE.md](../../CLAUDE.md).
 
 ## Open questions
 
-Nothing project-wide is unresolved right now beyond what's tracked in
-each topic folder's `TODO.md` — see
-[../distributed-sync/TODO.md](../distributed-sync/TODO.md) for the
-current open item there.
+- **Closed vs. opt-in-sharing trust boundary**: the long-term vision
+  (see [../VISION.md](../VISION.md) Pillar 3) includes a future mode
+  where a user opts to share more of her data with the wider network in
+  exchange for more from it. This must never be allowed to blur the
+  current closed-by-default posture (no photo/user data ever leaves the
+  server) — any future design needs an explicit, separate opt-in, not a
+  gradual default shift. Unresolved; no design yet.
+- Everything else tracked in each topic folder's `TODO.md` — see
+  [../distributed-sync/TODO.md](../distributed-sync/TODO.md) for the
+  current open item there.

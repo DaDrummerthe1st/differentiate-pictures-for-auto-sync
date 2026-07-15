@@ -55,3 +55,20 @@ Phase A schema. Joakim has an existing login implementation from another
 project he'll bring to the next session — confirm whether Phase 1 adapts
 that implementation or builds fresh per TODO.md's spec before writing any
 auth code.
+
+## Why the Sunday deadline
+
+Elisabeth's mother is holding a memorial for Per, her late partner, on a
+specific Sunday; she asked Joakim to rip a few of Per's CDs/DVDs of
+pictures and movies so she can pick a handful to show on a picture-frame
+USB stick there. That single, narrow need is the entire reason v1's
+scope stops at "browse, search, tag into an album, download a zip" — see
+[MOCKUP.md](MOCKUP.md) and [TODO.md](TODO.md).
+
+## Relationship to the wider vision
+
+This folder is one narrow, closed slice of a much larger system Joakim
+is maturing over time — see [../VISION.md](../VISION.md). Nothing here
+should grow toward distributed storage, cross-household sharing, or
+AI-driven curation suggestions without an explicit decision to do so;
+those are separate, not-yet-scheduled pillars, not this folder's job.
