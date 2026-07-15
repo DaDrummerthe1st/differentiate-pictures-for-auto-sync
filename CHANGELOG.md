@@ -2,6 +2,20 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (8)
+
+- Session-wrap-up audit: compared TODO.md's Phase 0 wording against what
+  was actually built. Found three drifts, all fixed: 0.1 said "pytest +
+  httpx" but the actual dev dependency is `httpx2` (Starlette deprecated
+  plain `httpx` in `TestClient` — see the 0.1 commit) — reworded to
+  "pytest + FastAPI's `TestClient`" instead of naming a library
+  underneath it, so this doesn't re-drift if that changes again; 0.2 said
+  "curl /health from inside a container" but the actual (and correct)
+  checkpoint curled the published port from the host — reworded to match;
+  `server/pyproject.toml` still had uv's placeholder description
+  ("Add your description here"), never filled in. Char counts
+  (codepoints): `TODO.md` 13488 → 13595 (+107).
+
 ## 2026-07-16 (7)
 
 - Checked the no-auto-restart Docker rule from entry (6) against Docker's

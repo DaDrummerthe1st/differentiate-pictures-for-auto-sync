@@ -23,14 +23,16 @@ design.
 ## Phase 0 — Minimal scaffold (only what auth needs, nothing more)
 
 0.1 `GET /health` returns `{"status":"ok"}`, 200. Write the test failing
-first (pytest + httpx), then the minimal FastAPI route to pass it.
-**Security**: response leaks no version/stack info.
+first (pytest + FastAPI's `TestClient`), then the minimal FastAPI route
+to pass it. **Security**: response leaks no version/stack info.
 
 0.2 Dockerfile (slim base) + docker-compose.yml with two services: `app`
 (bound to 127.0.0.1 only, explicit `mem_limit`) and `postgres` (official
 image, explicit `mem_limit`, named volume, conservative
 `max_connections`/`shared_buffers`). Compose smoke test: build the
-image, curl `/health` from inside a container. **Security**: no ports
+image, curl `/health` via the `app` container's published port
+(`127.0.0.1:8000`, from the host — not `docker exec` into the
+container). **Security**: no ports
 published except through the app service; no default/blank Postgres
 password — generated and passed via env var, never hardcoded. Also carried
 over from 0.1: uvicorn's default `Server: uvicorn` response header leaks
