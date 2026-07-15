@@ -2,6 +2,17 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (10)
+
+- Three more global rules added (`~/.claude/CLAUDE.md`), from Joakim
+  asking directly what would make communication more effective: doc-drift
+  audits become standing practice at every session close (not just
+  when asked — this session's three real drifts only got found because
+  they were explicitly requested); no placeholder tool calls (a couple
+  slipped through this session); denser bookkeeping updates for repeated
+  no-news cycles (test → commit → log-metrics → commit ran ~10+ times
+  today, each narrated individually).
+
 ## 2026-07-16 (9)
 
 - New global rule (`~/.claude/CLAUDE.md`): keep a current-status line in
