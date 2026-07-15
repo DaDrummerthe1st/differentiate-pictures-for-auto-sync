@@ -2,6 +2,19 @@
 
 One entry per revision, newest first.
 
+## 2026-07-15 (10)
+
+- Trimmed two cross-file/within-file duplications found while auditing
+  `documentation/` for excess length at Joakim's request: `VISION.md`
+  Pillar 3 fully restated the closed-vs-opt-in trust-boundary tension
+  already owned by `POLICY.md`'s Open questions section (POLICY.md's own
+  rule: nothing project-wide duplicates outside it) — now a one-line
+  pointer. `photo-server/README.md` repeated its own Non-negotiables
+  Postgres/pgvector reasoning in its closing paragraph — now stated
+  once. No information removed, only the second copy of each fact.
+  Char counts (codepoints): `VISION.md` 3718 → 3483 (−235),
+  `photo-server/README.md` 4057 → 4016 (−41); −276 net.
+
 ## 2026-07-15 (9)
 
 - Fixed a scope mismatch Joakim spotted by auditing every root

@@ -50,12 +50,8 @@ is "premiered" — given more access from the network — in exchange for
 giving it more information.
 
 **Open tension, not resolved**: this opt-in-for-privilege model sits
-against POLICY.md's "no data leaves the server" default for the current
-closed build. These are two different trust boundaries — a closed
-household server versus an opted-in sharing network — and any future
-design must keep them explicitly separate so the closed default never
-silently shifts. Tracked as an open question in
-[policies/POLICY.md](policies/POLICY.md).
+against the closed-by-default posture required elsewhere — tracked as an
+open question in [policies/POLICY.md](policies/POLICY.md).
 
 ## Pillar 4 — Multi-angle event reconstruction
 

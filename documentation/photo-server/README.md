@@ -74,6 +74,5 @@ AI-driven curation suggestions without an explicit decision to do so;
 those are separate, not-yet-scheduled pillars, not this folder's job.
 
 This is also why Postgres was chosen as the sole database engine (see
-the "Non-negotiables" above): pgvector runs inside the same instance, so
-no second database is needed if/when Pillar 2's on-device-inference
-direction reaches this folder.
+"Non-negotiables" above) — no second database will be needed if/when
+Pillar 2's on-device-inference direction reaches this folder.
