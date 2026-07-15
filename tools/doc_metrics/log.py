@@ -1,8 +1,9 @@
 """Snapshot *.md character counts, tied to a git commit. See README.md.
 
 Usage:
-  python3 tools/doc_metrics/log.py            # snapshot the current HEAD commit
-  python3 tools/doc_metrics/log.py --backfill  # snapshot every commit in history
+  python3 tools/doc_metrics/log.py                        # snapshot HEAD
+  python3 tools/doc_metrics/log.py --task "photo-server 0.3"  # tag it with a task
+  python3 tools/doc_metrics/log.py --backfill              # snapshot every commit in history
 """
 from __future__ import annotations
 
@@ -14,7 +15,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from metrics import (  # noqa: E402
-    build_snapshot,
     build_snapshot_from_pairs,
     persist_snapshot,
     rebuild_db_from_jsonl,
@@ -29,15 +29,18 @@ def _git(*args: str) -> str:
     return subprocess.check_output(["git", *args], cwd=REPO_ROOT, text=True).strip()
 
 
-def log_current_commit() -> None:
+def log_current_commit(task: str | None = None) -> None:
     commit_hash = _git("rev-parse", "HEAD")
     branch = _git("rev-parse", "--abbrev-ref", "HEAD")
     recorded_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    snapshot = build_snapshot(REPO_ROOT)
-    persist_snapshot(snapshot, DB_PATH, JSONL_PATH, commit_hash, branch, recorded_at)
+    paths = _md_files_at_commit(commit_hash)
+    pairs = [(p, _read_file_at_commit(commit_hash, p)) for p in paths]
+    snapshot = build_snapshot_from_pairs(pairs)
+    persist_snapshot(snapshot, DB_PATH, JSONL_PATH, commit_hash, branch, recorded_at, task)
     total = sum(f.char_count for f in snapshot)
     print(f"Recorded {len(snapshot)} files, {total} total characters, "
-          f"at commit {commit_hash[:10]} ({branch}).")
+          f"at commit {commit_hash[:10]} ({branch})"
+          + (f", task={task!r}." if task else "."))
 
 
 def _commits_oldest_first() -> list[tuple[str, str]]:
@@ -75,6 +78,10 @@ def main() -> None:
     parser.add_argument(
         "--rebuild-db", action="store_true", help="rebuild metrics.db from the git-tracked metrics.jsonl"
     )
+    parser.add_argument(
+        "--task", default=None,
+        help="label this snapshot with the TODO task/outcome it served, e.g. 'photo-server 0.3'",
+    )
     args = parser.parse_args()
     if args.rebuild_db:
         rebuild_db_from_jsonl(DB_PATH, JSONL_PATH)
@@ -82,7 +89,7 @@ def main() -> None:
     elif args.backfill:
         backfill()
     else:
-        log_current_commit()
+        log_current_commit(args.task)
 
 
 if __name__ == "__main__":

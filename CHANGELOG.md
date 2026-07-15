@@ -2,6 +2,27 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (12)
+
+- Fixed a real bug in `tools/doc_metrics` found while confirming its
+  char/token tracking to Joakim: `discover_md_files` was a raw filesystem
+  walk (`root.rglob("*.md")`), so every regular post-commit `log.py` run
+  (not `--backfill`, which already used `git ls-tree` correctly) picked
+  up vendored `*.md` files inside gitignored `server/.venv/` — license
+  files, a bundled FastAPI skill doc. ~21.6% of all summed characters
+  logged to date (427,518 of 1,974,536) was this pollution, and it broke
+  the tool's own "every snapshot scoped identically" goal since `.venv`
+  contents vary per machine/install. Fixed by scoping to `git ls-files`
+  instead; historical `metrics.jsonl` rows left as-is (append-only, same
+  precedent as the earlier codepoint-vs-`wc -c` switch), documented in
+  `tools/doc_metrics/README.md`. Also added `--task` to `log.py` (labels
+  a snapshot with the TODO item/outcome it served) and `--by-task` to
+  `report.py` (cost grouped by task) — Joakim wants doc growth traceable
+  to what it paid for, not just tracked in the aggregate. `uv run
+  pytest`/`unittest` both green (14/14); `metrics.db` rebuilt from the
+  git-tracked jsonl to pick up the new `task` column. Doc character
+  counts: `tools/doc_metrics/README.md` 3662 → 5219 (+1557).
+
 ## 2026-07-16 (11)
 
 - Implemented photo-server TODO.md step 0.3: `users` table (id, email,

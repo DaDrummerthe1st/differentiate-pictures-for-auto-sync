@@ -15,13 +15,30 @@ count once em dashes or other multi-byte characters are involved).
   em dashes. Going forward, all entries use this script's codepoint
   count — treat the switchover as a one-time methodology note, not a
   regression.
-- **Scope = every `*.md` file in the repo**, found recursively from the
-  repo root. Not configurable per run, so every snapshot is scoped
-  identically — that's what makes commits comparable to each other.
+- **Scope = every `*.md` file *tracked by git*** — `git ls-files`, not a
+  filesystem walk. This is a deliberate correction too: `discover_md_files`
+  used to be `root.rglob("*.md")`, which silently picked up vendored `*.md`
+  files inside gitignored directories (`server/.venv/`'s package license
+  files, a bundled FastAPI agent-skill doc) — text that isn't this repo's
+  documentation and varies by whatever happens to be installed locally,
+  which broke the "every snapshot scoped identically" goal below. Fixed at
+  commit-time of this note; historical `metrics.jsonl` rows logged before
+  the fix (all under `log_current_commit`, never `--backfill`, which
+  already used `git ls-tree` and was unaffected) still contain that
+  pollution — same precedent as the codepoint-vs-`wc -c` switch above,
+  left as-is rather than rewritten, since the jsonl is append-only.
+  ~21.6% of all summed characters logged to date (427,518 of 1,974,536)
+  came from this bug.
 - **Granularity = one row per file per commit.** Folder- or repo-level
   totals (e.g. what CHANGELOG.md entries report) are always a `SUM()`
   over these rows, never stored separately — one source of truth, no
   risk of the aggregate drifting from the detail.
+- **Task linkage, optional.** Every row can carry a `task` label (e.g.
+  `"photo-server 0.3"`) via `log.py --task "..."`, answering not just
+  *how much* documentation grew but *what it paid for* — which TODO
+  item or outcome the growth served. Older rows have no `task` key at
+  all (not just `null`) — code reading `metrics.jsonl` directly must use
+  `.get("task")`, never `["task"]`.
 
 ## Files
 
@@ -33,7 +50,10 @@ count once em dashes or other multi-byte characters are involved).
   and snapshots every commit that already exists, so the trend doesn't
   start empty.
 - `report.py` — CLI. Prints char count, delta from the previous logged
-  commit, and an estimated token count per commit.
+  commit, and an estimated token count per commit, plus the `task` label
+  if that commit was tagged with one. `--by-task` instead prints total
+  char/token cost grouped by `task` label — sorted by most expensive
+  first — to answer "how much did TODO item X cost in documentation."
 - `metrics.jsonl` — append-only, **git-tracked**. One JSON line per
   (commit, file). This is the durable record — per CLAUDE.md's
   self-sufficiency rule, the data has to live in the repo, not only in a
@@ -69,5 +89,7 @@ permanent, harmless one-line-per-commit lag, not something to chase.
 python3 -m unittest tools.doc_metrics.test_metrics -v   # tests
 python3 tools/doc_metrics/log.py --backfill              # one-time, history to date
 python3 tools/doc_metrics/log.py                         # after each commit touching *.md
+python3 tools/doc_metrics/log.py --task "photo-server 0.3"  # ...tagged with the task it served
 python3 tools/doc_metrics/report.py                       # see the trend
+python3 tools/doc_metrics/report.py --by-task             # see cost grouped by task
 ```

@@ -4,6 +4,7 @@ python3 -m unittest tools.doc_metrics.test_metrics -v
 """
 import json
 import sqlite3
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -11,6 +12,17 @@ from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).parent))
 import metrics  # noqa: E402
+
+
+def _init_git_repo(root: Path) -> None:
+    subprocess.run(
+        ["git", "init", "-q"], cwd=root, check=True,
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    )
+
+
+def _git_add(root: Path, *paths: str) -> None:
+    subprocess.run(["git", "add", *paths], cwd=root, check=True)
 
 
 class CharCountTests(unittest.TestCase):
@@ -23,15 +35,34 @@ class CharCountTests(unittest.TestCase):
 
 
 class DiscoverMdFilesTests(unittest.TestCase):
-    def test_finds_only_markdown_files_recursively(self):
+    def test_finds_only_git_tracked_markdown_files(self):
         with TemporaryDirectory() as tmp:
             root = Path(tmp)
+            _init_git_repo(root)
             (root / "sub").mkdir()
             (root / "a.md").write_text("x")
             (root / "sub" / "b.md").write_text("y")
             (root / "ignore.txt").write_text("z")
+            (root / "untracked.md").write_text("w")
+            _git_add(root, "a.md", "sub/b.md", "ignore.txt")
             found = metrics.discover_md_files(root)
             self.assertEqual(sorted(p.name for p in found), ["a.md", "b.md"])
+
+    def test_excludes_gitignored_vendored_files_like_venv(self):
+        # regression test: discover_md_files used to be a raw filesystem
+        # walk (root.rglob("*.md")), which picked up vendored *.md files
+        # inside gitignored directories such as .venv — inflating char
+        # counts with third-party license text that isn't this repo's
+        # documentation and varies per machine/install.
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _init_git_repo(root)
+            (root / ".venv" / "pkg").mkdir(parents=True)
+            (root / ".venv" / "pkg" / "LICENSE.md").write_text("vendored license")
+            (root / "real.md").write_text("actual docs")
+            _git_add(root, "real.md")
+            found = metrics.discover_md_files(root)
+            self.assertEqual(sorted(p.name for p in found), ["real.md"])
 
 
 class BuildSnapshotFromPairsTests(unittest.TestCase):
@@ -48,7 +79,9 @@ class RecordSnapshotTests(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             root = Path(tmp) / "repo"
             root.mkdir()
+            _init_git_repo(root)
             (root / "a.md").write_text("hello")
+            _git_add(root, "a.md")
             db_path = Path(tmp) / "metrics.db"
             jsonl_path = Path(tmp) / "metrics.jsonl"
 
@@ -70,11 +103,63 @@ class RecordSnapshotTests(unittest.TestCase):
             self.assertEqual(record["chars"], 5)
             self.assertEqual(record["commit"], "abc123")
 
+    def test_task_is_stored_per_row_in_db_and_jsonl(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repo"
+            root.mkdir()
+            _init_git_repo(root)
+            (root / "a.md").write_text("hello")
+            _git_add(root, "a.md")
+            db_path = Path(tmp) / "metrics.db"
+            jsonl_path = Path(tmp) / "metrics.jsonl"
+
+            metrics.record_snapshot(
+                root, db_path, jsonl_path, "abc123", "main",
+                "2026-07-15T20:00:00+00:00", task="photo-server TODO 0.3",
+            )
+
+            conn = sqlite3.connect(db_path)
+            row = conn.execute(
+                "SELECT task FROM doc_char_counts WHERE commit_hash = 'abc123'"
+            ).fetchone()
+            conn.close()
+            self.assertEqual(row[0], "photo-server TODO 0.3")
+
+            line = jsonl_path.read_text(encoding="utf-8").strip()
+            record = json.loads(line)
+            self.assertEqual(record["task"], "photo-server TODO 0.3")
+
+    def test_task_defaults_to_null_when_not_given(self):
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp) / "repo"
+            root.mkdir()
+            _init_git_repo(root)
+            (root / "a.md").write_text("hello")
+            _git_add(root, "a.md")
+            db_path = Path(tmp) / "metrics.db"
+            jsonl_path = Path(tmp) / "metrics.jsonl"
+
+            metrics.record_snapshot(
+                root, db_path, jsonl_path, "abc123", "main", "2026-07-15T20:00:00+00:00"
+            )
+
+            conn = sqlite3.connect(db_path)
+            row = conn.execute(
+                "SELECT task FROM doc_char_counts WHERE commit_hash = 'abc123'"
+            ).fetchone()
+            conn.close()
+            self.assertIsNone(row[0])
+
+            record = json.loads(jsonl_path.read_text(encoding="utf-8").strip())
+            self.assertIsNone(record["task"])
+
     def test_rerunning_for_same_commit_does_not_duplicate_rows_or_lines(self):
         with TemporaryDirectory() as tmp:
             root = Path(tmp) / "repo"
             root.mkdir()
+            _init_git_repo(root)
             (root / "a.md").write_text("hello")
+            _git_add(root, "a.md")
             db_path = Path(tmp) / "metrics.db"
             jsonl_path = Path(tmp) / "metrics.jsonl"
 
@@ -97,7 +182,9 @@ class RecordSnapshotTests(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             root = Path(tmp) / "repo"
             root.mkdir()
+            _init_git_repo(root)
             (root / "a.md").write_text("hello")
+            _git_add(root, "a.md")
             db_path = Path(tmp) / "metrics.db"
             jsonl_path = Path(tmp) / "metrics.jsonl"
 
@@ -122,7 +209,9 @@ class RebuildDbFromJsonlTests(unittest.TestCase):
         with TemporaryDirectory() as tmp:
             root = Path(tmp) / "repo"
             root.mkdir()
+            _init_git_repo(root)
             (root / "a.md").write_text("hello")
+            _git_add(root, "a.md")
             db_path = Path(tmp) / "metrics.db"
             jsonl_path = Path(tmp) / "metrics.jsonl"
             metrics.record_snapshot(
