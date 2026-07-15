@@ -9,17 +9,14 @@ application/MVP/POC for this project. Confirmed scope so far:
 - Operates on pictures that **already exist on this same server/machine**
   (not a new upload flow, not the sync/distributed phase — that's
   [../distributed-sync/](../distributed-sync/README.md)).
-- Has a **specific purpose** — not yet defined. The next session needs to
-  ask Joakim what that purpose is (e.g. is this the discard/save/mark
-  sorting workflow described below, a viewer, a labeling tool, something
-  narrower?) before building — don't assume it's the full workflow below
-  just because it's the closest existing spec.
+- Has a **specific purpose** — not yet defined. Ask Joakim before
+  building (discard/save/mark workflow, a viewer, a labeling tool,
+  something narrower?) — don't assume the full spec below is the scope
+  just because it's the closest match.
 
-This is the natural next step of phase 1 (handle pictures) from the
-overall roadmap — see the root [README.md](../../README.md) feature list
-and the sections below for the fullest existing spec of what "handling
-pictures" was expected to cover, but treat that as background, not a
-locked-in MVP scope.
+Natural next step of phase 1 (handle pictures) — see the root
+[README.md](../../README.md) feature list and the sections below for the
+fullest existing spec, but treat it as background, not locked-in scope.
 
 ## Known drift
 

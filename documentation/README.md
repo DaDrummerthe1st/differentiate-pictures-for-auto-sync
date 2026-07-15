@@ -1,8 +1,7 @@
 # documentation/
 
-Project documentation, organized by topic. See
-[CLAUDE.md](../CLAUDE.md) at the repo root for how this folder is
-structured and maintained.
+Project documentation, organized by topic. Structure/maintenance rules:
+[CLAUDE.md](../CLAUDE.md).
 
 | Folder | What's there |
 | --- | --- |

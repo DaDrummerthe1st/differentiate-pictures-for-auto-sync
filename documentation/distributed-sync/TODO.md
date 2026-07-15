@@ -11,9 +11,8 @@ the initial documentation session:
 - On mobile devices not yet synced with the server: rename discarded
   files so common gallery apps don't surface them; keep a local temp
   database of choices and sync it once connectivity is available.
-- Self-hosted NAS device spec (router with two NICs + file system,
-  hardware-agnostic including Raspberry Pi) — see
-  [README.md](README.md) for the full vision as described so far.
+- Self-hosted NAS device spec — see [README.md](README.md) for the full
+  vision as described so far.
 - Shared/distributed file system where users can dedicate spare storage
   and AI compute in exchange for shared access — architecture not yet
   decided.

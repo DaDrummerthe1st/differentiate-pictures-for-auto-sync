@@ -2,6 +2,18 @@
 
 One entry per revision, newest first.
 
+## 2026-07-15 (3)
+
+- Trimmed `documentation/` for redundancy: the "roadmap addendum
+  expected from Joakim" note was stated near-verbatim in three files
+  (distributed-sync README, its TODO, and POLICY.md) — now stated once
+  in TODO.md's open question, with the other two pointing at it. Also
+  de-duplicated a NAS-spec restatement and a security/privacy-posture
+  restatement, and tightened wordy passages in `picture-handling/TODO.md`
+  and the top-level `documentation/README.md`. No meaning changed; the
+  SETI@home analogy was deliberately kept since it's the origin of the
+  idea, not just flavor text. 8,950 → 8,430 characters.
+
 ## 2026-07-15 (2)
 
 - Noted the next session's starting point in

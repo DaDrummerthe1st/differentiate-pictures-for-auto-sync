@@ -16,9 +16,8 @@ volunteer-computing projects like SETI@home, but for storage/AI
 resourcing instead of signal analysis. The bottom line is autonomy: no
 single point of dependency on a third-party quota.
 
-A full roadmap addendum for this phase is expected from Joakim in a
-future session — treat the above as the shape of the idea, not a spec to
-build against yet.
+Not yet a committed design — see [TODO.md](TODO.md)'s open question for
+what's still unresolved.
 
 ## Relevant external tools
 

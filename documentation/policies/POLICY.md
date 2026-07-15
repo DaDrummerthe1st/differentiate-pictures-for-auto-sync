@@ -7,8 +7,8 @@ high-blast-radius definition), see [CLAUDE.md](../../CLAUDE.md).
 
 ## Privacy and safety
 
-- The whole project retains a safety-first posture, applied to every
-  change, not only ones that look security-related.
+- Applies to every change, not just ones that look security-related
+  (see CLAUDE.md's "Security and privacy first" rule).
 - This app extracts and stores EXIF/GPS metadata from personal photos
   (see `app/gpsdata.py`). Location data is sensitive by default — never
   transmit, log, or expose it more broadly than the feature being built
@@ -39,7 +39,6 @@ high-blast-radius definition), see [CLAUDE.md](../../CLAUDE.md).
 ## Open questions
 
 Nothing project-wide is unresolved right now beyond what's tracked in
-each topic folder's `TODO.md`. A fuller roadmap addendum covering the
-distributed-sync vision is expected in a future session — until then,
-[../distributed-sync/TODO.md](../distributed-sync/TODO.md) captures only
-the high-level shape Joakim described, not a committed design.
+each topic folder's `TODO.md` — see
+[../distributed-sync/TODO.md](../distributed-sync/TODO.md) for the
+current open item there.
