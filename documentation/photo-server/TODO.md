@@ -32,8 +32,13 @@ image, explicit `mem_limit`, named volume, conservative
 `max_connections`/`shared_buffers`). Compose smoke test: build the
 image, curl `/health` from inside a container. **Security**: no ports
 published except through the app service; no default/blank Postgres
-password — generated and passed via env var, never hardcoded. (human
-checkpoint: run the smoke test yourself, confirm the curl response.)
+password — generated and passed via env var, never hardcoded. Also carried
+over from 0.1: uvicorn's default `Server: uvicorn` response header leaks
+the stack — the Dockerfile `CMD`/compose command must launch uvicorn with
+`server_header=False` (confirmed via `uv run uvicorn app.main:app` + curl
+against 0.1's route that the default leaks this; TestClient can't catch
+it since it bypasses the real transport). (human checkpoint: run the
+smoke test yourself, confirm the curl response.)
 
 0.3 `users` table only (id, email, password_hash, role, created_at) —
 nothing else from the full schema yet. Test: round-trip insert/read,

@@ -2,6 +2,26 @@
 
 One entry per revision, newest first.
 
+## 2026-07-15 (11)
+
+- Implemented photo-server TODO.md step 0.1 (`GET /health`) via TDD:
+  failing pytest first, then the minimal FastAPI route. System had no
+  `pip`/working `venv` (`ensurepip` missing, no `python3-venv` package) —
+  a system-level install per POLICY.md, so handed the fix to Joakim as a
+  copyable `apt install` command; he redirected to `uv` instead, which
+  needs no system package and resolved everything into `server/.venv`.
+  New `server/` is a self-contained uv project (`fastapi`, `uvicorn`,
+  `pytest`, `httpx2` — not plain `httpx`, since Starlette's `TestClient`
+  now deprecates it in favor of `httpx2`, confirmed by reading
+  `starlette/testclient.py` rather than assuming). Manually ran the app
+  and curled it for real (TestClient can't see this, since it bypasses
+  the transport layer) and found uvicorn's default `Server: uvicorn`
+  header leaks the stack, failing 0.1's own Security line; rather than
+  fix it in-place (scope belongs to whichever step defines the real run
+  command), added a tracked note to TODO.md step 0.2 to launch with
+  `server_header=False`. Char counts (codepoints): `TODO.md` 12629 →
+  12977 (+348).
+
 ## 2026-07-15 (10)
 
 - Trimmed two cross-file/within-file duplications found while auditing
