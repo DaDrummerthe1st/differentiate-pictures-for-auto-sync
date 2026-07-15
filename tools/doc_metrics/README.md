@@ -55,6 +55,14 @@ billable figure. Actual API cost additionally depends on current
 per-model pricing, which isn't tracked here because it changes
 independently of anything in this repo.
 
+## One-commit lag (expected, not a bug)
+
+`log.py` records the *current* HEAD, so it can only be run after a
+commit exists — a commit's own snapshot always lands in the jsonl update
+that gets committed next, one commit behind. This project never amends
+commits (see CLAUDE.md), so there's no way to close that gap; it's a
+permanent, harmless one-line-per-commit lag, not something to chase.
+
 ## Running it
 
 ```
