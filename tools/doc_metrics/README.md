@@ -36,9 +36,17 @@ count once em dashes or other multi-byte characters are involved).
 - **Task linkage, optional.** Every row can carry a `task` label (e.g.
   `"photo-server 0.3"`) via `log.py --task "..."`, answering not just
   *how much* documentation grew but *what it paid for* — which TODO
-  item or outcome the growth served. Older rows have no `task` key at
-  all (not just `null`) — code reading `metrics.jsonl` directly must use
-  `.get("task")`, never `["task"]`.
+  item or outcome the growth served. Rows logged without `--task` have
+  no `task` key at all (not just `null`) — code reading `metrics.jsonl`
+  directly must use `.get("task")`, never `["task"]`.
+- **jsonl keys = sqlite column names, exactly.** Renamed for readability
+  (`ts`→`recorded_at`, `commit`→`commit_hash`, `file`→`file_path`,
+  `chars`→`char_count`; `branch`/`task` were already clear) and so the
+  two representations of the same data never drift into different
+  vocabularies. Applied retroactively to all existing rows — a pure
+  key-rename, no values touched — as a value-preserving exception to
+  "jsonl is append-only": renaming a key's spelling isn't rewriting a
+  past *entry*'s meaning the way editing a CHANGELOG line would be.
 
 ## Files
 

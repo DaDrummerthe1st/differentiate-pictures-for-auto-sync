@@ -99,9 +99,9 @@ class RecordSnapshotTests(unittest.TestCase):
             lines = jsonl_path.read_text(encoding="utf-8").strip().splitlines()
             self.assertEqual(len(lines), 1)
             record = json.loads(lines[0])
-            self.assertEqual(record["file"], "a.md")
-            self.assertEqual(record["chars"], 5)
-            self.assertEqual(record["commit"], "abc123")
+            self.assertEqual(record["file_path"], "a.md")
+            self.assertEqual(record["char_count"], 5)
+            self.assertEqual(record["commit_hash"], "abc123")
 
     def test_task_is_stored_per_row_in_db_and_jsonl(self):
         with TemporaryDirectory() as tmp:

@@ -102,7 +102,7 @@ def _jsonl_has_commit(jsonl_path: Path, commit_hash: str) -> bool:
     with jsonl_path.open(encoding="utf-8") as fh:
         for line in fh:
             line = line.strip()
-            if line and json.loads(line).get("commit") == commit_hash:
+            if line and json.loads(line).get("commit_hash") == commit_hash:
                 return True
     return False
 
@@ -120,11 +120,11 @@ def append_jsonl(
             fh.write(
                 json.dumps(
                     {
-                        "ts": recorded_at,
-                        "commit": commit_hash,
+                        "recorded_at": recorded_at,
+                        "commit_hash": commit_hash,
                         "branch": branch,
-                        "file": item.file_path,
-                        "chars": item.char_count,
+                        "file_path": item.file_path,
+                        "char_count": item.char_count,
                         "task": task,
                     }
                 )
@@ -174,11 +174,11 @@ def rebuild_db_from_jsonl(db_path: Path, jsonl_path: Path) -> None:
                         task = excluded.task
                     """,
                     (
-                        row["ts"],
-                        row["commit"],
+                        row["recorded_at"],
+                        row["commit_hash"],
                         row["branch"],
-                        row["file"],
-                        row["chars"],
+                        row["file_path"],
+                        row["char_count"],
                         row.get("task"),
                     ),
                 )

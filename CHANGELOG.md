@@ -2,6 +2,19 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (13)
+
+- Renamed `metrics.jsonl`'s keys to match `metrics.db`'s column names
+  exactly (`ts`→`recorded_at`, `commit`→`commit_hash`, `file`→
+  `file_path`, `chars`→`char_count`), per Joakim's readability ask.
+  Applied to all 736 existing rows — a pure key-rename, values
+  untouched, so kept despite the append-only design (renaming a key's
+  spelling isn't rewriting a past entry's meaning). Also clarified for
+  Joakim that `metrics.db` was already gitignored (never committed), so
+  the jsonl+db split isn't paying a double storage cost in git — only
+  `metrics.jsonl` is. Doc character counts:
+  `tools/doc_metrics/README.md` 5219 → 5789 (+570).
+
 ## 2026-07-16 (12)
 
 - Fixed a real bug in `tools/doc_metrics` found while confirming its
