@@ -2,6 +2,17 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (4)
+
+- Merged `photo-server-planning` into `master` (fast-forward, no
+  conflicts) per Joakim's specified procedure: pull the feature branch,
+  pull master, merge master into the feature branch first, only then
+  fast-forward master onto it. Fixed a stale status line in
+  `documentation/photo-server/README.md` — it still said "planning only,
+  no code written yet" after 0.1 and 0.2 were both built and
+  checkpointed this session. Char counts (codepoints): `README.md`
+  4031 → 4186 (+155).
+
 ## 2026-07-16 (3)
 
 - Step 0.2 human checkpoint passed: Joakim ran `docker compose up --build`

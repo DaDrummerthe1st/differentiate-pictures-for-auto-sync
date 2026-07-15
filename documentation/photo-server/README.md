@@ -8,13 +8,15 @@ existing single-machine, single-user Python sorting tool) and from
 [../distributed-sync/](../distributed-sync/README.md) (future multi-device
 P2P sync — not started, unaffected by this work).
 
-Status: **planning only, no code written yet.** This folder absorbs two
-external planning documents Joakim supplied in chat — a build plan and a
-GUI spec amendment — into the repo's permanent documentation, per
-[CLAUDE.md](../../CLAUDE.md)'s self-sufficiency rule. Those two source
-documents are not kept as separate files here; their content is distilled
-into the files below so there is one place to read, not several competing
-drafts.
+Status: **Phase 0 scaffold done and checkpointed** (TODO.md 0.1–0.2:
+`GET /health`, Dockerfile + compose, both verified against a real
+`docker compose up`). Next up is 0.3 (`users` table). This folder
+originally absorbed two external planning documents Joakim supplied in
+chat — a build plan and a GUI spec amendment — into the repo's permanent
+documentation, per [CLAUDE.md](../../CLAUDE.md)'s self-sufficiency rule.
+Those two source documents were not kept as separate files here; their
+content was distilled into the files below so there is one place to
+read, not several competing drafts.
 
 ## Contents
 
