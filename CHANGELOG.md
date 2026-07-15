@@ -2,6 +2,32 @@
 
 One entry per revision, newest first.
 
+## 2026-07-15 (7)
+
+- Added `tools/doc_metrics/`: TDD'd (stdlib `unittest`, pytest isn't
+  installed in this environment) character-count logging so the
+  character-count-change rule is measured the same way every time
+  instead of ad hoc `wc -c`. `metrics.py` counts Unicode codepoints per
+  `*.md` file; `log.py` snapshots the current commit (or `--backfill`s
+  the full history via read-only `git show`/`git ls-tree`, never
+  touching the working tree); `report.py` prints char count, delta, and
+  an approximate token count (chars/4, explicitly labeled as directional
+  only — real cost also depends on current model pricing, not tracked
+  here) per commit. `metrics.jsonl` is git-tracked (the durable record,
+  per the self-sufficiency rule); `metrics.db` (SQLite) is gitignored,
+  local, and rebuildable from the jsonl via `--rebuild-db`. Backfilled
+  all 77 existing commits. Also fixed two `.gitignore` gaps found while
+  doing this: `.claude/settings.local.json` was untracked but not
+  ignored (risk of accidentally committing local permission config), and
+  `__pycache__/` wasn't ignored anywhere. Corrected the character-count
+  methodology itself: earlier entries in this file used `wc -c` (byte
+  count), which runs ~0.8% high on this repo's docs because of em
+  dashes; from here on, counts are Unicode codepoints via this tool —
+  noted as a one-time methodology switch, not a discrepancy to chase.
+  `documentation/`: 39,113 characters (codepoint count, not directly
+  comparable to prior entries' byte counts). `CLAUDE.md`: 6,178
+  characters.
+
 ## 2026-07-15 (6)
 
 - Captured Joakim's long-term system vision (four pillars: distributed

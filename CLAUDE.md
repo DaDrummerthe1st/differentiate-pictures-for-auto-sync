@@ -43,7 +43,11 @@ see the self-sufficiency rule below.
 - **Report the character-count change** for every documentation edit —
   before → after count for the file or folder touched, in the
   CHANGELOG.md entry and in the session's closing summary. Makes drift
-  and bloat visible over time instead of assumed.
+  and bloat visible over time instead of assumed. Measure it with
+  [tools/doc_metrics](tools/doc_metrics/README.md) (`log.py` after
+  committing, `report.py` to see the trend) rather than ad hoc `wc`
+  calls, so every session's numbers use the same method and stay
+  comparable to each other.
 - **Commit continuously**: commit coherent chunks of work as you go, not
   one giant commit at the end of a session. This is standing
   authorization to commit without asking first. It does NOT cover push,
