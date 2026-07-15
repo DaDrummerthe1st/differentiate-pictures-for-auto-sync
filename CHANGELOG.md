@@ -2,6 +2,20 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16
+
+- Fixed `server/docker-compose.yml`'s postgres volume mount: it targeted
+  `/var/lib/postgresql/data`, the pre-18 convention, which postgres:18+
+  refuses to start against (`pg_ctlcluster`-style versioned layout now
+  expected). Root cause was a research gap I should have caught before
+  writing the file, not a new discovery — 0.2's own commit already cited
+  a web search noting "PostgreSQL 18 using /var/lib/postgresql/18/docker"
+  but that fact never got applied to the actual mount path. Confirmed
+  the fix (mount at `/var/lib/postgresql`, not `.../data`) against
+  docker-library/docs's postgres content.md before changing it, rather
+  than guessing a second time. Found via Joakim running the step 0.2
+  checkpoint himself and hitting the failure.
+
 ## 2026-07-15 (13)
 
 - Wrote and built (not run) photo-server TODO.md step 0.2: `server/Dockerfile`

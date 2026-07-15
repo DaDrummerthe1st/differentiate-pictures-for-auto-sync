@@ -14,7 +14,7 @@ services:
       POSTGRES_USER: photo_server
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in server/.env, never hardcode it}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     mem_limit: 512m
     restart: unless-stopped
 
