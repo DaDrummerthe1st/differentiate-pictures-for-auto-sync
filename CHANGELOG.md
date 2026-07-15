@@ -2,6 +2,17 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (9)
+
+- New global rule (`~/.claude/CLAUDE.md`): keep a current-status line in
+  each project's entry doc, updated whenever a phase/step completes.
+  Prompted by this session's own experience — asked to estimate a fresh
+  session's catch-up cost, the answer came out to ~500-800 characters
+  specifically because `documentation/photo-server/README.md`'s status
+  line had just been fixed from stale ("planning only, no code written
+  yet") to current. Generalizing that habit the same way the CHANGELOG
+  discipline was generalized earlier today.
+
 ## 2026-07-16 (8)
 
 - Session-wrap-up audit: compared TODO.md's Phase 0 wording against what
