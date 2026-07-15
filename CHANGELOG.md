@@ -2,6 +2,34 @@
 
 One entry per revision, newest first.
 
+## 2026-07-15 (8)
+
+- Untracked 5 `.pyc` files under `app/*/__pycache__/` that were
+  committed before `__pycache__/` was added to `.gitignore` last
+  entry — `git rm --cached`, files kept on disk. Confirmed via
+  `git ls-files -i -c --exclude-standard` that nothing else tracked
+  matches any `.gitignore` pattern.
+- Researched current CVEs (real web search, not training-data guesses)
+  for every package in `requirements.txt`, which had no version pins at
+  all, and pinned each to the latest patched release: `Pillow==12.3.0`
+  (fixes CVE-2026-25990, CVE-2026-42308, CVE-2026-42309, CVE-2026-55379,
+  CVE-2026-55380), `mysql-connector-python==9.7.0` (well past
+  CVE-2024-21272 and CVE-2025-21548), `numpy==2.5.1`, `opencv-python==5.0.0.93`
+  (bundles a libwebp/libvpx build; 5.0.0.93 is current),
+  `exif==1.6.1` and `python-magic==0.4.27` (both already the latest
+  release on PyPI — no newer version exists, no known CVEs found for
+  either). **Unverified**: this sandbox has no `pip`/`ensurepip`, so
+  none of this could actually be installed and run against `app/` —
+  numpy 2.x and opencv-python 5.x are major version bumps with real
+  breaking-change risk (numpy 2.0's ABI break in particular). Flagged in
+  `picture-handling/TODO.md`'s Known Drift for Joakim to verify on a
+  machine with pip before trusting it. Also noted, but deliberately not
+  acted on (system-level, outside this session's authority per
+  POLICY.md): Python 3.12.13 is the current security-patch release for
+  this repo's 3.12 branch, vs. the 3.12.3 recorded in
+  `photo-server/HARDWARE.md`.
+  `documentation/`: 39,441 → 39,976 characters.
+
 ## 2026-07-15 (7)
 
 - Added `tools/doc_metrics/`: TDD'd (stdlib `unittest`, pytest isn't
