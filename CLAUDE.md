@@ -1,0 +1,102 @@
+# Working agreement
+
+This file is the working agreement between Joakim and any AI session (or
+future human contributor) working in this repo. The repo is the memory —
+see the self-sufficiency rule below.
+
+## Non-negotiables
+
+- **Security and privacy first**: consider it for every change, not just
+  ones that look security-related. This app handles personal photos and
+  EXIF/GPS metadata, and is heading toward a distributed system that will
+  hold other people's data too — privacy is a first-class constraint from
+  day one, not something bolted on once sync exists.
+- **Test-Driven Development**: write a failing test before the
+  implementation for new functionality where practical. Run the FULL test
+  suite before every commit, even for changes that look unrelated or
+  untestable (e.g. a config or docs-only edit) — cheap insurance against
+  regressions that aren't obvious from reading the diff.
+- **Ask or search — never guess.** If a fact is unknown or uncertain (a
+  library's current API/version, a legal/compliance detail, a business
+  rule, anything project-specific not already stated here) stop and either
+  ask directly or run a real web search. Never present an assumption or a
+  plausible-sounding guess as fact.
+- **This repo is fully self-sufficient — no external memory required.** A
+  human developer, or a fresh AI session with zero prior context, must be
+  able to pick this project up entirely from what's checked in here.
+  Decision history, status, future plans, and reusable lessons belong in
+  this repo (CLAUDE.md, POLICY.md, CHANGELOG.md, the relevant
+  README/TODO per topic) — never only in a private/local AI memory store.
+- **Documentation stays current**: when a change affects schema, API
+  surface, or architecture, update the relevant doc in the same pass —
+  don't let docs drift from what the code does. (Known existing drift:
+  see [documentation/picture-handling/TODO.md](documentation/picture-handling/TODO.md)
+  for the MySQL-vs-PostgreSQL mismatch.)
+- **Lean and compact**: no filler, no restating what's already documented
+  elsewhere, no speculative abstraction for hypothetical future needs.
+  Documentation should be thorough but slim — sectioned, skimmable, no
+  duplication between files.
+- **One revision per update**: add a new entry to the top of
+  CHANGELOG.md for every meaningful change (what + why, one or two
+  lines) — newest first. Never rewrite or reorder past entries.
+- **Commit continuously**: commit coherent chunks of work as you go, not
+  one giant commit at the end of a session. This is standing
+  authorization to commit without asking first. It does NOT cover push,
+  force-push, history rewrites, or any other high-blast-radius action
+  (defined below) — those are never run directly, only ever handed over
+  as a copyable command for Joakim to run himself.
+- **Argue with evidence**: if a proposal (naming, structure, approach)
+  has a concrete best-practice or precedent-based counter-argument, raise
+  it and explain the trade-off before implementing it as asked — don't
+  default to agreement, and don't silently substitute your own
+  preference either.
+- **Ask for constraints before high-blast-radius work**, rather than
+  waiting for them to surface organically mid-task.
+- **Copyable text goes in one fenced code block** — any text meant to be
+  copied verbatim (commands, handoff prompts, etc.), never inline prose
+  mixed with bold/headers.
+- **End substantive sessions with both a durable record and a chat
+  summary.**
+
+## What counts as high-blast-radius here
+
+Human-in-the-loop required — draft the action, hand it over, don't
+execute it directly:
+
+- **Running the app against the real photo library.** The discard / save
+  / mark workflow moves and deletes actual files. Only run it against
+  `resources/testpics` (or other clearly-disposable fixtures) without
+  asking first.
+- **Database schema changes** — `CREATE`/`ALTER`/`DROP` or anything else
+  structural, and anything touching the gitignored credentials in
+  `app/local_mysql.py` (name is legacy — see the Postgres note in
+  [documentation/picture-handling/TODO.md](documentation/picture-handling/TODO.md)).
+- **Any system-level install or config** — Docker, a database server, NAS
+  OS setup, network configuration. Claude has no sudo access on this
+  machine and must not attempt such installs; always hand the commands to
+  Joakim.
+- **Deployment of any kind** — same rule as above: deployment is always
+  performed by Joakim, never automated by the AI session.
+- **`git push`, force-push, or any history rewrite.**
+
+Everything else — local edits, running the test suite, committing to the
+current branch — is fine to do without asking each time.
+
+## Documentation layout
+
+- `documentation/` — every subfolder (root included) has its own
+  `README.md`: what the folder is for, plus an index of its children
+  only if that index adds something a reader wouldn't already get from
+  each child's own opening line.
+- `documentation/policies/POLICY.md` (not `README.md` — a deliberate
+  naming exception so "hard rules live here" is unmistakable) holds
+  genuinely project-wide hard constraints. Nothing project-wide gets
+  duplicated outside this file.
+- **Topic folders** (a subject with its own ongoing open work) get a
+  mandatory `TODO.md` — open/deferred items, or "nothing planned right
+  now" if empty. Never delete it for being empty; the point is proving
+  absence was checked. Pure reference folders (like `policies/`) don't
+  need one.
+- Root `README.md` is the public-facing GitHub landing page (short pitch
+  + pointer into `documentation/`); this file (`CLAUDE.md`) is the
+  working agreement for whoever — human or AI — is doing the work.
