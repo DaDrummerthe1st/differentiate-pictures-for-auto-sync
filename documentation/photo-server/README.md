@@ -38,9 +38,9 @@ drafts.
 - The root domain (`reuterborg.se`) already serves something that must
   keep working. Only ever touch the `photos.` subdomain, and double-check
   DNS changes don't affect the root (see TODO.md's HTTPS phase).
-- Docker Compose, not a native install — see HARDWARE.md for why.
-  PostgreSQL is the only database engine; no separate search or vector
-  store (tsvector now, pgvector later, same instance).
+- Docker Compose, not a native install (see [HARDWARE.md](HARDWARE.md)
+  for why). PostgreSQL is the only database engine; no separate search or
+  vector store (tsvector now, pgvector later, same instance).
 - Everything here inherits [POLICY.md](../policies/POLICY.md)'s privacy
   rule and CLAUDE.md's high-blast-radius list (deployment, schema
   changes, and running against the real photo library all require

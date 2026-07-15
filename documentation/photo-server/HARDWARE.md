@@ -1,8 +1,10 @@
 # Hardware — photo-server
 
-The machine this runs on. Also hosts the ZFS pool other things depend on
-— see [README.md](README.md) for why that means Docker Compose, not a
-native install.
+The machine this runs on. It also hosts the ZFS pool other things depend
+on, so photo-server is containerized (Docker Compose) rather than
+installed natively — a native install's dependencies could collide with,
+or need root access shared with, whatever else already runs against that
+pool. See [README.md](README.md) for the resulting non-negotiable.
 
 | Component | Spec |
 | --- | --- |

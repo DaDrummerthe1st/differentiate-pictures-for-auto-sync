@@ -37,8 +37,11 @@ over from 0.1: uvicorn's default `Server: uvicorn` response header leaks
 the stack — the Dockerfile `CMD`/compose command must launch uvicorn with
 `server_header=False` (confirmed via `uv run uvicorn app.main:app` + curl
 against 0.1's route that the default leaks this; TestClient can't catch
-it since it bypasses the real transport). (human checkpoint: run the
-smoke test yourself, confirm the curl response.)
+it since it bypasses the real transport). **Before running `compose up`
+on the target host, check [HARDWARE.md](HARDWARE.md)'s memtest gate —
+it may not be cleared yet; build/test images on a dev machine until it
+is.** (human checkpoint: run the smoke test yourself, confirm the curl
+response.)
 
 0.3 `users` table only (id, email, password_hash, role, created_at) —
 nothing else from the full schema yet. Test: round-trip insert/read,

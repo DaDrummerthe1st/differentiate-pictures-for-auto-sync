@@ -2,6 +2,21 @@
 
 One entry per revision, newest first.
 
+## 2026-07-15 (12)
+
+- Fixed two photo-server doc gaps found while explaining the deployment
+  environment to Joakim: README.md and HARDWARE.md pointed at each other
+  for the "why Docker Compose, not native install" reasoning without
+  either stating it — a circular reference, not an actual cross-link.
+  HARDWARE.md is now the canonical owner of that reasoning (shared ZFS
+  pool → dependency/root-access collision risk), README.md points to it
+  one-way. Separately, TODO.md step 0.2's human checkpoint didn't
+  reference HARDWARE.md's "don't run `compose up` until the RAM upgrade
+  is memtested" gate — a session reading only TODO.md (the file its own
+  README tells you to start with) could miss it; added an explicit
+  pointer. Char counts (codepoints): `README.md` 4016 → 4031 (+15),
+  `HARDWARE.md` 936 → 1129 (+193), `TODO.md` 12977 → 13154 (+177).
+
 ## 2026-07-15 (11)
 
 - Implemented photo-server TODO.md step 0.1 (`GET /health`) via TDD:
