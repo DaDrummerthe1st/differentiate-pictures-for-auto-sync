@@ -32,13 +32,18 @@ see the self-sufficiency rule below.
   don't let docs drift from what the code does. (Known existing drift:
   see [documentation/picture-handling/TODO.md](documentation/picture-handling/TODO.md)
   for the MySQL-vs-PostgreSQL mismatch.)
-- **Lean and compact**: no filler, no restating what's already documented
-  elsewhere, no speculative abstraction for hypothetical future needs.
-  Documentation should be thorough but slim — sectioned, skimmable, no
-  duplication between files.
+- **Lean, exact, and compact**: no filler, no restating what's already
+  documented elsewhere, no speculative abstraction for hypothetical
+  future needs. Prefer the more precise word or number over the vaguer
+  one — effective text over more text. Documentation should be thorough
+  but slim — sectioned, skimmable, no duplication between files.
 - **One revision per update**: add a new entry to the top of
   CHANGELOG.md for every meaningful change (what + why, one or two
   lines) — newest first. Never rewrite or reorder past entries.
+- **Report the character-count change** for every documentation edit —
+  before → after count for the file or folder touched, in the
+  CHANGELOG.md entry and in the session's closing summary. Makes drift
+  and bloat visible over time instead of assumed.
 - **Commit continuously**: commit coherent chunks of work as you go, not
   one giant commit at the end of a session. This is standing
   authorization to commit without asking first. It does NOT cover push,
