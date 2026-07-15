@@ -2,6 +2,15 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (3)
+
+- Step 0.2 human checkpoint passed: Joakim ran `docker compose up --build`
+  (after stopping an unrelated stray container, `buzzkit-api`'s
+  `api-api-1`, that had squatted on port 8000 for 23h) and confirmed
+  `curl /health` returns 200 `{"status":"ok"}` with no `Server` header.
+  Postgres 18.4 initialized cleanly at `/var/lib/postgresql/18/docker`,
+  confirming the volume-path fix. Phase 0 scaffold (0.1 + 0.2) is done.
+
 ## 2026-07-16 (2)
 
 - Added a "Branching and merging" rule to CLAUDE.md at Joakim's request:
