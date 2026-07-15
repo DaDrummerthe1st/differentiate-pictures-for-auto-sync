@@ -2,6 +2,17 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (5)
+
+- Closed two documentation gaps found on an explicit audit pass ("what's
+  undocumented"): added `server/README.md` explaining why `server/` uses
+  uv instead of pip/venv (this dev machine's `ensurepip`/`python3-venv`
+  is broken — previously only mentioned in passing in TODO.md), and
+  generalized the README.md↔HARDWARE.md circular-reference bug fixed
+  earlier this session into a durable rule in CLAUDE.md's lean/exact
+  bullet ("cross-references must terminate"). Char counts (codepoints):
+  `CLAUDE.md` 6829 → 7181 (+352), `server/README.md` 0 → 1189 (new).
+
 ## 2026-07-16 (4)
 
 - Merged `photo-server-planning` into `master` (fast-forward, no

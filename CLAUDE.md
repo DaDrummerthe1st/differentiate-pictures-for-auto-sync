@@ -37,6 +37,11 @@ see the self-sufficiency rule below.
   future needs. Prefer the more precise word or number over the vaguer
   one — effective text over more text. Documentation should be thorough
   but slim — sectioned, skimmable, no duplication between files.
+  Cross-references must terminate: a "see X for why" pointer has to land
+  on the actual explanation, not on another pointer back — that's a
+  circular reference, not a cross-reference, and it silently loses the
+  information both files were supposed to preserve (caught once in
+  README.md ↔ HARDWARE.md; check for it whenever adding a "see X" link).
 - **One revision per update**: add a new entry to the top of
   CHANGELOG.md for every meaningful change (what + why, one or two
   lines) — newest first. Never rewrite or reorder past entries.
