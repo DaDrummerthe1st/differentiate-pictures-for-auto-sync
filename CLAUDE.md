@@ -71,12 +71,10 @@ execute it directly:
   structural, and anything touching the gitignored credentials in
   `app/local_mysql.py` (name is legacy — see the Postgres note in
   [documentation/picture-handling/TODO.md](documentation/picture-handling/TODO.md)).
-- **Any system-level install or config** — Docker, a database server, NAS
-  OS setup, network configuration. Claude has no sudo access on this
-  machine and must not attempt such installs; always hand the commands to
-  Joakim.
-- **Deployment of any kind** — same rule as above: deployment is always
-  performed by Joakim, never automated by the AI session.
+- **Any system-level install, config, or deployment** — see
+  [policies/POLICY.md](documentation/policies/POLICY.md) ("Deployment
+  and system access") for the full rule; hand to Joakim as copyable
+  commands, never run directly.
 - **`git push`, force-push, or any history rewrite.**
 
 Everything else — local edits, running the test suite, committing to the

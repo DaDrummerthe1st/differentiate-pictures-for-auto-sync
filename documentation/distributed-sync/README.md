@@ -21,7 +21,9 @@ what's still unresolved.
 
 ## Relevant external tools
 
-| Project | Site | Purpose | In use? |
-| --- | --- | --- | --- |
-| SyncThing | https://syncthing.net/ | Continuous sync between units | Not yet |
-| rClone | https://blog.rymcg.tech/blog/linux/rclone_sync/ | Auto-sync of files via bash | Not yet |
+Not adopted yet.
+
+| Project | Site | Purpose |
+| --- | --- | --- |
+| SyncThing | https://syncthing.net/ | Continuous sync between units |
+| rClone | https://blog.rymcg.tech/blog/linux/rclone_sync/ | Auto-sync of files via bash |

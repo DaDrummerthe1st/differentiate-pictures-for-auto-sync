@@ -2,6 +2,20 @@
 
 One entry per revision, newest first.
 
+## 2026-07-15 (4)
+
+- Second pass on the same documentation trim, per Joakim's answers to a
+  few judgment calls: dropped the "In use?" column from both external-
+  tools tables (all rows read "Not yet" — zero information), tightened
+  a couple more sentences, and removed the sudo/deployment rule
+  restatement from CLAUDE.md's high-blast-radius list in favor of a
+  pointer to POLICY.md's "Deployment and system access" section (POLICY.md
+  already declares itself the sole home for that rule). Declined:
+  merging each topic's README+TODO into one file (keeps the documented
+  structure rule intact) and resolving the "4D" placeholder in
+  `picture-handling/TODO.md` (still unclear — left as-is).
+  8,430 → 8,249 characters in `documentation/`.
+
 ## 2026-07-15 (3)
 
 - Trimmed `documentation/` for redundancy: the "roadmap addendum

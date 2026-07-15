@@ -1,7 +1,7 @@
 # TODO — distributed-sync
 
-Nothing is designed or built yet. Captured so far, from early notes and
-the initial documentation session:
+Nothing built yet. Captured from early notes and the initial
+documentation session:
 
 - Sync between devices (general, PC-to-PC).
 - Android → PC sync over local WLAN.
@@ -17,6 +17,5 @@ the initial documentation session:
   and AI compute in exchange for shared access — architecture not yet
   decided.
 
-**Open question**: full roadmap addendum for this phase, to be provided
-by Joakim in a future session. Don't design against the vision in
-README.md as if it were final.
+**Open question**: full roadmap addendum, still pending from Joakim —
+don't treat README.md's vision as final.

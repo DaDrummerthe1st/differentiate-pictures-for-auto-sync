@@ -17,6 +17,8 @@ phase of work — see [TODO.md](TODO.md) for open items.
 
 ## Relevant external tools
 
-| Project | Site | Purpose | In use? |
-| --- | --- | --- | --- |
-| LabelImg | https://github.com/tzutalin/labelImg | Manual labelling of picture regions/objects | Not yet |
+Not adopted yet.
+
+| Project | Site | Purpose |
+| --- | --- | --- |
+| LabelImg | https://github.com/tzutalin/labelImg | Manual labelling of picture regions/objects |
