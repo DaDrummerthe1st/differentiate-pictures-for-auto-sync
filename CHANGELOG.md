@@ -2,6 +2,19 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (11)
+
+- Implemented photo-server TODO.md step 0.3: `users` table (id, email,
+  password_hash, role, created_at), psycopg3 + raw SQL per Joakim's
+  choice over SQLAlchemy/asyncpg (`app/db.py`), TDD round-trip +
+  `unique(email)` tests. Also added `scripts/test_db.sh`, a disposable
+  Postgres container for local test runs — the committed
+  `docker-compose.yml` deliberately never publishes Postgres's port to
+  the host, so plain `pytest` had nothing to connect to; documented in
+  `server/README.md`'s new "Testing against Postgres" section. Doc
+  character counts: `documentation/photo-server/README.md` 4186 → 4388
+  (+202), `server/README.md` 1189 → 2004 (+815).
+
 ## 2026-07-16 (10)
 
 - Three more global rules added (`~/.claude/CLAUDE.md`), from Joakim

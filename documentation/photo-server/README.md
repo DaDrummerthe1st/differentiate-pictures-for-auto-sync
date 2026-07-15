@@ -8,9 +8,13 @@ existing single-machine, single-user Python sorting tool) and from
 [../distributed-sync/](../distributed-sync/README.md) (future multi-device
 P2P sync — not started, unaffected by this work).
 
-Status: **Phase 0 scaffold done and checkpointed** (TODO.md 0.1–0.2:
-`GET /health`, Dockerfile + compose, both verified against a real
-`docker compose up`). Next up is 0.3 (`users` table). This folder
+Status: **Phase 0 in progress** — 0.1–0.2 done and checkpointed
+(`GET /health`, Dockerfile + compose, both verified against a real
+`docker compose up`); 0.3 (`users` table, psycopg3 + raw SQL, tested
+against a disposable Postgres container — see
+[server/README.md](../../server/README.md#testing-against-postgres))
+also done. Next up is 0.4 (env-var-only config, fail-fast on missing
+vars). This folder
 originally absorbed two external planning documents Joakim supplied in
 chat — a build plan and a GUI spec amendment — into the repo's permanent
 documentation, per [CLAUDE.md](../../CLAUDE.md)'s self-sufficiency rule.

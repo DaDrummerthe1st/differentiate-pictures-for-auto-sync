@@ -25,3 +25,22 @@ uv run uvicorn app.main:app --reload # run the app locally
 `uv.lock` is committed for reproducibility. Dev-only dependencies
 (`pytest`, `httpx2`) live in the `dev` dependency group and are excluded
 from the Docker image via `uv sync --no-dev` (see `Dockerfile`).
+
+## Testing against Postgres
+
+`docker-compose.yml`'s `postgres` service deliberately never publishes
+its port to the host (TODO.md 0.2's security line), so it's unreachable
+from a plain `uv run pytest` on the dev machine. Any step from TODO.md
+0.3 onward that touches the database needs a separate, disposable test
+container instead — not part of the deployed stack, fine to expose on
+localhost only:
+
+```
+scripts/test_db.sh up                # start, wait until ready (127.0.0.1:5433)
+uv run pytest tests                  # tests/conftest.py connects to it
+scripts/test_db.sh down              # stop + auto-remove when done
+```
+
+`tests/conftest.py`'s `TEST_POSTGRES_*` env vars (`HOST`/`PORT`/`DB`/
+`USER`/`PASSWORD`) default to match `test_db.sh`'s own defaults, so no
+`.env` file is needed for the common case.
