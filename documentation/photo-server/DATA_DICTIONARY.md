@@ -25,7 +25,7 @@ wrong.
 | --- | --- | --- |
 | id | pk | now |
 | email | unique | now |
-| password_hash | bcrypt | now |
+| password_hash | argon2id | now (changed from bcrypt 2026-07-16 — see TODO.md Phase 1's architecture note) |
 | role | admin / member | now |
 | created_at | timestamp | now |
 

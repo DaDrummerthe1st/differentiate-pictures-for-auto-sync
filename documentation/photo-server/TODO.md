@@ -66,58 +66,128 @@ gitignored (it already was, pre-dating this step).
 
 ## Phase 1 — Complete login system (priority one)
 
+**Architecture, decided 2026-07-16 (superseding the fallback spec this
+phase originally had):** Joakim's existing login implementation, in
+`../../project/buzzkit` (sibling repo, not part of this one), is ported
+in and adapted rather than building the original bcrypt/DB-session
+fallback from scratch. Two deliberate deviations from buzzkit's code,
+confirmed with Joakim rather than assumed:
+- **Password hashing is argon2id** (`argon2-cffi`'s `PasswordHasher`,
+  ported from buzzkit's `app/core/security.py`), not bcrypt as this
+  spec originally said — argon2id is OWASP's current recommendation for
+  new applications over bcrypt. `password_hash` in
+  [DATA_DICTIONARY.md](DATA_DICTIONARY.md) is now labelled `argon2id`,
+  not `bcrypt`.
+- **Sessions are JWT access + refresh tokens, Redis-backed for
+  revocation** (ported from buzzkit's `app/core/security.py` +
+  `app/core/cookies.py`), not the plain Postgres-only session-cookie
+  design this spec originally sketched. This adds a `redis` service to
+  `server/docker-compose.yml` — mem-capped (128m), no host port
+  published (internal-only, same pattern as `postgres`), `requirepass`
+  via `REDIS_PASSWORD` env var, and **`restart: "no"`** (buzzkit's own
+  compose file uses `unless-stopped` on `redis` — deliberately not
+  carried over; see this file's Docker rule). Refresh-token TTL is 12h
+  here (not buzzkit's 30 days) to preserve this spec's original "session
+  expires after 12h" intent for a small, private, two-account server;
+  access-token TTL is short (15 min) so a stolen access-token cookie
+  alone doesn't grant the full 12h.
+- **Rate limiting is `slowapi` + the same Redis instance**, IP-keyed
+  (ported from buzzkit's `app/core/rate_limit.py` near-verbatim) — this
+  alone satisfies 1.8 below, so buzzkit's separate username-keyed
+  `lockout.py` (a 15-minute account lockout, a different mechanism this
+  spec never asked for) is not ported.
+- `audit_log` (defined in [DATA_DICTIONARY.md](DATA_DICTIONARY.md) under
+  Phase 2) is created now, in this phase, since 1.7 needs it — only that
+  one table is pulled forward, not the rest of Phase 2's schema.
+- Login identifier stays **email**, matching the `users` table already
+  built in 0.3 (buzzkit's own login uses `username`; not applicable
+  here).
+
+**Explicitly not ported from buzzkit** (out of scope for this project):
+the `/signup` endpoint (only the two fixed accounts from 1.2's CLI
+exist, ever), Google OAuth (calls out to a cloud API — against this
+folder's "no cloud APIs" non-negotiable), analytics/activity-event
+emission, the honeypot signup field, and per-request Postgres
+row-level-security role switching (this project stays on the single
+`photo_server` DB role built in Phase 0). Buzzkit's least-privilege
+`security_writer` DB role for its audit table is a real hardening idea
+worth revisiting later (see [DEFERRED.md](DEFERRED.md)) but not built
+now — a single DB role stays proportionate at two-user scale.
+
+New dependencies (`server/pyproject.toml`): `argon2-cffi`, `pyjwt`,
+`redis`, `slowapi` — added as `>=`-only (no upper bound, matching this
+project's existing pins), resolved to latest via `uv lock`, and
+`pip-audit`-checked clean before use (2026-07-16).
+
 1.1 Password hashing helper: hash + verify round-trip test, using
-bcrypt. **Security**: confirm bcrypt (not a fast hash like sha256/md5)
-before writing it, don't assume the library choice.
+argon2id (`argon2-cffi`'s `PasswordHasher`, ported from buzzkit's
+`hash_password`/`verify_password`/`needs_rehash`). **Security**: confirm
+`PasswordHasher()`'s default variant is actually argon2id (not argon2i/d)
+before relying on it — don't assume the library default.
 
 1.2 CLI (`server/scripts/create_account.py` or similar) creates the two
 accounts — joakim.reuterborg@gmail.com (admin),
-elisabeth.reuterborg@gmail.com (member) — bcrypt-hashed, password
+elisabeth.reuterborg@gmail.com (member) — argon2id-hashed, password
 supplied interactively or via env var at creation time, never hardcoded
 in the repo. Test: CLI creates a row, duplicate email rejected.
 
-1.3 `POST /login` with correct email+password → session cookie, 200.
-Test first.
+1.3 `POST /login` with correct email+password → sets access + refresh
+JWT cookies (ported from buzzkit's `set_auth_cookies`, renamed off the
+`buzzkit_*` cookie names), 200. Test first.
 
 1.4 `POST /login` with wrong password → 401. Same status/body/timing
 profile for "wrong password" and "unknown email" — explicit test
 comparing both, so the response never discloses whether an email is
-registered.
+registered (buzzkit's generic `_GENERIC_LOGIN_ERROR` pattern, ported).
 
-1.5 Unauthenticated request to a protected route → 401. Valid session
-cookie → allowed through.
+1.5 Unauthenticated request to a protected route → 401. Valid
+access-token cookie → allowed through (ported from buzzkit's
+`get_current_user` dependency, adapted to raw psycopg instead of
+SQLAlchemy).
 
-1.6 Sessions expire after 12h — test with a mocked clock, not a real
-sleep.
+1.6 Refresh token expires after 12h, access token after 15 min — test
+with a mocked clock (JWT `exp`), not a real sleep.
 
-1.7 Failed logins are written to `audit_log`. Test: one failed login →
+1.7 Failed logins are written to `audit_log` (table created now, pulled
+forward from Phase 2 — see architecture note above; buzzkit's
+`log_security_event` ported and simplified to the single existing DB
+role, no separate `security_writer` role yet). Test: one failed login →
 one row, correct `action`/`details`.
 
-1.8 6th failed attempt within a minute from the same IP → 429. Test
-drives 6 requests, asserts the 6th (not the 5th) is throttled.
+1.8 6th failed attempt within a minute from the same IP → 429, via
+`slowapi`'s Redis-backed limiter on `POST /login` (`"5/minute"`, ported
+from buzzkit's `app/core/rate_limit.py`). Test drives 6 requests,
+asserts the 6th (not the 5th) is throttled.
 
 1.9 **Security pass — gaps not in the original spec, add before calling
 Phase 1 done:**
- - Session cookie flags: `HttpOnly`, `Secure`, `SameSite=Strict` (or
-   `Lax` if cross-site redirects are needed — default to `Strict` and
-   only loosen with a reason). Test that the flags are present, not just
-   that login works.
- - CSRF: cookie-based sessions authenticate state-changing POSTs
-   (tag-add, download) automatically from any origin unless mitigated.
+ - Cookie flags: `HttpOnly`, `Secure`, `SameSite=Strict` (or `Lax` if
+   cross-site redirects are needed — default to `Strict` and only loosen
+   with a reason) on both the access and refresh cookies. Test that the
+   flags are present, not just that login works.
+ - CSRF: cookie-based auth authenticates state-changing POSTs (tag-add,
+   download) automatically from any origin unless mitigated.
    `SameSite=Strict` covers most of this for a single-domain app with no
    third-party embeds — confirm that's actually sufficient here rather
    than assuming, given photos.reuterborg.se is the only origin in play.
  - Logout endpoint: **not in the original build plan at all.** Add
-   `POST /logout` that invalidates the session server-side (not just
-   clears the cookie client-side) — a session store that can't be
-   revoked early is a real gap on a machine reachable from the open
-   internet. Test: after logout, the old cookie no longer authenticates.
+   `POST /logout` that revokes the refresh token server-side in Redis
+   (ported from buzzkit's `revoke_refresh_token`) — not just clearing
+   the cookie client-side, since a stolen refresh token would otherwise
+   stay valid for the rest of its 12h regardless of logout. Test: after
+   logout, the old refresh cookie no longer authenticates a `/refresh`
+   call.
+ - `JWT_SECRET_KEY` minimum length/entropy check at startup (buzzkit
+   validates ≥32 characters in its config — port that validator), fed
+   through `app/config.py`'s fail-fast pattern from 0.4 rather than a
+   new mechanism.
  - Password reset: not in scope for Phase 1 (see MOCKUP.md) — confirm
    this is an accepted gap, not a missed requirement.
 
 1.10 (human checkpoint) Log in as both real accounts with real
 passwords you set via 1.2's CLI; confirm a wrong password truly fails;
-confirm logout truly invalidates the session.
+confirm logout truly invalidates the refresh token (old cookie can no
+longer refresh).
 
 **Phase 1 done = login system complete.** Nothing below starts until
 this checkpoint passes.

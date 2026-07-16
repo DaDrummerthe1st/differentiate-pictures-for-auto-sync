@@ -2,6 +2,38 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (22)
+
+- Phase 1 (login) architecture decided, on new branch `phase-1-login`:
+  reuse Joakim's existing login implementation from the sibling
+  `buzzkit` repo (`../../project/buzzkit`) instead of building this
+  phase's original bcrypt/DB-session fallback spec from scratch, per
+  Joakim's explicit ask to shorten build time. Two deviations from
+  buzzkit's code confirmed with Joakim rather than assumed: argon2id
+  (not bcrypt) for password hashing — OWASP's current recommendation —
+  and JWT access+refresh tokens with Redis-backed revocation (not a
+  plain Postgres session table) for sessions, trading a new `redis`
+  service for buzzkit's own tested code. Refresh-token TTL set to 12h
+  (not buzzkit's 30 days) to preserve this spec's original session-length
+  intent for a small private server. Not ported: `/signup`, Google OAuth
+  (violates this project's no-cloud-APIs rule), analytics/activity
+  emission, buzzkit's username-keyed account lockout (superseded by
+  `slowapi`'s IP-keyed rate limiter, which already satisfies this
+  phase's 1.8 on its own), and buzzkit's separate least-privilege
+  `security_writer` DB role (deferred, not proportionate at two-user
+  scale yet). This commit is scaffolding only, no auth code yet: added
+  `argon2-cffi`/`pyjwt`/`redis`/`slowapi` to `server/pyproject.toml`
+  (`>=`-only, resolved to latest via `uv lock`, `pip-audit`-clean);
+  added a `redis` service to `server/docker-compose.yml` (128m-capped,
+  internal-only, `requirepass` via env var, `restart: "no"` — buzzkit's
+  own compose file uses `unless-stopped` here, deliberately not carried
+  over); added `REDIS_PASSWORD`/`JWT_SECRET_KEY` to `.env.example`;
+  rewrote TODO.md's Phase 1 section end-to-end for the new architecture;
+  updated DATA_DICTIONARY.md's `password_hash` column note. Full suite
+  still 11/11 green (no app code touched). Doc character counts:
+  `documentation/photo-server/TODO.md` 14166 → 18540 (+4374),
+  `documentation/photo-server/DATA_DICTIONARY.md` 4687 → 4764 (+77).
+
 ## 2026-07-16 (21)
 
 - Dependency/CVE check across `server/`, prompted by Joakim asking for a
