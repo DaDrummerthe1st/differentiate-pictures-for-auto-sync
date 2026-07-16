@@ -35,10 +35,33 @@ docker compose up -d
 Open `https://<host LAN IP>:8420`. First load shows a self-signed-cert
 warning — click through, that's expected. Stop with `docker compose down`.
 
-**Tests**: `.venv-test/bin/python -m pytest app/tests/ -q` (27 tests as of
+**Tests**: `.venv-test/bin/python -m pytest app/tests/ -q` (24 tests as of
 this writing — tree scanning, thumbnails, path-traversal guards, zip/download
-endpoints, the file-type summary's content-sniffing, voiceover upload/list/
-playback).
+endpoints, the file-type summary's content-sniffing and its interaction
+with /api/tree, voiceover upload/list/playback).
+
+### Suspending or shutting down the host machine
+
+Checklist before the host machine sleeps/suspends or powers off while this
+app might be in use:
+
+1. **Check nobody's mid-download** — a burst of recent `/original` requests
+   in the analytics log means an active bulk download; wait for it or warn
+   whoever's downloading first (interrupting it is safe per the cancel/retry
+   handling, but still better avoided).
+2. **`git status`** — this project commits continuously, so this should
+   already be clean; if not, commit before stepping away.
+3. **`docker compose down`** — stop the container rather than leaving it
+   listening through a suspend/resume cycle. Matches the household's
+   standing rule that nothing should silently start listening again
+   without a human consciously starting it (e.g. after waking on a
+   different, untrusted network).
+4. **On resume**: `docker compose up -d` from the repo root brings it back
+   at the same URL.
+
+Suspend (unlike a full shutdown) technically preserves a running
+container's state through the sleep, so step 3 isn't strictly required
+for correctness — it's done anyway for the silent-relisten reason above.
 
 ## Features (current state)
 
@@ -65,15 +88,13 @@ playback).
   history if that choice ever needs revisiting).
 - **File-type summary**: a button that scans every file in the source
   folder (not just recognized media) and reports real content-sniffed
-  type per file (magic-number detection, not trusting the extension),
-  flagging any extension/content mismatch. Caught real corrupted files
-  in the actual photo library this way.
-- **Voiceover narration**: record audio while freely browsing photos:
-  which photo and where on it the pointer was resting is sampled every
-  200ms and saved alongside the audio, so playback re-shows the right
-  photo with a moving dot in sync with the narration. See TODO.md for
-  the planned durable/shareable export (baked MP4) - today's version is
-  tied to this app staying runnable.
+  type per file, flagging any extension/content mismatch. See
+  [../file-integrity/README.md](../file-integrity/README.md) for the
+  full apparatus this is part of.
+- **Voiceover narration**: record audio while freely browsing photos,
+  play it back with the right photo and a pointer dot re-appearing in
+  sync with the narration. See
+  [voiceover/README.md](voiceover/README.md).
 - **Dismissable info messages**: first-use explanations (e.g. how
   voiceover recording works) can be permanently dismissed via a "don't
   show again" checkbox, but stay reachable afterward via the "❓ Hjälp"

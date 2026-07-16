@@ -32,30 +32,12 @@ Not started - no code, no design doc yet. Flagged by Joakim on
 2026-07-16 as the deliberate next step after the current no-login
 single-user version is done.
 
-## Voiceover durability/export
+## Voiceover feature
 
-Current voiceover recordings (audio + pointer-timeline JSON) only work
-via this app's own server staying runnable - the referenced photo paths
-and the live playback re-composition break if the app changes
-significantly or the photo library gets reorganized. Joakim wants
-recordings to remain listenable/watchable for years, independent of
-this app's future, and shareable (e.g. shown to his kids later).
-
-Decided direction (2026-07-16): **bake each voiceover into an actual
-MP4 video** - photos shown full-frame with a moving pointer-dot overlay,
-synced to the recorded audio, encoded via ffmpeg. This is the most
-durable option (any device/player can open an MP4 forever, fully
-independent of this app) versus a self-contained HTML+audio+photos
-folder (also considered, more fragile long-term - needs a browser and
-working JS forever) or just fixing path-fragility without exporting
-(smallest change, doesn't solve the actual "shareable for years" ask).
-
-Not started - needs: ffmpeg added to the Docker image, a frame-plan
-function (given events + fps + duration → which photo + pointer
-position per frame, pure logic, unit-testable without ffmpeg), a
-Pillow-based frame renderer (photo letterboxed to a fixed video
-resolution + dot overlay), and the ffmpeg invocation to mux frames +
-audio into the final MP4.
+Moved to its own subfolder: [voiceover/README.md](voiceover/README.md)
+(how it works today) and [voiceover/TODO.md](voiceover/TODO.md) (the
+planned MP4-export work) — substantial enough a feature to warrant its
+own doc root rather than living inline here.
 
 ## History note: why this project lives in this repo at all
 
@@ -65,6 +47,20 @@ see the GitHub issue filed 2026-07-16 for typing-while-a-popup-opens
 spawning a duplicate session) fetched that repo's history into this one
 under a same-named branch. Once discovered, Joakim opted to keep building
 here rather than untangle it back out.
+
+## History note: why bulk downloads are sequential, not a zip
+
+Originally "download all"/"download selected" built one zip server-side,
+then streamed it. Switched away from this 2026-07-16 after mum's actual
+download over real (slow, USB-drive-destination) conditions showed the
+real problems: a single zip is all-or-nothing (any interruption loses
+the whole batch), gives no real progress feedback until fully built, and
+can't be cancelled cleanly. Per-file sequential transfer (now used by
+both buttons) shows honest incremental progress, survives individual
+file failures, and can be cancelled without losing anything already
+saved. Confirmed as a permanent decision (not just a workaround) the
+same day - the zip endpoint (`POST /api/zip`), its client-side code, and
+its tests were removed entirely rather than left dormant.
 
 ## Other open items (carried over, not yet done)
 

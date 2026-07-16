@@ -1,10 +1,8 @@
-import hashlib
 import json
 import mimetypes
 import os
 import sqlite3
 import uuid
-import zipfile
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
@@ -16,12 +14,8 @@ from PIL import Image, ImageDraw, ImageOps
 from pydantic import BaseModel
 
 PHOTOS_ROOT = Path(os.environ.get("PHOTOS_ROOT", "/photos")).resolve()
-PHOTOS_LABEL = os.environ.get("PHOTOS_LABEL", PHOTOS_ROOT.name)
 THUMB_CACHE = Path(os.environ.get("THUMB_CACHE_DIR", "/thumbcache"))
 THUMB_CACHE.mkdir(parents=True, exist_ok=True)
-
-ZIP_CACHE = Path(os.environ.get("ZIP_CACHE_DIR", "/zipcache"))
-ZIP_CACHE.mkdir(parents=True, exist_ok=True)
 
 STORY_DIR = Path(os.environ.get("STORY_DIR", "/stories"))
 STORY_DIR.mkdir(parents=True, exist_ok=True)
@@ -80,14 +74,8 @@ def _log_event(event_type: str, detail: str = "", client_ip: str | None = None) 
     db.commit()
 
 
-def _clean_stale_zip_cache_tmp_files() -> None:
-    for tmp_file in ZIP_CACHE.glob("*.tmp"):
-        tmp_file.unlink(missing_ok=True)
-
-
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
-    _clean_stale_zip_cache_tmp_files()
     _log_event("server_started")
     yield
     _log_event("server_stopping")
@@ -353,37 +341,6 @@ def original(p: str = Query(...)):
     src = resolve_relpath(p)
     mime = mimetypes.guess_type(src.name)[0] or "application/octet-stream"
     return FileResponse(src, media_type=mime, filename=src.name)
-
-
-class ZipRequest(BaseModel):
-    paths: list[str]
-
-
-def _zip_cache_key(paths: list[str]) -> str:
-    return hashlib.sha256("\n".join(sorted(paths)).encode()).hexdigest()
-
-
-@app.post("/api/zip")
-def zip_paths(req: ZipRequest):
-    if not req.paths:
-        raise HTTPException(status_code=400, detail="no paths given")
-    key = _zip_cache_key(req.paths)
-    zip_path = ZIP_CACHE / f"{key}.zip"
-    if not zip_path.exists():
-        tmp_path = ZIP_CACHE / f"{key}.{uuid.uuid4().hex}.tmp"
-        try:
-            with zipfile.ZipFile(tmp_path, "w", zipfile.ZIP_STORED) as zf:
-                for p in req.paths:
-                    src = resolve_relpath(p)
-                    zf.write(src, arcname=src.relative_to(PHOTOS_ROOT).as_posix())
-            tmp_path.rename(zip_path)
-        finally:
-            tmp_path.unlink(missing_ok=True)
-    return FileResponse(
-        zip_path,
-        media_type="application/zip",
-        filename=f"{PHOTOS_LABEL}.zip",
-    )
 
 
 @app.post("/api/voiceover")

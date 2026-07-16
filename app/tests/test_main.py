@@ -160,47 +160,6 @@ def test_original_rejects_path_traversal(client):
     assert res.status_code == 400
 
 
-def test_zip_endpoint_400_for_no_paths(client):
-    res = client.post("/api/zip", json={"paths": []})
-    assert res.status_code == 400
-
-
-def test_zip_endpoint_builds_zip_with_requested_images(client):
-    paths = ["AlbumA/1/pic1.jpg", "AlbumA/2/pic3.jpg"]
-    res = client.post("/api/zip", json={"paths": paths})
-    assert res.status_code == 200
-    assert res.headers["content-type"] == "application/zip"
-
-
-def test_zip_endpoint_reuses_cache_for_identical_request(client, zip_cache_dir):
-    paths = ["AlbumA/1/pic1.jpg", "AlbumA/2/pic3.jpg"]
-    first = client.post("/api/zip", json={"paths": paths})
-    second = client.post("/api/zip", json={"paths": paths})
-    assert first.status_code == 200
-    assert second.status_code == 200
-    assert first.content == second.content
-    zip_files = list(zip_cache_dir.glob("*.zip"))
-    assert len(zip_files) == 1, f"expected exactly one cached zip, found {zip_files}"
-
-
-def test_zip_endpoint_leaves_no_tmp_files_behind(client, zip_cache_dir):
-    client.post("/api/zip", json={"paths": ["AlbumA/1/pic1.jpg"]})
-    leftover_tmp = list(zip_cache_dir.glob("*.tmp"))
-    assert leftover_tmp == []
-
-
-def test_startup_cleans_up_stale_tmp_files(zip_cache_dir):
-    from fastapi.testclient import TestClient
-    from app.main import app
-
-    zip_cache_dir.mkdir(parents=True, exist_ok=True)
-    stray = zip_cache_dir / "abandoned.zip.tmp"
-    stray.write_bytes(b"partial")
-    with TestClient(app):
-        pass
-    assert not stray.exists()
-
-
 def test_startup_and_shutdown_are_logged():
     from fastapi.testclient import TestClient
     from app.main import app

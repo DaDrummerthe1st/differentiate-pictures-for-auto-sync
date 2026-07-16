@@ -3,22 +3,14 @@ services:
     build: .
     ports:
       - "8420:8420"
-    environment:
-      # Single declared source of truth for the mounted folder's display
-      # name - the container can't see the host path, only /photos, so
-      # this has to be named explicitly. Keep it matching the basename
-      # of the volume source path below.
-      PHOTOS_LABEL: mammas_bilder
     volumes:
       - /home/joakim/Pictures/mammas_bilder:/photos:ro
       - thumbcache:/thumbcache
       - analytics_data:/data
-      - zipcache:/zipcache
       - stories:/stories
     restart: "no"
 
 volumes:
   thumbcache:
   analytics_data:
-  zipcache:
   stories:
