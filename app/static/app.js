@@ -129,20 +129,91 @@ const marked = new Set();
 let allImages = [];
 let currentLightboxIndex = -1;
 
+function loadSet(key) {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(key) || "[]"));
+  } catch (e) {
+    return new Set();
+  }
+}
+function saveSet(key, set) {
+  localStorage.setItem(key, JSON.stringify(Array.from(set)));
+}
+
+const visitedHeadlines = loadSet("mpv_visited_headlines");
+const collapsedHeadlines = loadSet("mpv_collapsed_headlines");
+let headlineCount = 0;
+
+const visitObserver = new IntersectionObserver(
+  (entries) => {
+    let changed = false;
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        const headline = entry.target.dataset.headline;
+        if (!visitedHeadlines.has(headline)) {
+          visitedHeadlines.add(headline);
+          changed = true;
+        }
+      }
+    }
+    if (changed) {
+      saveSet("mpv_visited_headlines", visitedHeadlines);
+      updateVisitedUI();
+    }
+  },
+  { threshold: 0.05 }
+);
+
+function updateVisitedUI() {
+  document.getElementById("visitedCounter").textContent =
+    `${visitedHeadlines.size} av ${headlineCount} album visade`;
+  document.querySelectorAll(".nav-pill").forEach((pill) => {
+    pill.classList.toggle("visited", visitedHeadlines.has(pill.dataset.headline));
+  });
+}
+
 function renderTree(sections) {
   const tree = document.getElementById("tree");
+  const nav = document.getElementById("albumNav");
   tree.innerHTML = "";
+  nav.innerHTML = "";
   allImages = [];
+  headlineCount = sections.length;
+
   for (const section of sections) {
-    const h = document.createElement("div");
+    const album = document.createElement("div");
+    album.className = "album";
+    album.dataset.headline = section.headline;
+
+    const row = document.createElement("div");
+    row.className = "headline-row";
+    const h = document.createElement("h2");
     h.className = "headline";
     h.textContent = section.headline;
-    tree.appendChild(h);
+    const collapseBtn = document.createElement("button");
+    collapseBtn.className = "collapse-btn";
+    const isCollapsed = collapsedHeadlines.has(section.headline);
+    collapseBtn.textContent = isCollapsed ? "Visa" : "Dölj";
+    row.appendChild(h);
+    row.appendChild(collapseBtn);
+    album.appendChild(row);
+
+    const body = document.createElement("div");
+    body.className = "album-body" + (isCollapsed ? " collapsed" : "");
+
+    collapseBtn.addEventListener("click", () => {
+      const nowCollapsed = body.classList.toggle("collapsed");
+      collapseBtn.textContent = nowCollapsed ? "Visa" : "Dölj";
+      if (nowCollapsed) collapsedHeadlines.add(section.headline);
+      else collapsedHeadlines.delete(section.headline);
+      saveSet("mpv_collapsed_headlines", collapsedHeadlines);
+    });
+
     for (const chunk of section.chunks) {
       const ct = document.createElement("div");
       ct.className = "chunk-title";
       ct.textContent = chunk.path;
-      tree.appendChild(ct);
+      body.appendChild(ct);
       const grid = document.createElement("div");
       grid.className = "grid";
       for (const img of chunk.images) {
@@ -159,9 +230,20 @@ function renderTree(sections) {
         thumb.addEventListener("click", () => onThumbClick(thumb));
         grid.appendChild(thumb);
       }
-      tree.appendChild(grid);
+      body.appendChild(grid);
     }
+    album.appendChild(body);
+    tree.appendChild(album);
+    visitObserver.observe(album);
+
+    const pill = document.createElement("button");
+    pill.className = "nav-pill" + (visitedHeadlines.has(section.headline) ? " visited" : "");
+    pill.dataset.headline = section.headline;
+    pill.textContent = section.headline;
+    pill.addEventListener("click", () => album.scrollIntoView({ behavior: "smooth", block: "start" }));
+    nav.appendChild(pill);
   }
+  updateVisitedUI();
 }
 
 function onThumbClick(thumbEl) {
@@ -188,6 +270,16 @@ function updateDownloadSelectedBtn() {
   } else {
     btn.classList.add("hidden");
   }
+}
+
+document.getElementById("gridSizeBtn").addEventListener("click", () => {
+  const large = document.body.classList.toggle("large-thumbs");
+  document.getElementById("gridSizeBtn").textContent = large ? "Små bilder" : "Stora bilder";
+  localStorage.setItem("mpv_large_thumbs", large ? "1" : "0");
+});
+if (localStorage.getItem("mpv_large_thumbs") === "1") {
+  document.body.classList.add("large-thumbs");
+  document.getElementById("gridSizeBtn").textContent = "Små bilder";
 }
 
 document.getElementById("selectModeBtn").addEventListener("click", () => {
@@ -250,8 +342,11 @@ document.getElementById("lbDownload").addEventListener("click", async (e) => {
 document.addEventListener("keydown", (e) => {
   if (document.getElementById("lightbox").classList.contains("hidden")) return;
   if (e.key === "Escape") closeLightbox();
-  if (e.key === "ArrowLeft") lightboxStep(-1);
-  if (e.key === "ArrowRight") lightboxStep(1);
+  else if (e.altKey && e.key === "ArrowLeft") {
+    e.preventDefault();
+    closeLightbox();
+  } else if (e.key === "ArrowLeft") lightboxStep(-1);
+  else if (e.key === "ArrowRight") lightboxStep(1);
 });
 
 async function loadTree() {
