@@ -248,7 +248,26 @@ async function loadTree() {
 
 document.getElementById("pickFolderBtn").addEventListener("click", setupDownloadFolder);
 
+function checkCompatibility() {
+  if (typeof window.showDirectoryPicker === "function") return true;
+  const setupError = document.getElementById("setupError");
+  const pickBtn = document.getElementById("pickFolderBtn");
+  pickBtn.classList.add("hidden");
+  if (!window.isSecureContext) {
+    setupError.textContent =
+      "Sidan är inte öppnad över https://. Kontrollera att adressen i webbläsaren " +
+      "börjar med https:// (inte http://) - annars fungerar inte mappvalet. " +
+      "Adress just nu: " + location.href;
+  } else {
+    setupError.textContent =
+      "Den här webbläsaren stöder inte mappval (kräver Microsoft Edge eller Google Chrome, " +
+      "inte Firefox). Webbläsare: " + navigator.userAgent;
+  }
+  return false;
+}
+
 (async function init() {
+  if (!checkCompatibility()) return;
   if (await tryRestoreDownloadFolder()) {
     enterGallery();
   }
