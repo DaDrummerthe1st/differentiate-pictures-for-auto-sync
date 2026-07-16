@@ -1,4 +1,4 @@
-"""Trend report over logged *.md character counts. See README.md.
+"""Trend report over logged *.md character counts. See ../../documentation/tooling/DOC_METRICS.md.
 
 Usage:
   python3 tools/doc_metrics/report.py           # per-commit trend

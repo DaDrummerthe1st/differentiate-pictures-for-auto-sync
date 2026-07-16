@@ -1,4 +1,4 @@
-"""Per-commit token/dollar cost report. See README.md.
+"""Per-commit token/dollar cost report. See ../../documentation/tooling/COMMIT_COST.md.
 
 Usage:
   python3 tools/commit_cost/report.py            # one line per commit

@@ -2,6 +2,38 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (17)
+
+- Redundancy + doc-location audit, prompted by Joakim asking "is that not
+  a rule?" about documentation living under `documentation/`. Checked the
+  actual written rule (`CLAUDE.md`'s Documentation layout section) and
+  found it only governs `documentation/`'s own internal structure plus
+  two explicit exceptions (root `README.md`, `CLAUDE.md`) — it never
+  addressed `server/README.md` or the two `tools/*/README.md`s, which had
+  drifted into holding real content outside `documentation/`. Per
+  Joakim's decision: moved that content in — `server/README.md`'s
+  toolchain notes → `documentation/photo-server/TOOLCHAIN.md`;
+  `tools/doc_metrics/README.md` and `tools/commit_cost/README.md` → new
+  `documentation/tooling/` (project-wide utilities, not tied to one
+  topic) — and left one-line stub `README.md`s in the code directories
+  for IDE discoverability. Made this an explicit written rule in
+  `CLAUDE.md` so it doesn't drift again. Also fixed the one real
+  redundancy the audit found: `CLAUDE.md`'s privacy bullet restated
+  `POLICY.md`'s EXIF/GPS and distributed-sync specifics instead of
+  cross-referencing them, against `POLICY.md`'s own "nothing project-wide
+  duplicated outside this file" rule — trimmed to a cross-reference.
+  Updated every affected link (six code docstrings, two README index
+  tables) and verified all of them resolve. Doc character counts:
+  `CLAUDE.md` 7633 → 8280 (+647), `documentation/README.md` 634 → 729
+  (+95), `documentation/photo-server/README.md` 4388 → 4477 (+89),
+  `server/README.md` 2004 → 241 (-1763, now a stub),
+  `tools/doc_metrics/README.md` 6298 → 219 (-6079, now a stub),
+  `tools/commit_cost/README.md` 5136 → 219 (-4917, now a stub); new:
+  `documentation/photo-server/TOOLCHAIN.md` 2104,
+  `documentation/tooling/README.md` 656,
+  `documentation/tooling/DOC_METRICS.md` 6712,
+  `documentation/tooling/COMMIT_COST.md` 5378.
+
 ## 2026-07-16 (16)
 
 - `commit_cost` was documented in its own README but nowhere else —

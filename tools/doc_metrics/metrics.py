@@ -1,4 +1,4 @@
-"""Character-count metrics for *.md files — see README.md for methodology.
+"""Character-count metrics for *.md files — see ../../documentation/tooling/DOC_METRICS.md for methodology.
 
 Character count = Unicode codepoints (len() of UTF-8-decoded text), not
 bytes and not a locale-dependent `wc` count, so numbers are reproducible

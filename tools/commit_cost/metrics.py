@@ -1,4 +1,4 @@
-"""Real, per-commit token cost — see README.md for methodology.
+"""Real, per-commit token cost — see ../../documentation/tooling/COMMIT_COST.md for methodology.
 
 Reads Claude Code session transcripts (~/.claude/projects/<slug>/*.jsonl),
 finds the exact point each git commit was authored, and sums the *actual

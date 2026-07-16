@@ -1,4 +1,4 @@
-"""Snapshot *.md character counts, tied to a git commit. See README.md.
+"""Snapshot *.md character counts, tied to a git commit. See ../../documentation/tooling/DOC_METRICS.md.
 
 Usage:
   python3 tools/doc_metrics/log.py                        # snapshot HEAD

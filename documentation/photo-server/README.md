@@ -31,6 +31,7 @@ read, not several competing drafts.
 | [DATA_DICTIONARY.md](DATA_DICTIONARY.md) | Full schema, which columns are live now vs reserved |
 | [HARDWARE.md](HARDWARE.md) | The server this runs on |
 | [DEFERRED.md](DEFERRED.md) | What's explicitly out of scope, and why |
+| [TOOLCHAIN.md](TOOLCHAIN.md) | Local dev toolchain (uv) and testing against Postgres |
 
 ## Non-negotiables specific to this topic
 

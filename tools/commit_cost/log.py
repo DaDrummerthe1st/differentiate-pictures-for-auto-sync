@@ -1,5 +1,5 @@
 """Extract exact per-commit token cost from Claude Code session transcripts.
-See README.md for methodology.
+See ../../documentation/tooling/COMMIT_COST.md for methodology.
 
 Usage:
   python3 tools/commit_cost/log.py                       # scan, write new commits found

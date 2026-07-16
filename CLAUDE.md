@@ -7,10 +7,10 @@ see the self-sufficiency rule below.
 ## Non-negotiables
 
 - **Security and privacy first**: consider it for every change, not just
-  ones that look security-related. This app handles personal photos and
-  EXIF/GPS metadata, and is heading toward a distributed system that will
-  hold other people's data too — privacy is a first-class constraint from
-  day one, not something bolted on once sync exists.
+  ones that look security-related — a first-class constraint from day
+  one, not something bolted on later. Specifics (what data is sensitive,
+  why) live in [POLICY.md](documentation/policies/POLICY.md), not
+  repeated here.
 - **Test-Driven Development**: write a failing test before the
   implementation for new functionality where practical. Run the FULL test
   suite before every commit, even for changes that look unrelated or
@@ -49,12 +49,12 @@ see the self-sufficiency rule below.
   before → after count for the file or folder touched, in the
   CHANGELOG.md entry and in the session's closing summary. Makes drift
   and bloat visible over time instead of assumed. Measure it with
-  [tools/doc_metrics](tools/doc_metrics/README.md) (`log.py` after
+  [tools/doc_metrics](documentation/tooling/DOC_METRICS.md) (`log.py` after
   committing, `report.py` to see the trend) rather than ad hoc `wc`
   calls, so every session's numbers use the same method and stay
   comparable to each other.
 - **Log the real token/dollar cost of every commit** — run
-  [tools/commit_cost](tools/commit_cost/README.md)'s `log.py` after
+  [tools/commit_cost](documentation/tooling/COMMIT_COST.md)'s `log.py` after
   committing (same discipline as `doc_metrics` above), commit the
   resulting `commit_costs.jsonl` update. This reads actual billed usage
   from Claude Code's own session transcripts, not an estimate — see that
@@ -132,3 +132,14 @@ current branch — is fine to do without asking each time.
 - Root `README.md` is the public-facing GitHub landing page (short pitch
   + pointer into `documentation/`); this file (`CLAUDE.md`) is the
   working agreement for whoever — human or AI — is doing the work.
+- **All documentation lives under `documentation/` — no exceptions
+  beyond the two above.** Code directories (`server/`, `tools/*/`) get at
+  most a one-line stub `README.md` pointing into `documentation/`, never
+  their own real content — the actual doc goes in the matching topic
+  folder (e.g. `server/`'s toolchain notes live in
+  `documentation/photo-server/TOOLCHAIN.md`) or, for project-wide
+  utilities not tied to one topic, under
+  [documentation/tooling/](documentation/tooling/README.md). Decided
+  2026-07-16 after `server/README.md` and two `tools/*/README.md`s had
+  drifted into real content living outside `documentation/` — moved and
+  replaced with stubs.
