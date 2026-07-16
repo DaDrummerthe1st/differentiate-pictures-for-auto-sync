@@ -1,3 +1,5 @@
+from collections.abc import Iterator
+
 import psycopg
 
 from app.config import load_db_config
@@ -12,6 +14,19 @@ def get_connection() -> psycopg.Connection:
         user=config["POSTGRES_USER"],
         password=config["POSTGRES_PASSWORD"],
     )
+
+
+def get_db() -> Iterator[psycopg.Connection]:
+    """FastAPI dependency wrapping get_connection() - overridden in tests
+    (see tests/conftest.py) to reuse the test's own connection/transaction
+    instead of opening a second one, so seeded rows are visible without
+    committing test data permanently into the disposable test database."""
+    conn = get_connection()
+    try:
+        yield conn
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def ensure_schema(conn: psycopg.Connection) -> None:

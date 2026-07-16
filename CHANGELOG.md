@@ -2,6 +2,30 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (27)
+
+- photo-server TODO.md 1.3–1.6 (login route, generic error, protected
+  route, token expiry): new `app/auth_routes.py` (`POST /login`,
+  `GET /whoami`, `get_current_user` dependency) and `app/cookies.py`
+  (`set_auth_cookies`/`clear_auth_cookies`), ported from buzzkit and
+  adapted to raw psycopg. **Real bug found and fixed, not just
+  ported-and-trusted**: buzzkit's own login route short-circuits
+  (`auth_row is None or not verify_password(...)`), so an unknown email
+  skips the expensive argon2 verify and returns measurably faster than a
+  wrong-password attempt — a timing side channel that discloses which
+  emails are registered. Fixed here by always calling `verify_password`
+  (against a precomputed dummy hash when no user exists) regardless of
+  whether the email exists, with a test asserting the call count is
+  identical either way. Also added `app/db.py`'s `get_db()` FastAPI
+  dependency (wraps `get_connection()`) so tests can override it to
+  share the test's own transaction — avoids a second, separately-committed
+  connection that would've left permanent rows in the disposable test
+  database across repeated local runs. 1.6 (token TTLs) was already
+  covered by the prior token-layer commit's tests, marked done here.
+  TDD: new `tests/test_auth_routes.py` (7 tests) written failing first.
+  Full suite: 35/35 green (was 28/28 before this step). Doc character
+  count: `documentation/photo-server/TODO.md` 19239 → 20122 (+883).
+
 ## 2026-07-16 (26)
 
 - photo-server Phase 1 prerequisite (feeds 1.3–1.6): JWT access/refresh

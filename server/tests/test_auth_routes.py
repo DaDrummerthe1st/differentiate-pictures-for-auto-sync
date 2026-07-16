@@ -1,0 +1,94 @@
+from unittest.mock import patch
+
+from app.accounts import create_account
+from app.cookies import ACCESS_COOKIE, REFRESH_COOKIE
+from app.security import verify_password
+
+_GENERIC_ERROR = "Incorrect email or password"
+
+
+def _seed_user(db_connection, email="member@example.test", password="correct horse battery staple"):
+    create_account(db_connection, email=email, password=password, role="member")
+
+
+def test_login_with_correct_credentials_sets_cookies_and_returns_200(client, db_connection):
+    _seed_user(db_connection)
+
+    response = client.post(
+        "/login",
+        json={"email": "member@example.test", "password": "correct horse battery staple"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"email": "member@example.test", "role": "member"}
+    assert ACCESS_COOKIE in response.cookies
+    assert REFRESH_COOKIE in response.cookies
+
+
+def test_login_with_wrong_password_returns_401(client, db_connection):
+    _seed_user(db_connection, email="wrongpw@example.test")
+
+    response = client.post(
+        "/login", json={"email": "wrongpw@example.test", "password": "not the password"}
+    )
+
+    assert response.status_code == 401
+    assert response.json() == {"detail": _GENERIC_ERROR}
+
+
+def test_login_with_unknown_email_returns_401(client, db_connection):
+    response = client.post(
+        "/login", json={"email": "no-such-user@example.test", "password": "whatever"}
+    )
+
+    assert response.status_code == 401
+    assert response.json() == {"detail": _GENERIC_ERROR}
+
+
+def test_login_wrong_password_and_unknown_email_get_identical_response(client, db_connection):
+    _seed_user(db_connection, email="wrongpw2@example.test")
+
+    wrong_password_response = client.post(
+        "/login", json={"email": "wrongpw2@example.test", "password": "not the password"}
+    )
+    unknown_email_response = client.post(
+        "/login", json={"email": "still-no-such-user@example.test", "password": "whatever"}
+    )
+
+    assert wrong_password_response.status_code == unknown_email_response.status_code
+    assert wrong_password_response.json() == unknown_email_response.json()
+
+
+def test_login_always_calls_verify_password_regardless_of_whether_email_exists(
+    client, db_connection
+):
+    _seed_user(db_connection, email="timing@example.test")
+
+    with patch("app.auth_routes.verify_password", wraps=verify_password) as spy:
+        client.post("/login", json={"email": "timing@example.test", "password": "wrong"})
+        assert spy.call_count == 1
+
+        client.post(
+            "/login", json={"email": "no-such-timing-user@example.test", "password": "wrong"}
+        )
+        assert spy.call_count == 2
+
+
+def test_protected_route_without_cookie_returns_401(client):
+    response = client.get("/whoami")
+
+    assert response.status_code == 401
+
+
+def test_protected_route_with_valid_access_cookie_returns_200(client, db_connection):
+    _seed_user(db_connection, email="whoami@example.test")
+    client.post(
+        "/login",
+        json={"email": "whoami@example.test", "password": "correct horse battery staple"},
+    )
+
+    # the client's own cookie jar already carries the cookies login just set
+    response = client.get("/whoami")
+
+    assert response.status_code == 200
+    assert response.json()["email"] == "whoami@example.test"

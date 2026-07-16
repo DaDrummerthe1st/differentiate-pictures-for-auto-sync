@@ -142,22 +142,35 @@ scripts/create_account.py`, doesn't put `server/` on `sys.path`, so
 `app` wasn't importable) — fixed by adding `scripts/__init__.py` and
 switching to `-m` invocation.
 
-1.3 `POST /login` with correct email+password → sets access + refresh
-JWT cookies (ported from buzzkit's `set_auth_cookies`, renamed off the
-`buzzkit_*` cookie names), 200. Test first.
+1.3 (done) `POST /login` with correct email+password → sets access +
+refresh JWT cookies (`app/auth_routes.py`, cookies via `app/cookies.py`
+— ported from buzzkit's `set_auth_cookies`, renamed off the `buzzkit_*`
+cookie names to `photo_server_access`/`photo_server_refresh`), 200.
 
-1.4 `POST /login` with wrong password → 401. Same status/body/timing
-profile for "wrong password" and "unknown email" — explicit test
-comparing both, so the response never discloses whether an email is
-registered (buzzkit's generic `_GENERIC_LOGIN_ERROR` pattern, ported).
+1.4 (done) `POST /login` with wrong password → 401. Same status/body
+for "wrong password" and "unknown email" (`_GENERIC_LOGIN_ERROR`,
+ported from buzzkit) — explicit test asserts identical status+body for
+both. **Timing found and fixed, not just assumed**: buzzkit's own login
+route short-circuits (`auth_row is None or not verify_password(...)`),
+so an unknown email never pays argon2's verify cost and returns
+measurably faster than a wrong-password attempt — a real timing side
+channel, not ported. `app/auth_routes.py` instead always calls
+`verify_password` (against a precomputed dummy hash when no user
+exists), and `test_login_always_calls_verify_password_regardless_of_
+whether_email_exists` asserts the call happens exactly once either way.
 
-1.5 Unauthenticated request to a protected route → 401. Valid
-access-token cookie → allowed through (ported from buzzkit's
-`get_current_user` dependency, adapted to raw psycopg instead of
-SQLAlchemy).
+1.5 (done) Unauthenticated request to a protected route → 401. Valid
+access-token cookie → allowed through — `get_current_user` dependency
+in `app/auth_routes.py` (ported from buzzkit's dependency, adapted to
+raw psycopg instead of SQLAlchemy), exercised via a new `GET /whoami`
+route.
 
-1.6 Refresh token expires after 12h, access token after 15 min — test
-with a mocked clock (JWT `exp`), not a real sleep.
+1.6 (done) Refresh token expires after 12h, access token after 15 min —
+already tested in the token-layer prerequisite commit
+(`tests/test_tokens.py`), via a backdated `now` parameter passed to
+token creation rather than a real sleep or a separate mocked-clock
+library — same effect (deterministic, no wall-clock dependency),
+smaller mechanism.
 
 1.7 Failed logins are written to `audit_log` (table created now, pulled
 forward from Phase 2 — see architecture note above; buzzkit's

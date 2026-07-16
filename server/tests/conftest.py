@@ -3,8 +3,9 @@ import os
 import psycopg
 import pytest
 import redis
+from fastapi.testclient import TestClient
 
-from app.db import ensure_schema
+from app.db import ensure_schema, get_db
 
 TEST_DSN = dict(
     host=os.environ.get("TEST_POSTGRES_HOST", "127.0.0.1"),
@@ -53,3 +54,20 @@ def redis_client():
     yield client
     client.flushdb()
     client.close()
+
+
+@pytest.fixture()
+def client(db_connection):
+    """TestClient with app's get_db dependency overridden to the test's
+    own db_connection - so rows seeded via db_connection are visible to
+    route handlers without committing them permanently (rollback at
+    db_connection's teardown still isolates each test)."""
+    from app.main import app
+
+    def _override_get_db():
+        yield db_connection
+
+    app.dependency_overrides[get_db] = _override_get_db
+    with TestClient(app, base_url="https://testserver") as test_client:
+        yield test_client
+    app.dependency_overrides.pop(get_db, None)
