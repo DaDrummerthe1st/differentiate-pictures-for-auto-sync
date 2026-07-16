@@ -13,6 +13,15 @@ TEST_DSN = dict(
     password=os.environ.get("TEST_POSTGRES_PASSWORD", "test"),
 )
 
+# app.main validates its required POSTGRES_* env vars at import time
+# (fail-fast startup, TODO.md 0.4) — point them at the disposable test
+# container so `from app.main import app` succeeds during collection.
+os.environ.setdefault("POSTGRES_HOST", TEST_DSN["host"])
+os.environ.setdefault("POSTGRES_PORT", str(TEST_DSN["port"]))
+os.environ.setdefault("POSTGRES_DB", TEST_DSN["dbname"])
+os.environ.setdefault("POSTGRES_USER", TEST_DSN["user"])
+os.environ.setdefault("POSTGRES_PASSWORD", TEST_DSN["password"])
+
 
 @pytest.fixture(scope="session", autouse=True)
 def _schema():

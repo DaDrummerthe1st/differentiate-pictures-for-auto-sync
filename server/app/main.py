@@ -1,5 +1,9 @@
 from fastapi import FastAPI
 
+from app.config import load_db_config
+
+load_db_config()
+
 app = FastAPI()
 
 

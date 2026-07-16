@@ -8,13 +8,16 @@ existing single-machine, single-user Python sorting tool) and from
 [../distributed-sync/](../distributed-sync/README.md) (future multi-device
 P2P sync — not started, unaffected by this work).
 
-Status: **Phase 0 in progress** — 0.1–0.2 done and checkpointed
-(`GET /health`, Dockerfile + compose, both verified against a real
-`docker compose up`); 0.3 (`users` table, psycopg3 + raw SQL, tested
-against a disposable Postgres container — see
-[server/README.md](../../server/README.md#testing-against-postgres))
-also done. Next up is 0.4 (env-var-only config, fail-fast on missing
-vars). This folder
+Status: **Phase 0 done.** 0.1–0.2 checkpointed (`GET /health`, Dockerfile
++ compose, both verified against a real `docker compose up`); 0.3
+(`users` table, psycopg3 + raw SQL, tested against a disposable Postgres
+container — see
+[TOOLCHAIN.md](TOOLCHAIN.md#testing-against-postgres)) and 0.4
+(env-var-only config, fail-fast via `app/config.py`'s
+`load_db_config()`, called at `app/main.py` import time) both done. Next
+up is Phase 1 (login) — TODO.md flags a question for Joakim before it
+starts: does his existing login implementation from another project
+replace the fallback spec there, or get adapted into it? This folder
 originally absorbed two external planning documents Joakim supplied in
 chat — a build plan and a GUI spec amendment — into the repo's permanent
 documentation, per [CLAUDE.md](../../CLAUDE.md)'s self-sufficiency rule.

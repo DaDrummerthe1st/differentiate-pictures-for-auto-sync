@@ -3,6 +3,14 @@ services:
     build: .
     ports:
       - "127.0.0.1:8000:8000"
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: photo_server
+      POSTGRES_USER: photo_server
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in server/.env, never hardcode it}
+    depends_on:
+      - postgres
     mem_limit: 256m
     restart: "no"
 

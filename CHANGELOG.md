@@ -2,6 +2,27 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (19)
+
+- photo-server TODO.md 0.4 (env-var-only DB config, fail-fast on a
+  missing var): new `server/app/config.py`'s `load_db_config()` reads
+  the five `POSTGRES_*` vars with no fallback defaults and raises
+  `MissingConfigError` if any are missing; `app/main.py` calls it at
+  module import time so the app refuses to start before binding a port
+  rather than failing lazily on the first DB-touching request.
+  `app/db.py`'s `get_connection()` now goes through the same loader
+  instead of repeating `os.environ[...]` inline. TDD: new
+  `tests/test_config.py` (6 tests: happy path, one per missing var,
+  plus an import-time-reload check on `app.main`) written failing
+  first, then made to pass. Also fixed a real gap this step's tests
+  exposed: `docker-compose.yml`'s `app` service defined no `POSTGRES_*`
+  environment at all — with the new fail-fast check in place that would
+  have kept the real container from starting — now wired through
+  against the `postgres` service. Full suite: 11/11 green (was 4/4
+  before this step). Doc character counts:
+  `documentation/photo-server/TODO.md` 13595 → 14166 (+571),
+  `documentation/photo-server/README.md` 4477 → 4700 (+223).
+
 ## 2026-07-16 (18)
 
 - Session wrap-up audit: git clean, 33/33 tests green (29 tool + 4

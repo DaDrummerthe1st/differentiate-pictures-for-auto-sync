@@ -50,10 +50,19 @@ nothing else from the full schema yet. Test: round-trip insert/read,
 `unique(email)`. **Security**: `password_hash` column never appears in
 any log statement or test assertion output in plaintext-adjacent form.
 
-0.4 All paths and DB connection details from environment variables only
-— test that a missing required env var fails startup immediately
-(fail-fast) rather than falling back to a default. **Security**: confirm
-`.env`-style files are gitignored before this step's commit, not after.
+0.4 (done) All paths and DB connection details from environment
+variables only — test that a missing required env var fails startup
+immediately (fail-fast) rather than falling back to a default.
+`app/config.py`'s `load_db_config()` reads the five `POSTGRES_*` vars
+with no defaults and raises `MissingConfigError` if any are absent;
+`app/main.py` calls it at module import time, so a bare `uvicorn
+app.main:app` refuses to start before binding a port if config is
+missing, rather than failing lazily on the first DB-touching request.
+`docker-compose.yml`'s `app` service now passes the five vars through
+explicitly (previously it defined none, which — with this fail-fast
+check now in place — would have kept `docker compose up`'s app
+container from starting at all). **Security**: confirmed `.env` is
+gitignored (it already was, pre-dating this step).
 
 ## Phase 1 — Complete login system (priority one)
 
