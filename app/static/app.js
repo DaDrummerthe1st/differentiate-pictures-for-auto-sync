@@ -45,15 +45,25 @@ async function uniqueFileHandle(dirHandle, filename) {
   return dirHandle.getFileHandle(name, { create: true });
 }
 
-async function saveImageToFolder(relpath) {
-  const res = await fetch(`/original?p=${encodeURIComponent(relpath)}`);
-  if (!res.ok) throw new Error("download failed: " + relpath);
-  const blob = await res.blob();
-  const filename = relpath.split("/").pop();
-  const fileHandle = await uniqueFileHandle(downloadDirHandle, filename);
-  const writable = await fileHandle.createWritable();
-  await writable.write(blob);
-  await writable.close();
+async function saveImage(relpath) {
+  if (downloadDirHandle) {
+    const res = await fetch(`/original?p=${encodeURIComponent(relpath)}`);
+    if (!res.ok) throw new Error("download failed: " + relpath);
+    const blob = await res.blob();
+    const filename = relpath.split("/").pop();
+    const fileHandle = await uniqueFileHandle(downloadDirHandle, filename);
+    const writable = await fileHandle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+  } else {
+    const filename = relpath.split("/").pop();
+    const a = document.createElement("a");
+    a.href = `/original?p=${encodeURIComponent(relpath)}`;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  }
 }
 
 function showProgress(text) {
@@ -103,11 +113,14 @@ async function primeUsedNames() {
 }
 
 async function enterGallery() {
-  await primeUsedNames();
+  if (downloadDirHandle) {
+    await primeUsedNames();
+  }
   document.getElementById("setup").classList.add("hidden");
   document.getElementById("gallery").classList.remove("hidden");
-  document.getElementById("downloadFolderLabel").textContent =
-    "Bilder sparas i: " + (downloadDirHandle.name || "vald mapp");
+  document.getElementById("downloadFolderLabel").textContent = downloadDirHandle
+    ? "Bilder sparas i: " + (downloadDirHandle.name || "vald mapp")
+    : "Nedladdningar sparas enligt webbläsarens nedladdningsinställning";
   loadTree();
 }
 
@@ -194,9 +207,10 @@ document.getElementById("downloadSelectedBtn").addEventListener("click", async (
   let done = 0;
   showProgress(`Sparar ${done}/${paths.length}...`);
   for (const p of paths) {
-    await saveImageToFolder(p);
+    await saveImage(p);
     done++;
     showProgress(`Sparar ${done}/${paths.length}...`);
+    if (!downloadDirHandle) await new Promise((r) => setTimeout(r, 400));
   }
   hideProgress();
   marked.clear();
@@ -226,7 +240,7 @@ document.getElementById("lbDownload").addEventListener("click", async (e) => {
   const original = btn.textContent;
   btn.textContent = "Sparar...";
   try {
-    await saveImageToFolder(allImages[currentLightboxIndex]);
+    await saveImage(allImages[currentLightboxIndex]);
     btn.textContent = "Sparad!";
   } catch (err) {
     btn.textContent = "Fel!";
@@ -247,27 +261,32 @@ async function loadTree() {
 }
 
 document.getElementById("pickFolderBtn").addEventListener("click", setupDownloadFolder);
+document.getElementById("skipFolderBtn").addEventListener("click", () => {
+  downloadDirHandle = null;
+  enterGallery();
+});
 
 function checkCompatibility() {
-  if (typeof window.showDirectoryPicker === "function") return true;
+  if (typeof window.showDirectoryPicker === "function") {
+    document.getElementById("pickFolderBtn").classList.remove("hidden");
+    return;
+  }
+  document.getElementById("pickFolderBtn").classList.add("hidden");
   const setupError = document.getElementById("setupError");
-  const pickBtn = document.getElementById("pickFolderBtn");
-  pickBtn.classList.add("hidden");
   if (!window.isSecureContext) {
     setupError.textContent =
       "Sidan är inte öppnad över https://. Kontrollera att adressen i webbläsaren " +
-      "börjar med https:// (inte http://) - annars fungerar inte mappvalet. " +
-      "Adress just nu: " + location.href;
+      "börjar med https:// (inte http://). Adress just nu: " + location.href;
   } else {
     setupError.textContent =
-      "Den här webbläsaren stöder inte mappval (kräver Microsoft Edge eller Google Chrome, " +
-      "inte Firefox). Webbläsare: " + navigator.userAgent;
+      "Den här webbläsaren stöder inte mappval (Microsoft Edge eller Google Chrome " +
+      "behövs för det) - men du kan fortsätta ändå, nedladdningar sparas då enligt " +
+      "webbläsarens vanliga nedladdningsinställning.";
   }
-  return false;
 }
 
 (async function init() {
-  if (!checkCompatibility()) return;
+  checkCompatibility();
   if (await tryRestoreDownloadFolder()) {
     enterGallery();
   }

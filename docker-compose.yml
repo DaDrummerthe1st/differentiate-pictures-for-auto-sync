@@ -6,7 +6,9 @@ services:
     volumes:
       - /home/joakim/Pictures/mammas_bilder:/photos:ro
       - thumbcache:/thumbcache
+      - analytics_data:/data
     restart: "no"
 
 volumes:
   thumbcache:
+  analytics_data:

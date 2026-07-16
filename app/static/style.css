@@ -31,6 +31,8 @@ body {
   cursor: pointer;
 }
 .big-btn:active { background: #326ad6; }
+.skip-btn { background: #555; font-size: 1.1rem; padding: 0.7rem 1.4rem; }
+.skip-btn:active { background: #3d3d3d; }
 
 #toolbar {
   position: sticky;

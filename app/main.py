@@ -1,7 +1,9 @@
 import mimetypes
+import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image, ImageOps
@@ -13,7 +15,41 @@ THUMB_CACHE.mkdir(parents=True, exist_ok=True)
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tif", ".tiff", ".webp"}
 THUMB_SIZE = (340, 340)
 
+DB_PATH = Path("/data/analytics.db")
+DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+db = sqlite3.connect(DB_PATH, check_same_thread=False)
+db.execute(
+    """
+    CREATE TABLE IF NOT EXISTS requests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts TEXT NOT NULL,
+        method TEXT NOT NULL,
+        path TEXT NOT NULL,
+        user_agent TEXT,
+        client_ip TEXT
+    )
+    """
+)
+db.commit()
+
 app = FastAPI()
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    response = await call_next(request)
+    db.execute(
+        "INSERT INTO requests (ts, method, path, user_agent, client_ip) VALUES (?, ?, ?, ?, ?)",
+        (
+            datetime.now(timezone.utc).isoformat(),
+            request.method,
+            request.url.path,
+            request.headers.get("user-agent"),
+            request.client.host if request.client else None,
+        ),
+    )
+    db.commit()
+    return response
 
 
 def resolve_relpath(relpath: str) -> Path:
