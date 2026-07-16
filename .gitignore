@@ -8,4 +8,5 @@ resources/darknet
 tools/doc_metrics/metrics.db
 __pycache__/
 .pytest_cache/
+.venv-test/
 /server/.env

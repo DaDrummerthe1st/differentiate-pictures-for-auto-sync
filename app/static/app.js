@@ -89,12 +89,20 @@ function setBtnProgress(btn, pct, text) {
     pct == null ? "" : `linear-gradient(to right, #1f8f3f ${pct}%, #34c759 ${pct}%)`;
 }
 
+function filenameFromContentDisposition(header, fallback) {
+  if (!header) return fallback;
+  const match = header.match(/filename="?([^";]+)"?/);
+  return match ? match[1] : fallback;
+}
+
 async function downloadAsZip(paths, btn) {
   const original = btn.textContent;
   const originalBg = btn.style.background;
   btn.disabled = true;
   setBtnProgress(btn, 0, `Bygger ZIP (${paths.length} bilder)...`);
   downloadsInProgress++;
+  let writable = null;
+  let reservedName = null;
   try {
     const res = await fetch("/api/zip", {
       method: "POST",
@@ -102,13 +110,16 @@ async function downloadAsZip(paths, btn) {
       body: JSON.stringify({ paths }),
     });
     if (!res.ok) throw new Error("zip failed");
-    const filename = "mammas_bilder.zip";
+    const filename = filenameFromContentDisposition(
+      res.headers.get("content-disposition"),
+      "pictures.zip"
+    );
     const total = parseInt(res.headers.get("Content-Length") || "0", 10);
 
-    let writable = null;
     const chunks = [];
     if (downloadDirHandle) {
       const fileHandle = await uniqueFileHandle(downloadDirHandle, filename);
+      reservedName = fileHandle.name;
       writable = await fileHandle.createWritable();
     }
 
@@ -135,6 +146,7 @@ async function downloadAsZip(paths, btn) {
 
     if (writable) {
       await writable.close();
+      writable = null;
     } else {
       const blob = new Blob(chunks);
       const url = URL.createObjectURL(blob);
@@ -147,8 +159,18 @@ async function downloadAsZip(paths, btn) {
       URL.revokeObjectURL(url);
     }
     setBtnProgress(btn, 100, "Klart!");
+    logEvent("download_zip_done", `count=${paths.length}`);
   } catch (e) {
-    setBtnProgress(btn, null, "Fel vid nedladdning");
+    if (writable) {
+      try {
+        await writable.abort();
+      } catch (abortErr) {
+        // best-effort - some browsers already discard the temp file on error
+      }
+      if (reservedName) usedNames.delete(reservedName);
+    }
+    setBtnProgress(btn, null, "Fel vid nedladdning - försök igen");
+    logEvent("download_zip_error", `count=${paths.length} err=${e}`);
   } finally {
     downloadsInProgress--;
   }
@@ -536,7 +558,8 @@ async function openVoiceoverList() {
     row.className = "voiceover-item";
     const label = document.createElement("span");
     const date = new Date(item.ts);
-    label.textContent = `${date.toLocaleString("sv-SE")} — ${item.image_count} bilder`;
+    const stockholmTime = date.toLocaleString("sv-SE", { timeZone: "Europe/Stockholm" });
+    label.textContent = `${stockholmTime} — ${item.image_count} bilder`;
     const playBtn = document.createElement("button");
     playBtn.textContent = "Spela upp";
     playBtn.addEventListener("click", () => openVoiceoverPlayer(item.id));

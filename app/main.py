@@ -1,8 +1,11 @@
+import hashlib
 import json
 import mimetypes
+import os
 import sqlite3
 import uuid
 import zipfile
+from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -11,22 +14,22 @@ from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image, ImageOps
 from pydantic import BaseModel
-from starlette.background import BackgroundTask
 
-PHOTOS_ROOT = Path("/photos").resolve()
-THUMB_CACHE = Path("/thumbcache")
+PHOTOS_ROOT = Path(os.environ.get("PHOTOS_ROOT", "/photos")).resolve()
+PHOTOS_LABEL = os.environ.get("PHOTOS_LABEL", PHOTOS_ROOT.name)
+THUMB_CACHE = Path(os.environ.get("THUMB_CACHE_DIR", "/thumbcache"))
 THUMB_CACHE.mkdir(parents=True, exist_ok=True)
 
-ZIP_CACHE = Path("/zipcache")
+ZIP_CACHE = Path(os.environ.get("ZIP_CACHE_DIR", "/zipcache"))
 ZIP_CACHE.mkdir(parents=True, exist_ok=True)
 
-STORY_DIR = Path("/stories")
+STORY_DIR = Path(os.environ.get("STORY_DIR", "/stories"))
 STORY_DIR.mkdir(parents=True, exist_ok=True)
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tif", ".tiff", ".webp"}
 THUMB_SIZE = (340, 340)
 
-DB_PATH = Path("/data/analytics.db")
+DB_PATH = Path(os.environ.get("ANALYTICS_DB_PATH", "/data/analytics.db"))
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 db = sqlite3.connect(DB_PATH, check_same_thread=False)
 db.execute(
@@ -65,7 +68,29 @@ db.execute(
 )
 db.commit()
 
-app = FastAPI()
+
+def _log_event(event_type: str, detail: str = "", client_ip: str | None = None) -> None:
+    db.execute(
+        "INSERT INTO events (ts, event_type, detail, client_ip) VALUES (?, ?, ?, ?)",
+        (datetime.now(timezone.utc).isoformat(), event_type, detail, client_ip),
+    )
+    db.commit()
+
+
+def _clean_stale_zip_cache_tmp_files() -> None:
+    for tmp_file in ZIP_CACHE.glob("*.tmp"):
+        tmp_file.unlink(missing_ok=True)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    _clean_stale_zip_cache_tmp_files()
+    _log_event("server_started")
+    yield
+    _log_event("server_stopping")
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 class Event(BaseModel):
@@ -75,16 +100,7 @@ class Event(BaseModel):
 
 @app.post("/api/event")
 def log_event(event: Event, request: Request):
-    db.execute(
-        "INSERT INTO events (ts, event_type, detail, client_ip) VALUES (?, ?, ?, ?)",
-        (
-            datetime.now(timezone.utc).isoformat(),
-            event.type,
-            event.detail,
-            request.client.host if request.client else None,
-        ),
-    )
-    db.commit()
+    _log_event(event.type, event.detail, request.client.host if request.client else None)
     return {"ok": True}
 
 
@@ -171,20 +187,30 @@ class ZipRequest(BaseModel):
     paths: list[str]
 
 
+def _zip_cache_key(paths: list[str]) -> str:
+    return hashlib.sha256("\n".join(sorted(paths)).encode()).hexdigest()
+
+
 @app.post("/api/zip")
 def zip_paths(req: ZipRequest):
     if not req.paths:
         raise HTTPException(status_code=400, detail="no paths given")
-    zip_path = ZIP_CACHE / f"{uuid.uuid4().hex}.zip"
-    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_STORED) as zf:
-        for p in req.paths:
-            src = resolve_relpath(p)
-            zf.write(src, arcname=src.relative_to(PHOTOS_ROOT).as_posix())
+    key = _zip_cache_key(req.paths)
+    zip_path = ZIP_CACHE / f"{key}.zip"
+    if not zip_path.exists():
+        tmp_path = ZIP_CACHE / f"{key}.{uuid.uuid4().hex}.tmp"
+        try:
+            with zipfile.ZipFile(tmp_path, "w", zipfile.ZIP_STORED) as zf:
+                for p in req.paths:
+                    src = resolve_relpath(p)
+                    zf.write(src, arcname=src.relative_to(PHOTOS_ROOT).as_posix())
+            tmp_path.rename(zip_path)
+        finally:
+            tmp_path.unlink(missing_ok=True)
     return FileResponse(
         zip_path,
         media_type="application/zip",
-        filename="mammas_bilder.zip",
-        background=BackgroundTask(zip_path.unlink, missing_ok=True),
+        filename=f"{PHOTOS_LABEL}.zip",
     )
 
 
