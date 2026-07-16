@@ -1,12 +1,13 @@
 import jwt
 import psycopg
-from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel
 
 from app.accounts import UserRecord, get_user_by_email
 from app.audit import log_audit_event
 from app.cookies import ACCESS_COOKIE, set_auth_cookies
 from app.db import get_db
+from app.rate_limit import limiter
 from app.security import hash_password, verify_password
 from app.tokens import create_access_token, create_refresh_token, get_redis_client, verify_access_token
 
@@ -32,7 +33,13 @@ class LoginResponse(BaseModel):
 
 
 @router.post("/login", response_model=LoginResponse)
-def login(payload: LoginRequest, response: Response, db: psycopg.Connection = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(
+    request: Request,
+    payload: LoginRequest,
+    response: Response,
+    db: psycopg.Connection = Depends(get_db),
+):
     user = get_user_by_email(db, payload.email)
     password_hash = user.password_hash if user is not None else _DUMMY_PASSWORD_HASH
     password_ok = verify_password(payload.password, password_hash)

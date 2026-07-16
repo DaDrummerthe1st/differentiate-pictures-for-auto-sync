@@ -194,15 +194,16 @@ same convention `scripts/create_account.py` already used. Test: one
 failed login → one row with correct `action`/`details`; one successful
 login → one `login_success` row.
 
-1.8 6th failed attempt within a minute from the same IP → 429, via
-`slowapi`'s Redis-backed limiter on `POST /login` (`"5/minute"`, ported
-from buzzkit's `app/core/rate_limit.py`). Test drives 6 requests,
-asserts the 6th (not the 5th) is throttled.
-
-1.8 6th failed attempt within a minute from the same IP → 429, via
-`slowapi`'s Redis-backed limiter on `POST /login` (`"5/minute"`, ported
-from buzzkit's `app/core/rate_limit.py`). Test drives 6 requests,
-asserts the 6th (not the 5th) is throttled.
+1.8 (done) 6th failed attempt within a minute from the same IP → 429,
+via `slowapi`'s Redis-backed limiter on `POST /login` (`"5/minute"`,
+ported from buzzkit's `app/core/rate_limit.py`, new `app/rate_limit.py`
++ registration in `app/main.py`). Test drives 6 requests, asserts the
+first 5 are `401` (wrong password) and the 6th is `429`. Test isolation
+note: the limiter's Redis keys on client IP, and `TestClient` always
+reports the same fixed address, so the shared `client` test fixture now
+also flushes Redis before/after every test (via the existing
+`redis_client` fixture) — otherwise one test's login attempts would
+count toward the next test's limit.
 
 1.9 **Security pass — gaps not in the original spec, add before calling
 Phase 1 done:**

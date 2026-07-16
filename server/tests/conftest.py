@@ -57,7 +57,7 @@ def redis_client():
 
 
 @pytest.fixture()
-def client(db_connection, monkeypatch):
+def client(db_connection, redis_client, monkeypatch):
     """TestClient with app's get_db dependency overridden to the test's
     own db_connection - so rows seeded via db_connection are visible to
     route handlers without committing them permanently (rollback at
@@ -72,6 +72,12 @@ def client(db_connection, monkeypatch):
     the same seeded addresses. The eventual db_connection.rollback() at
     teardown still needs a live transaction to roll back, which no-op'ing
     commit (instead of skipping it) preserves.
+
+    Depends on redis_client (unused directly) purely for its flushdb
+    before/after: slowapi's rate limiter (TODO.md 1.8) is Redis-backed
+    and keys on client IP, which TestClient always reports as the same
+    fixed address - without a flush between tests, one test's login
+    attempts count toward the next test's limit.
     """
     from app.main import app
 

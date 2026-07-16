@@ -2,6 +2,25 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (30)
+
+- photo-server TODO.md 1.8 (rate limiting): new `app/rate_limit.py`
+  (`slowapi`'s `Limiter`, Redis-backed, IP-keyed), registered in
+  `app/main.py`, `"5/minute"` on `POST /login`. TDD: `tests/
+  test_rate_limit.py` written failing first (6 requests, asserted the
+  6th returns 429 — failed at first since the limiter didn't exist yet).
+  Caught a test-isolation gap while wiring it in: the limiter's Redis
+  state persists across the whole test run and keys on client IP, which
+  `TestClient` always reports as one fixed address, so an earlier test's
+  login attempts were bleeding into a later test's limit once both
+  existed. Fixed by making the shared `client` fixture always flush
+  Redis before/after (via the existing `redis_client` fixture), not only
+  for tests that request it directly. Also fixed a duplicated paragraph
+  in this file left over from an earlier edit (1.8's text had been
+  pasted twice). Full suite: 40/40 green (was 39/39 before this step),
+  confirmed stable across two consecutive runs. Doc character count:
+  `documentation/photo-server/TODO.md` 21465 → 21625 (+160).
+
 ## 2026-07-16 (29)
 
 - Tightened `CLAUDE.md`'s TDD bullet: dropped "where practical", now
