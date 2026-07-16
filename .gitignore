@@ -1,5 +1,11 @@
+/venv/
+/server/.venv/
+/.idea/
+app/local_mysql.py
+/resources/potential_first_check_py_files
+resources/darknet
+/.claude/settings.local.json
+tools/doc_metrics/metrics.db
 __pycache__/
-*.pyc
-.venv/
-.env
-!.env.example
+.pytest_cache/
+/server/.env
