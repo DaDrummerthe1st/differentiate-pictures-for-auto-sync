@@ -7,8 +7,10 @@ services:
       - /home/joakim/Pictures/mammas_bilder:/photos:ro
       - thumbcache:/thumbcache
       - analytics_data:/data
+      - zipcache:/zipcache
     restart: "no"
 
 volumes:
   thumbcache:
   analytics_data:
+  zipcache:

@@ -1,5 +1,6 @@
 import mimetypes
 import sqlite3
+import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -7,10 +8,15 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image, ImageOps
+from pydantic import BaseModel
 
 PHOTOS_ROOT = Path("/photos").resolve()
 THUMB_CACHE = Path("/thumbcache")
 THUMB_CACHE.mkdir(parents=True, exist_ok=True)
+
+ZIP_CACHE = Path("/zipcache")
+ZIP_CACHE.mkdir(parents=True, exist_ok=True)
+ZIP_PATH = ZIP_CACHE / "mammas_bilder.zip"
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tif", ".tiff", ".webp"}
 THUMB_SIZE = (340, 340)
@@ -30,9 +36,40 @@ db.execute(
     )
     """
 )
+db.execute(
+    """
+    CREATE TABLE IF NOT EXISTS events (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts TEXT NOT NULL,
+        event_type TEXT NOT NULL,
+        detail TEXT,
+        client_ip TEXT
+    )
+    """
+)
 db.commit()
 
 app = FastAPI()
+
+
+class Event(BaseModel):
+    type: str
+    detail: str = ""
+
+
+@app.post("/api/event")
+def log_event(event: Event, request: Request):
+    db.execute(
+        "INSERT INTO events (ts, event_type, detail, client_ip) VALUES (?, ?, ?, ?)",
+        (
+            datetime.now(timezone.utc).isoformat(),
+            event.type,
+            event.detail,
+            request.client.host if request.client else None,
+        ),
+    )
+    db.commit()
+    return {"ok": True}
 
 
 @app.middleware("http")
@@ -112,6 +149,18 @@ def original(p: str = Query(...)):
     src = resolve_relpath(p)
     mime = mimetypes.guess_type(src.name)[0] or "application/octet-stream"
     return FileResponse(src, media_type=mime, filename=src.name)
+
+
+@app.get("/download-all")
+def download_all():
+    if not ZIP_PATH.exists():
+        tmp_path = ZIP_CACHE / "mammas_bilder.zip.tmp"
+        with zipfile.ZipFile(tmp_path, "w", zipfile.ZIP_STORED) as zf:
+            for path in sorted(PHOTOS_ROOT.rglob("*")):
+                if path.is_file() and path.suffix.lower() in IMAGE_EXTS:
+                    zf.write(path, arcname=path.relative_to(PHOTOS_ROOT).as_posix())
+        tmp_path.rename(ZIP_PATH)
+    return FileResponse(ZIP_PATH, media_type="application/zip", filename="mammas_bilder.zip")
 
 
 app.mount("/", StaticFiles(directory=Path(__file__).parent / "static", html=True), name="static")

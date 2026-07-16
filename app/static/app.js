@@ -1,3 +1,11 @@
+function logEvent(type, detail) {
+  fetch("/api/event", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ type, detail: detail == null ? "" : String(detail) }),
+  }).catch(() => {});
+}
+
 const DB_NAME = "mamma-photo-viewer";
 const STORE = "handles";
 
@@ -64,6 +72,7 @@ async function saveImage(relpath) {
     a.click();
     a.remove();
   }
+  logEvent("image_download", relpath);
 }
 
 function showProgress(text) {
@@ -81,6 +90,7 @@ async function setupDownloadFolder() {
     const handle = await window.showDirectoryPicker({ mode: "readwrite" });
     await idbSet("dir", handle);
     downloadDirHandle = handle;
+    logEvent("folder_picked", handle.name || "");
     enterGallery();
   } catch (e) {
     if (e.name !== "AbortError") {
@@ -144,25 +154,16 @@ const visitedHeadlines = loadSet("mpv_visited_headlines");
 const collapsedHeadlines = loadSet("mpv_collapsed_headlines");
 let headlineCount = 0;
 
-const visitObserver = new IntersectionObserver(
-  (entries) => {
-    let changed = false;
-    for (const entry of entries) {
-      if (entry.isIntersecting) {
-        const headline = entry.target.dataset.headline;
-        if (!visitedHeadlines.has(headline)) {
-          visitedHeadlines.add(headline);
-          changed = true;
-        }
-      }
-    }
-    if (changed) {
-      saveSet("mpv_visited_headlines", visitedHeadlines);
-      updateVisitedUI();
-    }
-  },
-  { threshold: 0.05 }
-);
+function toggleVisited(headline) {
+  if (visitedHeadlines.has(headline)) {
+    visitedHeadlines.delete(headline);
+  } else {
+    visitedHeadlines.add(headline);
+  }
+  saveSet("mpv_visited_headlines", visitedHeadlines);
+  updateVisitedUI();
+  logEvent("album_visited_toggle", headline + ":" + visitedHeadlines.has(headline));
+}
 
 function updateVisitedUI() {
   document.getElementById("visitedCounter").textContent =
@@ -190,12 +191,29 @@ function renderTree(sections) {
     const h = document.createElement("h2");
     h.className = "headline";
     h.textContent = section.headline;
+    const visitedBtn = document.createElement("button");
+    visitedBtn.className = "visited-btn";
+    const setVisitedBtnLabel = () => {
+      const done = visitedHeadlines.has(section.headline);
+      visitedBtn.textContent = done ? "✓ Klar" : "Markera som klar";
+      visitedBtn.classList.toggle("done", done);
+    };
+    setVisitedBtnLabel();
+    visitedBtn.addEventListener("click", () => {
+      toggleVisited(section.headline);
+      setVisitedBtnLabel();
+    });
+
     const collapseBtn = document.createElement("button");
     collapseBtn.className = "collapse-btn";
     const isCollapsed = collapsedHeadlines.has(section.headline);
     collapseBtn.textContent = isCollapsed ? "Visa" : "Dölj";
+    const actions = document.createElement("div");
+    actions.className = "headline-actions";
+    actions.appendChild(visitedBtn);
+    actions.appendChild(collapseBtn);
     row.appendChild(h);
-    row.appendChild(collapseBtn);
+    row.appendChild(actions);
     album.appendChild(row);
 
     const body = document.createElement("div");
@@ -234,13 +252,15 @@ function renderTree(sections) {
     }
     album.appendChild(body);
     tree.appendChild(album);
-    visitObserver.observe(album);
 
     const pill = document.createElement("button");
     pill.className = "nav-pill" + (visitedHeadlines.has(section.headline) ? " visited" : "");
     pill.dataset.headline = section.headline;
     pill.textContent = section.headline;
-    pill.addEventListener("click", () => album.scrollIntoView({ behavior: "smooth", block: "start" }));
+    pill.addEventListener("click", () => {
+      album.scrollIntoView({ behavior: "smooth", block: "start" });
+      logEvent("nav_jump", section.headline);
+    });
     nav.appendChild(pill);
   }
   updateVisitedUI();
@@ -252,9 +272,11 @@ function onThumbClick(thumbEl) {
     if (marked.has(path)) {
       marked.delete(path);
       thumbEl.classList.remove("marked");
+      logEvent("image_unmark", path);
     } else {
       marked.add(path);
       thumbEl.classList.add("marked");
+      logEvent("image_mark", path);
     }
     updateDownloadSelectedBtn();
   } else {
@@ -272,10 +294,45 @@ function updateDownloadSelectedBtn() {
   }
 }
 
+document.getElementById("downloadAllBtn").addEventListener("click", async () => {
+  const btn = document.getElementById("downloadAllBtn");
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Bygger ZIP... (kan ta någon minut)";
+  logEvent("download_all_zip_start");
+  try {
+    if (downloadDirHandle) {
+      const res = await fetch("/download-all");
+      if (!res.ok) throw new Error("download-all failed");
+      const fileHandle = await uniqueFileHandle(downloadDirHandle, "mammas_bilder.zip");
+      const writable = await fileHandle.createWritable();
+      await res.body.pipeTo(writable);
+      btn.textContent = "Klart! ZIP sparad.";
+    } else {
+      const a = document.createElement("a");
+      a.href = "/download-all";
+      a.download = "mammas_bilder.zip";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      btn.textContent = "Nedladdning startad";
+    }
+    logEvent("download_all_zip_done");
+  } catch (e) {
+    btn.textContent = "Fel vid nedladdning";
+    logEvent("download_all_zip_error", String(e));
+  }
+  setTimeout(() => {
+    btn.textContent = original;
+    btn.disabled = false;
+  }, 4000);
+});
+
 document.getElementById("gridSizeBtn").addEventListener("click", () => {
   const large = document.body.classList.toggle("large-thumbs");
   document.getElementById("gridSizeBtn").textContent = large ? "Små bilder" : "Stora bilder";
   localStorage.setItem("mpv_large_thumbs", large ? "1" : "0");
+  logEvent("grid_size", large ? "large" : "normal");
 });
 if (localStorage.getItem("mpv_large_thumbs") === "1") {
   document.body.classList.add("large-thumbs");
@@ -287,6 +344,7 @@ document.getElementById("selectModeBtn").addEventListener("click", () => {
   const btn = document.getElementById("selectModeBtn");
   btn.classList.toggle("active", selectMode);
   btn.textContent = selectMode ? "Markeringsläge PÅ" : "Markera bilder";
+  logEvent("select_mode", selectMode ? "on" : "off");
   if (!selectMode) {
     marked.clear();
     document.querySelectorAll(".thumb.marked").forEach((el) => el.classList.remove("marked"));
@@ -296,6 +354,7 @@ document.getElementById("selectModeBtn").addEventListener("click", () => {
 
 document.getElementById("downloadSelectedBtn").addEventListener("click", async () => {
   const paths = Array.from(marked);
+  logEvent("download_selected_batch", `count=${paths.length}`);
   let done = 0;
   showProgress(`Sparar ${done}/${paths.length}...`);
   for (const p of paths) {
@@ -315,6 +374,7 @@ function openLightbox(idx) {
   const lb = document.getElementById("lightbox");
   document.getElementById("lbImg").src = `/original?p=${encodeURIComponent(allImages[idx])}`;
   lb.classList.remove("hidden");
+  logEvent("image_view", allImages[idx]);
 }
 function closeLightbox() {
   document.getElementById("lightbox").classList.add("hidden");
@@ -322,6 +382,7 @@ function closeLightbox() {
 function lightboxStep(delta) {
   currentLightboxIndex = (currentLightboxIndex + delta + allImages.length) % allImages.length;
   document.getElementById("lbImg").src = `/original?p=${encodeURIComponent(allImages[currentLightboxIndex])}`;
+  logEvent("image_view", allImages[currentLightboxIndex]);
 }
 
 document.getElementById("lbClose").addEventListener("click", closeLightbox);
@@ -358,6 +419,7 @@ async function loadTree() {
 document.getElementById("pickFolderBtn").addEventListener("click", setupDownloadFolder);
 document.getElementById("skipFolderBtn").addEventListener("click", () => {
   downloadDirHandle = null;
+  logEvent("folder_skipped");
   enterGallery();
 });
 
