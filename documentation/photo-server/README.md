@@ -8,16 +8,17 @@ existing single-machine, single-user Python sorting tool) and from
 [../distributed-sync/](../distributed-sync/README.md) (future multi-device
 P2P sync — not started, unaffected by this work).
 
-Status: **Phase 0 done.** 0.1–0.2 checkpointed (`GET /health`, Dockerfile
-+ compose, both verified against a real `docker compose up`); 0.3
-(`users` table, psycopg3 + raw SQL, tested against a disposable Postgres
-container — see
-[TOOLCHAIN.md](TOOLCHAIN.md#testing-against-postgres)) and 0.4
-(env-var-only config, fail-fast via `app/config.py`'s
-`load_db_config()`, called at `app/main.py` import time) both done. Next
-up is Phase 1 (login) — TODO.md flags a question for Joakim before it
-starts: does his existing login implementation from another project
-replace the fallback spec there, or get adapted into it? This folder
+Status: **Phase 0 done, Phase 1 (login) in progress on branch
+`phase-1-login`.** 0.1–0.4 checkpointed (health check, Dockerfile +
+compose, `users` table, fail-fast env config). Phase 1's architecture is
+now decided (see TODO.md's Phase 1 note): ported from Joakim's existing
+login implementation in the sibling `buzzkit` repo, keeping buzzkit's
+own argon2id choice (OWASP's current recommendation, and a change from
+this doc's original bcrypt spec) and JWT access+refresh tokens backed
+by a new `redis` service for revocation (instead of TODO.md's original
+plain Postgres-session fallback). 1.1 (password hashing helper,
+`server/app/security.py`) is done and tested. Next up is 1.2 (CLI to
+create the two real accounts). This folder
 originally absorbed two external planning documents Joakim supplied in
 chat — a build plan and a GUI spec amendment — into the repo's permanent
 documentation, per [CLAUDE.md](../../CLAUDE.md)'s self-sufficiency rule.

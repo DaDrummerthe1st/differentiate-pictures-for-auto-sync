@@ -2,6 +2,13 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (24)
+
+- photo-server README.md status line updated: Phase 0 done, Phase 1 in
+  progress on `phase-1-login` with 1.1 done, next up is 1.2. Doc
+  character count: `documentation/photo-server/README.md` 4700 → 4807
+  (+107).
+
 ## 2026-07-16 (23)
 
 - photo-server TODO.md 1.1 (password hashing helper): new
