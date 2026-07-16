@@ -25,6 +25,23 @@ def test_login_with_correct_credentials_sets_cookies_and_returns_200(client, db_
     assert REFRESH_COOKIE in response.cookies
 
 
+def test_login_cookies_have_expected_security_flags(client, db_connection):
+    _seed_user(db_connection, email="cookieflags@example.test")
+
+    response = client.post(
+        "/login",
+        json={"email": "cookieflags@example.test", "password": "correct horse battery staple"},
+    )
+
+    set_cookie_headers = response.headers.get_list("set-cookie")
+    assert len(set_cookie_headers) == 2
+    for header in set_cookie_headers:
+        lowered = header.lower()
+        assert "httponly" in lowered
+        assert "secure" in lowered
+        assert "samesite=strict" in lowered
+
+
 def test_login_with_wrong_password_returns_401(client, db_connection):
     _seed_user(db_connection, email="wrongpw@example.test")
 
@@ -78,6 +95,44 @@ def test_protected_route_without_cookie_returns_401(client):
     response = client.get("/whoami")
 
     assert response.status_code == 401
+
+
+def test_refresh_with_valid_cookie_rotates_tokens_and_returns_200(client, db_connection):
+    _seed_user(db_connection, email="refresh@example.test")
+    client.post(
+        "/login",
+        json={"email": "refresh@example.test", "password": "correct horse battery staple"},
+    )
+    old_refresh_cookie = client.cookies.get("photo_server_refresh")
+
+    response = client.post("/refresh")
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "refreshed"}
+    # rotated: the client's cookie jar now holds a different refresh cookie
+    assert client.cookies.get("photo_server_refresh") != old_refresh_cookie
+    # and the new one actually works for a protected route
+    assert client.get("/whoami").status_code == 200
+
+
+def test_refresh_without_cookie_returns_401(client):
+    response = client.post("/refresh")
+
+    assert response.status_code == 401
+
+
+def test_logout_revokes_refresh_token_and_clears_cookies(client, db_connection):
+    _seed_user(db_connection, email="logout@example.test")
+    client.post(
+        "/login",
+        json={"email": "logout@example.test", "password": "correct horse battery staple"},
+    )
+
+    logout_response = client.post("/logout")
+    refresh_response = client.post("/refresh")
+
+    assert logout_response.status_code == 200
+    assert refresh_response.status_code == 401
 
 
 def test_protected_route_with_valid_access_cookie_returns_200(client, db_connection):

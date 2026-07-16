@@ -5,11 +5,18 @@ from pydantic import BaseModel
 
 from app.accounts import UserRecord, get_user_by_email
 from app.audit import log_audit_event
-from app.cookies import ACCESS_COOKIE, set_auth_cookies
+from app.cookies import ACCESS_COOKIE, REFRESH_COOKIE, clear_auth_cookies, set_auth_cookies
 from app.db import get_db
 from app.rate_limit import limiter
 from app.security import hash_password, verify_password
-from app.tokens import create_access_token, create_refresh_token, get_redis_client, verify_access_token
+from app.tokens import (
+    create_access_token,
+    create_refresh_token,
+    get_redis_client,
+    revoke_refresh_token,
+    verify_access_token,
+    verify_refresh_token,
+)
 
 router = APIRouter()
 
@@ -90,3 +97,46 @@ def get_current_user(
 @router.get("/whoami", response_model=LoginResponse)
 def whoami(user: UserRecord = Depends(get_current_user)) -> LoginResponse:
     return LoginResponse(email=user.email, role=user.role)
+
+
+class MessageResponse(BaseModel):
+    message: str
+
+
+@router.post("/refresh", response_model=MessageResponse)
+def refresh(
+    response: Response,
+    refresh_token: str | None = Cookie(default=None, alias=REFRESH_COOKIE),
+):
+    if refresh_token is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated")
+
+    redis_client = get_redis_client()
+    try:
+        user_id, jti = verify_refresh_token(refresh_token, redis_client=redis_client)
+    except jwt.InvalidTokenError:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session")
+
+    # Rotate: the old refresh token is single-use, same as buzzkit's design.
+    revoke_refresh_token(jti, redis_client=redis_client)
+    new_access_token = create_access_token(user_id)
+    new_refresh_token = create_refresh_token(user_id, redis_client=redis_client)
+    set_auth_cookies(response, new_access_token, new_refresh_token)
+
+    return MessageResponse(message="refreshed")
+
+
+@router.post("/logout", response_model=MessageResponse)
+def logout(
+    response: Response,
+    refresh_token: str | None = Cookie(default=None, alias=REFRESH_COOKIE),
+):
+    if refresh_token is not None:
+        try:
+            _, jti = verify_refresh_token(refresh_token, redis_client=get_redis_client())
+            revoke_refresh_token(jti, redis_client=get_redis_client())
+        except jwt.InvalidTokenError:
+            pass
+
+    clear_auth_cookies(response)
+    return MessageResponse(message="logged out")

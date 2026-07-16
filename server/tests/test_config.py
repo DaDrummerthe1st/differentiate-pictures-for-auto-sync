@@ -58,6 +58,14 @@ def test_load_auth_config_fails_fast_when_a_required_var_is_missing(monkeypatch,
         load_auth_config()
 
 
+def test_load_auth_config_rejects_a_jwt_secret_key_shorter_than_32_chars(monkeypatch):
+    _set_all_auth(monkeypatch)
+    monkeypatch.setenv("JWT_SECRET_KEY", "too-short")
+
+    with pytest.raises(MissingConfigError):
+        load_auth_config()
+
+
 def test_importing_app_main_fails_immediately_when_config_is_missing(monkeypatch):
     _set_all(monkeypatch)
     _set_all_auth(monkeypatch)

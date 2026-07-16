@@ -31,5 +31,13 @@ def load_db_config() -> dict[str, str]:
     return _load(REQUIRED_DB_ENV_VARS)
 
 
+MIN_JWT_SECRET_KEY_LENGTH = 32
+
+
 def load_auth_config() -> dict[str, str]:
-    return _load(REQUIRED_AUTH_ENV_VARS)
+    config = _load(REQUIRED_AUTH_ENV_VARS)
+    if len(config["JWT_SECRET_KEY"]) < MIN_JWT_SECRET_KEY_LENGTH:
+        raise MissingConfigError(
+            f"JWT_SECRET_KEY must be at least {MIN_JWT_SECRET_KEY_LENGTH} characters"
+        )
+    return config

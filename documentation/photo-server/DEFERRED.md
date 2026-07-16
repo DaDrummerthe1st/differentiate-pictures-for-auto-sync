@@ -27,3 +27,13 @@ absence is a decision, not an oversight.
   put onto a USB stick for a picture frame, not in-app display.
 - **Usage-based fate prediction** — needs `audit_log` and album-tag
   history to accumulate first; a DPFAS-phase idea, not v1.
+- **Revoke-all-sessions-by-user-id on password reset** — TODO.md 1.9b's
+  admin password reset doesn't invalidate the reset user's existing
+  refresh tokens, since Redis only indexes them by `jti`, not `user_id`.
+  A stolen still-live session survives a reset until its own ≤12h expiry.
+  Worth a Redis secondary index if this matters more than it does at
+  two-user scale; not built now.
+- **Self-service email-based password reset** — needs a self-hosted SMTP
+  relay (system-level install) or a third-party email API (conflicts
+  with this project's no-cloud-APIs rule); deferred indefinitely
+  (2026-07-16). See TODO.md 1.9's admin-reset alternative, built instead.

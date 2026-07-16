@@ -237,28 +237,74 @@ count toward the next test's limit.
 
 1.9 **Security pass — gaps not in the original spec, add before calling
 Phase 1 done:**
- - Cookie flags: `HttpOnly`, `Secure`, `SameSite=Strict` (or `Lax` if
-   cross-site redirects are needed — default to `Strict` and only loosen
-   with a reason) on both the access and refresh cookies. Test that the
-   flags are present, not just that login works.
- - CSRF: cookie-based auth authenticates state-changing POSTs (tag-add,
-   download) automatically from any origin unless mitigated.
-   `SameSite=Strict` covers most of this for a single-domain app with no
-   third-party embeds — confirm that's actually sufficient here rather
-   than assuming, given photos.reuterborg.se is the only origin in play.
- - Logout endpoint: **not in the original build plan at all.** Add
-   `POST /logout` that revokes the refresh token server-side in Redis
-   (ported from buzzkit's `revoke_refresh_token`) — not just clearing
-   the cookie client-side, since a stolen refresh token would otherwise
-   stay valid for the rest of its 12h regardless of logout. Test: after
-   logout, the old refresh cookie no longer authenticates a `/refresh`
-   call.
- - `JWT_SECRET_KEY` minimum length/entropy check at startup (buzzkit
-   validates ≥32 characters in its config — port that validator), fed
-   through `app/config.py`'s fail-fast pattern from 0.4 rather than a
-   new mechanism.
- - Password reset: not in scope for Phase 1 (see MOCKUP.md) — confirm
-   this is an accepted gap, not a missed requirement.
+ - (done) Cookie flags: `HttpOnly`, `Secure`, `SameSite=Strict` on both
+   the access and refresh cookies — already set in `app/cookies.py` since
+   1.3; this step just closed the test-coverage gap
+   (`test_login_cookies_have_expected_security_flags` asserts all three
+   flags on both `Set-Cookie` headers, not just that login works).
+ - (done) **CSRF, confirmed not assumed**: `SameSite=Strict` blocks the
+   cookie from being sent on *any* cross-site request, including a
+   top-level navigation from another origin — strictly stronger than
+   `Lax`, which still allows top-level GET navigations through. The one
+   real cost of `Strict` is that following an inbound external link
+   (an email link, a bookmark opened fresh) into an authenticated page
+   won't carry the cookie on that very first request, so the page loads
+   logged-out and needs a second load/click. This app has no such
+   inbound-link flow — Elisabeth and Joakim open the site directly, not
+   via emailed deep links — so that cost is negligible and `Strict` is
+   confirmed sufficient, not just assumed adequate.
+ - (done) Logout endpoint: **not in the original build plan at all.**
+   `POST /logout` (`app/auth_routes.py`) revokes the refresh token
+   server-side in Redis (ported from buzzkit's `revoke_refresh_token`)
+   — not just clearing the cookie client-side. **Gap found while
+   test-driving this**: TODO.md's own wording here already presumed a
+   `POST /refresh` endpoint existed ("the old refresh cookie no longer
+   authenticates a `/refresh` call") but no step had ever built one —
+   without it, the 15-minute access token had no renewal path at all,
+   defeating the point of a 12h refresh token. Added `POST /refresh`
+   (rotates both tokens, single-use refresh token like buzzkit) alongside
+   logout. Tests: refresh rotates and the new cookie still authenticates;
+   refresh without a cookie → 401; after logout, the old refresh cookie
+   no longer authenticates `/refresh`.
+ - (done) `JWT_SECRET_KEY` minimum length check at startup (buzzkit
+   validates ≥32 characters in its config — ported the threshold) — folded
+   into `app/config.py`'s existing `load_auth_config()` fail-fast pattern
+   from 0.4 rather than a new mechanism.
+ - Password reset: **scope decided 2026-07-16, replacing the earlier
+   "CLI, accepted gap" note** — self-service email-based reset conflicts
+   with this project's no-cloud-APIs rule (needs either a self-hosted
+   SMTP relay — a system-level install, deferred indefinitely — or a
+   third-party email API, which the rule forbids outright). Instead: an
+   in-app, admin-only reset that generates a random password server-side
+   (see [MOCKUP.md](MOCKUP.md)'s new "Admin password reset screen"
+   section for the full spec). Split into 1.9a–1.9c below.
+
+1.9a `require_admin` dependency (`app/auth_routes.py`) — wraps
+`get_current_user`, 403 if `role != "admin"`. Test: an admin passes
+through; a member gets 403.
+
+1.9b `POST /admin/users/{user_id}/reset-password` — admin-only
+(1.9a), generates a cryptographically random password (`secrets`
+module, enough entropy that brute-forcing it isn't practical), hashes
+it (1.1's `hash_password`), updates `users.password_hash`, returns the
+plaintext password **once** in the response body (never logged, never
+written to `audit_log.details` — only that a reset happened, per this
+file's cross-cutting checklist on raw sensitive payloads). Logs
+`action="password_reset"` to `audit_log`. **Known limitation, not
+blocking**: doesn't revoke the reset user's existing refresh
+tokens/sessions (Redis only indexes refresh tokens by `jti`, not by
+`user_id`, so there's no "revoke all of this user's sessions" operation
+yet) — a stolen still-live session survives a password reset until it
+naturally expires (≤12h). Worth a Redis secondary index by `user_id` if
+this ever matters more than it does at two-user scale; noted in
+[DEFERRED.md](DEFERRED.md) rather than built now. Test: non-admin → 403;
+admin resets another account's password; the new password logs in; the
+old password no longer does.
+
+1.9c Admin password reset frontend, per MOCKUP.md's new section above
+(account list, confirm dialog, one-time password display). Same
+frontend-pairing rule as 1.10/4.8/4.9 — this is GUI-facing, so it gets
+its own step rather than being assumed to ride along with 1.9b's API.
 
 1.10 Login page frontend (per [MOCKUP.md](MOCKUP.md)'s Login screen
 spec — email, password, submit; a generic error message state; a

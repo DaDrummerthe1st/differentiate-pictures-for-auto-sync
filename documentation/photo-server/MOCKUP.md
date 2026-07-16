@@ -19,13 +19,40 @@ States:
 - Locked out (6th failed attempt within a minute, same IP) → "Too many
   attempts, try again in a minute."
 
-Explicitly excluded from this mockup: "remember me", password reset/
-forgot-password flow, account self-registration, two-factor auth. None
-of these are in the original build plan either — flagging password
-reset as a gap worth a decision before Phase 1 ships, since with only
-two accounts a lost password currently means Joakim resets it by hand
-via the CLI account-creation tool (acceptable at this scale, but should
-be a conscious choice, not an oversight).
+Explicitly excluded from this mockup: "remember me", self-service
+forgot-password (email-based reset conflicts with this project's
+no-cloud-APIs rule unless a self-hosted SMTP relay is deployed — deferred
+indefinitely, decided 2026-07-16), account self-registration, two-factor
+auth.
+
+## Admin password reset screen
+
+Decided 2026-07-16, replacing the earlier "reset by hand via CLI" note:
+an in-app, admin-only reset — no email involved.
+
+Fields: for each account (both are always listed — there are only ever
+two), an email/role label and a "Reset password" button. Nothing else.
+
+States:
+- Only visible to the admin role; a member account never sees this
+  screen or button. Non-admin hitting the underlying endpoint directly →
+  403.
+- Clicking "Reset password" → a confirm dialog, "Reset password for
+  {email}? This immediately invalidates their current password and logs
+  them out of all sessions." with Confirm/Cancel.
+- Confirm → the server generates a new random password, shown exactly
+  once in a copyable text field with the message "Share this with
+  {email} directly — it will not be shown again." and a "Done" button
+  that clears it from the screen (and from any client-side state —
+  never cached, never re-shown).
+- A "Done" tap returns to the plain account list (first state).
+- Failure (network/server error) → generic "Something went wrong,
+  try again" — no partial state, no password shown.
+
+Explicitly excluded: email delivery of any kind, letting the admin
+choose their own replacement password (always server-generated, to
+guarantee entropy), self-service reset by a non-admin (must always go
+through the admin).
 
 ## Thumbnail screen (catalogue browse, bare minimum)
 
