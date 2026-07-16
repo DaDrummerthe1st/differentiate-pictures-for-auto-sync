@@ -1,14 +1,17 @@
 import mimetypes
+import re
 import sqlite3
+import uuid
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image, ImageOps
 from pydantic import BaseModel
+from starlette.background import BackgroundTask
 
 PHOTOS_ROOT = Path("/photos").resolve()
 THUMB_CACHE = Path("/thumbcache")
@@ -16,7 +19,9 @@ THUMB_CACHE.mkdir(parents=True, exist_ok=True)
 
 ZIP_CACHE = Path("/zipcache")
 ZIP_CACHE.mkdir(parents=True, exist_ok=True)
-ZIP_PATH = ZIP_CACHE / "mammas_bilder.zip"
+
+STORY_DIR = Path("/stories")
+STORY_DIR.mkdir(parents=True, exist_ok=True)
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tif", ".tiff", ".webp"}
 THUMB_SIZE = (340, 340)
@@ -43,6 +48,17 @@ db.execute(
         ts TEXT NOT NULL,
         event_type TEXT NOT NULL,
         detail TEXT,
+        client_ip TEXT
+    )
+    """
+)
+db.execute(
+    """
+    CREATE TABLE IF NOT EXISTS stories (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts TEXT NOT NULL,
+        image_path TEXT NOT NULL,
+        audio_filename TEXT NOT NULL,
         client_ip TEXT
     )
     """
@@ -151,16 +167,68 @@ def original(p: str = Query(...)):
     return FileResponse(src, media_type=mime, filename=src.name)
 
 
-@app.get("/download-all")
-def download_all():
-    if not ZIP_PATH.exists():
-        tmp_path = ZIP_CACHE / "mammas_bilder.zip.tmp"
-        with zipfile.ZipFile(tmp_path, "w", zipfile.ZIP_STORED) as zf:
-            for path in sorted(PHOTOS_ROOT.rglob("*")):
-                if path.is_file() and path.suffix.lower() in IMAGE_EXTS:
-                    zf.write(path, arcname=path.relative_to(PHOTOS_ROOT).as_posix())
-        tmp_path.rename(ZIP_PATH)
-    return FileResponse(ZIP_PATH, media_type="application/zip", filename="mammas_bilder.zip")
+class ZipRequest(BaseModel):
+    paths: list[str]
+
+
+@app.post("/api/zip")
+def zip_paths(req: ZipRequest):
+    if not req.paths:
+        raise HTTPException(status_code=400, detail="no paths given")
+    zip_path = ZIP_CACHE / f"{uuid.uuid4().hex}.zip"
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_STORED) as zf:
+        for p in req.paths:
+            src = resolve_relpath(p)
+            zf.write(src, arcname=src.relative_to(PHOTOS_ROOT).as_posix())
+    return FileResponse(
+        zip_path,
+        media_type="application/zip",
+        filename="mammas_bilder.zip",
+        background=BackgroundTask(zip_path.unlink, missing_ok=True),
+    )
+
+
+def safe_story_filename(image_path: str) -> str:
+    stem = re.sub(r"[^A-Za-z0-9_-]+", "_", image_path)[:80]
+    return f"{stem}_{uuid.uuid4().hex}.webm"
+
+
+@app.post("/api/story")
+async def upload_story(request: Request, image_path: str = Form(...), audio: UploadFile = File(...)):
+    resolve_relpath(image_path)
+    filename = safe_story_filename(image_path)
+    dest = STORY_DIR / filename
+    with dest.open("wb") as f:
+        f.write(await audio.read())
+    db.execute(
+        "INSERT INTO stories (ts, image_path, audio_filename, client_ip) VALUES (?, ?, ?, ?)",
+        (
+            datetime.now(timezone.utc).isoformat(),
+            image_path,
+            filename,
+            request.client.host if request.client else None,
+        ),
+    )
+    db.commit()
+    return {"ok": True, "filename": filename}
+
+
+@app.get("/api/stories")
+def list_stories(p: str = Query(...)):
+    rows = db.execute(
+        "SELECT id, ts, audio_filename FROM stories WHERE image_path = ? ORDER BY id", (p,)
+    ).fetchall()
+    return [{"id": r[0], "ts": r[1], "audio_url": f"/story-audio/{r[2]}"} for r in rows]
+
+
+@app.get("/story-audio/{filename}")
+def story_audio(filename: str):
+    if "/" in filename or ".." in filename:
+        raise HTTPException(status_code=400, detail="invalid filename")
+    path = STORY_DIR / filename
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail="not found")
+    return FileResponse(path, media_type="audio/webm")
 
 
 app.mount("/", StaticFiles(directory=Path(__file__).parent / "static", html=True), name="static")

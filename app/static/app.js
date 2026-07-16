@@ -1,3 +1,11 @@
+let downloadsInProgress = 0;
+window.addEventListener("beforeunload", (e) => {
+  if (downloadsInProgress > 0) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+
 function logEvent(type, detail) {
   fetch("/api/event", {
     method: "POST",
@@ -75,13 +83,80 @@ async function saveImage(relpath) {
   logEvent("image_download", relpath);
 }
 
-function showProgress(text) {
-  const el = document.getElementById("progress");
-  el.textContent = text;
-  el.classList.remove("hidden");
+function setBtnProgress(btn, pct, text) {
+  btn.textContent = text;
+  btn.style.background =
+    pct == null ? "" : `linear-gradient(to right, #1f8f3f ${pct}%, #34c759 ${pct}%)`;
 }
-function hideProgress() {
-  document.getElementById("progress").classList.add("hidden");
+
+async function downloadAsZip(paths, btn) {
+  const original = btn.textContent;
+  const originalBg = btn.style.background;
+  btn.disabled = true;
+  setBtnProgress(btn, 0, `Bygger ZIP (${paths.length} bilder)...`);
+  downloadsInProgress++;
+  try {
+    const res = await fetch("/api/zip", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ paths }),
+    });
+    if (!res.ok) throw new Error("zip failed");
+    const filename = "mammas_bilder.zip";
+    const total = parseInt(res.headers.get("Content-Length") || "0", 10);
+
+    let writable = null;
+    const chunks = [];
+    if (downloadDirHandle) {
+      const fileHandle = await uniqueFileHandle(downloadDirHandle, filename);
+      writable = await fileHandle.createWritable();
+    }
+
+    const reader = res.body.getReader();
+    let received = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      received += value.length;
+      if (writable) {
+        await writable.write(value);
+      } else {
+        chunks.push(value);
+      }
+      const pct = total ? Math.round((received / total) * 100) : null;
+      setBtnProgress(
+        btn,
+        pct,
+        pct != null
+          ? `Sparar... ${pct}% (${(received / 1e6).toFixed(0)} MB)`
+          : `Sparar... ${(received / 1e6).toFixed(0)} MB`
+      );
+    }
+
+    if (writable) {
+      await writable.close();
+    } else {
+      const blob = new Blob(chunks);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+    setBtnProgress(btn, 100, "Klart!");
+  } catch (e) {
+    setBtnProgress(btn, null, "Fel vid nedladdning");
+  } finally {
+    downloadsInProgress--;
+  }
+  setTimeout(() => {
+    btn.style.background = originalBg;
+    btn.textContent = original;
+    btn.disabled = false;
+  }, 3000);
 }
 
 async function setupDownloadFolder() {
@@ -294,38 +369,9 @@ function updateDownloadSelectedBtn() {
   }
 }
 
-document.getElementById("downloadAllBtn").addEventListener("click", async () => {
-  const btn = document.getElementById("downloadAllBtn");
-  const original = btn.textContent;
-  btn.disabled = true;
-  btn.textContent = "Bygger ZIP... (kan ta någon minut)";
-  logEvent("download_all_zip_start");
-  try {
-    if (downloadDirHandle) {
-      const res = await fetch("/download-all");
-      if (!res.ok) throw new Error("download-all failed");
-      const fileHandle = await uniqueFileHandle(downloadDirHandle, "mammas_bilder.zip");
-      const writable = await fileHandle.createWritable();
-      await res.body.pipeTo(writable);
-      btn.textContent = "Klart! ZIP sparad.";
-    } else {
-      const a = document.createElement("a");
-      a.href = "/download-all";
-      a.download = "mammas_bilder.zip";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      btn.textContent = "Nedladdning startad";
-    }
-    logEvent("download_all_zip_done");
-  } catch (e) {
-    btn.textContent = "Fel vid nedladdning";
-    logEvent("download_all_zip_error", String(e));
-  }
-  setTimeout(() => {
-    btn.textContent = original;
-    btn.disabled = false;
-  }, 4000);
+document.getElementById("downloadAllBtn").addEventListener("click", () => {
+  logEvent("download_all_zip", `count=${allImages.length}`);
+  downloadAsZip(allImages, document.getElementById("downloadAllBtn"));
 });
 
 document.getElementById("gridSizeBtn").addEventListener("click", () => {
@@ -354,20 +400,92 @@ document.getElementById("selectModeBtn").addEventListener("click", () => {
 
 document.getElementById("downloadSelectedBtn").addEventListener("click", async () => {
   const paths = Array.from(marked);
-  logEvent("download_selected_batch", `count=${paths.length}`);
-  let done = 0;
-  showProgress(`Sparar ${done}/${paths.length}...`);
-  for (const p of paths) {
-    await saveImage(p);
-    done++;
-    showProgress(`Sparar ${done}/${paths.length}...`);
-    if (!downloadDirHandle) await new Promise((r) => setTimeout(r, 400));
-  }
-  hideProgress();
+  logEvent("download_selected_zip", `count=${paths.length}`);
+  await downloadAsZip(paths, document.getElementById("downloadSelectedBtn"));
   marked.clear();
   document.querySelectorAll(".thumb.marked").forEach((el) => el.classList.remove("marked"));
   updateDownloadSelectedBtn();
 });
+
+let mediaRecorder = null;
+let recordedChunks = [];
+let recordingPath = null;
+
+async function loadStoriesForImage(path) {
+  const list = document.getElementById("storyList");
+  list.innerHTML = "";
+  try {
+    const res = await fetch(`/api/stories?p=${encodeURIComponent(path)}`);
+    const stories = await res.json();
+    for (const story of stories) {
+      const row = document.createElement("div");
+      row.className = "story-row";
+      const audio = document.createElement("audio");
+      audio.controls = true;
+      audio.src = story.audio_url;
+      row.appendChild(audio);
+      list.appendChild(row);
+    }
+  } catch (e) {
+    // no stories yet, or offline - not fatal
+  }
+}
+
+async function toggleStoryRecording() {
+  const btn = document.getElementById("storyRecordBtn");
+  const status = document.getElementById("storyStatus");
+  const path = allImages[currentLightboxIndex];
+
+  if (mediaRecorder && mediaRecorder.state === "recording") {
+    mediaRecorder.stop();
+    return;
+  }
+
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    status.textContent = "Mikrofon stöds inte i den här webbläsaren.";
+    return;
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recordingPath = path;
+    recordedChunks = [];
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) recordedChunks.push(e.data);
+    };
+    mediaRecorder.onstop = async () => {
+      stream.getTracks().forEach((t) => t.stop());
+      btn.textContent = "\u{1F3A4} Spela in en berättelse";
+      btn.classList.remove("recording");
+      status.textContent = "Sparar...";
+      const blob = new Blob(recordedChunks, { type: "audio/webm" });
+      const form = new FormData();
+      form.append("image_path", recordingPath);
+      form.append("audio", blob, "story.webm");
+      try {
+        await fetch("/api/story", { method: "POST", body: form });
+        status.textContent = "Berättelse sparad!";
+        logEvent("story_recorded", recordingPath);
+        if (recordingPath === allImages[currentLightboxIndex]) {
+          await loadStoriesForImage(recordingPath);
+        }
+      } catch (e) {
+        status.textContent = "Kunde inte spara berättelsen.";
+      }
+      setTimeout(() => (status.textContent = ""), 3000);
+    };
+    mediaRecorder.start();
+    btn.textContent = "⏹ Stoppa inspelning";
+    btn.classList.add("recording");
+    status.textContent = "Spelar in...";
+    logEvent("story_recording_start", path);
+  } catch (e) {
+    status.textContent = "Kunde inte komma åt mikrofonen: " + e.message;
+  }
+}
+
+document.getElementById("storyRecordBtn").addEventListener("click", toggleStoryRecording);
 
 function openLightbox(idx) {
   currentLightboxIndex = idx;
@@ -375,14 +493,17 @@ function openLightbox(idx) {
   document.getElementById("lbImg").src = `/original?p=${encodeURIComponent(allImages[idx])}`;
   lb.classList.remove("hidden");
   logEvent("image_view", allImages[idx]);
+  loadStoriesForImage(allImages[idx]);
 }
 function closeLightbox() {
   document.getElementById("lightbox").classList.add("hidden");
+  if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
 }
 function lightboxStep(delta) {
   currentLightboxIndex = (currentLightboxIndex + delta + allImages.length) % allImages.length;
   document.getElementById("lbImg").src = `/original?p=${encodeURIComponent(allImages[currentLightboxIndex])}`;
   logEvent("image_view", allImages[currentLightboxIndex]);
+  loadStoriesForImage(allImages[currentLightboxIndex]);
 }
 
 document.getElementById("lbClose").addEventListener("click", closeLightbox);
