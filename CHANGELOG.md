@@ -2,6 +2,26 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (21)
+
+- Dependency/CVE check across `server/`, prompted by Joakim asking for a
+  version update after CVE warnings on other repos — also the first
+  application of entry (20)'s new policy, applied retroactively to 0.4.
+  `uv lock --upgrade` produced no diff: every dependency (`fastapi`
+  0.139.0, `psycopg` 3.3.4, `uvicorn` 0.51.0, `httpx2`/`httpcore2` 2.7.0,
+  `pytest` 9.1.1, and transitive deps) was already resolved to its
+  newest version, since `pyproject.toml`'s `>=`-only constraints let `uv
+  sync` pick latest by default. `pip-audit` (run via `uvx --python 3.13`
+  — the system's `/usr/bin/python3.12` lacks a working `ensurepip`, so
+  `uvx` needs a uv-downloaded interpreter instead, same gap
+  [TOOLCHAIN.md](documentation/photo-server/TOOLCHAIN.md) already notes
+  for `uv sync`) found no known vulnerabilities in either the production
+  or full (prod+dev) dependency set. Also checked the two pinned Docker
+  base images: `postgres:18.4-bookworm` is Docker Hub's current tag and
+  is itself the release that fixed 11 CVEs (not one needing a further
+  patch); `python:3.12-slim-bookworm` is a floating tag, always latest
+  on rebuild. No changes needed. Full suite re-run: 11/11 green.
+
 ## 2026-07-16 (20)
 
 - New non-negotiable in `CLAUDE.md`: check for newest dependency
