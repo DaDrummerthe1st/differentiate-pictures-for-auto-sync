@@ -2,6 +2,20 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (16)
+
+- `commit_cost` was documented in its own README but nowhere else —
+  found while Joakim asked "is the new metrics and the old metrics
+  documented?" Fixed two real gaps: (1) `CLAUDE.md` mandated running
+  `doc_metrics`'s `log.py` after every commit but never mentioned
+  `commit_cost` at all, so a fresh session with zero prior context
+  wouldn't know to keep doing it — added a standing rule mirroring the
+  `doc_metrics` one, per Joakim's explicit call to make it a written
+  requirement, not just a habit this session picked up; (2) the two
+  tools' READMEs only cross-linked one way (`commit_cost` → `doc_metrics`)
+  — added the reverse link. Doc character counts: `CLAUDE.md` 7181 → 7633
+  (+452), `tools/doc_metrics/README.md` 6103 → 6298 (+195).
+
 ## 2026-07-16 (15)
 
 - Added `tools/commit_cost`: exact per-commit token/dollar cost, distinct

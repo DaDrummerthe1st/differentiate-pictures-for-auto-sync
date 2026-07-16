@@ -9,7 +9,10 @@ built for — measured the same consistent way every time, instead of
 manually eyeballed with `wc -c` (which counts bytes, not characters, and
 diverges from a true count once em dashes or other multi-byte characters
 are involved). The character-count-change rule this serves lives in
-[CLAUDE.md](../../CLAUDE.md).
+[CLAUDE.md](../../CLAUDE.md). For what a commit *cost* (real billed
+tokens/dollars) rather than what it *produced* in doc size, see
+[../commit_cost](../commit_cost/README.md) — a different axis, not a
+duplicate of this tool.
 
 ## Methodology (fixed, for comparability)
 

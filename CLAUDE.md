@@ -53,6 +53,13 @@ see the self-sufficiency rule below.
   committing, `report.py` to see the trend) rather than ad hoc `wc`
   calls, so every session's numbers use the same method and stay
   comparable to each other.
+- **Log the real token/dollar cost of every commit** — run
+  [tools/commit_cost](tools/commit_cost/README.md)'s `log.py` after
+  committing (same discipline as `doc_metrics` above), commit the
+  resulting `commit_costs.jsonl` update. This reads actual billed usage
+  from Claude Code's own session transcripts, not an estimate — see that
+  tool's README for what it can and can't tell you (e.g. human-authored
+  commits log a real `0`, not "unknown").
 - **Commit continuously**: commit coherent chunks of work as you go, not
   one giant commit at the end of a session. This is standing
   authorization to commit without asking first. It does NOT cover push,
