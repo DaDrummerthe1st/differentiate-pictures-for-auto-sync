@@ -14,6 +14,23 @@
 - Login (Phases 0–1) is priority one, ahead of every other phase,
   including ahead of the rest of the original schema. Nothing in Phase 2
   onward starts until Phase 1 is checkpointed.
+- **Every phase that produces user-facing behavior gets an explicit
+  frontend step, paired with its backend step(s)** — not left implicit
+  or assumed to happen "later." Decided 2026-07-16 after Phase 1 turned
+  out to be API-only with no step that actually built the login page,
+  unlike Phase 4.6 which does build the thumbnail screen. Checked
+  retroactively against every phase below; 4.8/4.9 were the other gaps
+  found.
+- **A GUI-facing step isn't build-ready until its spec clears the same
+  bar as MOCKUP.md's Login screen section**: every field/element present
+  (and what's explicitly absent), every state enumerated with exact
+  user-facing wording where applicable, the transition for each state,
+  which backend endpoint(s) it calls, and an explicit list of what's
+  deferred and to where. A step that only *names* a screen ("lightbox",
+  "search panel") without that detail is not well-defined — write or
+  request the actual spec before starting, don't invent UX decisions to
+  fill the gap. 4.8 and 4.9 are marked **(blocked on spec)** for exactly
+  this reason.
 
 **Before Phase 1 starts**: confirm whether Joakim's existing login
 implementation (from another project) replaces the spec below or is
@@ -230,10 +247,22 @@ Phase 1 done:**
  - Password reset: not in scope for Phase 1 (see MOCKUP.md) — confirm
    this is an accepted gap, not a missed requirement.
 
-1.10 (human checkpoint) Log in as both real accounts with real
-passwords you set via 1.2's CLI; confirm a wrong password truly fails;
-confirm logout truly invalidates the refresh token (old cookie can no
-longer refresh).
+1.10 Login page frontend (per [MOCKUP.md](MOCKUP.md)'s Login screen
+spec — email, password, submit; a generic error message state; a
+locked-out state, "Too many attempts, try again in a minute", for the
+1.8 429 case) — minimal HTML/JS served by the app itself, calling
+`POST /login`, redirecting to the thumbnail screen's catalogue list
+(Phase 4) on success. **Gap found and closed 2026-07-16**: every step
+through 1.9 above built the API only; nothing in the original Phase 1
+plan actually built a page a person could open in a browser, unlike
+Phase 4.6 which explicitly builds the thumbnail screen's frontend.
+Added here, before the human checkpoint, so that checkpoint exercises
+the real screen rather than `curl`.
+
+1.11 (human checkpoint) Log in as both real accounts with real
+passwords you set via 1.2's CLI, through the actual login page (not
+`curl`); confirm a wrong password truly fails; confirm logout truly
+invalidates the refresh token (old cookie can no longer refresh).
 
 **Phase 1 done = login system complete.** Nothing below starts until
 this checkpoint passes.
@@ -307,6 +336,28 @@ as 4.2).
 4.7 Browsing itself is never written to `audit_log` (only mark/download/
 login are, per DATA_DICTIONARY.md) — explicit test that a browse request
 produces zero new audit rows.
+
+4.8 **(blocked on spec)** Lightbox + info panel frontend — tapping a
+thumbnail (4.6's placeholder tap target) opens the full-size image
+(4.5) in some kind of overlay, with an info panel showing
+catalogue/date/GPS/orientation. **Two gaps found 2026-07-16, not just
+one**: (1) MOCKUP.md only *names* "lightbox, info panel" without
+specifying it — no fields/states/wording/transitions, unlike the Login
+screen section's level of detail; (2) the numbered-step gap this
+mirrors 1.10's fix for. Closing (2) without closing (1) would mean
+building to an under-specified target. **Before this step starts**:
+write (or get from Joakim) an actual spec at the Login-screen's bar —
+what the info panel shows and in what layout, how the lightbox opens/
+closes/navigates between photos (swipe? arrows? both?), what happens
+on a RAW/video file 4.5 can't render inline. Don't invent these UX
+decisions — ask.
+
+4.9 **(blocked on spec)** Search/filter panel frontend, wired to 4.3's
+`GET /photos/search`. Same two-part gap as 4.8: MOCKUP.md names a
+"search/filter panel" with no detail on its fields (text box only?
+date-range pickers? catalogue picker?), states (empty results, query
+still typing/debounced, filters combined how), or layout. **Before this
+step starts**: write/get the actual spec, same bar as 4.8.
 
 ## Phase 5 — Tags (albums) and download
 

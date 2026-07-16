@@ -2,6 +2,35 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (31)
+
+- Closed a real roadmap gap in TODO.md, found by Joakim asking where
+  the GUI gets built: every Phase 1 step through 1.9 built the login
+  API only — nothing built an actual page a person could open in a
+  browser, unlike Phase 4.6 which explicitly builds the thumbnail
+  screen's frontend. Added new 1.10 (login page frontend per
+  MOCKUP.md, wired to `POST /login`) before the human checkpoint,
+  renumbered to 1.11. Audited every later phase for the same gap per
+  Joakim's follow-up ask ("add steps on every major update where gui is
+  applicable") and found two more: added 4.8 (lightbox + info panel)
+  and 4.9 (search/filter panel, wired to 4.3). Both of those, unlike
+  1.10, failed a second check Joakim then asked for explicitly — a
+  concrete definition of "well-defined GUI spec," using MOCKUP.md's
+  Login screen section as the bar (every field/element present and
+  explicitly what's absent, every state with exact user-facing wording,
+  the transition for each state, which backend endpoint(s) it calls,
+  what's deferred and to where). MOCKUP.md only *names* "lightbox, info
+  panel, search/filter panel" with none of that detail, so 4.8/4.9 are
+  marked **(blocked on spec)** rather than presented as build-ready —
+  the actual UX decisions (lightbox navigation, info panel layout,
+  search panel fields) are Joakim's to make, not something to invent to
+  fill the gap. Both new practices ("pair every user-facing phase with
+  a frontend step" and "GUI steps need a spec at this bar before
+  they're buildable") added to TODO.md's "How to use this roadmap"
+  section so they apply going forward, not just as one-off fixes. No
+  code yet — this commit is the roadmap fix only. Doc character count:
+  `documentation/photo-server/TODO.md` 21625 → 24767 (+3142).
+
 ## 2026-07-16 (30)
 
 - photo-server TODO.md 1.8 (rate limiting): new `app/rate_limit.py`
