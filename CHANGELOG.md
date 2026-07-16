@@ -2,6 +2,15 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (14)
+
+- Clarified `tools/doc_metrics/README.md`'s opening: it only stated the
+  mechanical goal (measure char growth consistently) not the actual
+  reason Joakim wants it (a cost ledger tied to outcomes/tasks). Fixed
+  the framing regardless of the bigger `commit_cost` discussion that
+  followed in the same session. Doc character counts:
+  `tools/doc_metrics/README.md` 5789 → 6103 (+314).
+
 ## 2026-07-16 (13)
 
 - Renamed `metrics.jsonl`'s keys to match `metrics.db`'s column names

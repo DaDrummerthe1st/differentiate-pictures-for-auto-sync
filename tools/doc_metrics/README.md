@@ -1,10 +1,15 @@
 # doc_metrics
 
-Tracks `*.md` character counts over time, per file, tied to git commits —
-so the character-count-change rule in [CLAUDE.md](../../CLAUDE.md) is
-measured the same way every time instead of manually eyeballed with
-`wc -c` (which counts bytes, not characters, and diverges from a true
-count once em dashes or other multi-byte characters are involved).
+**Purpose:** a durable ledger of what each iteration of work cost in
+documentation, and what it paid for — not just a char-count trend line.
+Every logged commit answers three questions at once: how much did the
+repo's docs grow or shrink, in service of which TODO item or outcome
+(`task`, see below), and — the mechanical baseline this was originally
+built for — measured the same consistent way every time, instead of
+manually eyeballed with `wc -c` (which counts bytes, not characters, and
+diverges from a true count once em dashes or other multi-byte characters
+are involved). The character-count-change rule this serves lives in
+[CLAUDE.md](../../CLAUDE.md).
 
 ## Methodology (fixed, for comparability)
 
