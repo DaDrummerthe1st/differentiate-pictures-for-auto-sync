@@ -1,8 +1,9 @@
 from fastapi import FastAPI
 
-from app.config import load_db_config
+from app.config import load_auth_config, load_db_config
 
 load_db_config()
+load_auth_config()
 
 app = FastAPI()
 

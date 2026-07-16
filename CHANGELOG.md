@@ -2,6 +2,26 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (26)
+
+- photo-server Phase 1 prerequisite (feeds 1.3–1.6): JWT access/refresh
+  token layer. `app/config.py` gained `load_auth_config()` (same
+  fail-fast, no-defaults pattern as 0.4's `load_db_config`, now for
+  `REDIS_URL`/`JWT_SECRET_KEY`), wired into `app/main.py`'s import-time
+  check alongside the DB config. New `app/tokens.py` — access tokens
+  (15 min TTL) and refresh tokens (12h TTL, Redis-allowlisted so
+  logout/rotation can revoke one early), ported from buzzkit's
+  `app/core/security.py`, with the redis client passed in explicitly
+  rather than module-global for testability. TDD: `tests/test_tokens.py`
+  (7 tests — round trips, wrong-type rejection for both token kinds,
+  expiry for both via a backdated `now` parameter rather than a real
+  sleep or a mocked clock library, and revocation) written failing
+  first. New `server/scripts/test_redis.sh` (disposable test Redis,
+  mirrors `test_db.sh`) plus a `redis_client` pytest fixture in
+  `conftest.py`. Full suite: 28/28 green (was 18/18 before this step).
+  Doc character count: `documentation/photo-server/TOOLCHAIN.md` 2104 →
+  2796 (+692).
+
 ## 2026-07-16 (25)
 
 - photo-server TODO.md 1.2 (account-creation CLI): new

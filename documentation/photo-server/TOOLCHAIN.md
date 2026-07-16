@@ -44,3 +44,20 @@ server/scripts/test_db.sh down       # stop + auto-remove when done
 `server/tests/conftest.py`'s `TEST_POSTGRES_*` env vars (`HOST`/`PORT`/
 `DB`/`USER`/`PASSWORD`) default to match `test_db.sh`'s own defaults, so
 no `.env` file is needed for the common case.
+
+## Testing against Redis (Phase 1 onward)
+
+Same reasoning as Postgres above, for `docker-compose.yml`'s `redis`
+service — TODO.md Phase 1's JWT/session tests need a real Redis, not a
+mock:
+
+```
+server/scripts/test_redis.sh up      # start, wait until ready (127.0.0.1:6380)
+uv run pytest tests                  # tests/conftest.py's redis_client fixture connects to it
+server/scripts/test_redis.sh down    # stop + auto-remove when done
+```
+
+`conftest.py`'s `TEST_REDIS_*` env vars (`PORT`/`PASSWORD`) default to
+match `test_redis.sh`'s own defaults. `JWT_SECRET_KEY` gets a fixed test
+value directly in `conftest.py` (not `TEST_`-prefixed — nothing reads it
+except this test suite itself).
