@@ -11,14 +11,23 @@ P2P sync — not started, unaffected by this work).
 Status: **Phase 0 done, Phase 1 (login) in progress on branch
 `phase-1-login`.** 0.1–0.4 checkpointed (health check, Dockerfile +
 compose, `users` table, fail-fast env config). Phase 1's architecture is
-now decided (see TODO.md's Phase 1 note): ported from Joakim's existing
+decided (see TODO.md's Phase 1 note): ported from Joakim's existing
 login implementation in the sibling `buzzkit` repo, keeping buzzkit's
 own argon2id choice (OWASP's current recommendation, and a change from
 this doc's original bcrypt spec) and JWT access+refresh tokens backed
-by a new `redis` service for revocation (instead of TODO.md's original
-plain Postgres-session fallback). 1.1 (password hashing helper,
-`server/app/security.py`) is done and tested. Next up is 1.2 (CLI to
-create the two real accounts). This folder
+by a `redis` service for revocation (instead of TODO.md's original
+plain Postgres-session fallback). 1.1–1.8 done and tested (hashing, CLI
+account creation, login route, generic error, protected-route
+dependency, token expiry, audit logging, IP-based rate limiting — 40
+tests green). Next up is 1.9 (security pass: cookie-flag test, CSRF
+confirmation, logout endpoint, `JWT_SECRET_KEY` length validator), then
+1.10 (login page frontend, per MOCKUP.md) before 1.11's human
+checkpoint. Two more roadmap gaps found and fixed along the way: TODO.md
+originally had no step to build the login page itself (API-only) or,
+further out, the lightbox/info-panel/search-panel screens named in
+MOCKUP.md — those two are now marked **(blocked on spec)** since
+MOCKUP.md only names them without the level of detail its own Login
+screen section has. This folder
 originally absorbed two external planning documents Joakim supplied in
 chat — a build plan and a GUI spec amendment — into the repo's permanent
 documentation, per [CLAUDE.md](../../CLAUDE.md)'s self-sufficiency rule.

@@ -2,6 +2,28 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (32)
+
+- Added a durable roadmap principle to TODO.md, prompted by Joakim:
+  "every major todo should end with a human test revealing user-made
+  bugs (if the user can do wrong, the user WILL do wrong)" — misuse
+  testing, not just the happy path, and this requires that phase's GUI
+  to actually be finished by then (not just its API), since layout bugs
+  like overflowing text boxes only show up on a real rendered screen.
+  Audited every phase: Phase 4 had no human checkpoint at all (added
+  one, misuse-focused, plus a note that it also covers 4.8/4.9 once
+  those specs exist); Phase 1's 1.11 and Phase 5's existing checkpoint
+  were happy-path only (both got misuse-testing additions — empty/
+  whitespace fields, absurd input length, double-submit, browser
+  back/forward, narrow-window overflow, rapid repeated taps); Phase 2
+  got an explicit "no checkpoint, by design" note instead of silence,
+  since it has no user-facing behavior to test. Also updated the
+  photo-server README.md status line to reflect 1.1–1.8 done (40 tests
+  green) and the roadmap gaps found and fixed this session. No code —
+  documentation only. Doc character counts:
+  `documentation/photo-server/TODO.md` 24767 → 27444 (+2677),
+  `documentation/photo-server/README.md` 4807 → 5402 (+595).
+
 ## 2026-07-16 (31)
 
 - Closed a real roadmap gap in TODO.md, found by Joakim asking where

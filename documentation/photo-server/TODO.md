@@ -31,6 +31,19 @@
   request the actual spec before starting, don't invent UX decisions to
   fill the gap. 4.8 and 4.9 are marked **(blocked on spec)** for exactly
   this reason.
+- **Every phase with user-facing behavior ends with a human checkpoint
+  that includes deliberate misuse, not just the happy path** — "if the
+  user can do wrong, the user will do wrong" (empty/whitespace-only
+  fields, absurdly long input, double-submitting a form, the browser
+  back button after logout, a narrow window width). This requires that
+  phase's GUI step(s) to actually be built by then, not just its API —
+  a human clicking through the real screen is also how layout bugs
+  (overflowing text boxes, wrapping, truncation) get caught; `curl`
+  can't reveal those. Decided 2026-07-16. Audited every phase below:
+  Phase 4 had no human checkpoint at all (added one); Phase 1's 1.11 and
+  Phase 5's existing checkpoint had their wording strengthened past
+  happy-path only; Phase 2 has none by design (schema only, no
+  user-facing behavior — see its own note) rather than by oversight.
 
 **Before Phase 1 starts**: confirm whether Joakim's existing login
 implementation (from another project) replaces the spec below or is
@@ -263,6 +276,12 @@ the real screen rather than `curl`.
 passwords you set via 1.2's CLI, through the actual login page (not
 `curl`); confirm a wrong password truly fails; confirm logout truly
 invalidates the refresh token (old cookie can no longer refresh).
+**Misuse pass, not just the happy path** (2026-07-16): submit the form
+empty and with a whitespace-only email; paste in an absurdly long
+password; submit twice in quick succession (double-click); use the
+browser back button after logging out and confirm the protected page
+doesn't render from cache; try a narrow/mobile-width window and confirm
+the email/password fields and error message don't overflow or clip.
 
 **Phase 1 done = login system complete.** Nothing below starts until
 this checkpoint passes.
@@ -279,6 +298,12 @@ against `search_vector` returns expected rows. **Security**: no table
 here is queryable without a `user_id`/`photo_owners` join that scopes
 results to the caller — write that as an explicit test per table, not
 an assumption.
+
+**No human checkpoint in this phase, by design, not oversight**: schema
+only, no endpoint and no user-facing behavior yet — nothing for a human
+to click through. Exercised indirectly once Phase 3's checkpoint loads
+real data into these tables and Phase 4's builds a screen on top of
+them.
 
 ## Phase 3 — Ingestion
 
@@ -359,6 +384,18 @@ date-range pickers? catalogue picker?), states (empty results, query
 still typing/debounced, filters combined how), or layout. **Before this
 step starts**: write/get the actual spec, same bar as 4.8.
 
+(human checkpoint) **Added 2026-07-16 — this phase had none.** Browse a
+real catalogue through the actual thumbnail screen (not the raw API):
+confirm thumbnails load and the grid looks right at a narrow/mobile
+window width (text/title wrapping, no overflow). Misuse pass: an empty
+catalogue, a catalogue name long enough to test the "wrapped never
+truncated" rule (DATA_DICTIONARY.md), rapid repeated taps on the same
+thumbnail, browser back/forward through lightbox opens. Once 4.8/4.9's
+specs exist and are built: open the lightbox on a RAW or video file
+specifically (the case 4.8's spec must define), and run a search with
+no results, a single-character query, and a query plus a date-range
+filter together.
+
 ## Phase 5 — Tags (albums) and download
 
 5.1 `POST /tags` create, `GET /tags` list caller's own `kind='album'`
@@ -388,7 +425,12 @@ Phase 4.
 (human checkpoint, from GUI_SPEC's original acceptance test) Create two
 tags, add the same photo to both, confirm it appears in both; download
 one tag fully, add a new photo, download again with default params,
-confirm only the new photo is in the second zip.
+confirm only the new photo is in the second zip. **Misuse pass added
+2026-07-16** (this checkpoint was happy-path only): double-tap the same
+thumbnail rapidly to add it to a tag twice, remove a tag while a
+download is still in progress, an absurdly long tag name, tapping the
+download button twice in quick succession, and confirm the top bar
+(name/count/size) doesn't overflow or clip at a narrow window width.
 
 ## Phase 6 — HTTPS and deployment
 
