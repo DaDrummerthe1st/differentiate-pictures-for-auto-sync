@@ -14,6 +14,90 @@ function logEvent(type, detail) {
   }).catch(() => {});
 }
 
+// --- Dismissable info messages: "don't show again" hides them from
+// auto-popping-up, but every message stays reachable via the Hjälp
+// button so nothing read-once is ever permanently lost. ---
+const INFO_MESSAGES = {
+  voiceover: {
+    title: "Så fungerar berättelseinspelning",
+    body:
+      "Tryck på inspelningsknappen för att börja spela in ljud. Bläddra och peka " +
+      "fritt på bilderna medan du pratar - var du pekar sparas tillsammans med " +
+      "ljudet, så när berättelsen spelas upp igen visas rätt bild och pekpunkt i " +
+      "takt med rösten. Tryck på \"Stoppa inspelning\" när du är klar.",
+  },
+};
+
+function dismissedInfoSet() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem("mpv_dismissed_info") || "[]"));
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function showInfo(key) {
+  const info = INFO_MESSAGES[key];
+  if (!info) return;
+  document.getElementById("infoModalTitle").textContent = info.title;
+  document.getElementById("infoModalBody").textContent = info.body;
+  document.getElementById("infoModalDontShowAgain").checked = dismissedInfoSet().has(key);
+  const modal = document.getElementById("infoModal");
+  modal.dataset.key = key;
+  modal.classList.remove("hidden");
+}
+
+function closeInfoModal() {
+  const modal = document.getElementById("infoModal");
+  const key = modal.dataset.key;
+  const dontShow = document.getElementById("infoModalDontShowAgain").checked;
+  const dismissed = dismissedInfoSet();
+  if (dontShow) dismissed.add(key);
+  else dismissed.delete(key);
+  localStorage.setItem("mpv_dismissed_info", JSON.stringify(Array.from(dismissed)));
+  modal.classList.add("hidden");
+  return key;
+}
+
+function maybeShowInfo(key, onProceed) {
+  if (dismissedInfoSet().has(key)) {
+    if (onProceed) onProceed();
+    return;
+  }
+  showInfo(key);
+  document.getElementById("infoModal").dataset.onProceed = "1";
+  pendingInfoProceed = onProceed || null;
+}
+
+let pendingInfoProceed = null;
+
+document.getElementById("infoModalClose").addEventListener("click", () => {
+  closeInfoModal();
+  if (pendingInfoProceed) {
+    const fn = pendingInfoProceed;
+    pendingInfoProceed = null;
+    fn();
+  }
+});
+
+document.getElementById("helpBtn").addEventListener("click", () => {
+  const container = document.getElementById("helpModalItems");
+  container.innerHTML = "";
+  for (const [key, info] of Object.entries(INFO_MESSAGES)) {
+    const btn = document.createElement("button");
+    btn.textContent = info.title;
+    btn.addEventListener("click", () => {
+      document.getElementById("helpModal").classList.add("hidden");
+      showInfo(key);
+    });
+    container.appendChild(btn);
+  }
+  document.getElementById("helpModal").classList.remove("hidden");
+});
+document.getElementById("helpModalClose").addEventListener("click", () => {
+  document.getElementById("helpModal").classList.add("hidden");
+});
+
 const DB_NAME = "mamma-photo-viewer";
 const STORE = "handles";
 
@@ -180,6 +264,69 @@ async function downloadAsZip(paths, btn) {
     btn.disabled = false;
   }, 3000);
 }
+
+// Bulk downloads go file-by-file rather than as one big zip: over a slow
+// or unreliable link, a single giant zip is all-or-nothing (any hiccup
+// loses the whole batch, and there's no way to see real progress until
+// it's fully built). Per-file downloads show honest incremental
+// progress, can be cancelled without losing what's already saved, and a
+// single failed/corrupt file doesn't take down the rest.
+let bulkDownloadActive = false;
+let bulkDownloadCancelled = false;
+
+function updateCancelDownloadBtn(show) {
+  document.getElementById("cancelDownloadBtn").classList.toggle("hidden", !show);
+}
+
+async function downloadFilesSequentially(paths, btn) {
+  if (bulkDownloadActive) return;
+  bulkDownloadActive = true;
+  bulkDownloadCancelled = false;
+  const original = btn.textContent;
+  const originalBg = btn.style.background;
+  btn.disabled = true;
+  downloadsInProgress++;
+  updateCancelDownloadBtn(true);
+
+  let saved = 0;
+  let failed = 0;
+  for (let i = 0; i < paths.length; i++) {
+    if (bulkDownloadCancelled) break;
+    const filename = paths[i].split("/").pop();
+    const pct = Math.round(((i + 1) / paths.length) * 100);
+    setBtnProgress(btn, pct, `${pct}% - ${i + 1}/${paths.length}: ${filename}`);
+    try {
+      await saveImage(paths[i]);
+      saved++;
+    } catch (e) {
+      failed++;
+    }
+  }
+
+  updateCancelDownloadBtn(false);
+  if (bulkDownloadCancelled) {
+    setBtnProgress(btn, null, `Avbruten - ${saved} av ${paths.length} sparade`);
+    logEvent("download_cancelled", `saved=${saved} of=${paths.length}`);
+  } else {
+    setBtnProgress(
+      btn,
+      100,
+      failed ? `Klart! ${saved} sparade, ${failed} misslyckades` : `Klart! ${saved} sparade`
+    );
+    logEvent("download_done", `saved=${saved} failed=${failed} of=${paths.length}`);
+  }
+  downloadsInProgress--;
+  bulkDownloadActive = false;
+  setTimeout(() => {
+    btn.style.background = originalBg;
+    btn.textContent = original;
+    btn.disabled = false;
+  }, 4000);
+}
+
+document.getElementById("cancelDownloadBtn").addEventListener("click", () => {
+  bulkDownloadCancelled = true;
+});
 
 async function setupDownloadFolder() {
   const setupError = document.getElementById("setupError");
@@ -392,8 +539,8 @@ function updateDownloadSelectedBtn() {
 }
 
 document.getElementById("downloadAllBtn").addEventListener("click", () => {
-  logEvent("download_all_zip", `count=${allImages.length}`);
-  downloadAsZip(allImages, document.getElementById("downloadAllBtn"));
+  logEvent("download_all", `count=${allImages.length}`);
+  downloadFilesSequentially(allImages, document.getElementById("downloadAllBtn"));
 });
 
 document.getElementById("albumNavToggle").addEventListener("click", () => {
@@ -430,8 +577,8 @@ document.getElementById("selectModeBtn").addEventListener("click", () => {
 
 document.getElementById("downloadSelectedBtn").addEventListener("click", async () => {
   const paths = Array.from(marked);
-  logEvent("download_selected_zip", `count=${paths.length}`);
-  await downloadAsZip(paths, document.getElementById("downloadSelectedBtn"));
+  logEvent("download_selected", `count=${paths.length}`);
+  await downloadFilesSequentially(paths, document.getElementById("downloadSelectedBtn"));
   marked.clear();
   document.querySelectorAll(".thumb.marked").forEach((el) => el.classList.remove("marked"));
   updateDownloadSelectedBtn();
@@ -538,7 +685,9 @@ function stopVoiceover() {
   updateVoiceoverUI();
 }
 
-document.getElementById("voiceoverRecordBtn").addEventListener("click", startVoiceover);
+document.getElementById("voiceoverRecordBtn").addEventListener("click", () => {
+  maybeShowInfo("voiceover", startVoiceover);
+});
 document.getElementById("voiceoverStopBtn").addEventListener("click", stopVoiceover);
 
 async function openVoiceoverList() {

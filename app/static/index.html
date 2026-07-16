@@ -20,9 +20,10 @@
   <div id="toolbar">
     <button id="selectModeBtn">Markera bilder</button>
     <button id="gridSizeBtn">Stora bilder</button>
-    <button id="downloadAllBtn">Ladda ner alla bilder (ZIP)</button>
+    <button id="downloadAllBtn">Ladda ner allt media (ZIP)</button>
     <button id="voiceoverRecordBtn">&#127908; Spela in berättelse</button>
     <button id="voiceoverListBtn">Berättelser</button>
+    <button id="helpBtn">&#10067; Hjälp</button>
     <span id="visitedCounter"></span>
     <span id="downloadFolderLabel"></span>
   </div>
@@ -34,6 +35,7 @@
 </div>
 
 <button id="downloadSelectedBtn" class="floating-btn hidden">Ladda ner markerade (0)</button>
+<button id="cancelDownloadBtn" class="floating-btn cancel-btn hidden">&#10005; Avbryt nedladdning</button>
 
 <div id="lightbox" class="hidden">
   <button id="lbClose" class="lb-btn lb-close">&#10005;</button>
@@ -61,6 +63,24 @@
     <div id="voiceoverPointerDot" class="hidden"></div>
   </div>
   <audio id="voiceoverPlayerAudio" controls></audio>
+</div>
+
+<div id="infoModal" class="hidden">
+  <div id="infoModalBox">
+    <h2 id="infoModalTitle"></h2>
+    <p id="infoModalBody"></p>
+    <label id="infoModalDontShowWrap"><input type="checkbox" id="infoModalDontShowAgain"> Visa inte detta igen</label>
+    <button id="infoModalClose" class="big-btn">Fortsätt</button>
+  </div>
+</div>
+
+<div id="helpModal" class="hidden">
+  <div id="helpModalBox">
+    <button id="helpModalClose" class="lb-btn lb-close">&#10005;</button>
+    <h2>Hjälp och information</h2>
+    <p>Meddelanden du tidigare stängt kan öppnas igen här.</p>
+    <div id="helpModalItems"></div>
+  </div>
 </div>
 
 <script src="/app.js"></script>

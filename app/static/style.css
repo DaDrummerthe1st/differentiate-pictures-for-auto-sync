@@ -199,6 +199,12 @@ body.large-thumbs { --thumb-min: 260px; }
   cursor: pointer;
   z-index: 10;
 }
+.cancel-btn {
+  bottom: auto;
+  top: 1.2rem;
+  background: #ff3b30;
+  z-index: 25;
+}
 
 #lightbox {
   position: fixed;
@@ -354,6 +360,62 @@ body.large-thumbs { --thumb-min: 260px; }
   transition: left 0.15s linear, top 0.15s linear;
 }
 #voiceoverPlayerAudio { width: 90vw; max-width: 40rem; }
+
+#helpBtn {
+  font-size: 1.2rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.6rem;
+  border: none;
+  background: #444;
+  color: white;
+  cursor: pointer;
+}
+
+#infoModal, #helpModal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+#infoModalBox, #helpModalBox {
+  position: relative;
+  background: #26262c;
+  border-radius: 1rem;
+  padding: 2rem;
+  max-width: 32rem;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+#infoModalBox h2, #helpModalBox h2 { margin-top: 0; }
+#infoModalDontShowWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  font-size: 1rem;
+  opacity: 0.85;
+}
+#helpModalItems {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+#helpModalItems button {
+  font-size: 1.05rem;
+  padding: 0.7rem 1.1rem;
+  border-radius: 0.6rem;
+  border: none;
+  background: #2c2c33;
+  color: white;
+  text-align: left;
+  cursor: pointer;
+}
 
 #progress {
   position: fixed;
