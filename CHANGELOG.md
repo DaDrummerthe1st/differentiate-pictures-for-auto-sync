@@ -65,3 +65,14 @@ CLAUDE.md's project-memory note on that trade-off).
   possible pattern, no narrower docker-specific rule could ever suppress
   it either — there's no rule to add or remove here, the floor isn't
   reachable from settings at all.
+- While drafting a next-session starting prompt for GUI login + branch
+  merges: fixed stale doc drift in `documentation/photo-server/README.md`'s
+  "Priority order" section — it still posed "does Phase 1 adapt Joakim's
+  buzzkit login implementation or build fresh" as an open question,
+  contradicting the same file's own Status section a few lines up, which
+  already said that was decided and executed (ported from buzzkit,
+  argon2id, JWT+redis, steps 1.1–1.8 done). Confirmed via buzzkit's own
+  CHANGELOG (Rev 4/5, 2026-07-05) that its login/auth — signup, lockout,
+  Google OAuth, JWT refresh/logout, RLS isolation, GDPR erasure — was
+  finished and tested long before today; the stale line was simply never
+  updated once the decision was made. Not an open question anymore.

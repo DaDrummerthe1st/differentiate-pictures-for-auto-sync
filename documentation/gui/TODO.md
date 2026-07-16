@@ -32,6 +32,51 @@ Not started - no code, no design doc yet. Flagged by Joakim on
 2026-07-16 as the deliberate next step after the current no-login
 single-user version is done.
 
+### Starting this work: read first, then resolve the open question below
+
+**Purpose, stated plainly so it doesn't get lost in the mechanics below**:
+next session's job is to merge `phase-1-login`, `mamma-photo-viewer`, and
+`master` into one working system, not just land isolated features. The
+result has to hit both bars at once — good UX (this is still Elisabeth's
+mum's app, ease of use hasn't stopped mattering) and genuinely high
+security, because this is becoming Joakim's own real server, not a
+one-off LAN tool scoped to a single Sunday. Treat the security
+requirements below (passkeys, session-hijacking protection, real TLS,
+breach-password checks, per-user isolation) as the actual bar, not
+aspirational — closer to buzzkit's production rigor than the current
+no-login LAN-only posture.
+
+- [CLAUDE.md](../../CLAUDE.md) (working agreement), [POLICY.md](../policies/POLICY.md).
+- [photo-server/README.md](../photo-server/README.md)'s Status section: the
+  *backend* login-architecture decision is already made and executed
+  (`phase-1-login` branch, steps 1.1–1.8 done) — ported from Joakim's
+  existing buzzkit login implementation (argon2id, JWT access+refresh via
+  redis). That question is resolved, don't re-ask it.
+
+**Genuinely open** — this GUI (`app/`, Flask) is a separate codebase from
+the photo-server backend (`server/`, FastAPI) — resolve before writing
+any code: does GUI login mean (a) adapting the same ported approach
+directly onto `app/`, or (b) `app/` eventually authenticating against
+the `server/` backend instead of implementing its own auth? Ask Joakim,
+don't assume.
+
+**Branch state** (measured 2026-07-17, current commit on
+`mamma-photo-viewer` was `a7d72d5` — re-check `git log`/`git status` if
+stale):
+- `phase-1-login`: 18 ahead / 0 behind `master` — backend login done
+  through step 1.8, clean, no catch-up needed to merge.
+- `mamma-photo-viewer` (this branch): 22 ahead / 134 behind `master` —
+  needs `master` merged in first, per [CLAUDE.md](../../CLAUDE.md)'s
+  merge procedure (merge target → feature branch first, resolve
+  conflicts there, only then feature → target).
+- `md5_duplicate_drop`, `photo-server-planning`: 0 ahead of `master`,
+  stale — not merge candidates, just old branches to confirm-then-delete
+  with Joakim.
+
+Per [CLAUDE.md](../../CLAUDE.md)'s branching rules: ask before starting
+on a new branch vs. continuing here, and get explicit confirmation
+before any merge into `master`, every time.
+
 ## Voiceover feature
 
 Moved to its own subfolder: [voiceover/README.md](voiceover/README.md)

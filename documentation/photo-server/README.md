@@ -70,10 +70,12 @@ read, not several competing drafts.
 
 Login (TODO.md Phases 0–1) is being built **before** anything else in
 this folder, including before the rest of the original build plan's
-Phase A schema. Joakim has an existing login implementation from another
-project he'll bring to the next session — confirm whether Phase 1 adapts
-that implementation or builds fresh per TODO.md's spec before writing any
-auth code.
+Phase A schema. Resolved (see Status above, decided before 1.1 was
+built): Phase 1 adapts Joakim's existing buzzkit login implementation
+rather than building fresh — this note used to pose that as an open
+question for "the next session"; fixed 2026-07-17 since it had gone
+stale, contradicting the file's own Status section above once the
+decision was actually made and executed.
 
 ## Why the Sunday deadline
 
