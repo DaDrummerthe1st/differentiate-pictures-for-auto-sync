@@ -2,6 +2,19 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (23)
+
+- photo-server TODO.md 1.1 (password hashing helper): new
+  `server/app/security.py`'s `hash_password`/`verify_password`/
+  `needs_rehash`, ported from buzzkit's `app/core/security.py` using
+  `argon2-cffi`'s `PasswordHasher` (argon2id). TDD: new
+  `tests/test_security.py` (5 tests — round trip, wrong-password
+  rejection, an explicit assertion the produced hash is actually
+  `$argon2id$` rather than assumed, and both branches of
+  `needs_rehash`) written failing first, then made to pass. Full suite:
+  16/16 green (was 11/11 before this step). Doc character count:
+  `documentation/photo-server/TODO.md` 18540 → 18614 (+74).
+
 ## 2026-07-16 (22)
 
 - Phase 1 (login) architecture decided, on new branch `phase-1-login`:

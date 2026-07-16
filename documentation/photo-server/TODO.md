@@ -119,11 +119,12 @@ New dependencies (`server/pyproject.toml`): `argon2-cffi`, `pyjwt`,
 project's existing pins), resolved to latest via `uv lock`, and
 `pip-audit`-checked clean before use (2026-07-16).
 
-1.1 Password hashing helper: hash + verify round-trip test, using
+1.1 (done) Password hashing helper: hash + verify round-trip test, using
 argon2id (`argon2-cffi`'s `PasswordHasher`, ported from buzzkit's
-`hash_password`/`verify_password`/`needs_rehash`). **Security**: confirm
-`PasswordHasher()`'s default variant is actually argon2id (not argon2i/d)
-before relying on it — don't assume the library default.
+`hash_password`/`verify_password`/`needs_rehash`, now `server/app/
+security.py`). **Security**: confirmed `PasswordHasher()`'s default
+variant is actually argon2id, not assumed — `test_hash_uses_argon2id_
+variant` asserts the `$argon2id$` prefix on a real produced hash.
 
 1.2 CLI (`server/scripts/create_account.py` or similar) creates the two
 accounts — joakim.reuterborg@gmail.com (admin),
