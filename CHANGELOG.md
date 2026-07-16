@@ -2,6 +2,19 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (20)
+
+- New non-negotiable in `CLAUDE.md`: check for newest dependency
+  versions before every numbered TODO step (not just once per phase, and
+  not only when a CVE prompts it); if updating surfaces an incompatible
+  or breaking newer version, fixing that break is the priority — no
+  quiet revert-and-move-on. Joakim's call, made concrete because 0.4 (the
+  previous commit) was implemented against already-pinned versions
+  without a fresh check first. Granularity (per-step, not per-phase) and
+  location (`CLAUDE.md` globally, not scoped to one topic's TODO.md)
+  both confirmed with Joakim rather than assumed. Doc character count:
+  `CLAUDE.md` 8280 → 8819 (+539).
+
 ## 2026-07-16 (19)
 
 - photo-server TODO.md 0.4 (env-var-only DB config, fail-fast on a

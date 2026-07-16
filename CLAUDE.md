@@ -16,6 +16,14 @@ see the self-sufficiency rule below.
   suite before every commit, even for changes that look unrelated or
   untestable (e.g. a config or docs-only edit) — cheap insurance against
   regressions that aren't obvious from reading the diff.
+- **Check for newest dependency versions before every numbered TODO
+  step** (0.1, 0.2, 1.3, etc. — not just once per phase), not only when a
+  CVE prompts it. If a newer version is available, update to it as part
+  of that step rather than starting the step on a stale pin. If the
+  newer version turns out incompatible or breaks a test once updated,
+  fixing that break is itself the priority — don't quietly revert to the
+  old pin and move on; the step isn't done until the suite is green on
+  the current version. Decided 2026-07-16.
 - **Ask or search — never guess.** If a fact is unknown or uncertain (a
   library's current API/version, a legal/compliance detail, a business
   rule, anything project-specific not already stated here) stop and either
