@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mammas bilder</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div id="setup" class="screen">
+  <h1>Mammas bilder</h1>
+  <p>Först: välj var på datorn nedladdade bilder ska sparas.</p>
+  <button id="pickFolderBtn" class="big-btn">Välj mapp för nedladdningar</button>
+  <p id="setupError" class="error"></p>
+</div>
+
+<div id="gallery" class="screen hidden">
+  <div id="toolbar">
+    <button id="selectModeBtn">Markera bilder</button>
+    <span id="downloadFolderLabel"></span>
+  </div>
+  <div id="tree"></div>
+</div>
+
+<button id="downloadSelectedBtn" class="floating-btn hidden">Ladda ner markerade (0)</button>
+
+<div id="lightbox" class="hidden">
+  <button id="lbClose" class="lb-btn lb-close">&#10005;</button>
+  <button id="lbPrev" class="lb-btn lb-prev">&#10094;</button>
+  <img id="lbImg" src="">
+  <button id="lbNext" class="lb-btn lb-next">&#10095;</button>
+  <button id="lbDownload" class="lb-btn lb-download">Ladda ner</button>
+</div>
+
+<div id="progress" class="hidden"></div>
+
+<script src="/app.js"></script>
+</body>
+</html>

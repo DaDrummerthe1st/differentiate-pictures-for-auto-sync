@@ -1,0 +1,12 @@
+services:
+  mamma-photo-viewer:
+    build: .
+    ports:
+      - "8420:8420"
+    volumes:
+      - /home/joakim/Pictures/mammas_bilder:/photos:ro
+      - thumbcache:/thumbcache
+    restart: "no"
+
+volumes:
+  thumbcache:
