@@ -172,11 +172,32 @@ token creation rather than a real sleep or a separate mocked-clock
 library — same effect (deterministic, no wall-clock dependency),
 smaller mechanism.
 
-1.7 Failed logins are written to `audit_log` (table created now, pulled
-forward from Phase 2 — see architecture note above; buzzkit's
-`log_security_event` ported and simplified to the single existing DB
-role, no separate `security_writer` role yet). Test: one failed login →
-one row, correct `action`/`details`.
+1.7 (done) Failed logins are written to `audit_log` (table created now
+in `app/db.py`'s `ensure_schema`, pulled forward from Phase 2 — see
+architecture note above; buzzkit's `log_security_event` ported and
+simplified to `app/audit.py`'s `log_audit_event`, single existing DB
+role, no separate `security_writer` role yet). Also logs
+`login_success` — DATA_DICTIONARY.md's audit_log description already
+said "login... actions are logged" without qualifying "failed only", so
+this reconciles the literal TODO wording with the broader schema intent
+rather than picking one silently. **Real bug found and fixed while
+wiring this in**: `app/db.py`'s `get_db()` auto-committed only after a
+route returned cleanly; since FastAPI throws a raised `HTTPException`
+into the dependency generator at its `yield` point, the failed-login
+path never reached that commit line, so the very audit row this step
+exists to write would have been silently dropped in the real deployed
+app (test coverage didn't catch it either, because the test override
+shares the test's own already-open transaction and doesn't need a
+commit to see its own writes). Fixed by removing the auto-commit and
+committing explicitly at each route's actual write points instead —
+same convention `scripts/create_account.py` already used. Test: one
+failed login → one row with correct `action`/`details`; one successful
+login → one `login_success` row.
+
+1.8 6th failed attempt within a minute from the same IP → 429, via
+`slowapi`'s Redis-backed limiter on `POST /login` (`"5/minute"`, ported
+from buzzkit's `app/core/rate_limit.py`). Test drives 6 requests,
+asserts the 6th (not the 5th) is throttled.
 
 1.8 6th failed attempt within a minute from the same IP → 429, via
 `slowapi`'s Redis-backed limiter on `POST /login` (`"5/minute"`, ported

@@ -92,3 +92,48 @@ def test_protected_route_with_valid_access_cookie_returns_200(client, db_connect
 
     assert response.status_code == 200
     assert response.json()["email"] == "whoami@example.test"
+
+
+def test_failed_login_writes_one_audit_log_row(client, db_connection):
+    _seed_user(db_connection, email="audit-fail@example.test")
+
+    client.post(
+        "/login", json={"email": "audit-fail@example.test", "password": "wrong password"}
+    )
+
+    rows = db_connection.execute(
+        "SELECT user_id, action, details FROM audit_log WHERE action = 'login_failure'"
+    ).fetchall()
+
+    assert len(rows) == 1
+    user_id, action, details = rows[0]
+    assert action == "login_failure"
+    assert details == {"attempted_email": "audit-fail@example.test"}
+
+
+def test_failed_login_for_unknown_email_writes_null_user_id(client, db_connection):
+    client.post(
+        "/login", json={"email": "no-such-audit-user@example.test", "password": "whatever"}
+    )
+
+    rows = db_connection.execute(
+        "SELECT user_id, details FROM audit_log WHERE action = 'login_failure'"
+    ).fetchall()
+
+    assert len(rows) == 1
+    assert rows[0][0] is None
+
+
+def test_successful_login_writes_one_audit_log_row(client, db_connection):
+    _seed_user(db_connection, email="audit-success@example.test")
+
+    client.post(
+        "/login",
+        json={"email": "audit-success@example.test", "password": "correct horse battery staple"},
+    )
+
+    rows = db_connection.execute(
+        "SELECT user_id, action FROM audit_log WHERE action = 'login_success'"
+    ).fetchall()
+
+    assert len(rows) == 1

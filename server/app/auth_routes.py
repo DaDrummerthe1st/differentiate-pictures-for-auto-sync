@@ -4,6 +4,7 @@ from fastapi import APIRouter, Cookie, Depends, HTTPException, Response, status
 from pydantic import BaseModel
 
 from app.accounts import UserRecord, get_user_by_email
+from app.audit import log_audit_event
 from app.cookies import ACCESS_COOKIE, set_auth_cookies
 from app.db import get_db
 from app.security import hash_password, verify_password
@@ -37,11 +38,24 @@ def login(payload: LoginRequest, response: Response, db: psycopg.Connection = De
     password_ok = verify_password(payload.password, password_hash)
 
     if user is None or not password_ok:
+        log_audit_event(
+            db,
+            action="login_failure",
+            user_id=user.id if user is not None else None,
+            details={"attempted_email": payload.email},
+        )
+        # commit explicitly: get_db() does not auto-commit on an
+        # exception path, and HTTPException below would otherwise
+        # discard this audit row along with it.
+        db.commit()
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, _GENERIC_LOGIN_ERROR)
 
     access_token = create_access_token(user.id)
     refresh_token = create_refresh_token(user.id, redis_client=get_redis_client())
     set_auth_cookies(response, access_token, refresh_token)
+
+    log_audit_event(db, action="login_success", user_id=user.id)
+    db.commit()
 
     return LoginResponse(email=user.email, role=user.role)
 

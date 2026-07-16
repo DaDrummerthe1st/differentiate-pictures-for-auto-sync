@@ -2,6 +2,38 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (28)
+
+- photo-server TODO.md 1.7 (audit log on login): `audit_log` table
+  pulled forward into `app/db.py`'s `ensure_schema`; new
+  `app/audit.py`'s `log_audit_event`, wired into `app/auth_routes.py`'s
+  login handler for both `login_failure` (with the attempted email in
+  `details`) and `login_success`. One process note: the standalone
+  `log_audit_event` unit test (`tests/test_audit.py`) was written after
+  its implementation, not before — a slip, caught and disclosed in
+  conversation rather than backfilled quietly; TDD stayed strict for
+  everything since. **Real bug found and fixed while wiring the audit
+  calls into the login route**: `app/db.py`'s `get_db()` only
+  auto-committed after a route returned cleanly; a raised
+  `HTTPException` (the failed-login path) is thrown into the dependency
+  generator at its `yield` point, skipping that commit entirely, so the
+  failed-login audit row this step exists to produce would have been
+  silently dropped in the real deployed app. Not caught by the test
+  suite itself, since the test override shares the test's own
+  already-open transaction (no commit needed to see its own writes) —
+  found via code review, not a failing test. Fixed by dropping the
+  auto-commit and committing explicitly at each route's actual write
+  points (matching `scripts/create_account.py`'s existing convention);
+  the test `client` fixture now also no-ops `db_connection.commit()` via
+  `monkeypatch` so a route's real commit call doesn't finalize seeded
+  test rows into the disposable database (which would otherwise break
+  repeated local test runs against the same long-lived container with
+  duplicate-email violations). TDD: `tests/test_auth_routes.py` gained
+  3 new tests, written failing first. Full suite: 39/39 green (was
+  35/35 before this step), verified stable across two consecutive runs
+  against the same test container. Doc character count:
+  `documentation/photo-server/TODO.md` 20122 → 21465 (+1343).
+
 ## 2026-07-16 (27)
 
 - photo-server TODO.md 1.3–1.6 (login route, generic error, protected

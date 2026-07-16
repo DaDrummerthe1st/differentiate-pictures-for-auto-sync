@@ -57,12 +57,25 @@ def redis_client():
 
 
 @pytest.fixture()
-def client(db_connection):
+def client(db_connection, monkeypatch):
     """TestClient with app's get_db dependency overridden to the test's
     own db_connection - so rows seeded via db_connection are visible to
     route handlers without committing them permanently (rollback at
-    db_connection's teardown still isolates each test)."""
+    db_connection's teardown still isolates each test).
+
+    Route handlers legitimately call db.commit() themselves (app/db.py's
+    get_db() deliberately does not auto-commit - see its docstring), so
+    that call is no-op'd here for the same connection: otherwise a
+    handler-issued commit would finalize seeded test rows into the
+    disposable test database for real, and a later test run (without
+    recreating the container) would hit duplicate-email violations on
+    the same seeded addresses. The eventual db_connection.rollback() at
+    teardown still needs a live transaction to roll back, which no-op'ing
+    commit (instead of skipping it) preserves.
+    """
     from app.main import app
+
+    monkeypatch.setattr(db_connection, "commit", lambda: None)
 
     def _override_get_db():
         yield db_connection
