@@ -119,6 +119,18 @@ execute it directly:
 Everything else — local edits, running the test suite, committing to the
 current branch — is fine to do without asking each time.
 
+## Known, accepted permission popups
+
+Distinct from the hand-over-only list above — not a blast-radius call,
+just commands that hit Claude Code's own hardcoded floor for `docker
+run`/`rmi`/`volume rm`: it always prompts, regardless of any `Bash(*)`/
+allow-list setting (confirmed 2026-07-17, see CHANGELOG — no setting can
+suppress it). Attempt these directly rather than routing around them;
+Joakim approves the popup live when it appears.
+
+- `server/scripts/test_db.sh up` / `test_redis.sh up` — both call
+  `docker run` internally to start disposable test fixtures.
+
 ## Branching and merging
 
 - **New branch, ask first.** Before starting non-trivial new development
