@@ -5,13 +5,15 @@ python3 -m unittest tools.doc_metrics.test_metrics -v
 import json
 import sqlite3
 import subprocess
-import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
-sys.path.insert(0, str(Path(__file__).parent))
-import metrics  # noqa: E402
+# Qualified import, not a sys.path + bare "import metrics" hack — this repo
+# has multiple tools/*/metrics.py modules sharing that bare name, which
+# collide in sys.modules when both test suites load in one process (see
+# CHANGELOG). The qualified form keeps them distinct.
+from tools.doc_metrics import metrics
 
 
 def _init_git_repo(root: Path) -> None:

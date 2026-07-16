@@ -2,6 +2,32 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (15)
+
+- Added `tools/commit_cost`: exact per-commit token/dollar cost, distinct
+  from `doc_metrics` (which measures document *size*, not the cost of
+  producing it). Reads Claude Code's own session transcripts
+  (`~/.claude/projects/<slug>/*.jsonl`) — every assistant turn's
+  `message.usage` carries the actual billed tokens, not an estimate — and
+  anchors on each `git commit` tool call's real result hash to sum usage
+  exactly between one commit and the next. Per Joakim's explicit
+  correction: a human-authored commit (no matching session) logs a real
+  `0`, never a null "unknown" — that's what makes human-vs-LLM cost
+  comparisons meaningful. `cost_usd` is null only when tokens are known
+  but genuinely unpriceable (mixed/unrecognized model in one commit).
+  `session_id` captured per commit too (`sessionId` is already on every
+  transcript row) for a `report.py --by-session` view. Caught and fixed
+  one real bug before trusting it: Claude Code's `<synthetic>`
+  (zero-usage, compaction-related) rows were polluting the per-commit
+  `models` list and wrongly blocking pricing — regression-tested.
+  Verified end-to-end against this repo's real history: 45 LLM-assisted
+  commits, 72 human-only, ~$97.72 total. Also fixed a latent bug this
+  surfaced: `doc_metrics/test_metrics.py` and `commit_cost/test_metrics.py`
+  both did a `sys.path` + bare `import metrics`, which collide in
+  `sys.modules` when both suites load in one process — switched to
+  qualified imports (`from tools.<name> import metrics`). Doc character
+  counts: `tools/commit_cost/README.md` (new) 5136.
+
 ## 2026-07-16 (14)
 
 - Clarified `tools/doc_metrics/README.md`'s opening: it only stated the
