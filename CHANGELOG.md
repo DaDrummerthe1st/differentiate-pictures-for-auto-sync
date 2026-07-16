@@ -2,6 +2,29 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (18)
+
+- Session wrap-up audit: git clean, 33/33 tests green (29 tool + 4
+  server), no dangling Docker images/containers, all 24 tracked `.md`
+  files' cross-references resolve, lockfile matches manifest, no stale
+  FIXME/TODO drift from this session's changes. Two real gaps found and
+  fixed separately: the "auto" permission-mode recommendation was never
+  actually applied (flagged back to Joakim — needs his `/config` action,
+  not something I can do); and this session went the entire way without
+  writing anything to the auto-memory store despite substantial feedback
+  — fixed by adding two feedback memories (exact-measurements-over-
+  estimates; permission-pushback-and-written-policy).
+- **Forward-effectiveness note**: this session's `commit_cost` bugs
+  (`<synthetic>`-model pricing block, the `tools/*/metrics.py` bare-import
+  collision) were only caught because both tool test suites happened to
+  get run *together* once. There's no single "run everything" command in
+  this repo today — `tools/doc_metrics` + `tools/commit_cost`'s unittest
+  suites and the server's pytest suite (behind `test_db.sh up`/`down`)
+  are three separate manual invocations. Worth considering a single
+  wrapper script next time test infrastructure is touched, so a future
+  cross-suite bug doesn't depend on remembering to combine them by hand.
+  Not built now — noted as a suggestion, not a decision.
+
 ## 2026-07-16 (17)
 
 - Redundancy + doc-location audit, prompted by Joakim asking "is that not
