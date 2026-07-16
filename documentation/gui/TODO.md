@@ -62,11 +62,23 @@ saved. Confirmed as a permanent decision (not just a workaround) the
 same day - the zip endpoint (`POST /api/zip`), its client-side code, and
 its tests were removed entirely rather than left dormant.
 
+## Analytics log format — more narrative, less terse
+
+Idea floated by Joakim 2026-07-17, not decided or started: today's
+`_log_event()` rows are terse structured fields (event type + a short
+detail string, e.g. `download_zip_done count=12`). Over many iterations
+of this app, terse IDs stop being legible on their own (`"#12345 opened
+by #22345 zoomed in"`). Direction being considered: freetext-style log
+lines that stay self-explanatory read cold, e.g. `"User #12345 opened
+picture #2344554 and spent 234 secs zooming and pressing buttons"`.
+Trade-off not yet weighed: more legible over time vs. harder to query/
+aggregate than structured fields. Needs a design decision (keep
+structured fields and add a rendered freetext view, or replace the
+stored format outright) before any implementation — TDD applies as
+usual once decided.
+
 ## Other open items (carried over, not yet done)
 
-- Delete stray leftover zip files sitting in old zipcache docker
-  volumes (pre-existing debris from before the caching fix, and from
-  before bulk downloads switched away from zips entirely).
 - Recheck for anything else possibly missing from the branch-mixup
   incident referenced above.
 - If this app is ever shared/open-sourced, re-check this documentation
