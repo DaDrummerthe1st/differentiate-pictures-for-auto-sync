@@ -77,16 +77,39 @@ body {
 #visitedCounter { opacity: 0.8; font-size: 1rem; }
 #downloadFolderLabel { opacity: 0.7; font-size: 1rem; }
 
-#albumNav {
+#albumNavBar {
   position: sticky;
   top: 3.6rem;
   z-index: 4;
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 0.6rem;
   padding: 0.8rem 1rem;
   background: #202024;
   border-bottom: 1px solid #333;
+}
+#albumNav {
+  display: flex;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 0.6rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+#albumNavBar.expanded #albumNav {
+  flex-wrap: wrap;
+  overflow-x: visible;
+}
+#albumNavToggle {
+  flex: 0 0 auto;
+  font-size: 0.95rem;
+  padding: 0.6rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid #555;
+  background: #2c2c33;
+  color: #ddd;
+  cursor: pointer;
+  white-space: nowrap;
 }
 .nav-pill {
   flex: 0 0 auto;

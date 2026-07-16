@@ -374,6 +374,14 @@ document.getElementById("downloadAllBtn").addEventListener("click", () => {
   downloadAsZip(allImages, document.getElementById("downloadAllBtn"));
 });
 
+document.getElementById("albumNavToggle").addEventListener("click", () => {
+  const bar = document.getElementById("albumNavBar");
+  const expanded = bar.classList.toggle("expanded");
+  document.getElementById("albumNavToggle").textContent = expanded
+    ? "Visa färre ▴"
+    : "Visa alla album ▾";
+});
+
 document.getElementById("gridSizeBtn").addEventListener("click", () => {
   const large = document.body.classList.toggle("large-thumbs");
   document.getElementById("gridSizeBtn").textContent = large ? "Små bilder" : "Stora bilder";
