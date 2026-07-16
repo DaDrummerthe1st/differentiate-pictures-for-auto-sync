@@ -11,11 +11,21 @@ see the self-sufficiency rule below.
   one, not something bolted on later. Specifics (what data is sensitive,
   why) live in [POLICY.md](documentation/policies/POLICY.md), not
   repeated here.
-- **Test-Driven Development**: write a failing test before the
-  implementation for new functionality where practical. Run the FULL test
-  suite before every commit, even for changes that look unrelated or
-  untestable (e.g. a config or docs-only edit) — cheap insurance against
-  regressions that aren't obvious from reading the diff.
+- **Test-Driven Development, no exceptions for "small" or "obvious"
+  code**: write a failing test before the implementation, every time,
+  confirm it actually fails for the expected reason, then implement.
+  "Where practical" used to qualify this bullet; dropped 2026-07-16
+  after a real slip during photo-server Phase 1 — a one-off helper
+  (`app/audit.py`'s `log_audit_event`) got written before its test, on
+  the reasoning that it was small enough not to matter. Disclosing the
+  slip in the moment was right; that a later, unrelated code-review pass
+  over the same area then caught a real bug (`app/db.py`'s `get_db()`
+  silently dropping commits on an exception path) does not retroactively
+  excuse having skipped the test — reviewed-and-lucky isn't the same as
+  tested. Run the FULL test suite before every commit, even for changes
+  that look unrelated or untestable (e.g. a config or docs-only edit) —
+  cheap insurance against regressions that aren't obvious from reading
+  the diff.
 - **Check for newest dependency versions before every numbered TODO
   step** (0.1, 0.2, 1.3, etc. — not just once per phase), not only when a
   CVE prompts it. If a newer version is available, update to it as part

@@ -2,6 +2,16 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (29)
+
+- Tightened `CLAUDE.md`'s TDD bullet: dropped "where practical", now
+  strict with no exceptions. Prompted by Joakim after a real slip this
+  session (a small helper written before its test) and a follow-up
+  question about whether that lesson was only going in private AI
+  memory — it was, initially; per this repo's own self-sufficiency
+  rule, the actual rule now lives here instead of only there. Doc
+  character count: `CLAUDE.md` 8819 → 9482 (+663).
+
 ## 2026-07-16 (28)
 
 - photo-server TODO.md 1.7 (audit log on login): `audit_log` table
