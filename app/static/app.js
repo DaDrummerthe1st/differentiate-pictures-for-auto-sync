@@ -151,10 +151,24 @@ async function saveImage(relpath) {
     if (!res.ok) throw new Error("download failed: " + relpath);
     const blob = await res.blob();
     const filename = relpath.split("/").pop();
+    // getFileHandle(create: true) creates the (empty) file on disk
+    // immediately, before any bytes are written - if write/close fails
+    // afterward (e.g. a USB drive dropping mid-write), clean up the
+    // orphaned empty file and free the name instead of leaving debris.
     const fileHandle = await uniqueFileHandle(downloadDirHandle, filename);
-    const writable = await fileHandle.createWritable();
-    await writable.write(blob);
-    await writable.close();
+    try {
+      const writable = await fileHandle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+    } catch (e) {
+      usedNames.delete(fileHandle.name);
+      try {
+        await downloadDirHandle.removeEntry(fileHandle.name);
+      } catch (removeErr) {
+        // best-effort - nothing more we can do if removal itself fails
+      }
+      throw e;
+    }
   } else {
     const filename = relpath.split("/").pop();
     const a = document.createElement("a");
@@ -288,6 +302,17 @@ async function downloadFilesSequentially(paths, btn) {
   downloadsInProgress++;
   updateCancelDownloadBtn(true);
 
+  // A long download can otherwise get silently paused if the screen
+  // sleeps or the OS suspends the tab - the wake lock reduces (doesn't
+  // guarantee, browsers can still ignore it) that risk while active.
+  let wakeLock = null;
+  try {
+    if ("wakeLock" in navigator) wakeLock = await navigator.wakeLock.request("screen");
+  } catch (e) {
+    // not fatal - downloads still work without it, just more exposed
+    // to the tab/screen sleeping mid-transfer
+  }
+
   let saved = 0;
   let failed = 0;
   for (let i = 0; i < paths.length; i++) {
@@ -303,6 +328,13 @@ async function downloadFilesSequentially(paths, btn) {
     }
   }
 
+  if (wakeLock) {
+    try {
+      await wakeLock.release();
+    } catch (e) {
+      // already released (e.g. tab lost visibility) - nothing to do
+    }
+  }
   updateCancelDownloadBtn(false);
   if (bulkDownloadCancelled) {
     setBtnProgress(btn, null, `Avbruten - ${saved} av ${paths.length} sparade`);

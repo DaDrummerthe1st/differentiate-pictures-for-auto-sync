@@ -82,6 +82,22 @@ def test_tree_excludes_binaries(client):
     assert not any(img.endswith(".dll") for img in all_images)
 
 
+def test_tree_excludes_extension_content_mismatches(client):
+    # fake_photo.jpg has a .jpg extension but isn't really a JPEG - it
+    # must not be browsable/thumbnailable as if it were a real photo.
+    res = client.get("/api/tree")
+    all_images = [img for h in res.json() for c in h["chunks"] for img in c["images"]]
+    assert "AlbumA/fake_photo.jpg" not in all_images
+
+
+def test_file_summary_still_reports_mismatches_excluded_from_tree(client):
+    # Even though it's hidden from browsing, it must still be visible
+    # in the file-type summary so a user can go check it.
+    res = client.get("/api/file-summary")
+    paths = [m["path"] for m in res.json()["extension_mismatches"]]
+    assert "AlbumA/fake_photo.jpg" in paths
+
+
 def test_thumb_for_corrupt_picture_returns_placeholder_not_500(client):
     # fake_photo.jpg has a .jpg extension but its real content isn't a
     # valid JPEG (see conftest) - the thumbnailer must not crash on it.

@@ -140,6 +140,15 @@ def api_tree():
     for path in PHOTOS_ROOT.rglob("*"):
         if not path.is_file() or path.suffix.lower() not in MEDIA_EXTS:
             continue
+        expected = _EXPECTED_LABEL_FOR_EXT.get(path.suffix.lower())
+        if expected:
+            with path.open("rb") as f:
+                header = f.read(64)
+            if _sniff_file_type(header) != expected:
+                # Extension claims one thing, actual content says
+                # another - don't show it as if it were a real photo.
+                # Still visible via /api/file-summary's mismatch list.
+                continue
         rel = path.relative_to(PHOTOS_ROOT)
         parent_parts = rel.parent.parts
         if not parent_parts:
