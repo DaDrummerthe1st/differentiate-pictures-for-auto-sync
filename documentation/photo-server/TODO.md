@@ -126,11 +126,21 @@ security.py`). **Security**: confirmed `PasswordHasher()`'s default
 variant is actually argon2id, not assumed — `test_hash_uses_argon2id_
 variant` asserts the `$argon2id$` prefix on a real produced hash.
 
-1.2 CLI (`server/scripts/create_account.py` or similar) creates the two
-accounts — joakim.reuterborg@gmail.com (admin),
-elisabeth.reuterborg@gmail.com (member) — argon2id-hashed, password
-supplied interactively or via env var at creation time, never hardcoded
-in the repo. Test: CLI creates a row, duplicate email rejected.
+1.2 (done) CLI (`server/scripts/create_account.py`, core logic in
+`app/accounts.py`) creates the two accounts —
+joakim.reuterborg@gmail.com (admin), elisabeth.reuterborg@gmail.com
+(member) — argon2id-hashed, password supplied interactively (non-echoed
+prompt) or via `CREATE_ACCOUNT_PASSWORD` env var, never as a CLI
+argument (would leak into shell history/process listings) or hardcoded
+in the repo. Run as `uv run python -m scripts.create_account --email
+... --role ...` from `server/` (`scripts/` is a package so `app`
+resolves). Test: `app/accounts.py`'s `create_account` inserts a row and
+rejects a duplicate email; also hand-smoke-tested the actual CLI
+end-to-end against the disposable test container, which caught a
+real invocation bug (running the script directly, `python
+scripts/create_account.py`, doesn't put `server/` on `sys.path`, so
+`app` wasn't importable) — fixed by adding `scripts/__init__.py` and
+switching to `-m` invocation.
 
 1.3 `POST /login` with correct email+password → sets access + refresh
 JWT cookies (ported from buzzkit's `set_auth_cookies`, renamed off the

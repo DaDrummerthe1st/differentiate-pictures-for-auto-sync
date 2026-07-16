@@ -2,6 +2,24 @@
 
 One entry per revision, newest first.
 
+## 2026-07-16 (25)
+
+- photo-server TODO.md 1.2 (account-creation CLI): new
+  `server/app/accounts.py`'s `create_account` (raw SQL insert using
+  1.1's `hash_password`) plus `server/scripts/create_account.py`, a
+  thin argparse wrapper reading the password from
+  `CREATE_ACCOUNT_PASSWORD` or a non-echoed prompt — never a CLI
+  argument, to avoid leaking it into shell history/process listings.
+  TDD: `tests/test_accounts.py` (row insert + duplicate-email rejection)
+  written failing first. Also hand-ran the actual CLI against the
+  disposable test container per this project's verify discipline, which
+  caught a real bug the unit tests couldn't: invoking the script
+  directly doesn't put `server/` on `sys.path`, so `app` wasn't
+  importable — fixed by adding `scripts/__init__.py` and switching the
+  documented invocation to `uv run python -m scripts.create_account`.
+  Full suite: 18/18 green (was 16/16 before this step). Doc character
+  count: `documentation/photo-server/TODO.md` 18614 → 19239 (+625).
+
 ## 2026-07-16 (24)
 
 - photo-server README.md status line updated: Phase 0 done, Phase 1 in
