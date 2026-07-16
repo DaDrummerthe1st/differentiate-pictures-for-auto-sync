@@ -1,5 +1,5 @@
+import json
 import mimetypes
-import re
 import sqlite3
 import uuid
 import zipfile
@@ -54,11 +54,11 @@ db.execute(
 )
 db.execute(
     """
-    CREATE TABLE IF NOT EXISTS stories (
+    CREATE TABLE IF NOT EXISTS voiceovers (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         ts TEXT NOT NULL,
-        image_path TEXT NOT NULL,
         audio_filename TEXT NOT NULL,
+        events_json TEXT NOT NULL,
         client_ip TEXT
     )
     """
@@ -188,41 +188,73 @@ def zip_paths(req: ZipRequest):
     )
 
 
-def safe_story_filename(image_path: str) -> str:
-    stem = re.sub(r"[^A-Za-z0-9_-]+", "_", image_path)[:80]
-    return f"{stem}_{uuid.uuid4().hex}.webm"
-
-
-@app.post("/api/story")
-async def upload_story(request: Request, image_path: str = Form(...), audio: UploadFile = File(...)):
-    resolve_relpath(image_path)
-    filename = safe_story_filename(image_path)
+@app.post("/api/voiceover")
+async def upload_voiceover(request: Request, events: str = Form(...), audio: UploadFile = File(...)):
+    try:
+        parsed_events = json.loads(events)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="invalid events json")
+    filename = f"{uuid.uuid4().hex}.webm"
     dest = STORY_DIR / filename
     with dest.open("wb") as f:
         f.write(await audio.read())
     db.execute(
-        "INSERT INTO stories (ts, image_path, audio_filename, client_ip) VALUES (?, ?, ?, ?)",
+        "INSERT INTO voiceovers (ts, audio_filename, events_json, client_ip) VALUES (?, ?, ?, ?)",
         (
             datetime.now(timezone.utc).isoformat(),
-            image_path,
             filename,
+            json.dumps(parsed_events),
             request.client.host if request.client else None,
         ),
     )
     db.commit()
-    return {"ok": True, "filename": filename}
+    return {"ok": True}
 
 
-@app.get("/api/stories")
-def list_stories(p: str = Query(...)):
+@app.get("/api/voiceovers")
+def list_voiceovers():
     rows = db.execute(
-        "SELECT id, ts, audio_filename FROM stories WHERE image_path = ? ORDER BY id", (p,)
+        "SELECT id, ts, audio_filename, events_json FROM voiceovers ORDER BY id DESC"
     ).fetchall()
-    return [{"id": r[0], "ts": r[1], "audio_url": f"/story-audio/{r[2]}"} for r in rows]
+    result = []
+    for row_id, ts, audio_filename, events_json in rows:
+        try:
+            parsed_events = json.loads(events_json)
+        except ValueError:
+            parsed_events = []
+        paths_in_order = []
+        for ev in parsed_events:
+            if ev.get("path") and ev["path"] not in paths_in_order:
+                paths_in_order.append(ev["path"])
+        result.append(
+            {
+                "id": row_id,
+                "ts": ts,
+                "audio_url": f"/voiceover-audio/{audio_filename}",
+                "image_count": len(paths_in_order),
+                "first_image": paths_in_order[0] if paths_in_order else None,
+            }
+        )
+    return result
 
 
-@app.get("/story-audio/{filename}")
-def story_audio(filename: str):
+@app.get("/api/voiceover/{voiceover_id}")
+def get_voiceover(voiceover_id: int):
+    row = db.execute(
+        "SELECT id, ts, audio_filename, events_json FROM voiceovers WHERE id = ?", (voiceover_id,)
+    ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="not found")
+    row_id, ts, audio_filename, events_json = row
+    try:
+        parsed_events = json.loads(events_json)
+    except ValueError:
+        parsed_events = []
+    return {"id": row_id, "ts": ts, "audio_url": f"/voiceover-audio/{audio_filename}", "events": parsed_events}
+
+
+@app.get("/voiceover-audio/{filename}")
+def voiceover_audio(filename: str):
     if "/" in filename or ".." in filename:
         raise HTTPException(status_code=400, detail="invalid filename")
     path = STORY_DIR / filename

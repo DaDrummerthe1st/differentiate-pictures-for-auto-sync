@@ -415,85 +415,176 @@ document.getElementById("downloadSelectedBtn").addEventListener("click", async (
   updateDownloadSelectedBtn();
 });
 
-let mediaRecorder = null;
-let recordedChunks = [];
-let recordingPath = null;
+// --- Freeform voiceover recording: talk while browsing, track which
+// picture and where on it the mouse points, without a fixed plan. ---
+let lastMouseX = 0;
+let lastMouseY = 0;
+document.addEventListener("mousemove", (e) => {
+  lastMouseX = e.clientX;
+  lastMouseY = e.clientY;
+});
 
-async function loadStoriesForImage(path) {
-  const list = document.getElementById("storyList");
-  list.innerHTML = "";
+let voiceoverActive = false;
+let voiceoverRecorder = null;
+let voiceoverChunks = [];
+let voiceoverEvents = [];
+let voiceoverStartMs = 0;
+let voiceoverSampleTimer = null;
+
+function currentPointedImage() {
+  const el = document.elementFromPoint(lastMouseX, lastMouseY);
+  if (!el) return null;
+  if (el.id === "lbImg" && !document.getElementById("lightbox").classList.contains("hidden")) {
+    return { imgEl: el, path: allImages[currentLightboxIndex] };
+  }
+  const thumbEl = el.closest && el.closest(".thumb");
+  if (thumbEl) {
+    return { imgEl: thumbEl.querySelector("img"), path: thumbEl.dataset.path };
+  }
+  return null;
+}
+
+function sampleVoiceoverPointer() {
+  const target = currentPointedImage();
+  if (!target || !target.imgEl || !target.path) return;
+  const rect = target.imgEl.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  const xFrac = (lastMouseX - rect.left) / rect.width;
+  const yFrac = (lastMouseY - rect.top) / rect.height;
+  if (xFrac < 0 || xFrac > 1 || yFrac < 0 || yFrac > 1) return;
+  const t = (Date.now() - voiceoverStartMs) / 1000;
+  voiceoverEvents.push({
+    t: Math.round(t * 10) / 10,
+    path: target.path,
+    x: Math.round(xFrac * 1000) / 1000,
+    y: Math.round(yFrac * 1000) / 1000,
+  });
+}
+
+function updateVoiceoverUI() {
+  document.getElementById("recordingBanner").classList.toggle("hidden", !voiceoverActive);
+  document.getElementById("voiceoverRecordBtn").classList.toggle("hidden", voiceoverActive);
+}
+
+async function uploadVoiceover() {
+  const blob = new Blob(voiceoverChunks, { type: "audio/webm" });
+  const form = new FormData();
+  form.append("audio", blob, "voiceover.webm");
+  form.append("events", JSON.stringify(voiceoverEvents));
   try {
-    const res = await fetch(`/api/stories?p=${encodeURIComponent(path)}`);
-    const stories = await res.json();
-    for (const story of stories) {
-      const row = document.createElement("div");
-      row.className = "story-row";
-      const audio = document.createElement("audio");
-      audio.controls = true;
-      audio.src = story.audio_url;
-      row.appendChild(audio);
-      list.appendChild(row);
-    }
+    await fetch("/api/voiceover", { method: "POST", body: form });
+    logEvent("voiceover_saved", `events=${voiceoverEvents.length}`);
   } catch (e) {
-    // no stories yet, or offline - not fatal
+    logEvent("voiceover_upload_error", String(e));
   }
 }
 
-async function toggleStoryRecording() {
-  const btn = document.getElementById("storyRecordBtn");
-  const status = document.getElementById("storyStatus");
-  const path = allImages[currentLightboxIndex];
-
-  if (mediaRecorder && mediaRecorder.state === "recording") {
-    mediaRecorder.stop();
-    return;
-  }
-
+async function startVoiceover() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    status.textContent = "Mikrofon stöds inte i den här webbläsaren.";
+    alert("Mikrofon stöds inte i den här webbläsaren.");
     return;
   }
-
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    recordingPath = path;
-    recordedChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = (e) => {
-      if (e.data.size > 0) recordedChunks.push(e.data);
+    voiceoverChunks = [];
+    voiceoverEvents = [];
+    voiceoverStartMs = Date.now();
+    voiceoverRecorder = new MediaRecorder(stream);
+    voiceoverRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) voiceoverChunks.push(e.data);
     };
-    mediaRecorder.onstop = async () => {
+    voiceoverRecorder.onstop = async () => {
       stream.getTracks().forEach((t) => t.stop());
-      btn.textContent = "\u{1F3A4} Spela in en berättelse";
-      btn.classList.remove("recording");
-      status.textContent = "Sparar...";
-      const blob = new Blob(recordedChunks, { type: "audio/webm" });
-      const form = new FormData();
-      form.append("image_path", recordingPath);
-      form.append("audio", blob, "story.webm");
-      try {
-        await fetch("/api/story", { method: "POST", body: form });
-        status.textContent = "Berättelse sparad!";
-        logEvent("story_recorded", recordingPath);
-        if (recordingPath === allImages[currentLightboxIndex]) {
-          await loadStoriesForImage(recordingPath);
-        }
-      } catch (e) {
-        status.textContent = "Kunde inte spara berättelsen.";
-      }
-      setTimeout(() => (status.textContent = ""), 3000);
+      clearInterval(voiceoverSampleTimer);
+      await uploadVoiceover();
     };
-    mediaRecorder.start();
-    btn.textContent = "⏹ Stoppa inspelning";
-    btn.classList.add("recording");
-    status.textContent = "Spelar in...";
-    logEvent("story_recording_start", path);
+    voiceoverRecorder.start();
+    voiceoverSampleTimer = setInterval(sampleVoiceoverPointer, 200);
+    voiceoverActive = true;
+    updateVoiceoverUI();
+    logEvent("voiceover_start");
   } catch (e) {
-    status.textContent = "Kunde inte komma åt mikrofonen: " + e.message;
+    alert("Kunde inte komma åt mikrofonen: " + e.message);
   }
 }
 
-document.getElementById("storyRecordBtn").addEventListener("click", toggleStoryRecording);
+function stopVoiceover() {
+  if (voiceoverRecorder && voiceoverRecorder.state === "recording") {
+    voiceoverRecorder.stop();
+  }
+  voiceoverActive = false;
+  updateVoiceoverUI();
+}
+
+document.getElementById("voiceoverRecordBtn").addEventListener("click", startVoiceover);
+document.getElementById("voiceoverStopBtn").addEventListener("click", stopVoiceover);
+
+async function openVoiceoverList() {
+  const modal = document.getElementById("voiceoverListModal");
+  const container = document.getElementById("voiceoverListItems");
+  container.textContent = "Laddar...";
+  modal.classList.remove("hidden");
+  const res = await fetch("/api/voiceovers");
+  const items = await res.json();
+  container.innerHTML = "";
+  if (items.length === 0) {
+    container.textContent = "Inga berättelser inspelade ännu.";
+    return;
+  }
+  for (const item of items) {
+    const row = document.createElement("div");
+    row.className = "voiceover-item";
+    const label = document.createElement("span");
+    const date = new Date(item.ts);
+    label.textContent = `${date.toLocaleString("sv-SE")} — ${item.image_count} bilder`;
+    const playBtn = document.createElement("button");
+    playBtn.textContent = "Spela upp";
+    playBtn.addEventListener("click", () => openVoiceoverPlayer(item.id));
+    row.appendChild(label);
+    row.appendChild(playBtn);
+    container.appendChild(row);
+  }
+}
+document.getElementById("voiceoverListBtn").addEventListener("click", openVoiceoverList);
+document.getElementById("voiceoverListClose").addEventListener("click", () => {
+  document.getElementById("voiceoverListModal").classList.add("hidden");
+});
+
+let playerEvents = [];
+async function openVoiceoverPlayer(id) {
+  document.getElementById("voiceoverListModal").classList.add("hidden");
+  const res = await fetch(`/api/voiceover/${id}`);
+  const data = await res.json();
+  playerEvents = data.events || [];
+  const audio = document.getElementById("voiceoverPlayerAudio");
+  audio.src = data.audio_url;
+  document.getElementById("voiceoverPlayer").classList.remove("hidden");
+  document.getElementById("voiceoverPointerDot").classList.add("hidden");
+  audio.currentTime = 0;
+  audio.play();
+  logEvent("voiceover_played", String(id));
+}
+document.getElementById("voiceoverPlayerClose").addEventListener("click", () => {
+  const audio = document.getElementById("voiceoverPlayerAudio");
+  audio.pause();
+  document.getElementById("voiceoverPlayer").classList.add("hidden");
+});
+document.getElementById("voiceoverPlayerAudio").addEventListener("timeupdate", (e) => {
+  if (playerEvents.length === 0) return;
+  const t = e.target.currentTime;
+  let ev = playerEvents[0];
+  for (const candidate of playerEvents) {
+    if (candidate.t <= t) ev = candidate;
+    else break;
+  }
+  const img = document.getElementById("voiceoverPlayerImg");
+  const wantedSrc = `/original?p=${encodeURIComponent(ev.path)}`;
+  if (!img.src.endsWith(wantedSrc)) img.src = wantedSrc;
+  const dot = document.getElementById("voiceoverPointerDot");
+  dot.classList.remove("hidden");
+  dot.style.left = ev.x * 100 + "%";
+  dot.style.top = ev.y * 100 + "%";
+});
 
 function openLightbox(idx) {
   currentLightboxIndex = idx;
@@ -501,17 +592,14 @@ function openLightbox(idx) {
   document.getElementById("lbImg").src = `/original?p=${encodeURIComponent(allImages[idx])}`;
   lb.classList.remove("hidden");
   logEvent("image_view", allImages[idx]);
-  loadStoriesForImage(allImages[idx]);
 }
 function closeLightbox() {
   document.getElementById("lightbox").classList.add("hidden");
-  if (mediaRecorder && mediaRecorder.state === "recording") mediaRecorder.stop();
 }
 function lightboxStep(delta) {
   currentLightboxIndex = (currentLightboxIndex + delta + allImages.length) % allImages.length;
   document.getElementById("lbImg").src = `/original?p=${encodeURIComponent(allImages[currentLightboxIndex])}`;
   logEvent("image_view", allImages[currentLightboxIndex]);
-  loadStoriesForImage(allImages[currentLightboxIndex]);
 }
 
 document.getElementById("lbClose").addEventListener("click", closeLightbox);

@@ -21,6 +21,8 @@
     <button id="selectModeBtn">Markera bilder</button>
     <button id="gridSizeBtn">Stora bilder</button>
     <button id="downloadAllBtn">Ladda ner alla bilder (ZIP)</button>
+    <button id="voiceoverRecordBtn">&#127908; Spela in berättelse</button>
+    <button id="voiceoverListBtn">Berättelser</button>
     <span id="visitedCounter"></span>
     <span id="downloadFolderLabel"></span>
   </div>
@@ -39,11 +41,26 @@
   <img id="lbImg" src="">
   <button id="lbNext" class="lb-btn lb-next">&#10095;</button>
   <button id="lbDownload" class="lb-btn lb-download">Ladda ner</button>
-  <div id="storyPanel">
-    <button id="storyRecordBtn" class="story-record-btn">&#127908; Spela in en berättelse</button>
-    <span id="storyStatus"></span>
-    <div id="storyList"></div>
+</div>
+
+<div id="recordingBanner" class="hidden">
+  &#128308; Spelar in berättelse - bläddra och peka fritt på bilderna medan du pratar
+  <button id="voiceoverStopBtn">Stoppa inspelning</button>
+</div>
+
+<div id="voiceoverListModal" class="hidden">
+  <button id="voiceoverListClose" class="lb-btn lb-close">&#10005;</button>
+  <h2>Berättelser</h2>
+  <div id="voiceoverListItems"></div>
+</div>
+
+<div id="voiceoverPlayer" class="hidden">
+  <button id="voiceoverPlayerClose" class="lb-btn lb-close">&#10005;</button>
+  <div id="voiceoverPlayerImageWrap">
+    <img id="voiceoverPlayerImg" src="">
+    <div id="voiceoverPointerDot" class="hidden"></div>
   </div>
+  <audio id="voiceoverPlayerAudio" controls></audio>
 </div>
 
 <script src="/app.js"></script>

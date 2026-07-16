@@ -102,15 +102,18 @@ body {
 }
 #albumNavToggle {
   flex: 0 0 auto;
-  font-size: 0.95rem;
-  padding: 0.6rem 1rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  padding: 0.7rem 1.3rem;
   border-radius: 1rem;
-  border: 1px solid #555;
-  background: #2c2c33;
-  color: #ddd;
+  border: none;
+  background: #4a8cff;
+  color: white;
   cursor: pointer;
   white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(74, 140, 255, 0.5);
 }
+#albumNavToggle:active { background: #326ad6; }
 .nav-pill {
   flex: 0 0 auto;
   font-size: 1.05rem;
@@ -235,44 +238,122 @@ body.large-thumbs { --thumb-min: 260px; }
   background: #34c759;
 }
 
-#storyPanel {
-  position: absolute;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  max-width: 22rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.5rem;
-}
-.story-record-btn {
-  font-size: 1.1rem;
-  padding: 0.7rem 1.3rem;
-  border-radius: 2rem;
+#voiceoverRecordBtn {
+  font-size: 1.2rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.6rem;
   border: none;
   background: #ff5c5c;
   color: white;
   cursor: pointer;
-  white-space: nowrap;
 }
-.story-record-btn.recording {
+#voiceoverListBtn {
+  font-size: 1.2rem;
+  padding: 0.6rem 1.2rem;
+  border-radius: 0.6rem;
+  border: none;
+  background: #444;
+  color: white;
+  cursor: pointer;
+}
+
+#recordingBanner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
   background: #ff2020;
-  animation: story-pulse 1.2s infinite;
+  color: white;
+  text-align: center;
+  padding: 0.8rem 1rem;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  animation: story-pulse 1.6s infinite;
 }
 @keyframes story-pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  50% { opacity: 0.75; }
 }
-#storyStatus { color: #ddd; font-size: 0.95rem; }
-#storyList {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  align-items: flex-end;
-  max-height: 30vh;
+#voiceoverStopBtn {
+  font-size: 1rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 1.5rem;
+  border: none;
+  background: white;
+  color: #ff2020;
+  font-weight: 600;
+  cursor: pointer;
+  animation: none;
+}
+
+#voiceoverListModal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.92);
+  padding: 3rem 2rem;
   overflow-y: auto;
 }
-.story-row audio { height: 2.2rem; max-width: 18rem; }
+#voiceoverListModal h2 { margin-top: 0; }
+#voiceoverListItems {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  max-width: 40rem;
+}
+.voiceover-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #2c2c33;
+  border-radius: 0.6rem;
+  padding: 0.8rem 1.2rem;
+}
+.voiceover-item button {
+  font-size: 1rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: 1.5rem;
+  border: none;
+  background: #4a8cff;
+  color: white;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+#voiceoverPlayer {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+#voiceoverPlayerImageWrap {
+  position: relative;
+  max-width: 90vw;
+  max-height: 75vh;
+}
+#voiceoverPlayerImg { max-width: 90vw; max-height: 75vh; object-fit: contain; display: block; }
+#voiceoverPointerDot {
+  position: absolute;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 50%;
+  background: rgba(255, 40, 40, 0.55);
+  border: 3px solid #ff2020;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: left 0.15s linear, top 0.15s linear;
+}
+#voiceoverPlayerAudio { width: 90vw; max-width: 40rem; }
 
 #progress {
   position: fixed;
