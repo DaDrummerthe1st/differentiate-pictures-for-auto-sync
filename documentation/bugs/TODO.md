@@ -36,7 +36,15 @@ how this list works.
 - **Thumbnails fail under concurrent load, likely OOM.** Found
   2026-07-17, live during the P0 human checkpoint. Full investigation
   trail: [reports/2026-07-17-thumbnail-oom-under-load.md](reports/2026-07-17-thumbnail-oom-under-load.md)
-  — start there next session, don't re-diagnose from scratch.
+  — mitigated (mem_limit 256m->512m) and a real fix applied
+  (`MAX_CONCURRENT_THUMBNAILS` semaphore, TDD'd), both same day; report
+  has the full trail including what's still unverified under real load.
+- **Faster/leaner thumbnail generation** (raised 2026-07-17, ties to the
+  above): `Image.draft()` before resize would cut decode cost for JPEG
+  sources; `pyvips` is a plausible future alternative to Pillow for
+  genuinely lower peak memory on Pi-class hardware. Neither evaluated or
+  built - candidate follow-ups once the semaphore fix is confirmed
+  sufficient on its own.
 - **No log persistence guarantee across the stack** (Joakim, 2026-07-17,
   explicit requirement: "ALL logs need to be persistent, even docker's").
   Today's `docker-compose.prod.yml` doesn't configure a logging driver at
