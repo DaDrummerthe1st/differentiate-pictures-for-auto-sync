@@ -78,12 +78,18 @@ see the self-sufficiency rule below.
   from Claude Code's own session transcripts, not an estimate — see that
   tool's README for what it can and can't tell you (e.g. human-authored
   commits log a real `0`, not "unknown").
-- **Commit continuously**: commit coherent chunks of work as you go, not
-  one giant commit at the end of a session. This is standing
-  authorization to commit without asking first. It does NOT cover push,
-  force-push, history rewrites, or any other high-blast-radius action
-  (defined below) — those are never run directly, only ever handed over
-  as a copyable command for Joakim to run himself.
+- **Commit continuously, and push after every commit**: commit coherent
+  chunks of work as you go, not one giant commit at the end of a session,
+  and push each one to the current branch's remote right after
+  committing. This is standing authorization to commit *and push*
+  without asking first (changed 2026-07-17, explicit instruction — this
+  project previously followed the global CLAUDE.md default of push being
+  hand-over-only; this project's own file now overrides that for plain
+  pushes to the current branch specifically). Still does NOT cover
+  force-push, history rewrites, pushing to a *different* branch than the
+  one already checked out, or any other high-blast-radius action (defined
+  below) — those are never run directly, only ever handed over as a
+  copyable command for Joakim to run himself.
 - **Argue with evidence**: if a proposal (naming, structure, approach)
   has a concrete best-practice or precedent-based counter-argument, raise
   it and explain the trade-off before implementing it as asked — don't

@@ -5,6 +5,13 @@ confirmed working end-to-end and Elisabeth has browsed, searched, tagged,
 and downloaded at least one photo from outside the LAN. Listed here so
 absence is a decision, not an oversight.
 
+**Not the same thing as [documentation/bugs/](../bugs/README.md)**: this
+file is for scope *deliberately* excluded, with reasoning already
+attached. `bugs/` is a staging area for things found live that haven't
+been triaged yet. An entry here shouldn't need to move to `bugs/` just
+because it describes a gap or limitation — if it's already got context
+and a home, it's already triaged.
+
 - **AI content and face recognition** — inference belongs on-device, on
   the phone; the server only stores derived tags/embeddings later, once
   there's something to sync. See [../VISION.md](../VISION.md) Pillar 2.

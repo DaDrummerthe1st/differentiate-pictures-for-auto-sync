@@ -15,6 +15,10 @@ order) lives, not just the conclusion — see
 [reports/2026-07-17-thumbnail-oom-under-load.md](reports/2026-07-17-thumbnail-oom-under-load.md)
 for the shape to follow.
 
+Use `tools/new_bug_report/new_bug_report.sh "Short bug title"` to create
+one with a consistent name and the right starter template — don't
+hand-name these.
+
 Once a bug here gets prioritized, it moves to wherever it actually
 belongs (e.g. `documentation/photo-server/TODO.md` or `DEFERRED.md`) and
 gets removed from this file — this folder should tend toward empty, not
