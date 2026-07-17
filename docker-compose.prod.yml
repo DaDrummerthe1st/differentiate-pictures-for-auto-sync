@@ -20,7 +20,17 @@ services:
     # the internal Docker network in plaintext, so uvicorn serves plain
     # HTTP. No host port published either; only Caddy is reachable from
     # outside this container network.
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8420"]
+    #
+    # --proxy-headers makes uvicorn trust Caddy's X-Forwarded-For (Caddy
+    # sends it by default) so request.client.host reports the real
+    # client IP, not Caddy's internal address - without this, every
+    # request looks like it came from the same source. --forwarded-
+    # allow-ips="*" is safe here specifically because this container
+    # publishes no host port; the only path in is through Caddy or
+    # another container already inside this compose network's trust
+    # boundary. --no-server-header matches server/Dockerfile's existing
+    # bar (avoid leaking the uvicorn version, TODO.md 0.2).
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8420", "--proxy-headers", "--forwarded-allow-ips=*", "--no-server-header"]
     environment:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?set JWT_SECRET_KEY in .env, never hardcode it}
     volumes:
@@ -33,6 +43,15 @@ services:
 
   auth:
     build: ./server
+    # Overrides server/Dockerfile's baked-in CMD, which deliberately
+    # omits --proxy-headers (safe default for direct/dev exposure with
+    # no proxy in front - trusting X-Forwarded-For with no proxy would
+    # let any caller spoof their own IP and dodge the login rate
+    # limiter). Behind Caddy in this file specifically, the flag is
+    # needed for the same reason as photo-viewer's override above -
+    # without it, slowapi's per-IP login rate limit becomes one shared
+    # bucket across every real client.
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers", "--forwarded-allow-ips=*", "--no-server-header"]
     environment:
       POSTGRES_HOST: postgres
       POSTGRES_PORT: "5432"

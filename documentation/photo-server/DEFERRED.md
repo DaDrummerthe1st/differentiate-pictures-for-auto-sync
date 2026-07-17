@@ -61,6 +61,34 @@ absence is a decision, not an oversight.
   another topic folder actually needs it, or as part of the P1
   `server/`→`backend/`, `app/`→`frontend/` restructuring already
   planned (see CHANGELOG 2026-07-17).
+- **Pre-launch security review findings, not fixed today** (2026-07-17,
+  reviewed before port-forwarding — see CHANGELOG). The
+  `--proxy-headers`/rate-limiter and missing `--no-server-header` gaps
+  found in the same pass *were* fixed (docker-compose.prod.yml). These
+  two were not, deliberately — both are real but lower-severity, and
+  fixing either correctly needs testing this session can't do (no live
+  deployment yet, and this project's own precedent is that `docker
+  compose up` is Joakim's action, not run by an AI session — see
+  TODO.md 0.2):
+  - **`app/Dockerfile` (photo-viewer) runs as root** — no `USER`
+    directive, unlike `server/Dockerfile` which explicitly creates and
+    switches to `appuser`. Defense-in-depth gap: an RCE-class bug
+    anywhere in this container's dependencies would run as root instead
+    of an unprivileged user. Not fixed today because doing it right
+    means adding a non-root user *and* making sure the named volumes
+    (`thumbcache`, `analytics_data`, `stories` — created at runtime via
+    `Path.mkdir()`, not pre-baked into the image) are actually writable
+    by that user, which needs a real container run to verify and isn't
+    something to get wrong for the first time under deadline pressure.
+  - **`/api/event` (photo-viewer) is intentionally unauthenticated**
+    (telemetry only, returns no data — see `app/main.py`) but has no
+    rate limiting either, unlike the auth backend's `/login`. Once this
+    app is reachable from the open internet, anyone can spam this
+    endpoint to grow `analytics.db` unboundedly or pollute usage
+    analytics. Low severity (no data disclosure, no auth bypass) but
+    real once port-forwarded. Fix would mean adding `slowapi` (or
+    equivalent) to `requirements.txt` and wiring a limiter — deferred
+    rather than adding a new dependency with limited time to test it.
 - **Multi-tenant photo partitioning / per-user sharing scope** — today's
   gate (`app/auth.py`) is deliberately binary: valid session or 401,
   with no per-user visibility restriction, because Elisabeth is the only
