@@ -20,6 +20,13 @@ high-blast-radius definition), see [CLAUDE.md](../../CLAUDE.md).
   work in that area must treat "whose data is this, and who can see it"
   as a first-class question, not an afterthought — even before the
   architecture is finalized.
+- **No browser `localStorage` for any frontend state** (Joakim, explicit,
+  2026-07-17). If a UI preference or choice needs to persist, it belongs
+  server-side (a `users`-table column, a cookie backed by the existing
+  session, or similar) — under the account's control and subject to the
+  same access/audit posture as everything else, not sitting unmanaged in
+  the browser. Applies to every frontend feature, not just the one this
+  was raised about (a recurring download-folder-picker prompt).
 
 ## Resource efficiency
 
