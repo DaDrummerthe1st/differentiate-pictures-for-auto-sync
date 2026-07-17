@@ -14,7 +14,7 @@ pool. See [README.md](README.md) for the resulting non-negotiable.
 | Storage | 3.6TB ZFS pool at `/tank`, 2.7TB free |
 | OS | Ubuntu 24.04 LTS, Python 3.12.3 |
 | LAN address | 192.168.1.10, under Joakim's desk |
-| Router | Ubiquiti EdgeRouter X, firmware 3.0.1 (Joakim, 2026-07-17) — LAN gateway `192.168.1.1`. Port-forwarding 80/443 -> 192.168.1.10 configured 2026-07-17 for the photo-server P0 deploy; see [DEPLOYMENT.md](DEPLOYMENT.md) and CHANGELOG. |
+| Router | Ubiquiti EdgeRouter X, firmware 3.0.1 (Joakim, 2026-07-17) — LAN gateway `192.168.1.1`. Port-forwarding 80/443 -> 192.168.1.10 needed for the photo-server P0 deploy; see [DEPLOYMENT.md](DEPLOYMENT.md) and CHANGELOG for current status — don't assume done, this drifted stale once already (2026-07-17: an SSH-based attempt to set it silently failed since SSH wasn't enabled on the router yet, and the doc briefly said "configured" when it wasn't). |
 
 The `192.168.1.1` gateway address is inferred from the dev workstation's
 own `ip route` (same `192.168.1.0/24` subnet as the server) — not read
@@ -22,6 +22,23 @@ directly off the server or the router itself, per the "physically
 separate machine" note below. Confirm on the server directly
 (`ip route | grep default`) if this ever needs to be certain rather than
 inferred.
+
+**Router admin UI has no valid TLS** (noted 2026-07-17): `https://192.168.1.1`
+does not present a trusted certificate — expected for a home router's
+self-managed admin interface, LAN-only exposure, not something to "fix."
+Flagging so a future session doesn't mistake it for a live problem.
+
+**DDoS / resource-exhaustion risk accepted, not mitigated** (2026-07-17):
+raised while setting up the P0 internet exposure — a real volumetric
+DDoS can't be stopped by anything configurable on an EdgeRouter X or in
+this app; that needs upstream mitigation (ISP-level, or a CDN in front),
+out of scope for this project's closed/no-cloud-APIs posture. Accepted
+as a standing risk of self-hosting on a residential line at v1 scale,
+not a today-fix. What IS mitigated: 2026-07-17's auth-gating work means
+almost every resource-expensive route (thumbnails, downloads, the full
+filesystem tree walk) requires a valid session, closing off anonymous
+abuse of those specifically — see DEFERRED.md for the two routes that
+remain anonymously reachable and why they're low-risk.
 
 **This is a physically separate machine from wherever an AI session (or
 Joakim) edits code or runs a dev shell.** Confirmed 2026-07-15: dev/build
