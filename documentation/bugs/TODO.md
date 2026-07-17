@@ -45,6 +45,22 @@ how this list works.
   genuinely lower peak memory on Pi-class hardware. Neither evaluated or
   built - candidate follow-ups once the semaphore fix is confirmed
   sufficient on its own.
+- **Background/async thumbnail generation** (Joakim, 2026-07-17, same
+  session as the semaphore fix): confirmed the semaphore fix helped
+  (some thumbnails now load that didn't before), but a full album still
+  seems to "give up" partway through - plausible given the semaphore
+  caps generation at `MAX_CONCURRENT_THUMBNAILS` (2), so a large album
+  takes real cumulative wall-clock time and something in the chain
+  (browser patience, a connection limit) may be timing out before it
+  finishes. Right architectural fix, not attempted today: generate
+  thumbnails asynchronously (a background task/queue) instead of making
+  the client's request wait inline, with the frontend polling/retrying
+  rather than failing outright. Real design work needed first: what
+  queue mechanism (in-process `BackgroundTasks`, or something more
+  durable that survives a restart mid-batch?), how the client knows
+  what's ready vs. pending, whether to pre-warm on album open vs.
+  per-thumbnail lazy trigger. Don't rush this live against a now-working
+  production service - design and TDD it properly next session.
 - **No log persistence guarantee across the stack** (Joakim, 2026-07-17,
   explicit requirement: "ALL logs need to be persistent, even docker's").
   Today's `docker-compose.prod.yml` doesn't configure a logging driver at
