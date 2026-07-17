@@ -38,7 +38,16 @@ services:
       - thumbcache:/thumbcache
       - analytics_data:/data
       - stories:/stories
-    mem_limit: 256m
+    # Raised 256m -> 512m 2026-07-17: this container kept getting
+    # silently killed (no Python traceback, no dmesg OOM entry visible -
+    # consistent with a cgroup hard-kill under container-limit memory
+    # pressure) shortly after serving /thumb requests. Steady-state usage
+    # is only ~40MB; the crash pattern points at transient spikes during
+    # Pillow's decode+resize+encode, not steady growth. See
+    # documentation/bugs/reports/2026-07-17-thumbnail-oom-under-load.md -
+    # this is a mitigation, not a confirmed root-cause fix; re-verify
+    # under real load before assuming it's fully solved.
+    mem_limit: 512m
     restart: unless-stopped
 
   auth:
