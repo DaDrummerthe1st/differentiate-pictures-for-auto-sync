@@ -8,13 +8,14 @@ a filing system.
 
 **Hard rule (2026-07-17): every bug is its own file under
 [reports/](reports/), named `<date>-<short-slug>.md` — never a bullet
-added to a shared list.** [TODO.md](TODO.md) is only an index (one line
-+ link per bug); it should never grow a real write-up inline. This
-applies even to a one-line bug, not just multi-session investigations —
-the file is where the *process* (what was checked, what was ruled out,
-in order) lives as it's learned, not just the conclusion — see
+added to a shared list.** This applies even to a one-line bug, not just
+multi-session investigations — the file is where the *process* (what
+was checked, what was ruled out, in order) lives as it's learned, not
+just the conclusion — see
 [reports/2026-07-17-thumbnail-oom-under-load.md](reports/2026-07-17-thumbnail-oom-under-load.md)
-for the shape to follow.
+for the shape to follow. No separate index is kept — see
+[TODO.md](TODO.md) for why (it proved unreliable) and how to browse
+what's open instead.
 
 Use `tools/new_bug_report/new_bug_report.sh "Short bug title"` to create
 one with a consistent name and the right starter template — don't

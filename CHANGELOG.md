@@ -5,6 +5,44 @@ before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
 CLAUDE.md's project-memory note on that trade-off).
 
+## 2026-07-17 (5) — bugs/ tracking overhaul, live thumbnail fixes
+
+- **Live production fix**: photo-viewer was being hard-killed shortly
+  after serving `/thumb` requests (app down for Elisabeth). Raised
+  `mem_limit` 256m->512m, added a `MAX_CONCURRENT_THUMBNAILS` semaphore
+  around thumbnail generation (TDD'd), and used `Image.draft()` to skip
+  full-resolution JPEG decode for thumbnails (TDD'd) — all three
+  deployed, confirmed stable for 2+ hours (previously restarting every
+  few minutes). Remaining latency is per-image on-demand generation
+  time, not a crash — logged as the next real fix (pre-compile ahead of
+  time, Joakim's direction).
+- **`bugs/` restructured, hard rule**: every bug and every AI-session
+  process lapse is now its own dated file (`bugs/reports/`,
+  `bugs/claude/`) — never a bullet in a shared list. `TODO.md`/`LOG.md`
+  are pure indexes now. New `bugs/solved/` archive for genuinely
+  resolved reports (`tools/new_bug_report/mark_solved.sh`). New
+  `tools/commit_cost/check_coverage.sh` compares `git log` against
+  `commit_costs.jsonl` and reports gaps — added after 3 commits went
+  out mid-session without their required cost-logging step, unnoticed
+  until asked about directly. Both wired into CLAUDE.md's wrap-up
+  routine.
+- **Found live**: `tools/commit_cost`'s boundary-detection stops working
+  partway through one long session (only matched the first ~40% of this
+  session's commits) — real spend for a long session is likely
+  undercounted, silently. Filed, not fixed - needs a transcript-
+  structure diff, not more guessing.
+- **Also found live**: production Postgres schema was never initialized
+  (root cause of login looking broken for a long stretch — worked
+  around, real fix pending), `server/Dockerfile` missing `scripts/`
+  (account creation only worked via a live workaround, same status), a
+  stale "(ZIP)" button label from an earlier feature removal, and
+  `DEPLOYMENT.md` still describing both broken original steps — all
+  fixed or documented as required workarounds the same day.
+- Joakim: no browser `localStorage`, ever, for AI-session persistence
+  (a misreading led to an unrelated, since-reverted POLICY.md edit about
+  browser localStorage — corrected); push now happens automatically
+  after every commit on this branch (was hand-over-only before).
+
 ## 2026-07-17 (4) — P0 deployment live
 
 - **Deployed and reachable before the 14:00 deadline.** Full sequence:
