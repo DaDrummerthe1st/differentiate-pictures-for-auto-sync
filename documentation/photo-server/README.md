@@ -8,29 +8,30 @@ existing single-machine, single-user Python sorting tool) and from
 [../distributed-sync/](../distributed-sync/README.md) (future multi-device
 P2P sync — not started, unaffected by this work).
 
-Status (2026-07-17): **Live, deployed, and confirmed working end-to-end**
-at `https://photos.reuterborg.se` on branch `mamma-photo-viewer`, built
-under a same-day hard deadline (Elisabeth needed real access by 14:00 or
-the fallback was a hand-delivered zip — see CHANGELOG). Real login
-confirmed (not just reachability) after finding and fixing two
-deploy-path gaps along the way — the production Postgres schema was
-never initialized, and `server/Dockerfile` never copied `scripts/` in —
-both tracked in [documentation/bugs/TODO.md](../bugs/TODO.md), both now
-documented as required steps in [DEPLOYMENT.md](DEPLOYMENT.md) so a
-fresh deploy won't rediscover them. Thumbnails were failing under
-concurrent load (likely the container's memory limit vs. Pillow's
-transient decode/resize spikes) — mitigated (`mem_limit` raised) and
-partially fixed (a concurrency-limiting semaphore, TDD'd); a full
-architectural fix (background/async generation) is the next real step,
-see `bugs/TODO.md`. New standing structure from this deploy: a
-`documentation/bugs/` tracking system (untriaged list + per-bug
-investigation reports), a hard resource-efficiency policy in
-[POLICY.md](../policies/POLICY.md) (this must eventually run on
-Pi-class hardware, not just today's server), and a Troubleshooting
-playbook in DEPLOYMENT.md. Not yet done: 1.9a–c (admin password reset),
-1.11's human checkpoint, the `master`/`phase-1-login`/`mamma-photo-viewer`
-branch reunification (deliberately deferred — TODO.md), and everything
-in `bugs/TODO.md`. This folder
+**Status (2026-07-17, end of session): live and working.** Elisabeth can
+log in and browse at `https://photos.reuterborg.se` (branch
+`mamma-photo-viewer`) — deployed same-day against a hard 14:00 deadline
+(the fallback was a hand-delivered zip; see CHANGELOG for that whole
+story). Thumbnails mostly work; large albums can still stall partway
+through under load — real, understood, not blocking tonight's use.
+
+**Starting a new session on this topic? Read
+[documentation/bugs/TODO.md](../bugs/TODO.md) first** — it opens with a
+priority-ordered "start here" list, not just a chronological dump.
+Don't re-derive today's deploy history from scratch: `DEPLOYMENT.md` has
+the current, correct deploy steps (including two gaps found and fixed
+in-place, not just noted); `bugs/reports/` has the full investigation
+trail for the one still-open hard problem (thumbnail generation under
+load); [POLICY.md](../policies/POLICY.md) has a hard resource-efficiency
+constraint added today (this must eventually run on Pi-class hardware);
+CHANGELOG.md's 2026-07-17 entries have the complete blow-by-blow if you
+need it, but shouldn't be required reading to start working.
+
+Not yet done, lower priority than `bugs/TODO.md`: 1.9a–c (admin password
+reset), 1.11's human checkpoint, and the
+`master`/`phase-1-login`/`mamma-photo-viewer` branch reunification
+(deliberately deferred — see TODO.md's "Branch relationship" section).
+This folder
 originally absorbed two external planning documents Joakim supplied in
 chat — a build plan and a GUI spec amendment — into the repo's permanent
 documentation, per [CLAUDE.md](../../CLAUDE.md)'s self-sufficiency rule.

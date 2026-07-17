@@ -1,7 +1,21 @@
 # bugs/TODO.md — untriaged
 
 Found, not yet prioritized or placed. See [README.md](README.md) for
-how this list works.
+how this list works. Entries below are in the order found, not priority
+— **start here instead** if picking this up fresh:
+
+1. **Highest-value next step**: "Pre-compile thumbnails ahead of time"
+   (below) — the biggest remaining real gap between where this is now
+   and Elisabeth having a smooth experience. Three design decisions are
+   already identified; start by making those calls, then TDD it.
+2. **Quick, safe, worth doing early**: the two deploy-path bugs (Postgres
+   schema init, `server/Dockerfile` missing `scripts/`) — both have a
+   working documented workaround already (`DEPLOYMENT.md` steps 4-5), so
+   this is "wire the known fix into the Dockerfile/CMD properly," not
+   fresh investigation.
+3. Everything else below (log persistence, resource monitoring, the
+   support button, the static-shell-before-login UX) is real but lower
+   urgency — the app works for tonight without any of them.
 
 - **Postgres schema was never initialized in production.** Found
   2026-07-17, live: every login attempt failed with "Incorrect email or

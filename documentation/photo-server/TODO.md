@@ -433,6 +433,17 @@ trusting ingested data.
 
 ## Phase 4 — Browse, search, and the thumbnail screen
 
+**Not the same system as `mamma-photo-viewer`'s already-deployed
+thumbnails** (2026-07-17 note, to prevent confusion): this phase is the
+future Postgres-catalog-backed backend (`server/`, schema-dependent,
+not yet built beyond Phase 0/1). The `/thumb` route that was actually
+debugged and fixed today (mem_limit, a concurrency semaphore,
+`Image.draft()` — see [DEFERRED.md](DEFERRED.md) and
+[../bugs/TODO.md](../bugs/TODO.md)) lives in `app/main.py`, the simpler,
+filesystem-based `mamma-photo-viewer` app that's actually live in
+production right now. Don't assume work here also applies there, or
+vice versa.
+
 4.1 `GET /catalogues` — alphabetical, with photo counts.
 
 4.2 `GET /catalogues/{name}/photos` — metadata, 404 on unknown
