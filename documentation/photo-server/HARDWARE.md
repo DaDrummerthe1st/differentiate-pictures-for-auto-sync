@@ -28,3 +28,17 @@ figure above, and update this file once confirmed. Do not run
 `docker compose up` against this host until the upgrade is installed and
 memtested (Memtest86+, at least one full pass) — build and test images on
 a dev machine until then, per TODO.md.
+
+**Gate knowingly overridden, 2026-07-17**: the memtest gate above is
+still the standing rule and still applies going forward — it was NOT
+cleared, the RAM sticks are ordered/paid but not yet installed (expected
+early the following week). Joakim made an explicit, informed call to run
+`docker compose -f docker-compose.prod.yml up -d` on this host today
+anyway, ahead of a hard external deadline, accepting the OOM/instability
+risk on 3.8GB RAM under five services (Caddy, photo-viewer, auth,
+Postgres, Redis — the compose file's `mem_limit`s cap worst case at
+~1.2GB combined, but that's still tight headroom on this box). This is a
+one-time, dated exception, not a retroactive removal of the gate — the
+gate re-applies to any future `docker compose up` on this host once this
+deploy is torn down or once the RAM arrives, whichever a session should
+re-verify rather than assume.

@@ -10,7 +10,13 @@ from app.config import load_auth_config
 # A private, two-account family server doesn't need buzzkit's 30-day
 # "remember me" refresh window - short-lived by design so a stolen
 # cookie has a small blast radius.
-ACCESS_TOKEN_EXPIRE_MINUTES = 15
+#
+# Access tokens are stateless JWTs, verified on signature+expiry alone -
+# no per-request DB/Redis recheck (see app/auth.py in the photo-viewer
+# container, which doesn't even have a Postgres dependency). 5 minutes
+# bounds how long a revoked/disabled account can still be used, pending
+# the real fix: a per-request revocation check (DEFERRED.md).
+ACCESS_TOKEN_EXPIRE_MINUTES = 5
 REFRESH_TOKEN_EXPIRE_HOURS = 12
 
 _JWT_ALGORITHM = "HS256"

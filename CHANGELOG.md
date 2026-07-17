@@ -5,6 +5,51 @@ before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
 CLAUDE.md's project-memory note on that trade-off).
 
+## 2026-07-17 (2)
+
+- **P0 under a hard 14:00 deadline**: gated the photo-viewer behind the
+  auth backend's session cookie so Elisabeth can log in and see her
+  pictures securely from the open internet, rather than Joakim driving
+  ~40min to hand-deliver a zip. Added `app/auth.py` (stateless JWT
+  verification, no Postgres dependency in this container by design) as
+  a FastAPI dependency on every route that returns photo/thumbnail/
+  voiceover data; `app.js` got a silent-refresh `authFetch` wrapper so
+  the access token's short TTL doesn't interrupt browsing. Built
+  `server/app/login_page.py` (TODO.md 1.10, previously unbuilt — API-only
+  before today). Cut `ACCESS_TOKEN_EXPIRE_MINUTES` 15->5 (Joakim: prefers
+  a smaller blind-trust window over relying on TTL alone; real
+  revocation-recheck is a documented P1, see DEFERRED.md). Shipped a full
+  production deployment: root-level `Caddyfile` + `docker-compose.prod.yml`
+  (5 services: Caddy with automatic Let's Encrypt for
+  `photos.reuterborg.se`, the photo-viewer, the auth+Postgres+Redis
+  stack — one file because Caddy has to front two separately-built
+  codebases) and `documentation/photo-server/DEPLOYMENT.md` as the
+  execution handoff (UFW rules, `.env` setup, account creation, and a
+  concrete restart-based persistence check for the analytics DB and
+  voiceover recordings — not just a compose-file read). Knowingly
+  overrode `HARDWARE.md`'s memtest gate for this one deploy (RAM
+  upgrade ordered, not yet installed) — documented as a dated exception,
+  not a removal of the gate.
+  Discovered along the way: `mamma-photo-viewer` is an orphan branch
+  with no shared git history with `master` (confirmed via
+  `git merge-base` returning nothing), despite already containing
+  byte-identical copies of `phase-1-login`'s auth backend files — so P0
+  ported wiring directly onto this branch rather than attempting a
+  24-conflict unrelated-histories merge under deadline pressure. Real
+  merge preserving all three branches' history deferred to P1, no clock
+  pressure — see TODO.md's new "Branch relationship" section.
+  Deferred, documented, not silently dropped: access-token revocation
+  recheck, multi-tenant photo partitioning (fine today since Elisabeth
+  is the only account with photos), and whether `HARDWARE.md` belongs
+  under a shared `documentation/hardware/` instead of `photo-server/`
+  (see DEFERRED.md). Left the pre-existing stale dependency pins
+  (fastapi/uvicorn/pillow/python-multipart) unbumped — Pillow's major
+  version bump specifically carries real regression risk to working
+  thumbnail code with no time to verify today.
+  Doc size: DEFERRED.md 2349->4750, HARDWARE.md 1544->2424, README.md
+  5551->5369, TODO.md 30385->34620, DEPLOYMENT.md 0->4157 (new file).
+  Tests: 49 (app/) + 47 (server/) = 96 passing, up from 49+45.
+
 ## 2026-07-17
 
 - Removed the zip-download feature entirely — server endpoint, client JS,

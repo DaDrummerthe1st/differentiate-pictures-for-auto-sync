@@ -37,3 +37,38 @@ absence is a decision, not an oversight.
   relay (system-level install) or a third-party email API (conflicts
   with this project's no-cloud-APIs rule); deferred indefinitely
   (2026-07-16). See TODO.md 1.9's admin-reset alternative, built instead.
+- **Access-token revocation recheck, not just TTL expiry** (raised
+  2026-07-17): `app/auth.py` (photo-viewer) and `auth_routes.py`'s
+  `get_current_user` (backend) both trust a valid access-token JWT's
+  signature+expiry alone — no per-request check against account/session
+  state, so a revoked or disabled account stays usable for up to
+  `ACCESS_TOKEN_EXPIRE_MINUTES` (currently 5, cut from 15 on 2026-07-17
+  as a stopgap — see `server/app/tokens.py`'s comment) after revocation.
+  The refresh token *is* rechecked every use (Redis-allowlisted), so the
+  gap is bounded to one access-token lifetime, not unbounded. Real fix,
+  not built today: either a Redis-backed access-token denylist (cheap,
+  no Postgres round-trip) or the photo-viewer calling the backend's
+  `/whoami` per request (simpler, adds a network hop per photo/thumbnail
+  load — needs a latency check at real photo-browsing volume before
+  adopting). Worth deciding once there's more than one active account.
+- **`HARDWARE.md` may belong at `documentation/hardware/` instead of
+  here** (raised 2026-07-17): the machine it describes hosts a ZFS pool
+  "other things depend on" per its own text — broader scope than
+  photo-server alone, even though today every actual reference to it
+  (`DEPLOYMENT.md`, `TODO.md`, `README.md`) is from inside this folder.
+  Not moved today: would mean updating those 3 cross-references under
+  deadline pressure for a reorg that doesn't block P0. Revisit once
+  another topic folder actually needs it, or as part of the P1
+  `server/`→`backend/`, `app/`→`frontend/` restructuring already
+  planned (see CHANGELOG 2026-07-17).
+- **Multi-tenant photo partitioning / per-user sharing scope** — today's
+  gate (`app/auth.py`) is deliberately binary: valid session or 401,
+  with no per-user visibility restriction, because Elisabeth is the only
+  account with photos in the pool (2026-07-17 P0 decision, see
+  CHANGELOG). This was the right shortcut for one real user, but it's a
+  shortcut: nothing today associates a photo with an owning account.
+  Before a second real user (or the "share-link" entry above) is added,
+  this needs actual design — which parts of `app/main.py`'s routes
+  become user-scoped, whether photos need an owner column, and how that
+  interacts with the still-schema-only `share_links` table. Flagging now
+  so it's a deliberate next design pass, not a surprise retrofit.

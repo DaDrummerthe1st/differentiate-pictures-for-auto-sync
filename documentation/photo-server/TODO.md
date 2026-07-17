@@ -50,6 +50,51 @@ implementation (from another project) replaces the spec below or is
 adapted into it. Phase 1 as written is a fallback spec, not a locked-in
 design.
 
+## Branch relationship — read before merging anything
+
+Three branches carry this project's history, and they are **not** a
+normal linear feature-branch chain:
+
+- `master` — this repo's mainline. Has `server/app/{config,db,main}.py`
+  only; no auth code at all (`server/app/main.py` here is just a bare
+  `/health` route).
+- `phase-1-login` — `master` + 24 commits building the full auth backend
+  (`accounts.py`, `audit.py`, `auth_routes.py`, `cookies.py`,
+  `rate_limit.py`, `security.py`, `tokens.py`, this file's Phase 0/1).
+  Normal history: `master` is a real ancestor (0 commits in `master` are
+  missing from `phase-1-login`).
+- `mamma-photo-viewer` — the GUI photo-viewer app (`app/`), built as a
+  **quick, deliberately disposable copy of another repo**, committed as
+  a fresh **orphan branch** (root commit "Initial empty commit",
+  2026-07-16) with **no shared git history with `master` at all**
+  (`git merge-base mamma-photo-viewer master` returns nothing). Despite
+  that, its `server/app/` tree already contains the exact same 7 auth
+  files as `phase-1-login` — byte-identical, confirmed via diff
+  2026-07-17 — because the branch was seeded from a `phase-1-login`
+  snapshot rather than from `master`. A plain `git merge master` here
+  hits `fatal: refusing to merge unrelated histories`; forcing it with
+  `--allow-unrelated-histories` produces **24 real file conflicts**
+  (`CLAUDE.md`, `README.md`, `CHANGELOG.md`, both `main.py`'s,
+  `server/pyproject.toml` + `server/uv.lock`, `server/docker-compose.yml`,
+  the append-only `tools/*/*.jsonl` logs, several `documentation/
+  photo-server/*.md` files) — checked 2026-07-17, not yet resolved.
+
+**Decision (2026-07-17, mid-deadline session)**: do not merge today.
+`mamma-photo-viewer` already has everything P0 needs (the auth backend
+files), so a merge buys nothing for that deadline and only costs time on
+conflict resolution. The P0 session instead ported the *wiring*
+(`app/auth.py`, the login page, Caddy config) directly onto
+`mamma-photo-viewer`, no git merge involved.
+
+**P1, no deadline pressure**: Joakim wants history preserved, not
+squashed or cherry-picked away — the end state is everything folded into
+one surviving `master`, by an actual `git merge --allow-unrelated-
+histories` (or equivalent), resolving the 24 conflicts above carefully,
+not a shortcut that drops attribution. `phase-1-login` should fold in
+first (clean ancestry with `master`, zero conflicts) or can be treated as
+already-superseded once `mamma-photo-viewer`'s auth files are confirmed
+identical and current. Do this once, calmly, with no clock running.
+
 ## Phase 0 — Minimal scaffold (only what auth needs, nothing more)
 
 0.1 `GET /health` returns `{"status":"ok"}`, 200. Write the test failing
@@ -306,17 +351,24 @@ old password no longer does.
 frontend-pairing rule as 1.10/4.8/4.9 — this is GUI-facing, so it gets
 its own step rather than being assumed to ride along with 1.9b's API.
 
-1.10 Login page frontend (per [MOCKUP.md](MOCKUP.md)'s Login screen
-spec — email, password, submit; a generic error message state; a
-locked-out state, "Too many attempts, try again in a minute", for the
-1.8 429 case) — minimal HTML/JS served by the app itself, calling
-`POST /login`, redirecting to the thumbnail screen's catalogue list
-(Phase 4) on success. **Gap found and closed 2026-07-16**: every step
-through 1.9 above built the API only; nothing in the original Phase 1
-plan actually built a page a person could open in a browser, unlike
-Phase 4.6 which explicitly builds the thumbnail screen's frontend.
-Added here, before the human checkpoint, so that checkpoint exercises
-the real screen rather than `curl`.
+1.10 (done, 2026-07-17, on `mamma-photo-viewer` not `phase-1-login` —
+see this file's "Branch relationship" note) Login page frontend (per
+[MOCKUP.md](MOCKUP.md)'s Login screen spec — email, password, submit; a
+generic error message state; a locked-out state, "Too many attempts, try
+again in a minute", for the 1.8 429 case) — minimal HTML/JS served by
+the app itself, calling `POST /login`, redirecting to the thumbnail
+screen's catalogue list (Phase 4) on success. **Gap found and closed
+2026-07-16**: every step through 1.9 above built the API only; nothing
+in the original Phase 1 plan actually built a page a person could open
+in a browser, unlike Phase 4.6 which explicitly builds the thumbnail
+screen's frontend. Added here, before the human checkpoint, so that
+checkpoint exercises the real screen rather than `curl`. Built as
+`server/app/login_page.py` (`GET /login`, inline HTML/JS, no separate
+static file) — tests in `server/tests/test_login_page.py`. Paired with
+`app/auth.py` in the photo-viewer (`mamma-photo-viewer`'s `app/`,
+different codebase from `server/`) gating every photo/thumbnail/
+voiceover route on the same session cookie, and `app.js`'s new
+`authFetch` wrapper for silent token refresh — see CHANGELOG 2026-07-17.
 
 1.11 (human checkpoint) Log in as both real accounts with real
 passwords you set via 1.2's CLI, through the actual login page (not
@@ -480,7 +532,25 @@ download button twice in quick succession, and confirm the top bar
 
 ## Phase 6 — HTTPS and deployment
 
-6.0 Add `server/docker-compose.prod.yml`, an override restoring
+**Built early and out of order, 2026-07-17, under the same deadline as
+1.10** (see README.md's status line and CHANGELOG) — this whole phase
+was originally planned to start only after Phase 5, but P0 needed real
+internet exposure today. What actually shipped differs in shape from
+6.0/6.1's sketch below: **one** repo-root `docker-compose.prod.yml`
+(not `server/docker-compose.prod.yml`) covers all 5 services (`caddy`,
+`photo-viewer`, `auth`, `postgres`, `redis`) in a single file — needed
+because Caddy has to reverse-proxy to *both* `server/`'s auth backend
+and `mamma-photo-viewer`'s separate `app/` codebase, which 6.0's
+sketch (written before that split existed) didn't anticipate. The
+`Caddyfile` is at the repo root too. 6.2's smoke test and 6.3's UFW
+ruleset are both folded into
+[DEPLOYMENT.md](DEPLOYMENT.md) instead of being separate steps. The
+human checkpoint below (DNS/router/UFW, run by Joakim) had not been
+executed as of this session's handoff — check DEPLOYMENT.md and this
+file's CHANGELOG entry for current status rather than assuming either
+way.
+
+6.0 (superseded, see note above) Add `server/docker-compose.prod.yml`, an override restoring
 `restart: unless-stopped` on `app`/`postgres` (the dev base file
 deliberately uses `restart: "no"` — see global Docker rule) — only ever
 invoked explicitly via `docker compose -f docker-compose.yml -f

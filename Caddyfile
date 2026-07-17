@@ -1,0 +1,21 @@
+photos.reuterborg.se {
+	# Caddy automatically obtains and renews the Let's Encrypt cert for
+	# this domain on first request - no separate certbot/cron job. Its
+	# ACME account + cert data live in the caddy_data volume (see
+	# docker-compose.prod.yml); losing that volume means a fresh cert
+	# issuance (Let's Encrypt rate-limits this, so don't recreate it
+	# casually).
+
+	# Auth backend: the login page (GET) and its API (POST), plus the
+	# session-refresh/logout endpoints. Everything else falls through to
+	# the photo-viewer below - the two services share this one origin so
+	# the session cookie (SameSite=Strict) is valid for both.
+	@auth path /login /whoami /refresh /logout
+	handle @auth {
+		reverse_proxy auth:8000
+	}
+
+	handle {
+		reverse_proxy photo-viewer:8420
+	}
+}

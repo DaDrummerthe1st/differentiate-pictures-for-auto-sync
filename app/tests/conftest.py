@@ -1,7 +1,9 @@
 import os
 import tempfile
+import time
 from pathlib import Path
 
+import jwt
 import pytest
 from PIL import Image
 
@@ -13,6 +15,7 @@ os.environ["PHOTOS_ROOT"] = str(PHOTOS_ROOT)
 os.environ["THUMB_CACHE_DIR"] = str(_TEST_ROOT / "thumbcache")
 os.environ["STORY_DIR"] = str(_TEST_ROOT / "stories")
 os.environ["ANALYTICS_DB_PATH"] = str(_TEST_ROOT / "data" / "analytics.db")
+os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret-key-at-least-32-chars")
 
 (PHOTOS_ROOT / "AlbumA" / "1").mkdir(parents=True)
 (PHOTOS_ROOT / "AlbumA" / "2").mkdir(parents=True)
@@ -38,10 +41,21 @@ _make_image(PHOTOS_ROOT / "AlbumA" / "2" / "pic3.jpg", "blue")
 
 from fastapi.testclient import TestClient  # noqa: E402
 
+from app.auth import ACCESS_COOKIE  # noqa: E402
 from app.main import app  # noqa: E402
+
+
+def _valid_access_token() -> str:
+    now = int(time.time())
+    payload = {"sub": "1", "type": "access", "iat": now, "exp": now + 900, "jti": "conftest-jti"}
+    return jwt.encode(payload, os.environ["JWT_SECRET_KEY"], algorithm="HS256")
 
 
 @pytest.fixture()
 def client():
     with TestClient(app) as test_client:
+        # Feature tests exercise app behavior, not the auth gate itself
+        # (that's app/tests/test_auth_gate.py) - carry a valid session by
+        # default so they don't all need to know about cookies.
+        test_client.cookies.set(ACCESS_COOKIE, _valid_access_token())
         yield test_client

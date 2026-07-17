@@ -8,26 +8,23 @@ existing single-machine, single-user Python sorting tool) and from
 [../distributed-sync/](../distributed-sync/README.md) (future multi-device
 P2P sync — not started, unaffected by this work).
 
-Status: **Phase 0 done, Phase 1 (login) in progress on branch
-`phase-1-login`.** 0.1–0.4 checkpointed (health check, Dockerfile +
-compose, `users` table, fail-fast env config). Phase 1's architecture is
-decided (see TODO.md's Phase 1 note): ported from Joakim's existing
-login implementation in the sibling `buzzkit` repo, keeping buzzkit's
-own argon2id choice (OWASP's current recommendation, and a change from
-this doc's original bcrypt spec) and JWT access+refresh tokens backed
-by a `redis` service for revocation (instead of TODO.md's original
-plain Postgres-session fallback). 1.1–1.8 done and tested (hashing, CLI
-account creation, login route, generic error, protected-route
-dependency, token expiry, audit logging, IP-based rate limiting — 40
-tests green). Next up is 1.9 (security pass: cookie-flag test, CSRF
-confirmation, logout endpoint, `JWT_SECRET_KEY` length validator), then
-1.10 (login page frontend, per MOCKUP.md) before 1.11's human
-checkpoint. Two more roadmap gaps found and fixed along the way: TODO.md
-originally had no step to build the login page itself (API-only) or,
-further out, the lightbox/info-panel/search-panel screens named in
-MOCKUP.md — those two are now marked **(blocked on spec)** since
-MOCKUP.md only names them without the level of detail its own Login
-screen section has. This folder
+Status (2026-07-17): **Login-gated deployment shipped on branch
+`mamma-photo-viewer`**, built under a same-day hard deadline (Elisabeth
+needed real access by 14:00 or the fallback was a hand-delivered zip —
+see CHANGELOG). That branch already carried the full auth backend
+(1.1–1.9 done, byte-identical to `phase-1-login`'s — see TODO.md's
+"Branch relationship" section for why two branches have the same code)
+plus the pre-existing `app/` photo-viewer GUI. Today's session added:
+1.10's login page (minimal HTML/JS, `server/app/login_page.py`), a new
+`app/auth.py` dependency gating every photo/thumbnail/voiceover route in
+the photo-viewer on the same session cookie, a silent-refresh wrapper in
+`app.js` so the (now 5-minute, shortened from 15 — see DEFERRED.md)
+access token doesn't interrupt browsing, and a full production
+deployment (`Caddyfile` + `docker-compose.prod.yml`, automatic Let's
+Encrypt for `photos.reuterborg.se`, see DEPLOYMENT.md). Not yet done:
+1.9a–c (admin password reset), 1.11's human checkpoint, and the
+`master`/`phase-1-login`/`mamma-photo-viewer` branch reunification
+(deliberately deferred — TODO.md). This folder
 originally absorbed two external planning documents Joakim supplied in
 chat — a build plan and a GUI spec amendment — into the repo's permanent
 documentation, per [CLAUDE.md](../../CLAUDE.md)'s self-sufficiency rule.

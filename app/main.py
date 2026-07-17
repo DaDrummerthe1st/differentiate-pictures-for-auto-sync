@@ -7,11 +7,15 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import FastAPI, File, Form, HTTPException, Query, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image, ImageDraw, ImageOps
 from pydantic import BaseModel
+
+from app.auth import load_auth_config, require_session
+
+load_auth_config()
 
 PHOTOS_ROOT = Path(os.environ.get("PHOTOS_ROOT", "/photos")).resolve()
 THUMB_CACHE = Path(os.environ.get("THUMB_CACHE_DIR", "/thumbcache"))
@@ -122,7 +126,7 @@ def resolve_relpath(relpath: str) -> Path:
 
 
 @app.get("/api/tree")
-def api_tree():
+def api_tree(_: int = Depends(require_session)):
     headlines: dict[str, dict[str, list[str]]] = {}
 
     for path in PHOTOS_ROOT.rglob("*"):
@@ -210,7 +214,7 @@ _EXPECTED_LABEL_FOR_EXT = {
 
 
 @app.get("/api/file-summary")
-def file_summary():
+def file_summary(_: int = Depends(require_session)):
     total = 0
     category_counts: dict[str, int] = {}
     mismatches = []
@@ -313,7 +317,7 @@ def _make_placeholder_thumb(cache_path: Path, filename: str, ext: str) -> None:
 
 
 @app.get("/thumb")
-def thumb(p: str = Query(...)):
+def thumb(p: str = Query(...), _: int = Depends(require_session)):
     src = resolve_relpath(p)
     ext = src.suffix.lower()
     cache_path = THUMB_CACHE / (p + ".jpg")
@@ -337,14 +341,19 @@ def thumb(p: str = Query(...)):
 
 
 @app.get("/original")
-def original(p: str = Query(...)):
+def original(p: str = Query(...), _: int = Depends(require_session)):
     src = resolve_relpath(p)
     mime = mimetypes.guess_type(src.name)[0] or "application/octet-stream"
     return FileResponse(src, media_type=mime, filename=src.name)
 
 
 @app.post("/api/voiceover")
-async def upload_voiceover(request: Request, events: str = Form(...), audio: UploadFile = File(...)):
+async def upload_voiceover(
+    request: Request,
+    events: str = Form(...),
+    audio: UploadFile = File(...),
+    _: int = Depends(require_session),
+):
     try:
         parsed_events = json.loads(events)
     except ValueError:
@@ -367,7 +376,7 @@ async def upload_voiceover(request: Request, events: str = Form(...), audio: Upl
 
 
 @app.get("/api/voiceovers")
-def list_voiceovers():
+def list_voiceovers(_: int = Depends(require_session)):
     rows = db.execute(
         "SELECT id, ts, audio_filename, events_json FROM voiceovers ORDER BY id DESC"
     ).fetchall()
@@ -394,7 +403,7 @@ def list_voiceovers():
 
 
 @app.get("/api/voiceover/{voiceover_id}")
-def get_voiceover(voiceover_id: int):
+def get_voiceover(voiceover_id: int, _: int = Depends(require_session)):
     row = db.execute(
         "SELECT id, ts, audio_filename, events_json FROM voiceovers WHERE id = ?", (voiceover_id,)
     ).fetchone()
@@ -409,7 +418,7 @@ def get_voiceover(voiceover_id: int):
 
 
 @app.get("/voiceover-audio/{filename}")
-def voiceover_audio(filename: str):
+def voiceover_audio(filename: str, _: int = Depends(require_session)):
     if "/" in filename or ".." in filename:
         raise HTTPException(status_code=400, detail="invalid filename")
     path = STORY_DIR / filename

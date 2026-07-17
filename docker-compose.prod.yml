@@ -1,0 +1,74 @@
+services:
+  caddy:
+    image: caddy:2.11.4-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - photo-viewer
+      - auth
+    restart: unless-stopped
+
+  photo-viewer:
+    build: .
+    # No self-signed TLS here (unlike docker-compose.yml's dev service) -
+    # Caddy terminates TLS at the edge and reaches this container over
+    # the internal Docker network in plaintext, so uvicorn serves plain
+    # HTTP. No host port published either; only Caddy is reachable from
+    # outside this container network.
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8420"]
+    environment:
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?set JWT_SECRET_KEY in .env, never hardcode it}
+    volumes:
+      - /home/joakim/Pictures/mammas_bilder:/photos:ro
+      - thumbcache:/thumbcache
+      - analytics_data:/data
+      - stories:/stories
+    mem_limit: 256m
+    restart: unless-stopped
+
+  auth:
+    build: ./server
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: photo_server
+      POSTGRES_USER: photo_server
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env, never hardcode it}
+      REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD in .env, never hardcode it}@redis:6379/0
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?set JWT_SECRET_KEY in .env, never hardcode it}
+    depends_on:
+      - postgres
+      - redis
+    mem_limit: 256m
+    restart: unless-stopped
+
+  redis:
+    image: redis:8.8-alpine
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD in .env, never hardcode it}"]
+    mem_limit: 128m
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:18.4-bookworm
+    command: postgres -c max_connections=20 -c shared_buffers=128MB
+    environment:
+      POSTGRES_DB: photo_server
+      POSTGRES_USER: photo_server
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env, never hardcode it}
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    mem_limit: 512m
+    restart: unless-stopped
+
+volumes:
+  thumbcache:
+  analytics_data:
+  stories:
+  postgres_data:
+  caddy_data:
+  caddy_config:

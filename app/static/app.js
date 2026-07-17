@@ -14,6 +14,31 @@ function logEvent(type, detail) {
   }).catch(() => {});
 }
 
+// The session's access-token cookie is short-lived (5min, see
+// server/app/tokens.py) so it can be silently renewed via the
+// httponly refresh cookie without disrupting a browsing session. Only
+// on a *second* 401 (refresh itself failed - refresh cookie expired
+// after 12h, or was revoked by a logout elsewhere) do we bounce to the
+// login page, since at that point there's no session left to recover.
+let _refreshInFlight = null;
+
+async function authFetch(url, options) {
+  const res = await fetch(url, options);
+  if (res.status !== 401) return res;
+
+  if (!_refreshInFlight) {
+    _refreshInFlight = fetch("/refresh", { method: "POST" }).finally(() => {
+      _refreshInFlight = null;
+    });
+  }
+  const refreshRes = await _refreshInFlight;
+  if (!refreshRes.ok) {
+    window.location.href = "/login";
+    return res;
+  }
+  return fetch(url, options);
+}
+
 // --- Dismissable info messages: "don't show again" hides them from
 // auto-popping-up, but every message stays reachable via the Hjälp
 // button so nothing read-once is ever permanently lost. ---
@@ -147,7 +172,7 @@ async function uniqueFileHandle(dirHandle, filename) {
 
 async function saveImage(relpath) {
   if (downloadDirHandle) {
-    const res = await fetch(`/original?p=${encodeURIComponent(relpath)}`);
+    const res = await authFetch(`/original?p=${encodeURIComponent(relpath)}`);
     if (!res.ok) throw new Error("download failed: " + relpath);
     const blob = await res.blob();
     const filename = relpath.split("/").pop();
@@ -581,7 +606,7 @@ async function uploadVoiceover() {
   form.append("audio", blob, "voiceover.webm");
   form.append("events", JSON.stringify(voiceoverEvents));
   try {
-    await fetch("/api/voiceover", { method: "POST", body: form });
+    await authFetch("/api/voiceover", { method: "POST", body: form });
     logEvent("voiceover_saved", `events=${voiceoverEvents.length}`);
   } catch (e) {
     logEvent("voiceover_upload_error", String(e));
@@ -635,7 +660,7 @@ async function openVoiceoverList() {
   const container = document.getElementById("voiceoverListItems");
   container.textContent = "Laddar...";
   modal.classList.remove("hidden");
-  const res = await fetch("/api/voiceovers");
+  const res = await authFetch("/api/voiceovers");
   const items = await res.json();
   container.innerHTML = "";
   if (items.length === 0) {
@@ -665,7 +690,7 @@ document.getElementById("voiceoverListClose").addEventListener("click", () => {
 let playerEvents = [];
 async function openVoiceoverPlayer(id) {
   document.getElementById("voiceoverListModal").classList.add("hidden");
-  const res = await fetch(`/api/voiceover/${id}`);
+  const res = await authFetch(`/api/voiceover/${id}`);
   const data = await res.json();
   playerEvents = data.events || [];
   const audio = document.getElementById("voiceoverPlayerAudio");
@@ -740,7 +765,7 @@ document.addEventListener("keydown", (e) => {
 });
 
 async function loadTree() {
-  const res = await fetch("/api/tree");
+  const res = await authFetch("/api/tree");
   const sections = await res.json();
   renderTree(sections);
 }
