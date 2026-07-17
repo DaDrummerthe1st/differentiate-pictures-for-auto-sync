@@ -49,21 +49,26 @@ how this list works.
   genuinely lower peak memory on Pi-class hardware. Neither evaluated or
   built - candidate follow-ups once the semaphore fix is confirmed
   sufficient on its own.
-- **Background/async thumbnail generation** (Joakim, 2026-07-17, same
-  session as the semaphore fix): confirmed the semaphore fix helped
-  (some thumbnails now load that didn't before), but a full album still
-  seems to "give up" partway through - plausible given the semaphore
-  caps generation at `MAX_CONCURRENT_THUMBNAILS` (2), so a large album
-  takes real cumulative wall-clock time and something in the chain
-  (browser patience, a connection limit) may be timing out before it
-  finishes. Right architectural fix, not attempted today: generate
-  thumbnails asynchronously (a background task/queue) instead of making
-  the client's request wait inline, with the frontend polling/retrying
-  rather than failing outright. Real design work needed first: what
-  queue mechanism (in-process `BackgroundTasks`, or something more
-  durable that survives a restart mid-batch?), how the client knows
-  what's ready vs. pending, whether to pre-warm on album open vs.
-  per-thumbnail lazy trigger. Don't rush this live against a now-working
+- **Pre-compile thumbnails ahead of time, not on-demand** (Joakim,
+  2026-07-17, refined from an earlier "background/async" framing to a
+  concrete direction): confirmed the semaphore + `Image.draft()` fixes
+  helped, but a full album can still "give up" partway through - large
+  albums take real cumulative wall-clock time under the semaphore's
+  `MAX_CONCURRENT_THUMBNAILS` cap, and something in the chain (browser
+  patience, a connection limit) may time out before it finishes. The
+  strongest fix, not attempted today: generate every thumbnail once,
+  ahead of any user request, so `/thumb` at browse time is *always* a
+  cache hit (a cheap file read, current code's existing
+  `cache_path.exists()` fast path already does this - the change is
+  running that generation path proactively over the whole tree, not
+  rewriting it). Real design decisions needed before building, not to be
+  guessed at live: (1) where the job runs - in-process at startup
+  (mustn't block uvicorn actually serving requests), a separate one-off
+  script, or a scheduled job; (2) what handles photos added after the
+  initial pass - a periodic re-scan, or keep today's on-demand path as a
+  fallback for cache-misses so pre-compiling isn't all-or-nothing; (3)
+  whether it needs to be resumable if interrupted mid-batch (a restart,
+  a crash) rather than starting over. Don't rush this live against a now-working
   production service - design and TDD it properly next session.
 - **No log persistence guarantee across the stack** (Joakim, 2026-07-17,
   explicit requirement: "ALL logs need to be persistent, even docker's").
