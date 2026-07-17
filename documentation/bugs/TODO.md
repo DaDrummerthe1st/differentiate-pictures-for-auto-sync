@@ -17,6 +17,28 @@ how this list works. Entries below are in the order found, not priority
    support button, the static-shell-before-login UX) is real but lower
    urgency — the app works for tonight without any of them.
 
+- **`tools/commit_cost` stops finding commit boundaries partway through
+  a long session.** Found 2026-07-17, live: after this session's
+  commits stopped showing real token/cost data and started logging as
+  "human-only, 0 tokens" (despite every commit being AI-made), direct
+  testing of `tools/commit_cost/metrics.py`'s `group_events_by_commit`
+  against this session's own transcript file
+  (`~/.claude/projects/.../d7c0f69a-*.jsonl`) showed it only found
+  boundaries for the *first 5* commits of a much longer session (roughly
+  the first 40% by commit count) — nothing after that, even though the
+  transcript keeps growing and more `git commit` tool calls clearly
+  happened. `find_commit_boundaries` (same file) scans for a `git
+  commit` tool_use followed by its tool_result containing a short hash;
+  something about that matching breaks down partway through this one
+  session. `metrics.py` already has a comment noting `"<synthetic>"`
+  rows appear "after compaction" — a very long single session hitting
+  context compaction partway through is the leading theory for what
+  changes structurally at that point, not confirmed. Real fix needs
+  someone to actually diff the transcript's row structure before vs.
+  after the point boundary-detection stops working, not more guessing.
+  Practical impact: `commit_costs.jsonl` likely undercounts real spend
+  for any long-running single session, silently (it logs a confident
+  "0 tokens, human-only" rather than failing loudly).
 - **Postgres schema was never initialized in production.** Found
   2026-07-17, live: every login attempt failed with "Incorrect email or
   password" even for the just-created account, because the account

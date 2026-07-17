@@ -19,6 +19,12 @@ Use `tools/new_bug_report/new_bug_report.sh "Short bug title"` to create
 one with a consistent name and the right starter template — don't
 hand-name these.
 
+[claude/](claude/README.md) is a different, narrower thing: not app
+bugs, but the AI session's own process lapses — a routine that should
+have run per an existing rule and didn't, or a claim made without
+properly checking it first. See that folder's own README for the
+distinction and what each entry should end with.
+
 Once a bug here gets prioritized, it moves to wherever it actually
 belongs (e.g. `documentation/photo-server/TODO.md` or `DEFERRED.md`) and
 gets removed from this file — this folder should tend toward empty, not
