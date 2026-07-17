@@ -113,3 +113,40 @@ This does **not** delete the named volumes (`postgres_data`,
 Encrypt cert all survive a `down` + `up`. Only `docker compose -f
 docker-compose.prod.yml down -v` would destroy them — never run that
 without knowing exactly why.
+
+## Troubleshooting playbook
+
+Captured 2026-07-17 from the first real P0 deploy, where several of
+these were worked out live under deadline pressure — reusable steps for
+"something's broken," roughly in the order that's cheapest-to-check
+first:
+
+1. **Is this actually a server bug, or a stale browser cache?** Hard
+   refresh (Ctrl+Shift+R) before chasing anything server-side — several
+   "broken" symptoms during the first deploy turned out to be the
+   browser caching failed responses from before auth/schema were fixed.
+2. **Did a container restart recently without you asking it to?**
+   `docker compose -f docker-compose.prod.yml ps` — compare "Created"
+   vs "Up" time per service; one showing a much shorter uptime than the
+   others (when you didn't restart it deliberately) means it crashed and
+   `restart: unless-stopped` brought it back. Note: a deliberate
+   `up -d --build` also resets a service's log history (new container
+   instance) - don't mistake that for a crash on its own.
+3. **Memory pressure?** `free -h` (host-level) and
+   `docker stats --no-stream` (per-container, against each service's
+   `mem_limit`) - this host is tight (see HARDWARE.md). Also check
+   `dmesg 2>/dev/null | grep -i "out of memory\|oom-kill"` for a
+   definitive OOM-kill, rather than inferring one from restarts alone.
+4. **What does the service's own log say?** Filter out routine noise
+   (uvicorn access logs, and once internet-facing, constant opportunistic
+   bot-scanning 404s for things like `/.env`, `/config.json` - normal,
+   ignore): `docker compose -f docker-compose.prod.yml logs <service> 2>&1
+   | grep -iE "error|traceback|exception|killed"`. Grep for the specific
+   endpoint/feature too (e.g. `thumb`) - zero matches for an endpoint you
+   know was requested means the request isn't reaching that container at
+   all, which points you at Caddy/routing/the client instead of that
+   service's own code.
+5. **Client-side evidence**: browser DevTools Network tab on the actual
+   failing request - exact URL, status code, response body/headers. Cheap
+   and often the fastest way to tell "client never sent it" from "server
+   rejected it" from "server crashed handling it."

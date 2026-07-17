@@ -21,6 +21,28 @@ high-blast-radius definition), see [CLAUDE.md](../../CLAUDE.md).
   as a first-class question, not an afterthought — even before the
   architecture is finalized.
 
+## Resource efficiency
+
+- **Hard constraint (2026-07-17), not a preference**: all code must stay
+  resource-tight — CPU, RAM, and disk. Reason: the target hardware isn't
+  just today's server (HARDWARE.md) — this is meant to eventually run on
+  genuinely constrained devices, Joakim's own example being a Raspberry
+  Pi 3 (1GB RAM, ARM, no meaningful CPU headroom). Code that's "fine" on
+  a beefy dev machine or even today's server can be a hard blocker
+  there. Applies to every choice, not just ones that look
+  performance-related: dependency picks (prefer lean deps over heavy
+  ones for equivalent functionality), algorithms (avoid loading full
+  datasets into memory when streaming/chunking works), container sizing
+  (`mem_limit`s should reflect genuine need, not headroom-for-its-own-
+  sake), and image processing specifically (this project already does
+  Pillow-based thumbnail generation — CPU/memory-heavy per call by
+  nature; cache aggressively, don't regenerate needlessly).
+- Not yet done: an actual resource budget per target device (e.g. "must
+  run the full stack under 1GB RAM on ARM") — until that's defined,
+  treat "tight" as a design bias to apply on every change, not a
+  measurable gate to check against. Define the real budget once there's
+  a concrete Pi-class target to test against, not before.
+
 ## Licensing
 
 - No open-source license has been chosen yet. Treat this as a private,

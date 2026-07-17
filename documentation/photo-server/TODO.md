@@ -567,17 +567,25 @@ through Caddy.
 6.3 Write (don't run) a UFW ruleset — 22, 443, 80 only — into
 `documentation/photo-server/DEPLOYMENT.md` for manual review.
 
-(human checkpoint, before any DNS/router change)
-- `dig reuterborg.se` and `dig photos.reuterborg.se` — confirm only the
-  subdomain's A record changes, root domain untouched.
-- Add the A record at Inleed, short TTL, confirm current IP via
-  whatsmyip.com.
-- Run the Caddy/UFW steps manually.
-- Forward external 443 to the app host only once 6.2 passes.
-- Repeat the `dig` check from outside the LAN once the port-forward is
-  live, to confirm the root domain did not become reachable by accident.
-- Confirm `https://photos.reuterborg.se/health` works from outside the
-  LAN.
+(human checkpoint, before any DNS/router change) — **done and confirmed,
+2026-07-17.** Root domain confirmed untouched (`dig` before/after);
+`photos.reuterborg.se` A record live at Inleed; router (EdgeRouter X)
+port-forwarding 80/443 configured over the CLI once SSH was enabled (see
+HARDWARE.md, DEPLOYMENT.md's Troubleshooting playbook, CHANGELOG for the
+full trail — SSH being off by default and a hairpin-NAT gap both cost
+real time). Caddy obtained its Let's Encrypt cert automatically once
+reachable. Confirmed working from outside the LAN (phone, mobile data)
+*and* from the LAN itself (after enabling `hairpin-nat`). `/health` isn't
+reachable through the catch-all route as originally written here — that
+path goes to the photo-viewer, which has no `/health` route; `/login`
+(auth backend) is what was actually used to verify reachability. Real
+end-to-end login (not just reachability) also confirmed, after finding
+and fixing two more gaps: the Postgres schema was never initialized in
+production (nothing in the deploy path ran `ensure_schema` — worked
+around live, not yet fixed at the Dockerfile/deploy-script level), and
+`server/Dockerfile` never copies `scripts/` into the image (account
+creation only worked via a live one-off workaround). Both logged in
+[documentation/bugs/TODO.md](../bugs/TODO.md).
 
 ## Phase 7 — Stability checkpoint
 

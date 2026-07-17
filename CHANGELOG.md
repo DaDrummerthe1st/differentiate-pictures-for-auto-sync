@@ -5,6 +5,81 @@ before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
 CLAUDE.md's project-memory note on that trade-off).
 
+## 2026-07-17 (4) — P0 deployment live
+
+- **Deployed and reachable before the 14:00 deadline.** Full sequence:
+  Docker installed on the home server from scratch (no `docker` apt
+  package on Ubuntu 24.04 — used Docker's official `get.docker.com`
+  convenience script instead); repo cloned; `.env` created with
+  generated secrets; `docker compose -f docker-compose.prod.yml up -d
+  --build` — all 5 containers came up clean, no crash loops.
+- **Router work**: EdgeRouter X had SSH disabled by default (first
+  attempt to configure port-forwarding over SSH silently failed —
+  `ssh` connection was refused, and the pasted command block ran as
+  no-ops in the local shell instead, which briefly produced a false
+  "configured" doc entry, corrected same day). Enabled SSH via the web
+  UI's System page, then configured port-forwarding via the EdgeOS CLI
+  (`set port-forward rule 1/2 ...`, ports 80/443 -> 192.168.1.10),
+  confirmed via `show port-forward`. **`hairpin-nat` is `disable`** on
+  this router (noted in HARDWARE.md) — means devices on Joakim's own LAN
+  can't reliably reach `photos.reuterborg.se` by its public DNS name
+  (the request doesn't loop back in correctly), even though external
+  access works fine. Caused a confusing false-alarm TLS warning when
+  testing from Firefox on the LAN; real external testing (phone on
+  mobile data) confirmed the deployment is actually correct.
+- **DNS**: `photos.reuterborg.se` A record added at Inleed pointing to
+  the public IP, root domain confirmed untouched throughout (`dig`
+  before/after, done via a separate claude.ai session working the
+  DNS/router side in parallel with this one).
+- **Let's Encrypt**: Caddy obtained a real certificate for
+  `photos.reuterborg.se` automatically once port-forwarding was live —
+  no manual cert step. Confirmed via phone (mobile data, off the home
+  LAN) that the site is reachable and the login gate correctly blocks
+  unauthenticated access.
+- **Caught and fixed mid-deploy**: `docker-compose.prod.yml` hardcoded
+  the wrong photo path (`/home/joakim/Pictures/mammas_bilder`, copied
+  from the dev compose file without verifying against the real server).
+  Real path, confirmed by Joakim running `ls` on the server directly:
+  `/tank/momfiles` (not even `/tank/mammas_bilder` as first guessed —
+  corrected twice). Now sourced from a required `PHOTOS_HOST_PATH` env
+  var instead of a literal in the tracked compose file.
+  Verified after the fix: `docker compose exec photo-viewer ls /photos`
+  shows the real album folders.
+- **Account creation**: `create_account.py` command handed over for
+  `elisabeth.reuterborg@gmail.com` (role member) — confirm directly with
+  Joakim whether this was actually run and the phone login test passed;
+  not independently verified by this session past handing over the
+  command, since the deadline landed before that confirmation came back
+  in chat.
+- **Blast-radius discussion** (Joakim): raised whether an app-level
+  compromise could reach the LAN/router. Answer documented in
+  DEFERRED.md rather than just chat — confirmed no container runs
+  privileged/host-networked (the main mitigation already in place), but
+  flagged two real gaps as elevated-priority P1 items: photo-viewer's
+  container running as root, and no egress restriction from the Docker
+  network to the LAN.
+- **New `documentation/bugs/` area** (Joakim's request, live during the
+  post-deploy human checkpoint): a landing spot for bugs found in the
+  moment, with a `TODO.md` untriaged list and a `reports/` subfolder for
+  full multi-session investigation trails on the harder ones (first real
+  one: the thumbnail-OOM bug below). `CLAUDE.md` now has a standing rule
+  to check it periodically and at every session's end. Real bugs found
+  and logged there today: `server/Dockerfile` never copies `scripts/`
+  into the image (account creation only worked via a live workaround);
+  the photo-viewer's static UI shell loads before any login check
+  (confusing, not a security issue); thumbnails failing under concurrent
+  load, likely OOM (unresolved — see the dedicated report).
+- **Also added, from the same live checkpoint**: a hard resource-
+  efficiency policy in `POLICY.md` (this must eventually run on
+  Pi-class hardware, not just today's server — applies to every future
+  code/dependency choice, not just performance-flagged work), and a
+  Troubleshooting playbook in `DEPLOYMENT.md` capturing the diagnostic
+  steps actually used to chase today's bugs, for reuse next time.
+- Deferred, not built today: an always-present support/help button in
+  the photo-viewer UI (Joakim's rough sketch: unobtrusive round blue
+  button, white question mark) — needs its own design pass, logged in
+  `documentation/bugs/TODO.md` conceptually but not yet a real ticket.
+
 ## 2026-07-17 (3)
 
 - Documented the router (Ubiquiti EdgeRouter X, firmware 3.0.1, gateway

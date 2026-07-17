@@ -96,6 +96,15 @@ see the self-sufficiency rule below.
   mixed with bold/headers.
 - **End substantive sessions with both a durable record and a chat
   summary.**
+- **Check `documentation/bugs/TODO.md` periodically during long sessions,
+  and always at session termination.** Fix what's now quickly and safely
+  fixable; for anything else, at minimum confirm it's still accurate
+  (not already fixed elsewhere, not stale) and re-prioritize/triage it
+  into its proper home (a topic folder's `TODO.md` or `DEFERRED.md`) if
+  it's ready to leave the untriaged list. Decided 2026-07-17 mid-deploy,
+  right after that folder was created for exactly this — the point of an
+  untriaged-bugs list is that it actually gets worked, not that it
+  becomes a second graveyard alongside `DEFERRED.md`.
 
 ## What counts as high-blast-radius here
 
