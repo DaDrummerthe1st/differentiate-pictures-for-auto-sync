@@ -42,7 +42,16 @@ fine for the same files.
    and then unresponsiveness. Matches resource exhaustion much better
    than a per-file code bug (path encoding, corrupt file, etc. would
    likely fail the *same* files consistently, not degrade under load).
-6. **Not yet done**: capturing `dmesg | grep -i oom` and `docker stats`
+6. **Further observation, same session**: scrolled to an album lower on
+   the page, clicked a thumbnail that had *not yet* shown the broken-image
+   icon (i.e. not yet requested/rendered) - it broke on that first
+   request too. Refines the theory: this isn't purely "many concurrent
+   requests at once" - cumulative load *across* the browsing session
+   (total thumbnails generated so far, not just those in flight right
+   now) may be enough on its own to degrade the service. Worth checking
+   memory trend over the session's lifetime, not just an instantaneous
+   snapshot, next time this is investigated.
+7. **Not yet done**: capturing `dmesg | grep -i oom` and `docker stats`
    *at the moment of failure* (not at rest) to get a definitive
    OOM-kill confirmation rather than inferring one. Session ended
    (Joakim had calls) before this could be captured live.
