@@ -140,8 +140,6 @@ how this list works. Entries below are in the order found, not priority
   prompt is pure friction there (the app's own text admits it - "den här
   webbläsaren stöder inte mappval... men du kan fortsätta ändå"). Real
   fix needs product input, not just code: should this be a one-time
-  choice persisted server-side (per-account, e.g. a `users` table
-  column - **not browser localStorage**, per Joakim's explicit
-  instruction 2026-07-17), and should unsupported browsers skip the
-  prompt entirely rather than show a "your browser can't do this"
-  message every time?
+  choice persisted (localStorage/cookie), and should unsupported browsers
+  skip the prompt entirely rather than show a "your browser can't do
+  this" message every time?
