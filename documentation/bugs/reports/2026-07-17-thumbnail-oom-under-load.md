@@ -1,8 +1,16 @@
 # Thumbnails fail under concurrent load
 
-Status: **investigating, not fixed**. Short version lives in
-[../TODO.md](../TODO.md); this file is the full chronological trail —
-update it as more is learned, don't just overwrite conclusions.
+Status: **mitigated, not fully fixed**. The crash is gone (mem_limit +
+semaphore + `Image.draft()`, all deployed and confirmed stable — see
+"Fixes applied" below). Confirmed 2026-07-17 (post-fix): each thumbnail
+now takes a *consistent* amount of time to appear, showing up exactly
+when it scrolls into focus (lazy-loading, pre-existing, doing its job) -
+this is normal on-demand generation latency working as designed, not a
+growing backlog or degradation over a session. Remaining issue is
+latency/UX (a visible wait per never-before-viewed thumbnail), not
+reliability. Short version lives in [../TODO.md](../TODO.md); this file
+is the full chronological trail — update it as more is learned, don't
+just overwrite conclusions.
 
 ## Symptom
 
@@ -67,20 +75,34 @@ resource-efficiency constraint (2026-07-17) - this is exactly the kind
 of code that needs to stay lean given the eventual Pi-class hardware
 target.
 
-## Candidate fixes (not evaluated yet - needs real profiling first)
+## Fixes applied (2026-07-17, same session)
 
-- Cap concurrent thumbnail generation server-side (a semaphore/queue),
-  so load degrades gracefully (slower) instead of failing outright.
-- Pre-generate/warm the thumbnail cache instead of generating on first
-  view (shifts cost to a background job instead of the request path).
-- Lower per-thumbnail memory footprint (e.g. `Image.draft()` before
-  resize, to avoid decoding a full-resolution image just to shrink it).
-- The already-known RAM upgrade (ordered, not installed — HARDWARE.md)
-  may simply resolve this once fitted; worth re-testing before assuming
-  a code change is required at all.
+- **`mem_limit` raised 256m -> 512m** on the photo-viewer container
+  (`docker-compose.prod.yml`) - mitigation, gives Pillow's transient
+  decode/resize spikes more headroom.
+- **`MAX_CONCURRENT_THUMBNAILS` semaphore** (default 2) around the
+  generation path in `app/main.py`'s `thumb()` - caps how many Pillow
+  decode+resize+encode calls run at once. TDD'd
+  (`app/tests/test_thumb_concurrency.py`).
+- **`Image.draft()`** called before `exif_transpose`/`thumbnail()` -
+  lets the JPEG decoder skip full-resolution decode for a small
+  thumbnail, same output size/quality, less memory/CPU per call. TDD'd
+  (`app/tests/test_thumb_draft.py`).
+
+All three deployed and confirmed stable over 2+ hours with no restarts
+(previously restarting every few minutes under normal browsing). The
+combination stopped the crash entirely; it did not make on-demand
+generation instant - see the 2026-07-17 update above.
+
+The RAM upgrade (ordered, not installed — HARDWARE.md) was never
+re-tested in isolation before these code fixes went in; not needed now
+given the above resolved the crash, but worth noting it was never ruled
+in or out as a contributing factor.
 
 ## Next session should start with
 
-`dmesg | grep -i oom` and a `docker stats` capture *during* a deliberate
-attempt to load many thumbnails at once, to confirm or rule out the OOM
-theory before spending time on any of the candidate fixes above.
+Not diagnosis - the crash is resolved. Go straight to designing/building
+the real next step: **pre-compile thumbnails ahead of time** (see
+[../TODO.md](../TODO.md)'s top-of-file priority list for the concrete
+design questions already identified) so on-demand generation latency
+stops being visible to the user at all.
