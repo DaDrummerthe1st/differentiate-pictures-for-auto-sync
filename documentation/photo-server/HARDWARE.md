@@ -14,6 +14,14 @@ pool. See [README.md](README.md) for the resulting non-negotiable.
 | Storage | 3.6TB ZFS pool at `/tank`, 2.7TB free |
 | OS | Ubuntu 24.04 LTS, Python 3.12.3 |
 | LAN address | 192.168.1.10, under Joakim's desk |
+| Router | Ubiquiti EdgeRouter X, firmware 3.0.1 (Joakim, 2026-07-17) — LAN gateway `192.168.1.1`. Port-forwarding 80/443 -> 192.168.1.10 configured 2026-07-17 for the photo-server P0 deploy; see [DEPLOYMENT.md](DEPLOYMENT.md) and CHANGELOG. |
+
+The `192.168.1.1` gateway address is inferred from the dev workstation's
+own `ip route` (same `192.168.1.0/24` subnet as the server) — not read
+directly off the server or the router itself, per the "physically
+separate machine" note below. Confirm on the server directly
+(`ip route | grep default`) if this ever needs to be certain rather than
+inferred.
 
 **This is a physically separate machine from wherever an AI session (or
 Joakim) edits code or runs a dev shell.** Confirmed 2026-07-15: dev/build

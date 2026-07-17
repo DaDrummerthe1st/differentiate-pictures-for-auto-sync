@@ -5,6 +5,15 @@ before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
 CLAUDE.md's project-memory note on that trade-off).
 
+## 2026-07-17 (3)
+
+- Documented the router (Ubiquiti EdgeRouter X, firmware 3.0.1, gateway
+  192.168.1.1) in HARDWARE.md, including the 80/443->192.168.1.10
+  port-forward set up for today's deploy. Gateway IP inferred from the
+  dev workstation's `ip route` (same /24 subnet), flagged as such rather
+  than presented as directly confirmed on the server. HARDWARE.md:
+  2424->3023.
+
 ## 2026-07-17 (2)
 
 - **P0 under a hard 14:00 deadline**: gated the photo-viewer behind the
