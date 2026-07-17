@@ -2,6 +2,7 @@ import json
 import mimetypes
 import os
 import sqlite3
+import threading
 import uuid
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
@@ -20,6 +21,17 @@ load_auth_config()
 PHOTOS_ROOT = Path(os.environ.get("PHOTOS_ROOT", "/photos")).resolve()
 THUMB_CACHE = Path(os.environ.get("THUMB_CACHE_DIR", "/thumbcache"))
 THUMB_CACHE.mkdir(parents=True, exist_ok=True)
+
+# Caps concurrent Pillow decode+resize+encode calls - measured, allocated,
+# released per POLICY.md's resource-efficiency rule. Each generation is a
+# real memory/CPU spike; letting an unbounded number run at once on a
+# 2-core, memory-tight host (see HARDWARE.md) is what was silently
+# killing this container in production (2026-07-17 - see
+# documentation/bugs/reports/2026-07-17-thumbnail-oom-under-load.md).
+# Cache-hit serving (the common case after warmup) is NOT gated by this -
+# only the expensive generation path is.
+MAX_CONCURRENT_THUMBNAILS = int(os.environ.get("MAX_CONCURRENT_THUMBNAILS", "2"))
+_thumb_semaphore = threading.Semaphore(MAX_CONCURRENT_THUMBNAILS)
 
 STORY_DIR = Path(os.environ.get("STORY_DIR", "/stories"))
 STORY_DIR.mkdir(parents=True, exist_ok=True)
@@ -323,20 +335,21 @@ def thumb(p: str = Query(...), _: int = Depends(require_session)):
     cache_path = THUMB_CACHE / (p + ".jpg")
     if not cache_path.exists() or cache_path.stat().st_mtime < src.stat().st_mtime:
         cache_path.parent.mkdir(parents=True, exist_ok=True)
-        picture_ok = False
-        if ext in PICTURE_EXTS:
-            try:
-                with Image.open(src) as im:
-                    im = ImageOps.exif_transpose(im)
-                    im.thumbnail(THUMB_SIZE)
-                    if im.mode != "RGB":
-                        im = im.convert("RGB")
-                    im.save(cache_path, "JPEG", quality=82)
-                picture_ok = True
-            except Exception:
-                picture_ok = False
-        if not picture_ok:
-            _make_placeholder_thumb(cache_path, src.name, ext)
+        with _thumb_semaphore:
+            picture_ok = False
+            if ext in PICTURE_EXTS:
+                try:
+                    with Image.open(src) as im:
+                        im = ImageOps.exif_transpose(im)
+                        im.thumbnail(THUMB_SIZE)
+                        if im.mode != "RGB":
+                            im = im.convert("RGB")
+                        im.save(cache_path, "JPEG", quality=82)
+                    picture_ok = True
+                except Exception:
+                    picture_ok = False
+            if not picture_ok:
+                _make_placeholder_thumb(cache_path, src.name, ext)
     return FileResponse(cache_path, media_type="image/jpeg")
 
 
