@@ -22,7 +22,19 @@ absence is a decision, not an oversight.
   'content'`), endpoints deferred. Only `kind = 'album'` endpoints are
   built now — see [DATA_DICTIONARY.md](DATA_DICTIONARY.md).
 - **Share-link endpoints** — schema only for now (`share_links` table).
-  No multi-party sharing needed with two known accounts.
+  No multi-party sharing needed with two known accounts. **Concrete need
+  raised 2026-07-17**: Joakim wants to copy/paste/share a link to one
+  specific picture. Checked what exists today: nothing — `app.js` has no
+  URL routing for an individual photo view (no `pushState`/hash routing),
+  and the only per-file URL (`/original?p=<relpath>`) requires an
+  existing session for this account, has no "copy link" UI, and isn't a
+  real app page (raw file, no gallery chrome). Real fix needs a design
+  decision this project hasn't made yet: an authenticated deep-link
+  (works only for someone already logged into this account - much
+  smaller scope, no `share_links` table needed) vs. an actual public
+  share link (works for anyone with the link, no login - the
+  originally-scoped `share_links` feature, bigger scope, real access-
+  control questions). Don't build either without picking one first.
 - **In-app slideshow/casting UI** — v1's deliverable is a downloaded zip
   put onto a USB stick for a picture frame, not in-app display.
 - **Usage-based fate prediction** — needs `audit_log` and album-tag
