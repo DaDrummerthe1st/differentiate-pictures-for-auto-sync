@@ -16,9 +16,11 @@ how this list works.
   around live with a one-off `python -c` call to `ensure_schema`,
   idempotent (`CREATE TABLE IF NOT EXISTS`) so safe to have run. Real
   fix: an explicit migration/init step in the deploy sequence (either
-  call `ensure_schema` once at `auth` container startup, or a documented
-  one-time `docker compose exec` step in DEPLOYMENT.md) so this doesn't
-  silently bite the next fresh deploy too.
+  call `ensure_schema` once at `auth` container startup, or wire the
+  workaround below into the Dockerfile/CMD directly). The workaround
+  itself is now a documented required step, not just a memory of what
+  happened — see `photo-server/DEPLOYMENT.md`'s step 4 (added same day),
+  so the next fresh deploy doesn't have to rediscover this.
 - **`server/Dockerfile` never copies `scripts/` into the image.**
   Found 2026-07-17, live during the P0 deploy:
   `docker compose exec auth python -m scripts.create_account ...` fails
@@ -31,7 +33,9 @@ how this list works.
   Real fix: add `COPY scripts/ /app/scripts/` (and whatever else
   `scripts/create_account.py` imports beyond `app.*`) to
   `server/Dockerfile`, rebuild, and re-verify the documented command in
-  DEPLOYMENT.md actually works before trusting that doc again.
+  DEPLOYMENT.md actually works before trusting that doc again. Until
+  then, `photo-server/DEPLOYMENT.md`'s step 5 documents the working
+  one-off `python -c` equivalent as the actual required step.
 
 - **Thumbnails fail under concurrent load, likely OOM.** Found
   2026-07-17, live during the P0 human checkpoint. Full investigation

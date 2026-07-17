@@ -64,25 +64,59 @@ doesn't come up clean:
 docker compose -f docker-compose.prod.yml logs -f caddy
 ```
 
-## 4. Create the first member account
+## 4. Initialize the database schema
 
-Runs inside the `auth` container, against the real Postgres it's
-already connected to:
+**Not automated yet — known gap, see
+[documentation/bugs/TODO.md](../bugs/TODO.md).** Nothing in the deploy
+path calls `ensure_schema()` against the real database; skip this step
+and every login attempt will fail with a confusing "Incorrect email or
+password" (the real error, `relation "users" does not exist", only shows
+up in the `auth` container's logs, not in the login response). Safe to
+re-run (`CREATE TABLE IF NOT EXISTS`) if you're ever unsure whether it's
+already been done:
 
 ```
-docker compose -f docker-compose.prod.yml exec auth \
-  python -m scripts.create_account --email elisabeth.reuterborg@gmail.com --role member
+docker compose -f docker-compose.prod.yml exec auth python -c "
+from app.db import get_connection, ensure_schema
+with get_connection() as conn:
+    ensure_schema(conn)
+    conn.commit()
+print('Schema ready')
+"
 ```
 
-It prompts for a password (not echoed) — set a real one and share it
-with her out of band (not over email/chat in plaintext, per
-[POLICY.md](../policies/POLICY.md)).
+## 5. Create the first member account
 
-## 5. Verify
+**`python -m scripts.create_account` (the originally-intended command)
+does not work — known gap, see
+[documentation/bugs/TODO.md](../bugs/TODO.md): `server/Dockerfile` never
+copies `scripts/` into the image.** Use this working equivalent instead,
+which only needs what's already in the image. Runs inside the `auth`
+container, against the real Postgres it's already connected to (replace
+the email and pick a real password — this example generates one for you
+so it's not typed into shell history):
+
+```
+docker compose -f docker-compose.prod.yml exec -e CREATE_ACCOUNT_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(16))')" auth python -c "
+from app.accounts import create_account
+from app.db import get_connection
+import os
+with get_connection() as conn:
+    user_id = create_account(conn, email='elisabeth.reuterborg@gmail.com', password=os.environ['CREATE_ACCOUNT_PASSWORD'], role='member')
+    conn.commit()
+print(f'Created user {user_id}')
+print(f'Password: {os.environ[\"CREATE_ACCOUNT_PASSWORD\"]}')
+"
+```
+
+Share the printed password with the account holder out of band (not
+over email/chat in plaintext, per [POLICY.md](../policies/POLICY.md)).
+
+## 6. Verify
 
 - `https://photos.reuterborg.se/login` loads, real cert (no browser
   warning), the login form renders.
-- Log in with the account from step 4 — lands on the photo-viewer.
+- Log in with the account from step 5 — lands on the photo-viewer.
 - Confirm a direct request to a photo/thumbnail URL without a session
   (e.g. `curl -i https://photos.reuterborg.se/api/tree`) returns 401.
 - Single-picture and multi-picture download still work from the logged-in
