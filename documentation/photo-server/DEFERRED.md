@@ -89,6 +89,12 @@ absence is a decision, not an oversight.
     real once port-forwarded. Fix would mean adding `slowapi` (or
     equivalent) to `requirements.txt` and wiring a limiter — deferred
     rather than adding a new dependency with limited time to test it.
+- **Repo location on the server** — cloned to `~/differentiate-pictures-for-auto-sync`
+  (Joakim's home dir) for speed under the 2026-07-17 deadline; Joakim
+  would prefer a conventional service location (e.g. `/opt/photo-server`
+  or `/srv/photo-server`). Purely a `mv` + updating `DEPLOYMENT.md`'s
+  paths whenever there's time — nothing functional depends on it living
+  in `~/`.
 - **Multi-tenant photo partitioning / per-user sharing scope** — today's
   gate (`app/auth.py`) is deliberately binary: valid session or 401,
   with no per-user visibility restriction, because Elisabeth is the only
