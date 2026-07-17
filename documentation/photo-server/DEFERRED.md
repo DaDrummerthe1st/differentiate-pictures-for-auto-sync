@@ -120,7 +120,7 @@ absence is a decision, not an oversight.
   in `~/`.
 - **Single consolidated media root for P1+** (Joakim, 2026-07-17): today's
   fix pointed `PHOTOS_HOST_PATH` at Elisabeth's specific directory
-  (`/tank/mammas_bilder`) as a one-account stopgap. Future builds with
+  (`/tank/momfiles`) as a one-account stopgap. Future builds with
   more than one account's photos should live under one shared root
   instead (Joakim's example: `/tank/all_media_from_dpfas`), with
   per-account/per-owner scoping handled in the app layer rather than by

@@ -44,7 +44,7 @@ Paste the three generated values into `.env` for `POSTGRES_PASSWORD`,
 `REDIS_PASSWORD`, and `JWT_SECRET_KEY` (the last one must be at least 32
 characters — `token_urlsafe(32)` comfortably clears that). Also set
 `PHOTOS_HOST_PATH` to the real photo directory on this host (confirmed
-2026-07-17: `/tank/mammas_bilder` — the ZFS pool path, not a
+2026-07-17: `/tank/momfiles` — the ZFS pool path, not a
 `~/Pictures/...` guess; verify with `ls` before trusting this doc if it
 ever seems stale).
 
