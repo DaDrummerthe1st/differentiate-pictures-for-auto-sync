@@ -340,6 +340,13 @@ def thumb(p: str = Query(...), _: int = Depends(require_session)):
             if ext in PICTURE_EXTS:
                 try:
                     with Image.open(src) as im:
+                        # Must run before exif_transpose/thumbnail() - both
+                        # would otherwise force a full-resolution decode
+                        # first. draft() only affects JPEG sources and is
+                        # a best-effort hint (actual decode size may not
+                        # match exactly), which is fine since .thumbnail()
+                        # below still resizes precisely to THUMB_SIZE.
+                        im.draft("RGB", THUMB_SIZE)
                         im = ImageOps.exif_transpose(im)
                         im.thumbnail(THUMB_SIZE)
                         if im.mode != "RGB":
