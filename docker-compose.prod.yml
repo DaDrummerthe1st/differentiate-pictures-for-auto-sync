@@ -34,7 +34,7 @@ services:
     environment:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?set JWT_SECRET_KEY in .env, never hardcode it}
     volumes:
-      - /home/joakim/Pictures/mammas_bilder:/photos:ro
+      - ${PHOTOS_HOST_PATH:?set PHOTOS_HOST_PATH in .env to the real photo directory on this host, e.g. /tank/mammas_bilder}:/photos:ro
       - thumbcache:/thumbcache
       - analytics_data:/data
       - stories:/stories

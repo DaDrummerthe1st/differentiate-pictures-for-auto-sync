@@ -80,6 +80,29 @@ absence is a decision, not an oversight.
     `Path.mkdir()`, not pre-baked into the image) are actually writable
     by that user, which needs a real container run to verify and isn't
     something to get wrong for the first time under deadline pressure.
+    **Elevated priority 2026-07-17** (Joakim raised the actual blast-
+    radius question this closes): combined with the LAN-egress gap
+    directly below, this is step 2 of a real (if multi-step) chain from
+    "app vulnerability" to "attacker has host-level access to the whole
+    home LAN and router" — not just a generic hardening nice-to-have.
+  - **No egress restriction from containers to the LAN** — confirmed
+    2026-07-17 that none of the 5 services run `privileged` or
+    `network_mode: host` (the biggest single mitigation - a compromised
+    container can't trivially escape to the host through those), but
+    Docker's default bridge networking still lets a compromised
+    container make *outbound* connections to the LAN (192.168.1.0/24,
+    including the router at 192.168.1.1) via the host's routing - nothing
+    in `docker-compose.prod.yml` currently blocks that egress. Also
+    relevant: Docker manipulates `iptables` directly and is known to
+    bypass UFW's rules unless specifically configured for Docker - so
+    DEPLOYMENT.md's UFW step protects inbound access only, not this.
+    Real fix (not attempted today - needs real testing, not a rushed
+    change to a live production compose file): egress-restrict the
+    Docker network (e.g. an explicit `internal: true` network plus a
+    narrow allow-list for the specific outbound calls each service
+    actually needs - Let's Encrypt's ACME servers for Caddy, nothing for
+    postgres/redis, nothing for auth/photo-viewer beyond the internal
+    network itself).
   - **`/api/event` (photo-viewer) is intentionally unauthenticated**
     (telemetry only, returns no data — see `app/main.py`) but has no
     rate limiting either, unlike the auth backend's `/login`. Once this
@@ -95,6 +118,15 @@ absence is a decision, not an oversight.
   or `/srv/photo-server`). Purely a `mv` + updating `DEPLOYMENT.md`'s
   paths whenever there's time — nothing functional depends on it living
   in `~/`.
+- **Single consolidated media root for P1+** (Joakim, 2026-07-17): today's
+  fix pointed `PHOTOS_HOST_PATH` at Elisabeth's specific directory
+  (`/tank/mammas_bilder`) as a one-account stopgap. Future builds with
+  more than one account's photos should live under one shared root
+  instead (Joakim's example: `/tank/all_media_from_dpfas`), with
+  per-account/per-owner scoping handled in the app layer rather than by
+  pointing the whole container at a single person's folder. Ties
+  directly into the already-noted "multi-tenant photo partitioning" gap
+  right below — same underlying design question, not a separate one.
 - **Multi-tenant photo partitioning / per-user sharing scope** — today's
   gate (`app/auth.py`) is deliberately binary: valid session or 401,
   with no per-user visibility restriction, because Elisabeth is the only
