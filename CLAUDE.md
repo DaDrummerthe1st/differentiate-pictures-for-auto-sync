@@ -111,6 +111,24 @@ see the self-sufficiency rule below.
   right after that folder was created for exactly this — the point of an
   untriaged-bugs list is that it actually gets worked, not that it
   becomes a second graveyard alongside `DEFERRED.md`.
+- **Every bug (`documentation/bugs/reports/`) and every AI-session
+  process lapse (`documentation/bugs/claude/`) is its own file — never a
+  bullet appended to a shared list.** `TODO.md`/`LOG.md` in those folders
+  are indexes only (one line + link each). Use
+  `tools/new_bug_report/new_bug_report.sh` (add `--claude` for a process
+  lapse) to create one with a consistent name and template — don't
+  hand-name these. Decided 2026-07-17 after the untriaged list started
+  accumulating full write-ups inline instead of staying scannable.
+- **Wrap-up must verify, not just assume, that on-the-way routines
+  actually ran** — decided 2026-07-17 after 3 commits went out mid-session
+  without their required `doc_metrics`/`commit_cost` logging, unnoticed
+  until asked about directly. At session end (and whenever picking a
+  session back up), run `tools/commit_cost/check_coverage.sh` — it
+  compares every commit in `git log` against `commit_costs.jsonl` and
+  reports any gap. A missing entry means the logging step was skipped for
+  that commit; catch up before considering wrap-up done. (The very last
+  commit will always show as "missing" until the *next* logging run —
+  that's expected, not a gap.)
 
 ## What counts as high-blast-radius here
 

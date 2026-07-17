@@ -4,20 +4,24 @@ A landing spot for bugs found in the moment — during a live session,
 mid-deploy, wherever — that haven't been triaged into their proper home
 yet (a topic folder's own `TODO.md`, `DEFERRED.md`, or a real fix). This
 folder is deliberately not organized by topic; it's a capture point, not
-a filing system. See [TODO.md](TODO.md) for the current untriaged list.
+a filing system.
 
-For a bug complex enough to need a multi-session investigation trail
-(not just a one-line description), give it its own file under
-[reports/](reports/) — named `<date>-<short-slug>.md` — and link it from
-the `TODO.md` entry instead of inlining the whole history there. The
-report is where the *process* (what was checked, what was ruled out, in
-order) lives, not just the conclusion — see
+**Hard rule (2026-07-17): every bug is its own file under
+[reports/](reports/), named `<date>-<short-slug>.md` — never a bullet
+added to a shared list.** [TODO.md](TODO.md) is only an index (one line
++ link per bug); it should never grow a real write-up inline. This
+applies even to a one-line bug, not just multi-session investigations —
+the file is where the *process* (what was checked, what was ruled out,
+in order) lives as it's learned, not just the conclusion — see
 [reports/2026-07-17-thumbnail-oom-under-load.md](reports/2026-07-17-thumbnail-oom-under-load.md)
 for the shape to follow.
 
 Use `tools/new_bug_report/new_bug_report.sh "Short bug title"` to create
 one with a consistent name and the right starter template — don't
-hand-name these.
+hand-name these. Once a `reports/` file is genuinely resolved (not just
+mitigated), move it with `tools/new_bug_report/mark_solved.sh
+<filename>` into [solved/](solved/README.md) instead of deleting it —
+see that folder's README for why.
 
 [claude/](claude/README.md) is a different, narrower thing: not app
 bugs, but the AI session's own process lapses — a routine that should
