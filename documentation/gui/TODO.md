@@ -122,6 +122,47 @@ structured fields and add a rendered freetext view, or replace the
 stored format outright) before any implementation — TDD applies as
 usual once decided.
 
+## Open from the 2026-07-18 session
+
+- **Download-folder UX rework, designed, not built**: remove the
+  upfront "choose folder" screen (currently shown before the gallery,
+  blocking first use). Instead: go straight to the gallery; prompt for
+  a folder lazily, only on the first actual save action; bake the
+  current-folder indicator into the toolbar's existing
+  `downloadFolderLabel` sentence ("Bilder sparas i: ..." /
+  "Nedladdningar sparas enligt webbläsarens nedladdningsinställning"),
+  made clickable/hoverable to show the full path and let the user
+  re-pick. TDD blocked on the Playwright decision below - no JS test
+  harness exists in this repo at all yet.
+- **Playwright vs. an alternative - Joakim raised a real concern, not
+  yet resolved**: Playwright is Microsoft-maintained (MIT licensed,
+  open source, but MS-driven), which sits awkwardly against Joakim's
+  stated direction (own VPS, own git server, less MS-ecosystem
+  dependence long-term). Selenium is the vendor-neutral alternative (W3C
+  WebDriver standard, no single owner) at the cost of a more verbose
+  API and historically more flakiness. Either way, run containerized
+  only (`POLICY.md`'s new no-system-installs rule) - Playwright has an
+  official Docker image (`mcr.microsoft.com/playwright`, or buildable
+  from Playwright's own open-source Dockerfile to avoid the MS registry
+  specifically); Selenium has an equivalent
+  (`selenium/standalone-chrome`). **Needs Joakim's call before writing
+  any frontend test**, not a default to assume.
+- **Thumbnail pre-compile design synthesis** - see
+  `../bugs/reports/2026-07-17-pre-compile-thumbnails-ahead-of-time.md`,
+  updated 2026-07-18 with a concrete design from Joakim's answers
+  (versioned cache path, one idempotent `ensure_thumbnail` method
+  serving manual backfill + on-demand fallback + any future event
+  trigger). Still needs Joakim's sign-off on the synthesis before
+  building.
+- **Grid pagination**, a separate/complementary idea to pre-compiling -
+  see `../bugs/reports/2026-07-18-paginate-the-grid-instead-of-loading-all-thumbnails-at-once.md`.
+  Candidate, not evaluated.
+- **Lightbox bug, not root-caused** - see
+  `../bugs/reports/2026-07-18-lightbox-shows-previous-photo-when-clicking-a-not-yet-loaded-thumbnail.md`.
+  Symptom changed after today's redeploy (now shows nothing instead of
+  the previous photo) - needs a live repro with DevTools open, not more
+  static code reading.
+
 ## Other open items (carried over, not yet done)
 
 - Recheck for anything else possibly missing from the branch-mixup

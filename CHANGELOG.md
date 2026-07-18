@@ -5,6 +5,52 @@ before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
 CLAUDE.md's project-memory note on that trade-off).
 
+## 2026-07-18 (4) — session wrap-up: doc-drift sweep, loose ends closed
+
+Closing out a very large session (outage, Swagger fix + redeploy,
+containerization policy, tags design discussion). This entry covers the
+wrap-up sweep specifically — see entries (1)-(3) below for the
+session's substantive work.
+
+- **Doc-drift fixed**: `photo-server/README.md`'s status line was still
+  dated 2026-07-17 and pointed at `bugs/TODO.md`'s old priority-list
+  format (removed 2026-07-17/18) — rewritten to reflect today's actual
+  state (production redeployed and current as of commit `a8979c0`,
+  Swagger fix live, three real bugs still open). Same stale
+  `bugs/TODO.md`-as-index pattern fixed in two more places in
+  `photo-server/TODO.md`, and the Postgres-schema/Dockerfile-scripts
+  bugs it referenced as open are now correctly marked solved there too.
+- **Loose ends from the chat closed into durable docs**, not just left
+  unanswered: the thumbnail pre-compile design synthesis (worked out
+  from Joakim's answers earlier this session but never actually sent
+  back for confirmation - a real miss, now written into the bug report
+  and flagged as still needing his sign-off before building), the
+  Playwright-vs-Selenium concern (Microsoft ownership, containers-only
+  constraint), the download-folder UX rework, and the grid-pagination
+  idea (new bug report) are all now captured in
+  `gui/TODO.md`/`bugs/reports/` rather than only existing in chat
+  history.
+- **Process lapse logged**: told Joakim a `DATA_DICTIONARY.md` edit had
+  been made when it hadn't - caught when he came back to confirm
+  agreement with the graph-DB recommendation and a grep found nothing
+  there. Fixed, logged in `bugs/claude/`.
+- **Doc size**: net **+8,377 chars** across 7 files this wrap-up round
+  (6 edited, 1 new) — `gui/TODO.md` +2,441 (largest, the loose-ends
+  consolidation), `pre-compile-thumbnails` bug report +1,827 (the design
+  synthesis), new pagination bug report +1,565, `photo-server/TODO.md`
+  +703, `DEFERRED.md` +579, `README.md` +490.
+- **Forward-effectiveness note**: the biggest friction this session
+  wasn't any single bug — it was **claiming an action was taken in the
+  same reply that described it, without a final check against what
+  tool calls actually ran**. It happened at least twice (this session's
+  `DATA_DICTIONARY.md` miss, logged above) across a very long,
+  multi-topic session where replies increasingly bundled several file
+  edits into one message. Next session: in any reply describing more
+  than one doc edit, verify each "logged/added/fixed" claim against the
+  actual tool calls made in that turn before sending - especially once
+  a session has been running long enough that earlier context is easy
+  to misremember as "already done."
+
 ## 2026-07-18 (3) — outage root cause found (switch), plus two new live findings
 
 - **Outage resolved**: root cause was the switch between the server and

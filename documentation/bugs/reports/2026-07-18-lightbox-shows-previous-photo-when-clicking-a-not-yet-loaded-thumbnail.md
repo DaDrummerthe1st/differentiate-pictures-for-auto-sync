@@ -32,6 +32,18 @@ in the lightbox popup itself, not in the small grid tile.
    `enterGallery()` at page load - no other caller found, so this
    shouldn't be re-running during normal browsing.
 4. No root cause identified yet from static reading alone.
+5. **Symptom changed after today's redeploy** (Joakim, 2026-07-18, post
+   `d147c04` deploy): clicking a not-yet-loaded thumbnail now shows
+   *nothing at all* - not even the broken-image placeholder icon a
+   failed `<img>` load normally shows. Previously it showed the
+   *previous* photo instead. Not yet understood whether this is the
+   same underlying bug presenting differently (e.g. now correctly
+   failing to load the wrong content, where it previously somehow
+   rendered stale content), or a distinct regression introduced by one
+   of today's other changes (the `docs_url=None` fix, the schema-init
+   lifespan handler, or something else entirely unrelated). Needs a
+   fresh live repro - don't assume continuity with the earlier
+   "previous photo" symptom.
 
 ## Leading theory (unconfirmed)
 

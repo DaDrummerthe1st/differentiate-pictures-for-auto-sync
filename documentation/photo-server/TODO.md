@@ -439,7 +439,8 @@ future Postgres-catalog-backed backend (`server/`, schema-dependent,
 not yet built beyond Phase 0/1). The `/thumb` route that was actually
 debugged and fixed today (mem_limit, a concurrency semaphore,
 `Image.draft()` — see [DEFERRED.md](DEFERRED.md) and
-[../bugs/TODO.md](../bugs/TODO.md)) lives in `app/main.py`, the simpler,
+`../bugs/reports/2026-07-17-thumbnail-oom-under-load.md`) lives in
+`app/main.py`, the simpler,
 filesystem-based `mamma-photo-viewer` app that's actually live in
 production right now. Don't assume work here also applies there, or
 vice versa.
@@ -593,10 +594,12 @@ path goes to the photo-viewer, which has no `/health` route; `/login`
 end-to-end login (not just reachability) also confirmed, after finding
 and fixing two more gaps: the Postgres schema was never initialized in
 production (nothing in the deploy path ran `ensure_schema` — worked
-around live, not yet fixed at the Dockerfile/deploy-script level), and
-`server/Dockerfile` never copies `scripts/` into the image (account
-creation only worked via a live one-off workaround). Both logged in
-[documentation/bugs/TODO.md](../bugs/TODO.md).
+around live at the time). Both **since fixed for real** (2026-07-18:
+`ensure_schema` now runs from a FastAPI `lifespan` handler on startup,
+and `server/Dockerfile` now copies `scripts/`) — see
+`../bugs/solved/2026-07-17-postgres-schema-never-initialized-in-production-SOLVED.md`
+and
+`../bugs/solved/2026-07-17-dockerfile-missing-scripts-directory-SOLVED.md`.
 
 ## Phase 7 — Stability checkpoint
 
@@ -632,6 +635,15 @@ Re-check this list at the end of every phase above, not just once:
   superuser.
 - Dependency versions pinned (Pillow, ffmpeg, RAW-reading library) —
   these parse untrusted file content (Phase 3.5's note).
+- **Systematic discovery pass for this same class of bug** (framework/
+  proxy defaults neither of us explicitly chose - the Swagger exposure
+  below was exactly this), raised by Joakim 2026-07-18, not started:
+  check Caddy's own admin API (`:2019`, confirm localhost-only) and
+  FastAPI's default error responses for traceback leaks; run `pip-audit`
+  against `pyproject.toml`/`uv.lock` on both services for known
+  dependency CVEs; run an OWASP ZAP baseline scan against the live site
+  for missing security headers/common injection points. None of the
+  three set up yet.
 - **Swagger/OpenAPI docs are publicly exposed, unauthenticated** — found
   2026-07-18: both `app/main.py` and `server/app/main.py` instantiate
   `FastAPI()` with no `docs_url`/`redoc_url`/`openapi_url` override, and

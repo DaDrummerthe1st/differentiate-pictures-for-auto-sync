@@ -157,3 +157,12 @@ and a home, it's already triaged.
   become user-scoped, whether photos need an owner column, and how that
   interacts with the still-schema-only `share_links` table. Flagging now
   so it's a deliberate next design pass, not a surprise retrofit.
+- **Periodic CVE monitoring, displayed in an admin GUI** (Joakim,
+  2026-07-18): this app has no admin GUI at all today — mamma-photo-
+  viewer is just the photo gallery, no admin concept exists anywhere in
+  the codebase. Building both a CVE-checking routine (likely `pip-audit`
+  run on a schedule, per TODO.md's discovery-methodology item) *and* a
+  new admin surface to display results is a substantial, separate
+  feature needing its own scoping conversation (where it runs, who can
+  see it, what "admin" even means here) — explicitly not scoped or
+  started this session.

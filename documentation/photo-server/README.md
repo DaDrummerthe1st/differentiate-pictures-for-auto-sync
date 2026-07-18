@@ -8,27 +8,36 @@ existing single-machine, single-user Python sorting tool) and from
 [../distributed-sync/](../distributed-sync/README.md) (future multi-device
 P2P sync — not started, unaffected by this work).
 
-**Status (2026-07-17, end of session): live and working.** Elisabeth can
-log in and browse at `https://photos.reuterborg.se` (branch
-`mamma-photo-viewer`) — deployed same-day against a hard 14:00 deadline
-(the fallback was a hand-delivered zip; see CHANGELOG for that whole
-story). Thumbnails mostly work; large albums can still stall partway
-through under load — real, understood, not blocking tonight's use.
+**Status (2026-07-18, end of session): live and working, production
+redeployed and current as of commit `a8979c0`.** Elisabeth can log in
+and browse at `https://photos.reuterborg.se` (branch
+`mamma-photo-viewer`). Today: a full outage (aging switch, not the
+server — see `bugs/solved/`), a since-fixed publicly-exposed Swagger/
+OpenAPI docs vulnerability (`docs_url=None` now on both services), and
+the Postgres schema-init + `Dockerfile` fixes from earlier are all live
+in production as of today's redeploy.
 
-**Starting a new session on this topic? Read
-[documentation/bugs/TODO.md](../bugs/TODO.md) first** — it opens with a
-priority-ordered "start here" list, not just a chronological dump.
-Don't re-derive today's deploy history from scratch: `DEPLOYMENT.md` has
-the current, correct deploy steps (including two gaps found and fixed
-in-place, not just noted); `bugs/reports/` has the full investigation
-trail for the one still-open hard problem (thumbnail generation under
-load); [POLICY.md](../policies/POLICY.md) has a hard resource-efficiency
-constraint added today (this must eventually run on Pi-class hardware);
-CHANGELOG.md's 2026-07-17 entries have the complete blow-by-blow if you
-need it, but shouldn't be required reading to start working.
+**Open, real problems** (each its own file in `bugs/reports/`, no index
+kept - browse that folder directly, each file's `Status:` line says
+where it stands): Redis has no persistent volume (every container
+restart silently logs out every active session); thumbnail/lightbox
+`<img>` tags have no silent-refresh on an expired access token (a
+possible everyday bug, not just a restart edge case); the lightbox
+shows wrong/no content when clicking a not-yet-loaded thumbnail
+(symptom changed after today's redeploy, not yet root-caused); Swagger
+docs public exposure (**fixed**, see `bugs/solved/`).
 
-Not yet done, lower priority than `bugs/TODO.md`: 1.9a–c (admin password
-reset), 1.11's human checkpoint, and the
+**Starting a new session on this topic?** Don't re-derive today's
+history from scratch: `DEPLOYMENT.md` has the current, correct deploy
+steps; `HARDWARE.md` now documents the switch between the server and
+router; [POLICY.md](../policies/POLICY.md) has a hard resource-
+efficiency constraint and (added today) a no-system-wide-installs,
+containers/venvs-only constraint; `CHANGELOG.md`'s 2026-07-17 and
+2026-07-18 entries have the complete blow-by-blow if you need it, but
+shouldn't be required reading to start working.
+
+Not yet done, lower priority than the open items in `bugs/reports/`:
+1.9a–c (admin password reset), 1.11's human checkpoint, and the
 `master`/`phase-1-login`/`mamma-photo-viewer` branch reunification
 (deliberately deferred — see TODO.md's "Branch relationship" section).
 This folder
