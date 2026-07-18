@@ -56,14 +56,26 @@ curl: (7) Failed to connect to photos.reuterborg.se port 443 after 3063 ms: Coul
    `isc-dhcp-client`) - moot regardless, since `NO-CARRIER` means no
    DHCP request could go out over that link even with the right tool.
 9. Checked the EdgeRouter X (`192.168.1.1`) for its side of the same
-   port - web UI login works (Firefox-saved credentials, account
-   `JokeHim`), so using that instead of SSH to check port status. SSH
-   login itself turned out broken for unrelated reasons - split into
-   its own report,
-   [2026-07-18-edgerouter-ssh-login-fails-for-jokehim-despite-working-web-ui-credentials.md](2026-07-18-edgerouter-ssh-login-fails-for-jokehim-despite-working-web-ui-credentials.md).
-   That investigation's SSH-banner evidence also rules out a router
-   reset/reflash as a shared root cause with this outage - treat the two
-   as unrelated.
+   port. Web UI login (Firefox-saved credentials, account `JokeHim`)
+   works. SSH login failed first on a username typo (`JokeHime` vs the
+   correct `JokeHim`); after fixing that, SSH *still* fails to
+   authenticate with the same credentials that work on the web UI.
+   Joakim confirmed router SSH worked as recently as yesterday
+   (2026-07-17, same day the server's own SSH last worked) - a
+   regression since then, not a never-worked account. No fallback
+   account to isolate with (the factory-default admin account was
+   deliberately removed previously, for security). Using the working
+   GUI instead of chasing this further mid-outage.
+10. SSH's banner/handshake was checked before the credential failure:
+    EdgeOS's normal login banner displayed immediately, with no
+    host-key-changed warning - the router's identity is the same one
+    previously trusted, so this specific evidence doesn't support a
+    router reset/reflash as a shared cause. Not fully ruled out as
+    related to this outage either way, though (e.g. a permission/config
+    change scoped to SSH specifically, rather than a full reset, could
+    still share a cause with the network-layer symptom without showing
+    up in the host key) - keeping both threads in this one file rather
+    than assuming they're unrelated.
 
 ## Leading theory (unconfirmed)
 
@@ -88,7 +100,15 @@ access to the router is currently blocked - see log entry 9).
    doesn't, or vice versa) that itself is informative - re-seat the
    cable at both ends first, then try a different cable, then a
    different router/switch port, in that order (cheapest test first).
-3. Once the server has a live link again, confirm its IP actually comes
+3. Separately: `JokeHim` can log into the router's web UI but not SSH
+   with the same credentials, a regression since yesterday. In the web
+   UI's user-management view, check what permission level `JokeHim` is
+   configured with - EdgeOS distinguishes an "operator" level (GUI
+   monitoring only) from "admin" (full access including SSH); if it's
+   `operator`, that alone would explain this. If already `admin`, check
+   `service ssh` config for anything scoping which accounts may
+   authenticate that way.
+4. Once the server has a live link again, confirm its IP actually comes
    back as `.10` (`ip addr show`) before assuming `HARDWARE.md`'s
    "should be static" note is actually configured that way, not just
    asserted.
