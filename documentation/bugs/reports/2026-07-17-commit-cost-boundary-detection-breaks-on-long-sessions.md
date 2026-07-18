@@ -45,3 +45,14 @@ rather than failing loudly).
 
 Diff the transcript's row structure before vs. after the point
 boundary-detection stops working, not more guessing.
+
+## Related: this bug is itself a signal for when to wrap up
+
+Noted by Joakim 2026-07-18: since this bug's root cause is tied to
+session length (a "very long single session hitting context compaction"
+is the leading unconfirmed theory above), **this bug starting to
+manifest is itself a practical signal that a session has run long
+enough to consider wrapping up** - not just a symptom to work around.
+If `commit_costs.jsonl` starts showing "0 tokens, human-only" for
+commits that are obviously AI-authored, that's as much a "this session
+is getting long" alarm as it is a tooling bug to fix later.
