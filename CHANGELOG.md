@@ -47,6 +47,88 @@ display to show only one at a time with easy, well-tested switching.
   9,144 → 11,422 chars (+2,278, Selenium bullet updated + new session
   section).
 
+## 2026-07-19 — resolved the 07-17 `Bash(*)`-still-prompts anomaly; hardened the no-outside-repo-access rule
+
+Joakim reported still getting popups "almost every session" despite
+`Bash(*)` and global `defaultMode: "auto"` already being set. Tested live
+in-session: plain `git status --short`, `&&`-chained, and piped through
+`grep` (including the exact secrets-scan pattern from the pre-commit
+routine) all ran silently — `Bash(*)` works correctly for ordinary
+in-repo commands. Isolated two real, distinct causes instead:
+
+- **A `cd <repo-path> && git ...` prefix triggers a prompt even when the
+  path is the current directory** — this resolves the 07-17 entry's
+  unresolved `git -C <path> log ...` anomaly; same mechanism, an
+  explicit path argument on/before a git invocation re-triggers
+  directory-access scrutiny that a bare command (relying on the shell's
+  already-known cwd) doesn't. This is a Claude-session habit to avoid
+  (per the Bash tool's own instructions: never prepend `cd
+  <current-directory>` to a git command), not a `.claude/settings.json`
+  gap.
+- **Commands reading outside the repo tree** (`find /`, `npm ls -g`)
+  independently prompt regardless of `Bash(*)` — directory access is a
+  separate permission dimension from command-pattern matching, confirmed
+  again here on top of the 07-17 finding.
+- Offered widening `permissions.additionalDirectories` to cover
+  cross-project/global reads; Joakim rejected this firmly and asked for
+  the boundary to be *harder* to accidentally cross, not softer — wrote
+  this as an explicit non-negotiable in CLAUDE.md rather than leaving it
+  as an in-chat preference (see CLAUDE.md's new outside-repo-access
+  rule).
+- Also traced Joakim's recollection of a Docker/`sudo` permission fight
+  to `buzzkit`, not this repo — already resolved and documented there
+  per the 07-17 entry below; this repo's Docker prompts are the separate,
+  unrelated, by-design `docker run`/`rmi`/`volume rm` floor (see
+  CLAUDE.md's "Known, accepted permission popups").
+
+CLAUDE.md: 14,749 → 15,455 chars (+706, new non-negotiable). This file:
+23,102 → 27,777 chars (+4,675, this entry).
+
+## 2026-07-19 (3) — trimmed CLAUDE.md duplication into a real wrap-up checklist; logged an ad-hoc-labels lapse
+
+Same day's continuation: a separate conversation about wrap-up cadence
+found the checklist had grown open-ended enough that ending a session
+took about as long as the work being closed out (see
+`bugs/claude/2026-07-18-session-wrap-up-itself-grows-unpredictably-long.md`).
+
+- **CLAUDE.md trimmed**: the three duplication candidates flagged
+  2026-07-17 (`bugs/claude/2026-07-17-claude-md-accumulating-detail-
+  that-belongs-in-more-specific-docs.md`) are resolved — 2 trimmed to
+  one-line pointers, 1 found already absent (never actually landed, or
+  removed in an earlier undocumented pass). The "not evaluated"
+  push-policy bullet in that file is still open.
+- **New wrap-up checklist** in `documentation/tooling/README.md`: every
+  check an AI session should run before calling a session done, each
+  with an explicit trigger condition (most are conditional — "if a
+  manifest changed," "if `docker build` ran" — not blanket-every-session
+  like before, which is what made wrap-up itself slow). Also added: a
+  standing rule to keep flagging drift/session-length plainly in every
+  message once either shows up, not just once.
+- **New process-lapse report**: this session referred to two parts of
+  its own reply as "thread 1"/"thread 2" without ever defining the
+  labels in the text — Joakim had to ask what they meant. No new
+  CLAUDE.md rule (existing "lean, exact, self-sufficient" principles
+  already cover it); logged as a behavioral correction instead — see
+  `bugs/claude/2026-07-19-used-unexplained-ad-hoc-labels-instead-of-
+  plain-language.md`.
+- **New open items** in `documentation/tooling/TODO.md`: the wrap-up
+  checklist should eventually be code (a script checking each trigger),
+  not prose an AI session has to remember correctly; whether
+  `doc_metrics`/`commit_cost`/the not-yet-built test-ledger should
+  consolidate into one shared database instead of separate `.jsonl`
+  files; a new hard rule against shorthand/abbreviated names going
+  forward (`doc_metrics` itself cited as the example that doesn't parse
+  on sight) — naming an existing rename candidate, not deciding to
+  rename it yet.
+- **Doc size**: `CLAUDE.md` 14,743 → 14,892 chars (+149 net — the
+  trimming removed more than the pointers added back).
+  `documentation/tooling/README.md` 580 → 3,754 (+3,174, new checklist).
+  `documentation/tooling/TODO.md` 654 → 2,452 (+1,798, 3 new items).
+  `bugs/claude/2026-07-17-claude-md-accumulating-...md` 2,091 → 2,865
+  (+774, status update). New file
+  `bugs/claude/2026-07-19-used-unexplained-ad-hoc-labels-...md`: 1,537
+  chars.
+
 ## 2026-07-18 (4) — session wrap-up: doc-drift sweep, loose ends closed
 
 Closing out a very large session (outage, Swagger fix + redeploy,

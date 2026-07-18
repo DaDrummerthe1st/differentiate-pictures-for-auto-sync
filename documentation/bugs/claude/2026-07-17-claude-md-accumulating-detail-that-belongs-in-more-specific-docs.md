@@ -1,6 +1,8 @@
 # CLAUDE.md accumulating detail that belongs in more specific docs
 
-Status: **priority check for next session, not fixed today**.
+Status: **all 3 flagged candidates resolved 2026-07-19** (2 trimmed, 1
+found already absent). The "not evaluated" push-policy bullet below is
+still genuinely unevaluated.
 
 ## What Joakim flagged
 
@@ -16,16 +18,25 @@ files") that CLAUDE.md itself already asserts elsewhere.
 - The `documentation/bugs/TODO.md` periodic-check bullet — the
   reasoning for *why* `bugs/` exists belongs in `bugs/README.md` (which
   already has it); CLAUDE.md probably only needs "check `bugs/TODO.md`
-  every session, see its own README for how."
+  every session, see its own README for how." **Resolved, but not by
+  trimming** — checked 2026-07-19 (`grep -n "bugs/TODO" CLAUDE.md`
+  returns nothing): no such bullet exists in CLAUDE.md as it stands
+  today, so either it was removed in an earlier, undocumented pass, or
+  never actually landed there. Nothing left to trim.
 - The "every bug/lapse is its own file" bullet — this is **already
   fully duplicated** in both `bugs/README.md` and `bugs/claude/
   README.md`. CLAUDE.md restating the whole rule is exactly the
   duplication this project says not to do; a one-line pointer would
-  suffice.
+  suffice. **Fixed 2026-07-19** — trimmed to a one-line pointer at both
+  targets.
 - The wrap-up coverage-check bullet — the mechanics of what
   `check_coverage.sh` does belongs in `tools/commit_cost`'s own
   documentation (`documentation/tooling/COMMIT_COST.md`), not spelled
-  out again in CLAUDE.md.
+  out again in CLAUDE.md. **Fixed 2026-07-19** — folded into a single
+  pointer bullet at [documentation/tooling/README.md](../../tooling/README.md),
+  which now also holds the full wrap-up checklist (a broader
+  consolidation than originally scoped here, prompted by a separate
+  conversation about wrap-up cadence the same day).
 
 ## Not evaluated
 

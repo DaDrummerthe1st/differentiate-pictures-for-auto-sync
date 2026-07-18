@@ -9,3 +9,30 @@
   `documentation/bugs/reports/`'s per-investigation logs, which already
   serve the separate need of a future session understanding *how* a
   past debugging session reasoned through a live issue. Not started.
+- **Session wrap-up checklist as code, not prose instructions.** Raised
+  2026-07-19: the checklist in [README.md](README.md) currently relies
+  on an AI session reading and remembering it correctly every time, the
+  same failure mode `commit_cost` and `doc_metrics` were built to avoid
+  for their own numbers. A script that actually runs each check's
+  trigger condition and reports what's outstanding (similar to
+  `tools/commit_cost/check_coverage.sh`, but for the whole checklist)
+  would remove that reliance. Not started - the checklist itself
+  (README.md) was the more urgent piece to get right first.
+- **A real database, not several separate append-only `.jsonl` files.**
+  Raised 2026-07-19: `doc_metrics`, `commit_cost`, and the test-result
+  ledger above each keep their own ledger, which makes cross-cutting
+  questions (e.g. "what did session X cost across docs, commits, and
+  tests combined") require stitching multiple files together by hand.
+  Each tool already keeps a gitignored SQLite mirror of its own jsonl
+  for fast queries - the open question is whether to consolidate into
+  one shared database instead. Explicitly deferred - not started, no
+  design done yet.
+- **No shorthand names, as a hard rule going forward** - raised
+  2026-07-19: `doc_metrics` itself is an example of a name that isn't
+  self-explanatory ("documentation metrics" abbreviated in a way that
+  doesn't parse on sight). Whether to actually rename `doc_metrics` (and
+  its `tools/doc_metrics/` directory, `DOC_METRICS.md`, every reference
+  to it) to something fully spelled out is an open question, not
+  decided - a rename touches every file that references it, so it needs
+  a deliberate pass, not a reflexive edit. Applies to new names going
+  forward regardless of whether the rename happens.

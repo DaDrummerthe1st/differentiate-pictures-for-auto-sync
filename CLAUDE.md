@@ -129,6 +129,17 @@ see the self-sufficiency rule below.
   preference either.
 - **Ask for constraints before high-blast-radius work**, rather than
   waiting for them to surface organically mid-task.
+- **Never read or search outside this repo's own directory tree without
+  asking first — this is a hard boundary, not friction to engineer
+  around.** The Bash tool's directory-access permission check is a gate
+  separate from command-pattern allow rules (`Bash(*)` does not bypass
+  it — confirmed 2026-07-17, see CHANGELOG). Never propose or add a
+  broad/system-wide path (e.g. `/`, `$HOME`) to
+  `permissions.additionalDirectories` to reduce popups — the popup
+  firing on an outside-repo read is the safeguard working correctly, not
+  a bug to route around. Decided 2026-07-19 after Joakim reacted
+  strongly against even being offered that option ("I never want you to
+  go through my ... laundry").
 - **Copyable text goes in one fenced code block** — any text meant to be
   copied verbatim (commands, handoff prompts, etc.), never inline prose
   mixed with bold/headers.
@@ -145,24 +156,16 @@ see the self-sufficiency rule below.
   `documentation/bugs/reports/` directly (each file opens with a
   `Status:` line) — no index is kept; one was tried and removed
   2026-07-17/18 for drifting out of sync repeatedly.
-- **Every bug (`documentation/bugs/reports/`) and every AI-session
-  process lapse (`documentation/bugs/claude/`) is its own file — never a
-  bullet appended to a shared list.** `TODO.md`/`LOG.md` in those folders
-  are indexes only (one line + link each). Use
-  `tools/create_bug_report/create_bug_report.sh` (add `--claude` for a process
-  lapse) to create one with a consistent name and template — don't
-  hand-name these. Decided 2026-07-17 after the untriaged list started
-  accumulating full write-ups inline instead of staying scannable.
-- **Wrap-up must verify, not just assume, that on-the-way routines
-  actually ran** — decided 2026-07-17 after 3 commits went out mid-session
-  without their required `doc_metrics`/`commit_cost` logging, unnoticed
-  until asked about directly. At session end (and whenever picking a
-  session back up), run `tools/commit_cost/check_coverage.sh` — it
-  compares every commit in `git log` against `commit_costs.jsonl` and
-  reports any gap. A missing entry means the logging step was skipped for
-  that commit; catch up before considering wrap-up done. (The very last
-  commit will always show as "missing" until the *next* logging run —
-  that's expected, not a gap.)
+- **Every bug and AI-session process lapse is its own file** — rule and
+  tool are in [documentation/bugs/README.md](documentation/bugs/README.md)
+  and [documentation/bugs/claude/README.md](documentation/bugs/claude/README.md),
+  not restated here.
+- **Session wrap-up: the full checklist and its cadence live in
+  [documentation/tooling/README.md](documentation/tooling/README.md)**,
+  not here. Two standing decisions on top of that checklist: verify
+  (don't assume) that on-the-way routines actually ran before calling
+  wrap-up done; and once a session shows drift or has run long, say so
+  plainly in every message from that point on, not just once.
 
 ## What counts as high-blast-radius here
 
