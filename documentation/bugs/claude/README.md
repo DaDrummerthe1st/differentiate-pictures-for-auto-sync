@@ -8,7 +8,7 @@ documentation/rules so the same lapse doesn't recur.
 
 **Hard rule (2026-07-17): every lapse is its own file in this folder,
 named `<date>-<short-slug>.md` — never a bullet added to a shared list.**
-Use `tools/new_bug_report/new_bug_report.sh --claude "Short title"` to
+Use `tools/create_bug_report/create_bug_report.sh --claude "Short title"` to
 create one with the right template — don't hand-name these. Every entry
 should end with what changed (a CLAUDE.md rule tightened, a routine made
 more explicit, a check added) as a result. No index is kept (tried one,

@@ -4,8 +4,8 @@
 # list. See documentation/bugs/README.md and documentation/bugs/claude/README.md.
 #
 # Usage:
-#   tools/new_bug_report/new_bug_report.sh "Thumbnail OOM under load"
-#   tools/new_bug_report/new_bug_report.sh --claude "Missed commit_cost logging"
+#   tools/create_bug_report/create_bug_report.sh "Thumbnail OOM under load"
+#   tools/create_bug_report/create_bug_report.sh --claude "Missed commit_cost logging"
 set -euo pipefail
 
 CLAUDE_MODE=0

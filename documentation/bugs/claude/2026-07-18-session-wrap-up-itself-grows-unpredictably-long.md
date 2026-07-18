@@ -31,6 +31,21 @@ message got engaged with fully and immediately, the same way it would
 mid-session, with nothing signaling "we're in the wrap-up phase, new
 ideas get logged for later rather than actioned now."
 
+**Deeper root cause, identified later the same session**: this isn't
+independent from the other lapses logged the same day (the dropped
+promise, the `commit_cost` boundary-detection failure). All three likely
+share one real mechanism, not three coincidences: Claude Code
+automatically compresses/summarizes prior conversation as a session
+approaches its context limit (per the system prompt's own description),
+and a summary is inherently lossy versus the original detail.
+`commit_cost`'s own bug report already theorizes context compaction as
+its leading cause. A session running long enough to trigger this isn't
+just "long" in a vague sense - it's long enough for actual, documented
+degradation to kick in. That reframes this entry: wrap-up sprawling
+isn't only a scope-boundary problem to solve with a rule about new
+ideas - it's a symptom that the session was already too long for full
+reliability by the time wrap-up even started.
+
 ## What changed
 
 Not resolved as a hard rule yet - this is a case where the actual fix

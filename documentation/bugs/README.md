@@ -17,10 +17,10 @@ for the shape to follow. No separate index is kept — see
 [TODO.md](TODO.md) for why (it proved unreliable) and how to browse
 what's open instead.
 
-Use `tools/new_bug_report/new_bug_report.sh "Short bug title"` to create
+Use `tools/create_bug_report/create_bug_report.sh "Short bug title"` to create
 one with a consistent name and the right starter template — don't
 hand-name these. Once a `reports/` file is genuinely resolved (not just
-mitigated), move it with `tools/new_bug_report/mark_solved.sh
+mitigated), move it with `tools/create_bug_report/mark_solved.sh
 <filename>` into [solved/](solved/README.md) instead of deleting it —
 see that folder's README for why.
 

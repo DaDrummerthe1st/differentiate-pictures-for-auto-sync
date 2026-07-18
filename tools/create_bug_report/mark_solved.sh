@@ -3,7 +3,7 @@
 # renaming it to mark it solved. See documentation/bugs/solved/README.md.
 #
 # Usage:
-#   tools/new_bug_report/mark_solved.sh 2026-07-17-thumbnail-oom-under-load.md
+#   tools/create_bug_report/mark_solved.sh 2026-07-17-thumbnail-oom-under-load.md
 set -euo pipefail
 
 if [ $# -ne 1 ]; then

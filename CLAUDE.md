@@ -137,7 +137,7 @@ see the self-sufficiency rule below.
 - **Bug/incident files start at investigation-open, not fix-time.** The
   moment something's being diagnosed (a live outage, a bug worth more
   than a one-line fix), create its file immediately via
-  `tools/new_bug_report/new_bug_report.sh` and update it as findings come
+  `tools/create_bug_report/create_bug_report.sh` and update it as findings come
   in, not just once it's solved. A session cut off mid-investigation must
   still leave a trail the next session can pick up from — this is the
   self-sufficiency rule applied *during* work, not only at wrap-up.
@@ -149,7 +149,7 @@ see the self-sufficiency rule below.
   process lapse (`documentation/bugs/claude/`) is its own file — never a
   bullet appended to a shared list.** `TODO.md`/`LOG.md` in those folders
   are indexes only (one line + link each). Use
-  `tools/new_bug_report/new_bug_report.sh` (add `--claude` for a process
+  `tools/create_bug_report/create_bug_report.sh` (add `--claude` for a process
   lapse) to create one with a consistent name and template — don't
   hand-name these. Decided 2026-07-17 after the untriaged list started
   accumulating full write-ups inline instead of staying scannable.

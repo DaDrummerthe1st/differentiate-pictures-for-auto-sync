@@ -8,7 +8,7 @@ where it stands. `ls documentation/bugs/reports/` is the reliable way
 to see what's open — cheaper and more accurate than a hand-maintained
 list.
 
-Use `tools/new_bug_report/new_bug_report.sh "Short bug title"` to create
+Use `tools/create_bug_report/create_bug_report.sh "Short bug title"` to create
 one. Once genuinely resolved (not just mitigated), move it with
-`tools/new_bug_report/mark_solved.sh <filename>` into
+`tools/create_bug_report/mark_solved.sh <filename>` into
 [solved/](solved/README.md).
