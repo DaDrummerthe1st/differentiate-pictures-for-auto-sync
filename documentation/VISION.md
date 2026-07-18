@@ -39,6 +39,16 @@ pgvector, so raw photos never need to leave it. Longer-term: the system
 suggests photos to remove, learned globally across the network and
 personalized per user.
 
+**Design principle, raised 2026-07-18**: every tagging/curation
+interaction the UX asks of a user should be *motivated* — the user
+should understand why they're being asked, not just be presented a
+blank tagging widget. The goal is more genuine human interaction with
+the photos themselves (looking, remembering, deciding), not tagging as
+a chore done to satisfy the system. Applies across all three UX paths
+above, including automated tags (blur/object/individual identification)
+once built — surface them as something the user reviews and confirms,
+not silently trusts.
+
 ## Pillar 3 — Presentation and sharing
 
 At an event — a party, up to something enormous — attendees take

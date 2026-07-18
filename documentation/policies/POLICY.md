@@ -57,6 +57,18 @@ high-blast-radius definition), see [CLAUDE.md](../../CLAUDE.md).
   Joakim as copyable commands.
 - Deployment — of any kind, to any target — is always performed by
   Joakim, never automated by the AI session.
+- **Hard constraint (2026-07-18): no toolchain gets installed system-wide
+  on the dev machine, by Joakim or by the AI session — containers or
+  per-project virtualenvs only.** Not just "the AI can't run the
+  installer" (the point above) — Joakim doesn't want it run system-wide
+  either, even by his own hand. Applies to every language's tooling
+  (Python already follows this via `uv`'s per-project `.venv`, see
+  `TOOLCHAIN.md`; the same bar applies to Node/npm, browser-automation
+  tools, and anything else this project ever adds) and to existing code
+  too, not just new work — retrofit when touched, don't grandfather it
+  in. When a tool ships an official container image (e.g. Playwright's
+  `mcr.microsoft.com/playwright`), prefer that over a host install even
+  if it means an extra `docker run`/`docker build` step.
 
 ## Open questions
 
