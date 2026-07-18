@@ -144,6 +144,9 @@ usual once decided.
   benefit from Playwright being given up. Containerized only
   (`POLICY.md`'s no-system-installs rule) - `selenium/standalone-chrome`
   is the equivalent of the Playwright image previously considered.
+  **Built 2026-07-19** (first real payoff of this decision): see
+  `scripts/test_selenium.sh` and `app/tests_selenium/` — used for the
+  single-album-view switching tests below.
 - **Thumbnail pre-compile design synthesis** - see
   `../bugs/reports/2026-07-17-pre-compile-thumbnails-ahead-of-time.md`,
   updated 2026-07-18 with a concrete design from Joakim's answers
@@ -159,6 +162,39 @@ usual once decided.
   Symptom changed after today's redeploy (now shows nothing instead of
   the previous photo) - needs a live repro with DevTools open, not more
   static code reading.
+
+## 2026-07-19 session: single-album view, and a local-dev gap found along the way
+
+- **Done**: only one album renders at a time now; the nav-pill bar
+  switches which one (`setActiveAlbum()` in `app.js`), persisted across
+  reloads via `localStorage` (`mpv_active_headline`). Covered by the new
+  Selenium suite (`app/tests_selenium/test_album_switching.py`) - see
+  the Selenium bullet above.
+- **Not changed, flagged for a future decision**: "download all" and the
+  lightbox's prev/next still span every album, including hidden ones
+  (`allImages` in `app.js` is still built from every section, not just
+  the active one) - this was already the case before today and is
+  preserved as-is, not addressed by this session. Worth a deliberate
+  decision later (scope both to the active album only? keep global?),
+  not a silent behavior change to make alongside the display switch.
+- **Found, not this session's scope to fix**: the root `docker-compose.yml`
+  (this repo's own dev machine, not the production server) is stale
+  relative to `app/auth.py` — it predates the 2026-07-17 P0 commit
+  (`9c090b0`) that made the app require a `JWT_SECRET_KEY` env var (and,
+  in production, a running `auth`/postgres/redis stack) just to start.
+  The one container that ever ran here did so for a few hours on
+  2026-07-16, before that commit, and has sat `Exited` ever since - it
+  was never evidence of an ongoing local workflow. The actual live
+  system is production only, kept current by push-here/pull-and-rebuild
+  on the server (`192.168.1.10`, `docker-compose.prod.yml`) - confirmed
+  reachable and current as of 2026-07-19. A rebuild of the root
+  `docker-compose.yml` as it stands today would fail at startup
+  (`MissingConfigError`). No local full-stack dev environment (photo-
+  viewer + auth + postgres + redis, reachable in a browser on this
+  workstation) exists today; this session's new Selenium suite works
+  around that by running `uvicorn` directly against a disposable test
+  photo tree with a fixed `JWT_SECRET_KEY`; it doesn't fix or replace
+  the stale root compose file itself.
 
 ## Other open items (carried over, not yet done)
 

@@ -35,10 +35,23 @@ docker compose up -d
 Open `https://<host LAN IP>:8420`. First load shows a self-signed-cert
 warning — click through, that's expected. Stop with `docker compose down`.
 
-**Tests**: `.venv-test/bin/python -m pytest app/tests/ -q` (24 tests as of
-this writing — tree scanning, thumbnails, path-traversal guards, zip/download
-endpoints, the file-type summary's content-sniffing and its interaction
-with /api/tree, voiceover upload/list/playback).
+**Tests**: `.venv-test/bin/python -m pytest app/tests/ -q` (53 tests as of
+this writing — tree scanning, thumbnails, path-traversal guards, session
+auth gating, the file-type summary's content-sniffing and its interaction
+with /api/tree, voiceover upload/list/playback). These run in-process
+(FastAPI `TestClient`) and don't exercise the browser/DOM at all.
+
+Real browser behavior (album switching, anything DOM/JS-driven) is
+covered separately by a Selenium suite, since this app has no build step
+or JS test runner of its own:
+```
+scripts/test_selenium.sh up                          # disposable Chrome container
+.venv-test/bin/python -m pytest app/tests_selenium -q  # starts its own uvicorn + test photo tree
+scripts/test_selenium.sh down
+```
+See `app/tests_selenium/conftest.py` for how the test server/browser are
+wired together (`--network host` so the containerized browser can reach
+the host-run uvicorn process).
 
 ### Suspending or shutting down the host machine
 
@@ -67,9 +80,12 @@ for correctness — it's done anyway for the silent-relisten reason above.
 
 - **Album view**: grouped by top-level source folder (headline) and
   immediate parent folder (chunk) — e.g. headline `Florida1`, chunks
-  `Florida1/Florida/1`, `Florida1/Florida/2`. Per-album collapse, a
-  "mark as done"/visited toggle with a running counter, and a sticky
-  jump-to-album nav bar.
+  `Florida1/Florida/1`, `Florida1/Florida/2`. Only one album is shown at
+  a time; a sticky pill bar switches between them (click a pill, no
+  scrolling/reload — see `setActiveAlbum()` in `app.js`), and the choice
+  persists across reloads via `localStorage`. Per-album collapse and a
+  "mark as done"/visited toggle with a running counter still apply to
+  whichever album is active.
 - **Thumbnail + fullscreen modes**: click a thumbnail for a fullscreen
   lightbox with prev/next (also `←`/`→`, `Alt+←` to go back to the grid,
   `Esc` to close). Grid density toggle (compact/large thumbnails).

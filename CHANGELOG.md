@@ -5,6 +5,48 @@ before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
 CLAUDE.md's project-memory note on that trade-off).
 
+## 2026-07-19 — single-album view + a minimal Selenium test suite
+
+Joakim asked to make sure the GUI is up and running, plus change album
+display to show only one at a time with easy, well-tested switching.
+
+- **Single-album view shipped**: `app.js`'s nav-pill bar now switches
+  which album is shown (`setActiveAlbum()`) instead of scrolling to it;
+  all other albums are hidden. Choice persists across reloads via
+  `localStorage` (`mpv_active_headline`). "Download all" and the
+  lightbox's prev/next intentionally still span every album (unchanged,
+  flagged in TODO.md as a separate future decision, not silently
+  changed alongside the display switch).
+- **New Selenium test infra** (`scripts/test_selenium.sh`,
+  `app/tests_selenium/`): first real build-out of the Selenium direction
+  decided 2026-07-18 but never started. Runs a disposable
+  `selenium/standalone-chrome` container (`--network host`) against a
+  real `uvicorn` process started directly from `.venv-test`, with a
+  throwaway multi-album photo tree and a manually-signed JWT cookie
+  (bypasses the real login flow, which needs Postgres/Redis this suite
+  doesn't run). 4 new browser-level tests, all TDD (written and
+  confirmed red against the old scroll-based behavior before the fix).
+  Full local test sweep after the change: 4 Selenium + 53 `app/tests` +
+  49 `server/tests`, all green.
+- **Found while checking "is the GUI up": the root `docker-compose.yml`
+  (this dev workstation, not production) is stale** — predates
+  `app/auth.py`'s login requirement (commit `9c090b0`, 2026-07-17) by
+  about 15 hours, so a rebuild here would crash on startup
+  (`MissingConfigError`, missing `JWT_SECRET_KEY`). The one container
+  that ever ran on this machine did so for a few hours the night before
+  that commit and has sat `Exited` since — not evidence of an ongoing
+  local workflow, as it first appeared. Confirmed the actual live
+  system is production only (`https://photos.reuterborg.se`, kept
+  current by push-here/pull-and-rebuild on `192.168.1.10` per
+  `DEPLOYMENT.md`) - reachable and returning `200` as of this session.
+  Not fixed this session (no local full-stack dev environment exists
+  yet); written up in `documentation/gui/TODO.md`'s new 2026-07-19
+  section rather than left only in this chat.
+- **Doc size**: `documentation/gui/README.md` 6,012 → 6,886 chars
+  (+874, features + testing sections updated), `documentation/gui/TODO.md`
+  9,144 → 11,422 chars (+2,278, Selenium bullet updated + new session
+  section).
+
 ## 2026-07-18 (4) — session wrap-up: doc-drift sweep, loose ends closed
 
 Closing out a very large session (outage, Swagger fix + redeploy,

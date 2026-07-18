@@ -363,6 +363,24 @@ const visitedHeadlines = loadSet("mpv_visited_headlines");
 const collapsedHeadlines = loadSet("mpv_collapsed_headlines");
 let headlineCount = 0;
 
+// Only one album is ever shown at a time - the nav-pill bar switches
+// which one, instead of the old scroll-to-it behavior. Persisted so a
+// reload lands back on the same album rather than always resetting to
+// the first one.
+let activeHeadline = localStorage.getItem("mpv_active_headline") || null;
+
+function setActiveAlbum(headline) {
+  activeHeadline = headline;
+  localStorage.setItem("mpv_active_headline", headline);
+  document.querySelectorAll("#tree .album").forEach((album) => {
+    album.classList.toggle("hidden", album.dataset.headline !== headline);
+  });
+  document.querySelectorAll(".nav-pill").forEach((pill) => {
+    pill.classList.toggle("current", pill.dataset.headline === headline);
+  });
+  logEvent("nav_jump", headline);
+}
+
 function toggleVisited(headline) {
   if (visitedHeadlines.has(headline)) {
     visitedHeadlines.delete(headline);
@@ -390,9 +408,14 @@ function renderTree(sections) {
   allImages = [];
   headlineCount = sections.length;
 
+  if (!sections.some((s) => s.headline === activeHeadline)) {
+    activeHeadline = sections.length > 0 ? sections[0].headline : null;
+    if (activeHeadline) localStorage.setItem("mpv_active_headline", activeHeadline);
+  }
+
   for (const section of sections) {
     const album = document.createElement("div");
-    album.className = "album";
+    album.className = "album" + (section.headline === activeHeadline ? "" : " hidden");
     album.dataset.headline = section.headline;
 
     const row = document.createElement("div");
@@ -463,13 +486,13 @@ function renderTree(sections) {
     tree.appendChild(album);
 
     const pill = document.createElement("button");
-    pill.className = "nav-pill" + (visitedHeadlines.has(section.headline) ? " visited" : "");
+    pill.className =
+      "nav-pill" +
+      (visitedHeadlines.has(section.headline) ? " visited" : "") +
+      (section.headline === activeHeadline ? " current" : "");
     pill.dataset.headline = section.headline;
     pill.textContent = section.headline;
-    pill.addEventListener("click", () => {
-      album.scrollIntoView({ behavior: "smooth", block: "start" });
-      logEvent("nav_jump", section.headline);
-    });
+    pill.addEventListener("click", () => setActiveAlbum(section.headline));
     nav.appendChild(pill);
   }
   updateVisitedUI();

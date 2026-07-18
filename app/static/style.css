@@ -126,6 +126,7 @@ body {
   white-space: nowrap;
 }
 .nav-pill.visited { border-color: #34c759; color: #9ee6ae; }
+.nav-pill.current { background: #4a8cff; color: white; border-color: #4a8cff; font-weight: 600; }
 
 #tree { padding: 1rem; }
 .headline-row {
