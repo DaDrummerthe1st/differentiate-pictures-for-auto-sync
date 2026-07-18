@@ -73,7 +73,7 @@ source tree directly, never the built image. See
 something inside it that only works if the change actually landed in
 the image, assert exit code 0). Decided 2026-07-18 after `scripts/`
 silently missing from the image went unnoticed until a live deploy (see
-`documentation/bugs/solved/2026-07-17-dockerfile-missing-scripts-directory.md`).
+`documentation/bugs/solved/2026-07-17-dockerfile-missing-scripts-directory-SOLVED.md`).
 
 These tests are marked `@pytest.mark.docker` and excluded from the
 default `uv run pytest tests` run (`pyproject.toml`'s `addopts = "-m

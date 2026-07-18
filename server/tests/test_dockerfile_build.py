@@ -10,7 +10,7 @@ IMAGE_TAG = "photo-server-scripts-import-check:test"
 @pytest.mark.docker
 def test_built_image_can_import_scripts_create_account():
     """Guards against server/Dockerfile silently dropping scripts/ again -
-    see documentation/bugs/reports/2026-07-17-dockerfile-missing-scripts-directory.md."""
+    see documentation/bugs/solved/2026-07-17-dockerfile-missing-scripts-directory-SOLVED.md."""
     subprocess.run(
         ["docker", "build", "-f", str(SERVER_DIR / "Dockerfile"), "-t", IMAGE_TAG, str(SERVER_DIR)],
         check=True,
