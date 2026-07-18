@@ -77,29 +77,38 @@ curl: (7) Failed to connect to photos.reuterborg.se port 443 after 3063 ms: Coul
     up in the host key) - keeping both threads in this one file rather
     than assuming they're unrelated.
 
+11. **Topology correction**: the server is not plugged directly into the
+    EdgeRouter - it connects to a switch, which connects to the router.
+    `HARDWARE.md` doesn't currently document this switch at all. This
+    means the EdgeRouter's own port-status view (log entry 9's plan)
+    only reflects the switch-to-router link, not the server-to-switch
+    link where `NO-CARRIER` was actually observed - it can't diagnose
+    this specific symptom. The switch's own port status (if it's
+    managed) or its port LEDs (if unmanaged) are what's actually
+    relevant now. Switch make/model and managed-vs-unmanaged not yet
+    known - asked Joakim.
+
 ## Leading theory (unconfirmed)
 
 Not DNS, not the public IP, not a Docker/app crash, and not a router
 reset (SSH banner shows no host-key change). Confirmed on the server's
 own console: `NO-CARRIER` on its NIC - the machine sees no physical
-link on the cable at all. This narrows to the physical layer
-specifically: a bad cable, a dead port on the server's NIC, or a dead
-port on the router/switch end. Not yet isolated which of the three -
-that needs either a cable/port swap test, or the router's own
-port-status view for that specific port (GUI Dashboard, since SSH
-access to the router is currently blocked - see log entry 9).
+link on the cable at all. This narrows to the physical layer on the
+server-to-switch segment specifically: a bad cable, a dead port on the
+server's NIC, or a dead port on the switch. Not yet isolated which of
+the three.
 
 ## Next session should start with
 
-1. **Still open, blocking**: what does the EdgeRouter's web UI
-   (Dashboard/Interfaces) show for the specific port the server's cable
-   plugs into - live link, or no link? This is the one check that
-   distinguishes "router-side port is dead" from "problem is the cable
-   or the server's NIC."
-2. If the router disagrees with the server (router sees a link, server
-   doesn't, or vice versa) that itself is informative - re-seat the
-   cable at both ends first, then try a different cable, then a
-   different router/switch port, in that order (cheapest test first).
+1. **Still open, blocking**: is the switch between the server and
+   router managed or unmanaged? If managed, check its port status for
+   the server's port (live link or not) the same way the router's
+   Dashboard was going to be checked. If unmanaged, there's no software
+   diagnostic available on it at all - go straight to the switch port's
+   own link LED, plus a physical swap test.
+2. Cheapest-first physical test either way: re-seat the cable at both
+   ends (server NIC and switch port), then try a different cable, then
+   a different switch port - in that order.
 3. Separately: `JokeHim` can log into the router's web UI but not SSH
    with the same credentials, a regression since yesterday. In the web
    UI's user-management view, check what permission level `JokeHim` is
