@@ -50,6 +50,20 @@ see the self-sufficiency rule below.
   don't let docs drift from what the code does. (Known existing drift:
   see [documentation/picture-handling/TODO.md](documentation/picture-handling/TODO.md)
   for the MySQL-vs-PostgreSQL mismatch.)
+- **Never claim a file was edited/logged/fixed without checking it
+  against the tool calls actually made that turn.** Before sending any
+  reply that says "logged," "added," "fixed," or similar about a
+  specific file, verify the corresponding Edit/Write tool call actually
+  ran in this turn — don't infer it from intent or from having
+  described the plan in the response text. Decided 2026-07-18 after
+  telling Joakim a `DATA_DICTIONARY.md` edit had been made when it
+  hadn't (planned and described mid-reply, but the actual tool call was
+  never issued — a large multi-topic reply describing several file
+  edits together was the trigger, see
+  `documentation/bugs/claude/2026-07-18-claimed-a-doc-edit-was-made-when-it-wasn-t.md`).
+  This repo *is* the durable record for anything discussed in a
+  session — a false "done" claim isn't a small slip, it's a hole in the
+  only safety net that exists.
 - **Lean, exact, and compact**: no filler, no restating what's already
   documented elsewhere, no speculative abstraction for hypothetical
   future needs. Prefer the more precise word or number over the vaguer

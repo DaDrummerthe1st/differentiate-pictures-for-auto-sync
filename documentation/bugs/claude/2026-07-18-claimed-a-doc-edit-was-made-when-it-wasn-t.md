@@ -27,10 +27,12 @@ against what tool calls had actually run.
 
 ## What changed
 
-No process change made yet beyond fixing the specific miss (the
-DATA_DICTIONARY.md content was added retroactively once caught).
-Going forward: when a reply claims "logged/added/fixed" for multiple
-files in one turn, verify each specific claim against the actual tool
-calls made in that turn before sending, not just against overall intent
-- especially in long, multi-topic replies where several file edits are
-described together.
+Beyond the specific fix (the `DATA_DICTIONARY.md` content added
+retroactively): a new CLAUDE.md rule, not just a stated intention -
+"Never claim a file was edited/logged/fixed without checking it against
+the tool calls actually made that turn," added directly under
+"Documentation stays current" in the Non-negotiables section. Joakim's
+framing, verbatim reasoning worth preserving here: this repo is the
+only durable record for anything discussed in a session - a false
+"done" claim isn't a small slip, it's a hole in the only safety net
+that exists.
