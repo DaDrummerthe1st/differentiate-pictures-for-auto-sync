@@ -632,6 +632,17 @@ Re-check this list at the end of every phase above, not just once:
   superuser.
 - Dependency versions pinned (Pillow, ffmpeg, RAW-reading library) —
   these parse untrusted file content (Phase 3.5's note).
+- **Swagger/OpenAPI docs are publicly exposed, unauthenticated** — found
+  2026-07-18: both `app/main.py` and `server/app/main.py` instantiate
+  `FastAPI()` with no `docs_url`/`redoc_url`/`openapi_url` override, and
+  `require_session` is wired per-route via `Depends()`, not app-wide —
+  so FastAPI's auto-generated `/docs`, `/redoc`, `/openapi.json` bypass
+  it entirely. `Caddyfile` routes everything except `/login /whoami
+  /refresh /logout` to `photo-viewer`, so `/docs` there is reachable
+  from the public internet with no login. Fix: either
+  `docs_url=None, redoc_url=None, openapi_url=None` in production, or
+  gate those routes behind `require_session` too. Not fixed this
+  session - logged as a task, not built.
 
 ## Out of scope
 
