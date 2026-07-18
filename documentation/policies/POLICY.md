@@ -49,6 +49,31 @@ high-blast-radius definition), see [CLAUDE.md](../../CLAUDE.md).
   personal project. Do not add a `LICENSE` file or make licensing claims
   until Joakim decides otherwise.
 
+## Vendor lock-in and openness
+
+- **Standing principle (2026-07-18), not an absolute ban**: prefer
+  open, non-proprietary, vendor-neutral tools and formats over ones
+  from a single controlling company, even when the proprietary option
+  is technically stronger — Joakim's reasoning: lock-in shows up
+  regardless of a vendor's short- or long-term intent, and openness
+  itself is the better trade even on pure UX/cost/control grounds, not
+  just an ethical stance. Concretely: when a technology choice has a
+  genuinely open, vendor-neutral alternative (e.g. Selenium vs.
+  Microsoft-driven Playwright, an open dependency vs. a proprietary
+  SaaS), default to the open one and name the trade-off explicitly if
+  going proprietary anyway — don't default silently to whichever tool
+  is best-known or easiest to reach for.
+- **Not absolute**: this repo already depends on GitHub (Microsoft-
+  owned) for hosting - Joakim is aware and has independence plans (own
+  VPS, own git server) already in motion, not a contradiction to
+  resolve today. The principle guides new choices going forward; it
+  doesn't mandate ripping out everything already in place.
+- Directly affects an open decision right now: Playwright (Microsoft)
+  vs. Selenium (W3C standard, no single owner) for this project's first
+  frontend test harness — see `gui/TODO.md`. Apply this principle when
+  that gets decided, don't re-litigate the philosophy each time a
+  similar choice comes up.
+
 ## Deployment and system access
 
 - The AI session has no sudo access on the development machine and must

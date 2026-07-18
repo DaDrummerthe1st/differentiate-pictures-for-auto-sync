@@ -132,21 +132,18 @@ usual once decided.
   `downloadFolderLabel` sentence ("Bilder sparas i: ..." /
   "Nedladdningar sparas enligt webbläsarens nedladdningsinställning"),
   made clickable/hoverable to show the full path and let the user
-  re-pick. TDD blocked on the Playwright decision below - no JS test
-  harness exists in this repo at all yet.
-- **Playwright vs. an alternative - Joakim raised a real concern, not
-  yet resolved**: Playwright is Microsoft-maintained (MIT licensed,
-  open source, but MS-driven), which sits awkwardly against Joakim's
-  stated direction (own VPS, own git server, less MS-ecosystem
-  dependence long-term). Selenium is the vendor-neutral alternative (W3C
-  WebDriver standard, no single owner) at the cost of a more verbose
-  API and historically more flakiness. Either way, run containerized
-  only (`POLICY.md`'s new no-system-installs rule) - Playwright has an
-  official Docker image (`mcr.microsoft.com/playwright`, or buildable
-  from Playwright's own open-source Dockerfile to avoid the MS registry
-  specifically); Selenium has an equivalent
-  (`selenium/standalone-chrome`). **Needs Joakim's call before writing
-  any frontend test**, not a default to assume.
+  re-pick. TDD-ready now that the test-tool decision below is made.
+- **Decided 2026-07-18: Selenium, not Playwright** — per
+  `POLICY.md`'s new vendor-lock-in-and-openness principle (prefer
+  vendor-neutral tools; Playwright is Microsoft-driven, Selenium is a
+  W3C standard with no single owner). Selenium's usual downsides
+  (verbose API, historically flakier waits) matter less here than
+  usual: this app's test surface is small, and the File System Access
+  API it depends on is Chromium-only anyway (Firefox already gets a
+  documented fallback), so there's no real cross-browser-coverage
+  benefit from Playwright being given up. Containerized only
+  (`POLICY.md`'s no-system-installs rule) - `selenium/standalone-chrome`
+  is the equivalent of the Playwright image previously considered.
 - **Thumbnail pre-compile design synthesis** - see
   `../bugs/reports/2026-07-17-pre-compile-thumbnails-ahead-of-time.md`,
   updated 2026-07-18 with a concrete design from Joakim's answers
