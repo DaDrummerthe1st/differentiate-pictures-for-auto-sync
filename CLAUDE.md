@@ -50,20 +50,26 @@ see the self-sufficiency rule below.
   don't let docs drift from what the code does. (Known existing drift:
   see [documentation/picture-handling/TODO.md](documentation/picture-handling/TODO.md)
   for the MySQL-vs-PostgreSQL mismatch.)
-- **Never claim a file was edited/logged/fixed without checking it
-  against the tool calls actually made that turn.** Before sending any
-  reply that says "logged," "added," "fixed," or similar about a
-  specific file, verify the corresponding Edit/Write tool call actually
-  ran in this turn — don't infer it from intent or from having
-  described the plan in the response text. Decided 2026-07-18 after
-  telling Joakim a `DATA_DICTIONARY.md` edit had been made when it
-  hadn't (planned and described mid-reply, but the actual tool call was
-  never issued — a large multi-topic reply describing several file
-  edits together was the trigger, see
-  `documentation/bugs/claude/2026-07-18-claimed-a-doc-edit-was-made-when-it-wasn-t.md`).
-  This repo *is* the durable record for anything discussed in a
-  session — a false "done" claim isn't a small slip, it's a hole in the
-  only safety net that exists.
+- **Never claim an action was taken without checking it against the tool
+  calls actually made that turn — not just file edits, any completed-
+  action claim** ("logged," "added," "fixed," "ran," "verified,"
+  "confirmed," etc.). Before sending any reply that asserts something is
+  already done, check the corresponding tool call actually ran in this
+  turn — don't infer it from intent or from having described the plan in
+  the response text. Originally scoped to file edits only (decided
+  2026-07-18 after telling Joakim a `DATA_DICTIONARY.md` edit had been
+  made when it hadn't — planned and described mid-reply, but the actual
+  tool call was never issued, see
+  `documentation/bugs/claude/2026-07-18-claimed-a-doc-edit-was-made-when-it-wasn-t.md`),
+  broadened the same day to any action-completion claim after Joakim
+  asked whether the broadening he'd been offered had actually happened —
+  it hadn't (a second instance of the same underlying pattern: an offer
+  stated in prose, not followed through on, not caught until asked about
+  directly). This repo *is* the durable record for anything discussed in
+  a session — a false "done" claim isn't a small slip, it's a hole in
+  the only safety net that exists. (Distinct from the next rule below,
+  which covers *forward*-looking promises for later in the same
+  conversation, not backward-looking completion claims.)
 - **A promised follow-up gets a TodoWrite item, not just a sentence.**
   Whenever a reply says something like "I'll present this for
   confirmation," "I'll come back to this," or "let me get back to you
