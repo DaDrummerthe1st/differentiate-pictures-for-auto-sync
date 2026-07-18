@@ -64,6 +64,18 @@ see the self-sufficiency rule below.
   This repo *is* the durable record for anything discussed in a
   session — a false "done" claim isn't a small slip, it's a hole in the
   only safety net that exists.
+- **A promised follow-up gets a TodoWrite item, not just a sentence.**
+  Whenever a reply says something like "I'll present this for
+  confirmation," "I'll come back to this," or "let me get back to you
+  on X" — add a `TodoWrite` item for it in that same turn, don't just
+  state it in prose. Decided 2026-07-18 after a thumbnail-precompile
+  design synthesis was promised back to Joakim for confirmation, then
+  silently dropped when several unrelated messages and a live incident
+  arrived immediately after — it only surfaced later via the session's
+  wrap-up sweep, not in the moment. See
+  `documentation/bugs/claude/2026-07-18-promised-a-follow-up-mid-conversation-without-tracking-it-as-a-todo.md`.
+  A promise that only exists as text is invisible to any later
+  self-check; a tracked item survives interruptions.
 - **Lean, exact, and compact**: no filler, no restating what's already
   documented elsewhere, no speculative abstraction for hypothetical
   future needs. Prefer the more precise word or number over the vaguer

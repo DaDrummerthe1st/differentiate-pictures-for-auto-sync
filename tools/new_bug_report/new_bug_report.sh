@@ -19,6 +19,14 @@ if [ $# -lt 1 ]; then
   exit 1
 fi
 
+for arg in "$@"; do
+  if [ "$arg" = "--claude" ]; then
+    echo "Error: --claude must come first, before the title - got: $0 $*" >&2
+    echo "Usage: $0 [--claude] \"Short bug title\"" >&2
+    exit 1
+  fi
+done
+
 TITLE="$*"
 SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed 's/^-//;s/-$//')
 DATE=$(date +%Y-%m-%d)
