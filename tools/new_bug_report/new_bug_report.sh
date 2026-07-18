@@ -61,14 +61,12 @@ added - every entry here should end with something that actually
 changed, not just a description of the lapse)
 EOF
   echo "Created: $FILE"
-  echo "Add a one-line pointer to it from documentation/bugs/claude/README.md's index."
 else
   cat > "$FILE" <<EOF
 # $TITLE
 
-Status: **investigating, not fixed**. See [../TODO.md](../TODO.md) for
-the index of all open bugs - keep this file as the full chronological
-trail, don't overwrite conclusions as more is learned.
+Status: **investigating, not fixed**. Keep this file as the full
+chronological trail as more is learned - don't overwrite conclusions.
 
 ## Symptom
 
@@ -88,5 +86,4 @@ codes where possible)
 ...
 EOF
   echo "Created: $FILE"
-  echo "Add a one-line pointer to it from documentation/bugs/TODO.md's index."
 fi
