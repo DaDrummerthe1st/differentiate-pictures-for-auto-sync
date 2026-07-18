@@ -117,4 +117,29 @@ values into logs — see the security checklist in TODO.md.
 | Content tags, face regions/identity | on-device model, phone side; pgvector server-side once it exists | DPFAS phase |
 | People count | derived from face regions | DPFAS phase |
 | Outcome/usage | album tags plus audit_log | now for data, used later |
+
+### Future tag schema (captured 2026-07-18, not designed/committed)
+
+Joakim proposed a general shape for tags once the dimensions above grow
+past today's album/content split - captured here for a future session,
+not scoped for this project's current phase:
+
+- `tags`: `id, name, type (folder|blur|identified_individual|...), flag
+  (global — system-set, vs. private — user's own), created_at`.
+- A separate reference table (not a graph DB - see below) for what a tag
+  points at: a user, a pixel region (e.g. a face's bounding box,
+  `[(23,466),(186,1234)]`), another tag, or a plain email address (an
+  invite/"recruit to view these pictures" mechanism, not yet designed
+  elsewhere).
+
+**Relational, not graph DB** (Joakim agreed 2026-07-18, "at least for
+now"): a graph database earns its cost at a node/edge count and
+traversal complexity this project doesn't have (one household, later
+some invited relatives - not a dense social graph). A `tags` +
+`tag_references` pair, with `reference_kind` discriminating what
+`reference_value` (JSONB or text) means per row, covers every case
+above natively in Postgres - already this project's database, already
+handling similar polymorphic/semi-structured data (see `details JSONB`
+in `audit_log` above). Revisit only if real scale ever demands it, not
+preemptively.
 | Ownership | photo_owners | now, schema only |
