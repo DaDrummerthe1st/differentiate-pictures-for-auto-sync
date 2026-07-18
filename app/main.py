@@ -97,7 +97,7 @@ async def lifespan(_app: FastAPI):
     _log_event("server_stopping")
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
 
 
 class Event(BaseModel):
