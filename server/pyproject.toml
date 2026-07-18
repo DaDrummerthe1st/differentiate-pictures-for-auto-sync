@@ -18,3 +18,9 @@ dev = [
     "httpx2>=2.7.0",
     "pytest>=9.1.1",
 ]
+
+[tool.pytest.ini_options]
+markers = [
+    "docker: builds/runs a real Docker image - slow, excluded from the default run (see TOOLCHAIN.md)",
+]
+addopts = "-m 'not docker'"

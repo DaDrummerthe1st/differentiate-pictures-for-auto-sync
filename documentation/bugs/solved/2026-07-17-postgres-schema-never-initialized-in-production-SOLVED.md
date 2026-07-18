@@ -1,6 +1,6 @@
 # Postgres schema was never initialized in production
 
-Status: **worked around, real fix not built**.
+Status: **solved 2026-07-18** — real fix built, workaround no longer needed.
 
 ## Symptom
 
@@ -26,8 +26,12 @@ workaround is now a documented required step in
 `photo-server/DEPLOYMENT.md`'s step 4 (added same day), so the next
 fresh deploy doesn't have to rediscover this.
 
-## Real fix, not built yet
+## Real fix
 
-An explicit migration/init step in the deploy sequence - either call
-`ensure_schema` once at `auth` container startup, or wire the workaround
-into the Dockerfile/CMD directly.
+`app/main.py` now calls `ensure_schema` (and commits) from a FastAPI
+`lifespan` handler, so it runs once at `auth` container startup, every
+startup, before the app accepts requests - idempotent
+(`CREATE TABLE IF NOT EXISTS`), so safe on every restart. Test-driven:
+`tests/test_main_startup.py` mocks `get_connection`/`ensure_schema` and
+asserts the lifespan handler calls them. `DEPLOYMENT.md` step 4's manual
+workaround is removed - no longer a required deploy step.

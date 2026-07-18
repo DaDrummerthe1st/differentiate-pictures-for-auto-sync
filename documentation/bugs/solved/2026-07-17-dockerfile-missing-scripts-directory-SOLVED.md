@@ -1,6 +1,6 @@
 # server/Dockerfile never copies scripts/ into the image
 
-Status: **worked around, real fix not built**.
+Status: **solved 2026-07-18** — real fix built, workaround no longer needed.
 
 ## Symptom
 
@@ -21,9 +21,15 @@ Worked around live via an inline `python -c` one-liner calling
 what's already in the image). This workaround is now documented as the
 actual required step in `photo-server/DEPLOYMENT.md`'s step 5.
 
-## Real fix, not built yet
+## Real fix
 
-Add `COPY scripts/ /app/scripts/` (and whatever else
-`scripts/create_account.py` imports beyond `app.*`) to
-`server/Dockerfile`, rebuild, and re-verify the documented command in
-DEPLOYMENT.md actually works before trusting that doc again.
+Added `COPY scripts/ /app/scripts/` to both the builder and final stages
+of `server/Dockerfile`. Test-driven: `tests/test_dockerfile_build.py`
+(new `@pytest.mark.docker` integration test, excluded from the default
+`uv run pytest tests` run - see `documentation/photo-server/
+TOOLCHAIN.md`'s new "Testing server/Dockerfile changes" section) builds
+the real image and execs `python -c "import scripts.create_account"`
+inside it, asserting success. Confirmed failing (`ModuleNotFoundError`)
+before the fix, passing after. `DEPLOYMENT.md` step 5's workaround is
+removed - `python -m scripts.create_account` is the documented command
+again.

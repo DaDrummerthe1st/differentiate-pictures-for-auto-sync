@@ -61,3 +61,26 @@ server/scripts/test_redis.sh down    # stop + auto-remove when done
 match `test_redis.sh`'s own defaults. `JWT_SECRET_KEY` gets a fixed test
 value directly in `conftest.py` (not `TEST_`-prefixed — nothing reads it
 except this test suite itself).
+
+## Testing `server/Dockerfile` changes
+
+Any change to `server/Dockerfile` (a new `COPY`, a new dependency baked
+into the image, etc.) needs a real `docker build` + `docker run`
+integration test, not just a code review of the diff — a missing `COPY`
+line is invisible to `uv run pytest tests` since that runs against the
+source tree directly, never the built image. See
+`tests/test_dockerfile_build.py` for the pattern (build the image, run
+something inside it that only works if the change actually landed in
+the image, assert exit code 0). Decided 2026-07-18 after `scripts/`
+silently missing from the image went unnoticed until a live deploy (see
+`documentation/bugs/solved/2026-07-17-dockerfile-missing-scripts-directory.md`).
+
+These tests are marked `@pytest.mark.docker` and excluded from the
+default `uv run pytest tests` run (`pyproject.toml`'s `addopts = "-m
+'not docker'"`) — a full image build is too slow to pay on every test
+run. Run them explicitly whenever `Dockerfile` changes, and before any
+production deploy that rebuilds the image:
+
+```
+uv run pytest tests -m docker
+```

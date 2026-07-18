@@ -5,6 +5,35 @@ before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
 CLAUDE.md's project-memory note on that trade-off).
 
+## 2026-07-18 — real fixes for the two deploy-path bugs (schema init, missing scripts/)
+
+- **Postgres schema init**: `server/app/main.py` now calls `ensure_schema()`
+  from a FastAPI `lifespan` handler on every `auth` container startup
+  (idempotent, so safe on restart) — no more manual one-off `python -c`
+  step after a fresh deploy. TDD'd via `tests/test_main_startup.py`
+  (mocks `get_connection`/`ensure_schema`, asserts the lifespan handler
+  calls them).
+- **`server/Dockerfile` missing `scripts/`**: added `COPY scripts/
+  /app/scripts/` to both build stages, so `python -m
+  scripts.create_account` works as originally documented instead of the
+  inline-`python -c` workaround. TDD'd via a new
+  `tests/test_dockerfile_build.py` (`@pytest.mark.docker`, builds the
+  real image and execs an import inside it) — the first test in this
+  repo that builds/runs a Docker image rather than importing the source
+  tree directly; documented as the standard pattern for future
+  `Dockerfile` changes in `documentation/photo-server/TOOLCHAIN.md`.
+  Excluded from the default `uv run pytest tests` run
+  (`pyproject.toml`'s `addopts = "-m 'not docker'"`, too slow to pay on
+  every run) — run explicitly with `-m docker` when `Dockerfile` changes.
+- Both bugs moved to `documentation/bugs/solved/`;
+  `documentation/photo-server/DEPLOYMENT.md` steps 4-5 updated to drop
+  the now-obsolete workarounds.
+- **Doc size**: `documentation/` net **+1,367 chars** (codepoints) across
+  the 4 files touched — `DEPLOYMENT.md` -443 (workarounds removed),
+  `TOOLCHAIN.md` +1,091 (new Dockerfile-testing section), the two
+  now-`solved/` bug reports +307 and +412 (real-fix writeups replacing
+  "not built yet" stubs).
+
 ## 2026-07-17 (5) — bugs/ tracking overhaul, live thumbnail fixes
 
 - **Live production fix**: photo-viewer was being hard-killed shortly
