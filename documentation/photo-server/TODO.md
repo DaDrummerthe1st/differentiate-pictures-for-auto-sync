@@ -644,17 +644,36 @@ Re-check this list at the end of every phase above, not just once:
   dependency CVEs; run an OWASP ZAP baseline scan against the live site
   for missing security headers/common injection points. None of the
   three set up yet.
-- **Swagger/OpenAPI docs are publicly exposed, unauthenticated** — found
-  2026-07-18: both `app/main.py` and `server/app/main.py` instantiate
-  `FastAPI()` with no `docs_url`/`redoc_url`/`openapi_url` override, and
-  `require_session` is wired per-route via `Depends()`, not app-wide —
-  so FastAPI's auto-generated `/docs`, `/redoc`, `/openapi.json` bypass
-  it entirely. `Caddyfile` routes everything except `/login /whoami
-  /refresh /logout` to `photo-viewer`, so `/docs` there is reachable
-  from the public internet with no login. Fix: either
-  `docs_url=None, redoc_url=None, openapi_url=None` in production, or
-  gate those routes behind `require_session` too. Not fixed this
-  session - logged as a task, not built.
+- **Swagger/OpenAPI docs were publicly exposed, unauthenticated — fixed
+  and deployed 2026-07-18.** `require_session` was wired per-route via
+  `Depends()`, not app-wide, so FastAPI's auto-generated `/docs`,
+  `/redoc`, `/openapi.json` bypassed it entirely, and `Caddyfile`
+  routed everything except `/login /whoami /refresh /logout` to
+  `photo-viewer` - so `/docs` was reachable from the public internet
+  with no login. Fixed same-day with `docs_url=None, redoc_url=None,
+  openapi_url=None` on both `FastAPI()` instances, TDD'd, redeployed,
+  and confirmed live (`curl -I https://photos.reuterborg.se/docs` →
+  `404`).
+- **Structured security-audit tool, designed 2026-07-18, not built** —
+  same idea as `doc_metrics`/`commit_cost`: an append-only, structured
+  ledger instead of ad hoc `grep`/`psql` commands re-typed each time.
+  What it should check, per run:
+  - **Caddy access/error logs**: count and bucket `502`/`401` bursts by
+    time, so a restart-triggered spike (like 2026-07-17's, fully
+    explained in hindsight) is visually distinguishable from an ongoing
+    problem without manually re-deriving the timestamp math each time.
+  - **`audit_log` table**: `login_failure` grouped by attempted email,
+    `login_success` grouped by user - the two queries used ad hoc
+    throughout 2026-07-18's live review.
+  - **Host-level logs, not just app/Docker ones** (Joakim, 2026-07-18):
+    `sudo` usage and SSH login attempts on the actual server host
+    (`/var/log/auth.log` or `journalctl -u ssh`, whichever this Ubuntu
+    24.04 box actually uses - confirm, don't assume) - today's review
+    only covered app-level logs, missing this entirely.
+  - Output as a git-tracked, append-only ledger (jsonl, same pattern as
+    `tools/doc_metrics`/`tools/commit_cost`) so trends are visible over
+    time, not just a point-in-time snapshot.
+  Not started - needs its own TDD design pass, not rushed live.
 
 ## Out of scope
 
