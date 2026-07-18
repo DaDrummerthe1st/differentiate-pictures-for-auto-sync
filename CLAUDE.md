@@ -102,15 +102,17 @@ see the self-sufficiency rule below.
   mixed with bold/headers.
 - **End substantive sessions with both a durable record and a chat
   summary.**
-- **Check `documentation/bugs/TODO.md` periodically during long sessions,
-  and always at session termination.** Fix what's now quickly and safely
-  fixable; for anything else, at minimum confirm it's still accurate
-  (not already fixed elsewhere, not stale) and re-prioritize/triage it
-  into its proper home (a topic folder's `TODO.md` or `DEFERRED.md`) if
-  it's ready to leave the untriaged list. Decided 2026-07-17 mid-deploy,
-  right after that folder was created for exactly this — the point of an
-  untriaged-bugs list is that it actually gets worked, not that it
-  becomes a second graveyard alongside `DEFERRED.md`.
+- **Bug/incident files start at investigation-open, not fix-time.** The
+  moment something's being diagnosed (a live outage, a bug worth more
+  than a one-line fix), create its file immediately via
+  `tools/new_bug_report/new_bug_report.sh` and update it as findings come
+  in, not just once it's solved. A session cut off mid-investigation must
+  still leave a trail the next session can pick up from — this is the
+  self-sufficiency rule applied *during* work, not only at wrap-up.
+  Decided 2026-07-18 after a live server-outage investigation. Browse
+  `documentation/bugs/reports/` directly (each file opens with a
+  `Status:` line) — no index is kept; one was tried and removed
+  2026-07-17/18 for drifting out of sync repeatedly.
 - **Every bug (`documentation/bugs/reports/`) and every AI-session
   process lapse (`documentation/bugs/claude/`) is its own file — never a
   bullet appended to a shared list.** `TODO.md`/`LOG.md` in those folders

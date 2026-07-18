@@ -5,6 +5,25 @@ before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
 CLAUDE.md's project-memory note on that trade-off).
 
+## 2026-07-18 (2) — live outage investigation, new "document as you go" policy
+
+- **`photos.reuterborg.se` unreachable**: found mid-session. DNS and
+  public IP both confirmed correct (not the cause) — the server
+  (`192.168.1.10`) isn't answering at the LAN network layer at all
+  (`ip neigh` `INCOMPLETE`, no route to host on 22/80/443), despite
+  Joakim confirming it's powered on with the cable seated. Full
+  investigation log, leading theory, and next step in
+  `documentation/bugs/reports/2026-07-18-photos-reuterborg-se-unreachable.md`
+  — **status: investigating, not fixed**, awaiting output from directly
+  on the server.
+- **New CLAUDE.md policy**: bug/incident files now get created at
+  investigation-*open*, not fix-time — via
+  `tools/new_bug_report/new_bug_report.sh`, updated as findings come in.
+  Applied to this very outage as the first case. Replaces a now-stale
+  bullet that referenced `bugs/TODO.md`'s old index (removed
+  2026-07-17/18). **Doc size**: CLAUDE.md +110 chars (net: fixed a stale
+  reference, added the new policy); new bug report file 3,230 chars.
+
 ## 2026-07-18 — real fixes for the two deploy-path bugs (schema init, missing scripts/)
 
 - **Postgres schema init**: `server/app/main.py` now calls `ensure_schema()`
