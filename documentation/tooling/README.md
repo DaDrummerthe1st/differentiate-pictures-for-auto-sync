@@ -3,8 +3,7 @@
 Documentation for project-wide utilities under `tools/` — not tied to
 any single topic (`picture-handling/`, `photo-server/`,
 `distributed-sync/`), so they live here rather than in one of those
-folders. Pure reference: no open work, no `TODO.md` needed (same reason
-[../policies/](../policies/POLICY.md) doesn't have one).
+folders. See [TODO.md](TODO.md) for open work.
 
 | File | What's there |
 | --- | --- |

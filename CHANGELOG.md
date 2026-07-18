@@ -5,6 +5,38 @@ before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
 CLAUDE.md's project-memory note on that trade-off).
 
+## 2026-07-18 (3) — outage root cause found (switch), plus two new live findings
+
+- **Outage resolved**: root cause was the switch between the server and
+  router - it had been running continuously for a couple of years with
+  no reboot. A power cycle restored the link immediately. Not a cable,
+  NIC, or router fault after all - see the outage report's final entry.
+- **New finding, same power event**: right after recovery, "no new
+  thumbnails nor pictures loading" turned out to be an auth problem, not
+  a thumbnail-generation one - `redis` has no persistent volume in
+  `docker-compose.prod.yml`, so the restart wiped every active session's
+  refresh token. Fresh login unblocks it immediately; the real fix
+  (give Redis a persistent volume) isn't built yet - see
+  `documentation/bugs/reports/2026-07-18-redis-has-no-persistent-volume-every-restart-wipes-active-sessions.md`.
+- **Related but distinct finding**: grid thumbnails and the lightbox's
+  full-size image are plain `<img>` tags, which bypass `app.js`'s only
+  401-silent-refresh path (`authFetch`, used solely by `fetch()`-based
+  calls). This means an access token's normal 5-minute expiry alone,
+  with no restart involved, could break thumbnails mid-browsing-session
+  - not yet confirmed happening outside today's Redis-restart incident,
+  but the code path clearly allows it. See
+  `documentation/bugs/reports/2026-07-18-thumbnail-img-tags-have-no-silent-refresh-on-expired-access-token.md`.
+- **Also opened**: a lightbox bug (popup shows the previous photo when
+  clicking a not-yet-loaded thumbnail) - investigation not yet
+  conclusive, needs a live repro session rather than more code reading.
+- **New tooling backlog item**: `documentation/tooling/TODO.md` (new -
+  that folder previously claimed "no open work", no longer true) - a
+  compact per-run test-result ledger, same shape as `doc_metrics`/
+  `commit_cost`. Explicitly distinguished from what
+  `documentation/bugs/reports/`'s investigation logs already do (capture
+  debugging *reasoning* for a future session, not test pass/fail
+  trends) - the two aren't a substitute for each other.
+
 ## 2026-07-18 (2) — live outage investigation, new "document as you go" policy
 
 - **`photos.reuterborg.se` unreachable**: found mid-session. DNS and

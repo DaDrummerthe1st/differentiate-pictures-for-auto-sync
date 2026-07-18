@@ -1,7 +1,7 @@
 # photos.reuterborg.se unreachable
 
-Status: **investigating, not fixed**. Keep this file as the full
-chronological trail as more is learned - don't overwrite conclusions.
+Status: **solved 2026-07-18**. Keep this file as the full chronological
+trail as more is learned - don't overwrite conclusions.
 
 ## Symptom
 
@@ -83,41 +83,44 @@ curl: (7) Failed to connect to photos.reuterborg.se port 443 after 3063 ms: Coul
     means the EdgeRouter's own port-status view (log entry 9's plan)
     only reflects the switch-to-router link, not the server-to-switch
     link where `NO-CARRIER` was actually observed - it can't diagnose
-    this specific symptom. The switch's own port status (if it's
-    managed) or its port LEDs (if unmanaged) are what's actually
-    relevant now. Switch make/model and managed-vs-unmanaged not yet
-    known - asked Joakim.
+    this specific symptom. Identified as a Linksys LGS1xx-series switch
+    (unmanaged - no web UI, no software port diagnostics available at
+    all on it).
+12. **Root cause found and fixed**: the switch had been powered
+    continuously for "probably a couple of years" with no reboot.
+    Joakim power-cycled it (pulling its power adapter - the only kind of
+    restart an unmanaged switch has). The server's NIC picked up
+    `NO-CARRIER` -> live link immediately once the switch finished
+    rebooting. A stuck port state on a switch that had never been
+    restarted in years is the confirmed cause - not a bad cable, not a
+    dead NIC port, not the router.
 
-## Leading theory (unconfirmed)
+## Leading theory (confirmed)
 
-Not DNS, not the public IP, not a Docker/app crash, and not a router
-reset (SSH banner shows no host-key change). Confirmed on the server's
-own console: `NO-CARRIER` on its NIC - the machine sees no physical
-link on the cable at all. This narrows to the physical layer on the
-server-to-switch segment specifically: a bad cable, a dead port on the
-server's NIC, or a dead port on the switch. Not yet isolated which of
-the three.
+An aging unmanaged switch, never rebooted in years, got into a stuck
+port state that produced `NO-CARRIER` on the server's side of that
+link. A power cycle of the switch resolved it immediately - no cable,
+NIC, or router hardware fault. `HARDWARE.md` should be updated to
+document this switch's existence in the topology (not done yet - open
+below).
 
 ## Next session should start with
 
-1. **Still open, blocking**: is the switch between the server and
-   router managed or unmanaged? If managed, check its port status for
-   the server's port (live link or not) the same way the router's
-   Dashboard was going to be checked. If unmanaged, there's no software
-   diagnostic available on it at all - go straight to the switch port's
-   own link LED, plus a physical swap test.
-2. Cheapest-first physical test either way: re-seat the cable at both
-   ends (server NIC and switch port), then try a different cable, then
-   a different switch port - in that order.
-3. Separately: `JokeHim` can log into the router's web UI but not SSH
-   with the same credentials, a regression since yesterday. In the web
-   UI's user-management view, check what permission level `JokeHim` is
-   configured with - EdgeOS distinguishes an "operator" level (GUI
-   monitoring only) from "admin" (full access including SSH); if it's
-   `operator`, that alone would explain this. If already `admin`, check
-   `service ssh` config for anything scoping which accounts may
-   authenticate that way.
-4. Once the server has a live link again, confirm its IP actually comes
-   back as `.10` (`ip addr show`) before assuming `HARDWARE.md`'s
-   "should be static" note is actually configured that way, not just
-   asserted.
+1. **Documentation gap**: `HARDWARE.md` doesn't mention this switch
+   (make/model: Linksys LGS1xx-series, unmanaged) at all in the
+   server's network topology - add it, including this incident as the
+   reason a periodic preventative reboot might be worth considering for
+   an unmanaged switch with years of continuous uptime.
+2. Separately, still open and unrelated to this outage (confirmed via
+   the SSH banner showing no router host-key change): `JokeHim` can log
+   into the router's web UI but not SSH with the same credentials, a
+   regression since yesterday. In the web UI's user-management view,
+   check what permission level `JokeHim` is configured with - EdgeOS
+   distinguishes an "operator" level (GUI monitoring only) from "admin"
+   (full access including SSH); if it's `operator`, that alone would
+   explain this. If already `admin`, check `service ssh` config for
+   anything scoping which accounts may authenticate that way.
+3. A second, distinct issue was found immediately after this one
+   resolved (same power event, different mechanism - Redis losing
+   session state on restart) - see
+   `2026-07-18-redis-has-no-persistent-volume-every-restart-wipes-active-sessions.md`.

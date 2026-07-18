@@ -15,6 +15,7 @@ pool. See [README.md](README.md) for the resulting non-negotiable.
 | OS | Ubuntu 24.04 LTS, Python 3.12.3 |
 | LAN address | 192.168.1.10, under Joakim's desk |
 | Router | Ubiquiti EdgeRouter X, firmware 3.0.1 (Joakim, 2026-07-17) — LAN gateway `192.168.1.1`. Port-forwarding 80/443 -> 192.168.1.10 needed for the photo-server P0 deploy; see [DEPLOYMENT.md](DEPLOYMENT.md) and CHANGELOG for current status — don't assume done, this drifted stale once already (2026-07-17: an SSH-based attempt to set it silently failed since SSH wasn't enabled on the router yet, and the doc briefly said "configured" when it wasn't). |
+| Switch | Linksys LGS1xx-series (unmanaged — no web UI, no port-level software diagnostics), between the server and the router — the server does **not** plug directly into the EdgeRouter. Found 2026-07-18 during an outage investigation this table didn't previously document at all: the switch had run continuously for "probably a couple of years" with no reboot and got into a stuck port state (`NO-CARRIER` on the server's NIC); a power cycle fixed it immediately. See `documentation/bugs/solved/2026-07-18-photos-reuterborg-se-unreachable-SOLVED.md`. Worth a periodic preventative reboot given this history — not automated, no schedule set. |
 
 The `192.168.1.1` gateway address is inferred from the dev workstation's
 own `ip route` (same `192.168.1.0/24` subnet as the server) — not read
@@ -46,13 +47,14 @@ work (including any Claude Code session) happens on a different Ubuntu
 machine; only the table above describes 192.168.1.10 itself. Don't infer
 which host you're on from `uname`/OS match alone — check the IP or ask.
 
-**Open item**: a RAM upgrade was ordered but installed capacity is not
-yet confirmed in this session. Verify with a real command
-(`free -h` or `dmidecode --type memory`) before relying on the 3.8GB
-figure above, and update this file once confirmed. Do not run
-`docker compose up` against this host until the upgrade is installed and
-memtested (Memtest86+, at least one full pass) — build and test images on
-a dev machine until then, per TODO.md.
+**RAM upgrade still not installed, confirmed 2026-07-18**: `free -h` run
+live on the server during today's outage investigation still shows
+`3.8Gi` total — same as the pre-upgrade figure above, so the ordered
+upgrade has not been installed yet (or at least hadn't as of today). The
+memtest gate below remains in force. Do not run `docker compose up`
+against this host until the upgrade is installed and memtested
+(Memtest86+, at least one full pass) — build and test images on a dev
+machine until then, per TODO.md.
 
 **Gate knowingly overridden, 2026-07-17**: the memtest gate above is
 still the standing rule and still applies going forward — it was NOT
