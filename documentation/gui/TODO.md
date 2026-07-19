@@ -87,11 +87,14 @@ own doc root rather than living inline here.
 ## History note: why this project lives in this repo at all
 
 Started as a genuinely separate repo (`~/code/project/mamma-photo-viewer`),
-but an accidental concurrent Claude Code session (a VS Code extension bug -
-see the GitHub issue filed 2026-07-16 for typing-while-a-popup-opens
-spawning a duplicate session) fetched that repo's history into this one
-under a same-named branch. Once discovered, Joakim opted to keep building
-here rather than untangle it back out.
+but an accidental concurrent Claude Code session fetched that repo's
+history into this one under a same-named branch. **Corrected 2026-07-19**:
+originally attributed to a suspected VS Code extension bug (typing while
+a popup was opening); the actual cause, identified by Joakim, is that
+editing/changing a previously-sent prompt forks the conversation into a
+new tab - expected behavior, not a bug, that only looked alarming because
+both tabs' sessions shared this same working tree. Once discovered,
+Joakim opted to keep building here rather than untangle it back out.
 
 ## History note: why bulk downloads are sequential, not a zip
 

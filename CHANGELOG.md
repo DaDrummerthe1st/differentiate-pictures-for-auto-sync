@@ -5,6 +5,48 @@ before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
 CLAUDE.md's project-memory note on that trade-off).
 
+## 2026-07-19 (4) — session wrap-up: corrected a stale root-cause theory, opened one live bug
+
+Closing out a very large session (single-album view through idle
+timeout - see entries (1)-(3) below). This entry is the wrap-up sweep
+itself, plus one correction that surfaced during it.
+
+- **Corrected a 2-day-old wrong root-cause theory**: the "why this
+  project lives in this repo" history note (both here implicitly and in
+  `gui/TODO.md`) attributed a duplicate-Claude-Code-session incident to
+  a suspected VS Code extension bug (typing during a popup). Joakim
+  identified the real cause: editing/changing a previously-sent prompt
+  forks the conversation into a new tab - expected behavior, not a bug -
+  which only looked alarming because both tabs' sessions shared the same
+  working tree. Corrected in `gui/TODO.md` and in this session's own
+  cross-session memory file (kept the superseded theory visible rather
+  than deleted, for context).
+- **Opened, not closed**: a live "picture click failed to show" report
+  (`bugs/reports/2026-07-19-picture-click-failed...md`) - investigation
+  ongoing, root cause not yet confirmed (ruled out a session-wide token
+  issue; still need the exact failed request's status code from
+  DevTools). Filed later than it should have been - see the paired
+  process-lapse report,
+  `bugs/claude/2026-07-19-didn-t-create-bug-report-at-investigation-open...md`.
+- **Docker hygiene**: no dangling images. Stopped `photo_server_test_pg`/
+  `_redis` (the disposable server-side test fixtures) at session close,
+  after re-confirming the full `server/tests` suite passes with them up.
+- **commit_cost coverage**: clean (`check_coverage.sh`'s one "missing"
+  entry is always the just-made commit, per its own documented caveat -
+  not a real gap).
+- **Forward-effectiveness note**: this session ran very long and covered
+  many distinct threads in quick succession (album display, DOM weight,
+  sticky-header CSS, a dead feature removal, two live-bug fixes, a new
+  cross-session logging routine, a stale root-cause correction) with
+  several genuine mid-session pivots. The thing that kept it coherent
+  rather than lossy was routing every real decision point through
+  `AskUserQuestion` instead of running text - caught and corrected once
+  early on, held for the rest of the session. Next session: keep doing
+  that from the start, especially in a session this topically wide,
+  rather than needing the same correction again.
+- **Doc size**: `documentation/gui/TODO.md` 16,870 → 17,110 chars (+240,
+  the root-cause correction).
+
 ## 2026-07-19 (3) — idle timeout for the new silent-refresh keep-alive
 
 Joakim caught a real side effect of the entry below's fix immediately
