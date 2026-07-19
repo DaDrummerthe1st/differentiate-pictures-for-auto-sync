@@ -39,6 +39,22 @@ async function authFetch(url, options) {
   return fetch(url, options);
 }
 
+function silentRefresh() {
+  if (_refreshInFlight) return;
+  _refreshInFlight = fetch("/refresh", { method: "POST" }).finally(() => {
+    _refreshInFlight = null;
+  });
+}
+
+// Proactively renews the access-token cookie before it expires, so a
+// long browsing session never actually hits an expired token in normal
+// use - this is what keeps plain <img> thumbnail/lightbox loads working
+// (they can't go through authFetch's reactive refresh-and-retry at
+// all, since they're not fetch() calls). ?test_refresh_ms overrides the
+// interval for Selenium tests, which can't wait out the real ~4 minutes.
+const SILENT_REFRESH_INTERVAL_MS =
+  Number(new URLSearchParams(location.search).get("test_refresh_ms")) || 4 * 60 * 1000;
+
 // --- Dismissable info messages: "don't show again" hides them from
 // auto-popping-up, but every message stays reachable via the Hjälp
 // button so nothing read-once is ever permanently lost. ---
@@ -341,27 +357,13 @@ async function enterGallery() {
     ? "Bilder sparas i: " + (downloadDirHandle.name || "vald mapp")
     : "Nedladdningar sparas enligt webbläsarens nedladdningsinställning";
   loadTree();
+  setInterval(silentRefresh, SILENT_REFRESH_INTERVAL_MS);
 }
 
 let selectMode = false;
 const marked = new Set();
 let allImages = [];
 let currentLightboxIndex = -1;
-
-function loadSet(key) {
-  try {
-    return new Set(JSON.parse(localStorage.getItem(key) || "[]"));
-  } catch (e) {
-    return new Set();
-  }
-}
-function saveSet(key, set) {
-  localStorage.setItem(key, JSON.stringify(Array.from(set)));
-}
-
-const visitedHeadlines = loadSet("mpv_visited_headlines");
-const collapsedHeadlines = loadSet("mpv_collapsed_headlines");
-let headlineCount = 0;
 
 // Only one album is ever shown at a time - the nav-pill bar switches
 // which one, instead of the old scroll-to-it behavior. Persisted so a
@@ -372,130 +374,100 @@ let activeHeadline = localStorage.getItem("mpv_active_headline") || null;
 function setActiveAlbum(headline) {
   activeHeadline = headline;
   localStorage.setItem("mpv_active_headline", headline);
-  document.querySelectorAll("#tree .album").forEach((album) => {
-    album.classList.toggle("hidden", album.dataset.headline !== headline);
-  });
   document.querySelectorAll(".nav-pill").forEach((pill) => {
     pill.classList.toggle("current", pill.dataset.headline === headline);
   });
+  renderActiveAlbum();
   logEvent("nav_jump", headline);
 }
 
-function toggleVisited(headline) {
-  if (visitedHeadlines.has(headline)) {
-    visitedHeadlines.delete(headline);
-  } else {
-    visitedHeadlines.add(headline);
-  }
-  saveSet("mpv_visited_headlines", visitedHeadlines);
-  updateVisitedUI();
-  logEvent("album_visited_toggle", headline + ":" + visitedHeadlines.has(headline));
-}
-
-function updateVisitedUI() {
-  document.getElementById("visitedCounter").textContent =
-    `${visitedHeadlines.size} av ${headlineCount} album visade`;
-  document.querySelectorAll(".nav-pill").forEach((pill) => {
-    pill.classList.toggle("visited", visitedHeadlines.has(pill.dataset.headline));
-  });
-}
+let allSections = [];
+// Global index (into allImages) that each album's first image starts at -
+// needed so a thumbnail built while only the active album is in the DOM
+// still gets the same dataset.idx it would have in a full render, since
+// the lightbox's prev/next intentionally still spans every album, not
+// just the active one (see TODO.md).
+let sectionImageOffset = new Map();
 
 function renderTree(sections) {
-  const tree = document.getElementById("tree");
-  const nav = document.getElementById("albumNav");
-  tree.innerHTML = "";
-  nav.innerHTML = "";
-  allImages = [];
-  headlineCount = sections.length;
+  allSections = sections;
 
   if (!sections.some((s) => s.headline === activeHeadline)) {
     activeHeadline = sections.length > 0 ? sections[0].headline : null;
     if (activeHeadline) localStorage.setItem("mpv_active_headline", activeHeadline);
   }
 
+  allImages = [];
+  sectionImageOffset = new Map();
   for (const section of sections) {
-    const album = document.createElement("div");
-    album.className = "album" + (section.headline === activeHeadline ? "" : " hidden");
-    album.dataset.headline = section.headline;
-
-    const row = document.createElement("div");
-    row.className = "headline-row";
-    const h = document.createElement("h2");
-    h.className = "headline";
-    h.textContent = section.headline;
-    const visitedBtn = document.createElement("button");
-    visitedBtn.className = "visited-btn";
-    const setVisitedBtnLabel = () => {
-      const done = visitedHeadlines.has(section.headline);
-      visitedBtn.textContent = done ? "✓ Klar" : "Markera som klar";
-      visitedBtn.classList.toggle("done", done);
-    };
-    setVisitedBtnLabel();
-    visitedBtn.addEventListener("click", () => {
-      toggleVisited(section.headline);
-      setVisitedBtnLabel();
-    });
-
-    const collapseBtn = document.createElement("button");
-    collapseBtn.className = "collapse-btn";
-    const isCollapsed = collapsedHeadlines.has(section.headline);
-    collapseBtn.textContent = isCollapsed ? "Visa" : "Dölj";
-    const actions = document.createElement("div");
-    actions.className = "headline-actions";
-    actions.appendChild(visitedBtn);
-    actions.appendChild(collapseBtn);
-    row.appendChild(h);
-    row.appendChild(actions);
-    album.appendChild(row);
-
-    const body = document.createElement("div");
-    body.className = "album-body" + (isCollapsed ? " collapsed" : "");
-
-    collapseBtn.addEventListener("click", () => {
-      const nowCollapsed = body.classList.toggle("collapsed");
-      collapseBtn.textContent = nowCollapsed ? "Visa" : "Dölj";
-      if (nowCollapsed) collapsedHeadlines.add(section.headline);
-      else collapsedHeadlines.delete(section.headline);
-      saveSet("mpv_collapsed_headlines", collapsedHeadlines);
-    });
-
+    sectionImageOffset.set(section.headline, allImages.length);
     for (const chunk of section.chunks) {
-      const ct = document.createElement("div");
-      ct.className = "chunk-title";
-      ct.textContent = chunk.path;
-      body.appendChild(ct);
-      const grid = document.createElement("div");
-      grid.className = "grid";
-      for (const img of chunk.images) {
-        const idx = allImages.length;
-        allImages.push(img);
-        const thumb = document.createElement("div");
-        thumb.className = "thumb";
-        thumb.dataset.path = img;
-        thumb.dataset.idx = idx;
-        const imgEl = document.createElement("img");
-        imgEl.loading = "lazy";
-        imgEl.src = `/thumb?p=${encodeURIComponent(img)}`;
-        thumb.appendChild(imgEl);
-        thumb.addEventListener("click", () => onThumbClick(thumb));
-        grid.appendChild(thumb);
-      }
-      body.appendChild(grid);
+      for (const img of chunk.images) allImages.push(img);
     }
-    album.appendChild(body);
-    tree.appendChild(album);
+  }
 
+  const nav = document.getElementById("albumNav");
+  nav.innerHTML = "";
+  for (const section of sections) {
     const pill = document.createElement("button");
-    pill.className =
-      "nav-pill" +
-      (visitedHeadlines.has(section.headline) ? " visited" : "") +
-      (section.headline === activeHeadline ? " current" : "");
+    pill.className = "nav-pill" + (section.headline === activeHeadline ? " current" : "");
     pill.dataset.headline = section.headline;
     pill.textContent = section.headline;
     pill.addEventListener("click", () => setActiveAlbum(section.headline));
     nav.appendChild(pill);
   }
-  updateVisitedUI();
+
+  renderActiveAlbum();
+}
+
+// Only the active album's DOM (and thumbnail <img> elements) ever exist -
+// switching albums tears this down and rebuilds it, rather than keeping
+// every album in the DOM and hiding the inactive ones with CSS, so a
+// hidden album costs nothing (no nodes, no thumbnail requests).
+function renderActiveAlbum() {
+  const tree = document.getElementById("tree");
+  tree.innerHTML = "";
+  const section = allSections.find((s) => s.headline === activeHeadline);
+  if (!section) return;
+
+  let idx = sectionImageOffset.get(section.headline) ?? 0;
+
+  const album = document.createElement("div");
+  album.className = "album";
+  album.dataset.headline = section.headline;
+
+  const h = document.createElement("h2");
+  h.className = "headline";
+  h.textContent = section.headline;
+  album.appendChild(h);
+
+  const body = document.createElement("div");
+  body.className = "album-body";
+
+  for (const chunk of section.chunks) {
+    const ct = document.createElement("div");
+    ct.className = "chunk-title";
+    ct.textContent = chunk.path;
+    body.appendChild(ct);
+    const grid = document.createElement("div");
+    grid.className = "grid";
+    for (const img of chunk.images) {
+      const thumb = document.createElement("div");
+      thumb.className = "thumb";
+      thumb.dataset.path = img;
+      thumb.dataset.idx = idx;
+      idx += 1;
+      const imgEl = document.createElement("img");
+      imgEl.loading = "lazy";
+      imgEl.src = `/thumb?p=${encodeURIComponent(img)}`;
+      thumb.appendChild(imgEl);
+      thumb.addEventListener("click", () => onThumbClick(thumb));
+      grid.appendChild(thumb);
+    }
+    body.appendChild(grid);
+  }
+  album.appendChild(body);
+  tree.appendChild(album);
 }
 
 function onThumbClick(thumbEl) {

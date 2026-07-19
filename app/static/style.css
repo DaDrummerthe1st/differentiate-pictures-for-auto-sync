@@ -34,10 +34,12 @@ body {
 .skip-btn { background: #555; font-size: 1.1rem; padding: 0.7rem 1.4rem; }
 .skip-btn:active { background: #3d3d3d; }
 
-#toolbar {
+#stickyHeader {
   position: sticky;
   top: 0;
   z-index: 5;
+}
+#toolbar {
   background: #26262c;
   padding: 0.8rem 1rem;
   display: flex;
@@ -74,13 +76,9 @@ body {
   cursor: pointer;
 }
 #downloadAllBtn:disabled { opacity: 0.6; cursor: default; }
-#visitedCounter { opacity: 0.8; font-size: 1rem; }
 #downloadFolderLabel { opacity: 0.7; font-size: 1rem; }
 
 #albumNavBar {
-  position: sticky;
-  top: 3.6rem;
-  z-index: 4;
   display: flex;
   align-items: center;
   gap: 0.6rem;
@@ -125,33 +123,15 @@ body {
   cursor: pointer;
   white-space: nowrap;
 }
-.nav-pill.visited { border-color: #34c759; color: #9ee6ae; }
 .nav-pill.current { background: #4a8cff; color: white; border-color: #4a8cff; font-weight: 600; }
 
 #tree { padding: 1rem; }
-.headline-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
+.headline {
+  font-size: 1.8rem;
   margin: 1.6rem 0 0.4rem;
   border-bottom: 2px solid #444;
   padding-bottom: 0.3rem;
 }
-.headline { font-size: 1.8rem; margin: 0; }
-.headline-actions { display: flex; gap: 0.5rem; flex-shrink: 0; }
-.collapse-btn, .visited-btn {
-  font-size: 0.95rem;
-  padding: 0.4rem 0.9rem;
-  border-radius: 0.5rem;
-  border: 1px solid #555;
-  background: #2c2c33;
-  color: #ddd;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.visited-btn.done { border-color: #34c759; color: #9ee6ae; }
-.album-body.collapsed { display: none; }
 .chunk-title { font-size: 1.1rem; opacity: 0.75; margin: 1rem 0 0.4rem; }
 .grid {
   display: grid;

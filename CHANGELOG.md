@@ -5,6 +5,76 @@ before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
 CLAUDE.md's project-memory note on that trade-off).
 
+## 2026-07-19 (2) — real-library feedback: DOM-unload inactive albums, fix sticky-header overlap
+
+Follow-up to the entry below, after deploying to production and testing
+against Joakim's actual 16-album library instead of 3 fake test albums.
+Two real bugs surfaced that the smaller local fixture hadn't caught.
+
+- **Inactive albums no longer exist in the DOM at all** — the previous
+  version still built every album's markup (including thumbnail `<img>`
+  tags) and only hid the inactive ones with CSS. Joakim correctly
+  flagged this as real, unnecessary weight at library scale, not just a
+  visibility question. `app.js`'s `renderTree()`/`renderActiveAlbum()`
+  now build only the active album's DOM; `setActiveAlbum()` tears it
+  down and rebuilds on switch. `allImages` (used by the lightbox and
+  "download all", which intentionally still span every album per the
+  entry below) is now computed as a flat list up front from the raw
+  tree data, decoupled from DOM construction, so hidden albums cost
+  nothing while global next/prev and download-all still work.
+- **Fixed sticky pill-bar overlap on scroll**: `#toolbar` and
+  `#albumNavBar` were two independently `position: sticky` elements,
+  the pill bar hardcoded to `top: 3.6rem` assuming a toolbar height
+  that didn't match reality (measured 111.78px vs. the assumed 57.6px
+  against the real page). Fixed by wrapping both in one `#stickyHeader`
+  container that alone is sticky - no offset to keep in sync, ever.
+- **New Selenium tests**: DOM-absence assertions (not just "hidden"
+  class) for inactive albums, and a `getBoundingClientRect()`-based
+  overlap check after scrolling - both written and confirmed red
+  against the two bugs above before fixing them. 6 Selenium + 53
+  `app/tests` + 49 `server/tests`, all green after.
+- **Debugging note**: diagnosed live via a JS snippet run in Joakim's
+  actual browser console (Firefox), not just screenshots - confirmed
+  the DOM state directly rather than guessing from visual description.
+  Firefox's paste-guard needed an actual paste attempt before typing
+  "allow pasting" would work; logged as its own note for next time.
+- **Logged, not built**: Joakim asked to consider Bootstrap/jQuery (or
+  similar) instead of the current no-framework/no-build-step stack, and
+  a CSS reset/normalize library - captured in `gui/TODO.md`, explicitly
+  deferred, not evaluated this session. Also logged, also not built: a
+  bigger redesign reframing folder-path segments as tags/sub-tags with
+  the per-album header removed entirely - genuinely open on where
+  sub-tags live in the UI, needs its own design pass.
+- **Removed entirely**: "Markera som klar" (per-album visited toggle +
+  toolbar counter) and "Dölj" (per-album collapse). Both were designed
+  for the old all-albums-stacked layout; asked about relocating them
+  once the header row was on the chopping block, Joakim didn't recall
+  their purpose, and on finding out "Dölj" specifically had none left
+  once only one album is ever shown at all, asked to delete both
+  outright - `app.js`, `index.html`, and `style.css` all cleaned of the
+  supporting code, not just the buttons.
+- **Fixed thumbnails breaking on token expiry, without ever needing a
+  reload**: the already-known bug
+  (`bugs/reports/2026-07-18-thumbnail-img-tags-have-no-silent-refresh-on-expired-access-token.md`)
+  went from "a mechanism that exists" to confirmed live during this
+  session (Joakim hit it in normal browsing, no restart involved) -
+  "just reload" turned out not to be a real workaround either (the
+  folder-picker permission doesn't reliably survive a reload, plus lost
+  scroll position). Fixed with the standard "silent refresh" pattern -
+  confirmed against external sources before building, not guessed: a
+  proactive `setInterval` in `app.js` (`silentRefresh()`, every 4
+  minutes, under the 5-minute access-token expiry) calls `/refresh` the
+  entire time the gallery is open, so the session cookie plain `<img
+  src>` thumbnail/lightbox loads depend on never actually goes stale in
+  normal use. `?test_refresh_ms` overrides the interval for the new
+  Selenium test, which can't wait out the real 4 minutes.
+- **Doc size**: `documentation/gui/README.md` 6,886 → 7,427 chars
+  (+541). `documentation/gui/TODO.md` 11,422 → 16,130 chars (+4,708).
+  `bugs/reports/2026-07-18-thumbnail-img-tags-...md` 2,915 → 3,944
+  (+1,029, real-world-frequency confirmation). New file
+  `bugs/claude/2026-07-19-asked-inline-instead-of-using-askuserquestion-...md`:
+  2,138 chars.
+
 ## 2026-07-19 — single-album view + a minimal Selenium test suite
 
 Joakim asked to make sure the GUI is up and running, plus change album

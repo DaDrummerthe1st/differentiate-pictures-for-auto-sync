@@ -45,7 +45,10 @@ def app_server():
     photos_root = root / "photos"
     for album in ("AlbumA", "AlbumB", "AlbumC"):
         (photos_root / album).mkdir(parents=True)
-    _make_image(photos_root / "AlbumA" / "a1.jpg", "red")
+    # AlbumA gets enough images to make the page taller than the test
+    # window, so scroll-position tests have something to scroll through.
+    for i in range(24):
+        _make_image(photos_root / "AlbumA" / f"a{i}.jpg", "red")
     _make_image(photos_root / "AlbumB" / "b1.jpg", "green")
     _make_image(photos_root / "AlbumC" / "c1.jpg", "blue")
 
@@ -96,6 +99,7 @@ def app_server():
 def driver(app_server):
     options = Options()
     options.add_argument("--headless=new")
+    options.add_argument("--window-size=1024,700")
     d = webdriver.Remote(command_executor=_SELENIUM_URL, options=options)
     try:
         # A cookie can only be added once the browser is already on the

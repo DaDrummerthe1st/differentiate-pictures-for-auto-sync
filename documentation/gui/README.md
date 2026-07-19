@@ -80,12 +80,20 @@ for correctness — it's done anyway for the silent-relisten reason above.
 
 - **Album view**: grouped by top-level source folder (headline) and
   immediate parent folder (chunk) — e.g. headline `Florida1`, chunks
-  `Florida1/Florida/1`, `Florida1/Florida/2`. Only one album is shown at
-  a time; a sticky pill bar switches between them (click a pill, no
-  scrolling/reload — see `setActiveAlbum()` in `app.js`), and the choice
-  persists across reloads via `localStorage`. Per-album collapse and a
-  "mark as done"/visited toggle with a running counter still apply to
-  whichever album is active.
+  `Florida1/Florida/1`, `Florida1/Florida/2`. Only one album's DOM (and
+  its thumbnail `<img>` tags) is ever built at all — switching albums
+  via the sticky pill bar tears down the previous album's markup and
+  builds the new one (`renderActiveAlbum()` in `app.js`), rather than
+  keeping every album in the DOM and hiding the rest with CSS, so a
+  hidden album costs no memory or thumbnail requests. The choice
+  persists across reloads via `localStorage`. Toolbar + pill bar are one
+  shared sticky header (`#stickyHeader`), not two independently-
+  positioned sticky elements, so the pill bar can't drift out of sync
+  with the toolbar's real height while scrolling. (Per-album collapse
+  and a "mark as done" toggle existed briefly here and were removed
+  2026-07-19 — see TODO.md — once only one album was ever shown at a
+  time, their original purpose from the old all-albums-stacked layout
+  no longer applied.)
 - **Thumbnail + fullscreen modes**: click a thumbnail for a fullscreen
   lightbox with prev/next (also `←`/`→`, `Alt+←` to go back to the grid,
   `Esc` to close). Grid density toggle (compact/large thumbnails).

@@ -1,7 +1,25 @@
 # Thumbnail img tags have no silent-refresh on expired access token
 
-Status: **root cause confirmed, not fixed**. Distinct from, but found
-alongside, `2026-07-18-redis-has-no-persistent-volume-every-restart-wipes-active-sessions.md`.
+Status: **confirmed as a real, everyday bug (2026-07-19), not fixed**.
+Originally found alongside a Redis restart
+(`2026-07-18-redis-has-no-persistent-volume-every-restart-wipes-active-sessions.md`),
+but this update confirms it also happens with no restart involved at
+all - answers this file's own "next session should start with" question.
+
+## Confirmed 2026-07-19: happens in normal, uninterrupted browsing too
+
+Joakim hit this live during a long GUI-debugging session with no server
+restart anywhere in between - screenshot showed every `/thumb?p=...`
+request returning a clean `401`, all grid thumbnails broken. Access
+token had simply expired (5 min) mid-session. Reloading the page
+self-healed it (`/api/tree`'s fetch goes through `authFetch`'s silent
+refresh, which runs before `renderTree()` builds any `<img>` tags), so
+no re-login was needed - but the underlying gap is real and will recur
+for any browsing session longer than 5 minutes. Priority raised
+accordingly; not fixed this session either (deliberately deferred so
+the session already in progress could wrap up) - next session should
+pick one of the two options below rather than re-investigate whether
+this is worth fixing.
 
 ## Symptom
 

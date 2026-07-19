@@ -195,6 +195,77 @@ usual once decided.
   around that by running `uvicorn` directly against a disposable test
   photo tree with a fixed `JWT_SECRET_KEY`; it doesn't fix or replace
   the stale root compose file itself.
+- **Follow-up fix, same day, after production feedback with Joakim's real
+  16-album library**: two real bugs the 3-fake-album local test hadn't
+  caught. (1) The single-album view above only hid inactive albums with
+  CSS (`display: none`) - all of them were still fully built into the
+  DOM with real thumbnail `<img>` tags, which Joakim correctly flagged
+  as unnecessary weight at real-library scale (not just a "make it
+  invisible" ask). Fixed: `renderActiveAlbum()` now builds *only* the
+  active album's DOM at all; switching tears it down and rebuilds,
+  confirmed via a new Selenium test asserting the other albums have zero
+  matching DOM nodes, not just a `hidden` class. (2) The toolbar and
+  pill bar were two independently `position: sticky` elements, the pill
+  bar's offset hardcoded to `top: 3.6rem` assuming a toolbar height that
+  didn't match reality (measured 111.78px vs assumed 57.6px on the real
+  page) - scrolling left the pill bar partly covered. Fixed by wrapping
+  both in one `#stickyHeader` container that alone is sticky, so there's
+  no offset to keep in sync at all. Covered by a new Selenium test
+  (`test_sticky_header.py`) asserting no vertical overlap after
+  scrolling, via real `getBoundingClientRect()` geometry, not a visual
+  guess.
+- **Raised by Joakim, explicitly not for now**: consider adopting
+  Bootstrap and jQuery (or similar established libraries) instead of
+  the current no-framework/no-build-step vanilla JS+CSS, to make future
+  GUI changes easier and more standard to reason about; also consider
+  adding a CSS reset/normalize library (Joakim said "zeroing.css" -
+  likely means [normalize.css](https://necolas.github.io/normalize.css/)
+  or a plain CSS reset; confirm the exact intended library before
+  implementing). Logged as a future direction only - not evaluated
+  against the "no build step" design choice this app started with, not
+  started.
+- **Removed entirely, same day**: "Markera som klar" (per-album visited
+  toggle + the toolbar's "X av Y album visade" counter) and "Dölj"
+  (per-album collapse). Joakim didn't remember what either did when
+  asked where their buttons should move to once the header row goes
+  away - on finding out "Dölj" specifically had been designed for the
+  old all-albums-stacked layout (collapsing a reviewed album saved
+  scroll space) and had no clear purpose left now that only one album
+  is ever shown at all, he asked to delete both outright rather than
+  relocate them. Removed from `app.js` (`toggleVisited`,
+  `updateVisitedUI`, `loadSet`/`saveSet`, the `visitedHeadlines`/
+  `collapsedHeadlines` Sets, the per-album `visitedBtn`/`collapseBtn`/
+  `headline-actions` markup), `index.html` (`#visitedCounter`), and
+  `style.css` (`.visited-btn`, `.collapse-btn`, `.headline-actions`,
+  `.nav-pill.visited`, `.album-body.collapsed`) - nothing left pointing
+  at the removed feature.
+- **Bigger redesign raised, not built**: Joakim wants folder-path
+  segments reframed explicitly as tags/sub-tags (album = tag, dated
+  subfolder = sub-tag) and the per-album `<h2>` header removed entirely
+  - "each section of pictures represented by tags, choosable in the now
+  pills section." Genuinely open before building: where do sub-tags
+  live (a second pill row under the active tag? inline chips above the
+  grid? folded into one flat pill list?), and does a sub-tag filter the
+  grid or just scroll to it. Not decided - needs its own design pass,
+  not a guess.
+- **Fixed: thumbnails silently breaking on token expiry, without ever
+  needing a reload.** The already-known bug
+  (`../bugs/reports/2026-07-18-thumbnail-img-tags-have-no-silent-refresh-on-expired-access-token.md`)
+  went from "a mechanism that exists" to confirmed-live during this
+  session - Joakim hit it in normal browsing, no server restart
+  involved. "Just reload" turned out not to be a real workaround either
+  (the File System Access folder permission doesn't reliably survive a
+  reload, bouncing back to the folder-picker screen, plus losing scroll
+  position). Fixed with the standard "silent refresh" pattern
+  (confirmed against external sources, not guessed - see the
+  2026-07-19 CHANGELOG entry for the citations): `app.js` now runs a
+  proactive timer (`silentRefresh()`, every 4 minutes, safely under the
+  5-minute access-token expiry) calling `/refresh` in the background the
+  entire time the gallery is open, so the session cookie - which plain
+  `<img src>` thumbnail/lightbox loads rely on entirely, since they
+  can't go through `authFetch`'s reactive retry - never actually goes
+  stale during normal use. `?test_refresh_ms` overrides the interval so
+  the new Selenium test doesn't wait out the real 4 minutes.
 
 ## Other open items (carried over, not yet done)
 
