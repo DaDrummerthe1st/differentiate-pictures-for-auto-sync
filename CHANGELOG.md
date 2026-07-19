@@ -11,6 +11,22 @@ including the 07-19 duplicate `(3)`, are left exactly as originally
 written — not retroactively renumbered, per the never-rewrite rule
 below.
 
+## 2026-07-19T03:54:48+00:00 — session wrap-up: commit_cost's known boundary bug reproduced live
+
+While logging commit_cost for the previous entry, noticed this
+session's own commits from `f69979d` onward were logging as
+"human-only, 0 tokens" despite being AI-authored — the exact known bug
+in `bugs/reports/2026-07-17-commit-cost-boundary-detection-breaks-on-
+long-sessions.md`. Logged the fresh reproduction there (same shape as
+the original: a real prefix, then a hard cutoff, nothing after).
+
+- That bug file already establishes its own recurrence as a practical
+  "this session has run long enough" signal, not just a tooling bug —
+  taking that at face value rather than continuing to add more work
+  this session.
+- **Doc size**: `bugs/reports/2026-07-17-commit-cost-boundary-...md`
+  2,638 → 3,523 chars (+885).
+
 ## 2026-07-19T03:53:21+00:00 — scope the full-test-suite-every-commit rule: skip a redundant server/tests re-run
 
 Joakim caught it live: the container-based `server/tests` suite had

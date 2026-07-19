@@ -46,6 +46,21 @@ rather than failing loudly).
 Diff the transcript's row structure before vs. after the point
 boundary-detection stops working, not more guessing.
 
+## Reproduced again 2026-07-19 (separate session, same shape)
+
+A different, unrelated session (a full documentation audit) hit the
+same failure: its first two commits (`3fadc88`, `cd66d3e`) logged real
+token/cost data correctly; every commit after that in the same session
+(`f69979d`, `40caf1b`, `eddfaf4`, `ba84e27`, `d93a18e` — five straight)
+logged `llm_session_found: false, 0 tokens` despite all being
+AI-authored. Same shape as the original finding (a real prefix, then a
+hard cutoff with nothing after) — different exact boundary (2 commits
+here vs. 5 originally), consistent with the leading theory being tied
+to *when* compaction happens in a given session rather than a fixed
+commit count. Not re-investigated beyond confirming the pattern still
+matches; per the note below, this session used the recurrence as its
+cue to wrap up rather than debugging further mid-task.
+
 ## Related: this bug is itself a signal for when to wrap up
 
 Noted by Joakim 2026-07-18: since this bug's root cause is tied to
