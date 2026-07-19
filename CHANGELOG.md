@@ -11,6 +11,50 @@ including the 07-19 duplicate `(3)`, are left exactly as originally
 written — not retroactively renumbered, per the never-rewrite rule
 below.
 
+## 2026-07-19T04:22:38+00:00 — script the mechanical half of a CLEANING.md pass: tools/documentation_checks/
+
+Joakim asked, after the second cleaning pass this session, for the
+routines it used to be scripted and checked in so future sessions run
+them the same way instead of re-deriving them — the dead-link sweep had
+just been rewritten from scratch, ad hoc, as an inline Python heredoc,
+twice in one session.
+
+- **New**: `tools/documentation_checks/` (`checks.py` pure logic,
+  `test_checks.py` — 12 tests, TDD'd failing-first before
+  implementation, `run.py` CLI). Covers the mechanical subset of
+  CLEANING.md's methodology: the dead-link sweep, and the "every topic
+  folder has a `TODO.md`" / "code dirs stay one-line stubs"  structural
+  checks. Does **not** cover reading every doc in full, cross-checking
+  claims against code, or judging redundancy — those still need real
+  comprehension, by a person or an AI session, not a script; documented
+  explicitly in the new doc so a future session doesn't mistake "checks
+  pass" for "the pass is done."
+  - `find_topic_folders_missing_todo`'s exemption list (`policies`,
+    `bugs/solved`, `bugs/claude` — pure-reference/archive folders with
+    no backlog of their own) lives in `run.py`, not baked into
+    `checks.py`'s logic, since which folders qualify is a judgment call
+    a script can't make alone — same pattern `doc_metrics/log.py`
+    already uses for config the pure-logic module shouldn't own.
+  - `find_non_stub_code_readmes` is a soft, size-based heuristic (warns
+    past 400 chars, doesn't fail the run) — a length threshold can
+    signal real content crept into a stub but can't prove it either way.
+  - Ran clean against the real repo: 0 broken links, 0 topic folders
+    missing `TODO.md`, 0 oversized code-dir READMEs — matches every
+    manual check from the pass earlier this session.
+  - New file `documentation/tooling/DOCUMENTATION_CHECKS.md` (purpose,
+    what's and isn't covered, usage), stub `tools/documentation_checks/README.md`
+    pointing at it, `tooling/README.md`'s contents table updated.
+  - `CLEANING.md`'s own step 3 updated from "not currently checked into
+    `tools/`" to point at the new script — closes the gap that file
+    itself had been flagging since it was written this session.
+- `app/tests` run clean (53 passed) after this change; `server/tests`
+  not re-run (no `server/`/`app/` code touched — same scoped-rule
+  reasoning as the entry below).
+- **Doc size**: `documentation/tooling/DOCUMENTATION_CHECKS.md`: 2,632
+  chars (new). `documentation/tooling/CLEANING.md` 3,383 → 3,732 (+349).
+  `documentation/tooling/README.md` 4,073 → 4,301 (+228).
+  `tools/documentation_checks/README.md`: 246 chars (new).
+
 ## 2026-07-19T04:11:00+00:00 — second documentation-cleaning pass: a cross-branch drift, a stale caveat's ordering, a checklist row left behind by an earlier fix
 
 Joakim asked for another full pass over `documentation/` (a fresh session,

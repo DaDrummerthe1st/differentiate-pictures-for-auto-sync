@@ -29,14 +29,20 @@ verbose costs in tokens.
    other docs. A doc can be internally consistent and still be wrong
    about what the code does.
 3. **Dead-link sweep** — every relative markdown link across the repo
-   resolves to a real file (automatable; see the audit script used
-   2026-07-19, not currently checked into `tools/`).
+   resolves to a real file. Scripted, run first:
+   `python3 tools/documentation_checks/run.py` (see
+   [DOCUMENTATION_CHECKS.md](DOCUMENTATION_CHECKS.md) — built 2026-07-19
+   after this same script got rewritten from scratch, ad hoc, twice in
+   one session).
 4. **Structural convention compliance**, per `CLAUDE.md`'s "Documentation
    layout" section: nothing project-wide duplicated outside
    `POLICY.md`; every "see X" cross-reference terminates in real content
    within 1-2 hops, not another pointer back; code directories stay
    one-line stubs; topic folders keep a `TODO.md`; root `README.md`
-   stays the short pitch + pointer, not branch-specific content.
+   stays the short pitch + pointer, not branch-specific content. The
+   topic-folder-`TODO.md` and code-dir-stub-size parts are also covered
+   by `tools/documentation_checks/run.py` above — the duplication and
+   cross-reference-termination parts still need a real read.
 5. **Fix vs. flag**: fix stale facts and structural violations directly.
    Flag, don't unilaterally resolve, anything that would mean editing an
    already-published, append-only record (e.g. a past `CHANGELOG.md`

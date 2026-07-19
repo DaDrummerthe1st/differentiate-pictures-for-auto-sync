@@ -10,6 +10,7 @@ folders. See [TODO.md](TODO.md) for open work.
 | [DOC_METRICS.md](DOC_METRICS.md) | `tools/doc_metrics/` — tracks documentation char-count growth per commit, tied to a `task` label |
 | [COMMIT_COST.md](COMMIT_COST.md) | `tools/commit_cost/` — exact real token/dollar cost per commit, from Claude Code's own session transcripts |
 | [CLEANING.md](CLEANING.md) | Full, on-demand documentation audit — goals and methodology, not a per-session check |
+| [DOCUMENTATION_CHECKS.md](DOCUMENTATION_CHECKS.md) | `tools/documentation_checks/` — the mechanical subset of a CLEANING.md pass (dead links, topic-folder `TODO.md` presence), scripted so it isn't rewritten ad hoc each time |
 
 ## Session wrap-up checklist
 
