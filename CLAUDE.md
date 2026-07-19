@@ -23,8 +23,13 @@ kept current for exactly this reason.
 - **Test-Driven Development, no exceptions for "small" or "obvious"
   code**: write a failing test before the implementation, every time,
   confirm it actually fails for the expected reason, then implement. Run
-  the FULL test suite before every commit, even for changes that look
-  unrelated or untestable (e.g. a config or docs-only edit). See
+  the fast in-process `app/tests` before every commit, even a docs-only
+  one. Also run the container-based `server/tests` suite before every
+  commit that touches `server/`/`app/` code — for a doc-only commit,
+  skip re-running it if it already ran clean earlier in the same session
+  against the same code (repeating it against unchanged code is pure
+  cost, not insurance; decided 2026-07-19 after doing exactly that
+  twice with nothing to catch). See
   `documentation/bugs/claude/2026-07-19-skipped-tdd-for-a-small-helper-reasoning-it-wouldn-t-matter.md`
   for why the old "where practical" qualifier was dropped 2026-07-16.
 - **Check for newest dependency versions before every numbered TODO

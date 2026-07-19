@@ -11,6 +11,24 @@ including the 07-19 duplicate `(3)`, are left exactly as originally
 written — not retroactively renumbered, per the never-rewrite rule
 below.
 
+## 2026-07-19T03:53:21+00:00 — scope the full-test-suite-every-commit rule: skip a redundant server/tests re-run
+
+Joakim caught it live: the container-based `server/tests` suite had
+just been run twice in a row against completely unchanged server code
+(the two prior entries below were doc-only), each run guaranteed to
+pass before it started — pure cost (Docker container spin-up, a
+permission prompt) for zero new information.
+
+- **Rule scoped**: `app/tests` (fast, in-process) still runs before
+  every commit, docs-only or not. `server/tests` (container-based) now
+  only re-runs for a doc-only commit if it hasn't already run clean this
+  session against the same, unchanged `server/`/`app/` code — otherwise
+  it's mandatory the moment code changes again. Applied immediately to
+  this very commit: only `app/tests` ran, since `server/tests` already
+  ran clean twice already this session with nothing in between to
+  invalidate it.
+- **Doc size**: `CLAUDE.md` 14,828 → 15,151 chars (+323).
+
 ## 2026-07-19T03:50:56+00:00 — trim CLAUDE.md's recurring accumulated-detail pattern; add a "starting a session" pointer
 
 Joakim asked why CLAUDE.md was 251 lines when he'd expected mostly
