@@ -4,6 +4,15 @@ This file is the working agreement between Joakim and any AI session (or
 future human contributor) working in this repo. The repo is the memory —
 see the self-sufficiency rule below.
 
+## Starting a session
+
+This file is the only doc guaranteed to be loaded automatically — it
+holds the rules, not the current state. Before assuming anything about
+where the project actually stands, read
+[documentation/README.md](documentation/README.md)'s folder index, then
+the relevant topic's own README/TODO — most carry a dated `Status:` line
+kept current for exactly this reason.
+
 ## Non-negotiables
 
 - **Security and privacy first**: consider it for every change, not just
@@ -13,19 +22,11 @@ see the self-sufficiency rule below.
   repeated here.
 - **Test-Driven Development, no exceptions for "small" or "obvious"
   code**: write a failing test before the implementation, every time,
-  confirm it actually fails for the expected reason, then implement.
-  "Where practical" used to qualify this bullet; dropped 2026-07-16
-  after a real slip during photo-server Phase 1 — a one-off helper
-  (`app/audit.py`'s `log_audit_event`) got written before its test, on
-  the reasoning that it was small enough not to matter. Disclosing the
-  slip in the moment was right; that a later, unrelated code-review pass
-  over the same area then caught a real bug (`app/db.py`'s `get_db()`
-  silently dropping commits on an exception path) does not retroactively
-  excuse having skipped the test — reviewed-and-lucky isn't the same as
-  tested. Run the FULL test suite before every commit, even for changes
-  that look unrelated or untestable (e.g. a config or docs-only edit) —
-  cheap insurance against regressions that aren't obvious from reading
-  the diff.
+  confirm it actually fails for the expected reason, then implement. Run
+  the FULL test suite before every commit, even for changes that look
+  unrelated or untestable (e.g. a config or docs-only edit). See
+  `documentation/bugs/claude/2026-07-19-skipped-tdd-for-a-small-helper-reasoning-it-wouldn-t-matter.md`
+  for why the old "where practical" qualifier was dropped 2026-07-16.
 - **Check for newest dependency versions before every numbered TODO
   step** (0.1, 0.2, 1.3, etc. — not just once per phase), not only when a
   CVE prompts it. If a newer version is available, update to it as part
@@ -56,32 +57,20 @@ see the self-sufficiency rule below.
   "confirmed," etc.). Before sending any reply that asserts something is
   already done, check the corresponding tool call actually ran in this
   turn — don't infer it from intent or from having described the plan in
-  the response text. Originally scoped to file edits only (decided
-  2026-07-18 after telling Joakim a `DATA_DICTIONARY.md` edit had been
-  made when it hadn't — planned and described mid-reply, but the actual
-  tool call was never issued, see
-  `documentation/bugs/claude/2026-07-18-claimed-a-doc-edit-was-made-when-it-wasn-t.md`),
-  broadened the same day to any action-completion claim after Joakim
-  asked whether the broadening he'd been offered had actually happened —
-  it hadn't (a second instance of the same underlying pattern: an offer
-  stated in prose, not followed through on, not caught until asked about
-  directly). This repo *is* the durable record for anything discussed in
-  a session — a false "done" claim isn't a small slip, it's a hole in
-  the only safety net that exists. (Distinct from the next rule below,
-  which covers *forward*-looking promises for later in the same
-  conversation, not backward-looking completion claims.)
+  the response text. This repo *is* the durable record for anything
+  discussed in a session — a false "done" claim isn't a small slip, it's
+  a hole in the only safety net that exists. (Distinct from the next
+  rule below, which covers *forward*-looking promises, not backward-
+  looking completion claims.) See
+  `documentation/bugs/claude/2026-07-18-claimed-a-doc-edit-was-made-when-it-wasn-t.md`
+  for why this covers every action-completion claim, not just file edits.
 - **A promised follow-up gets a TodoWrite item, not just a sentence.**
   Whenever a reply says something like "I'll present this for
   confirmation," "I'll come back to this," or "let me get back to you
   on X" — add a `TodoWrite` item for it in that same turn, don't just
-  state it in prose. Decided 2026-07-18 after a thumbnail-precompile
-  design synthesis was promised back to Joakim for confirmation, then
-  silently dropped when several unrelated messages and a live incident
-  arrived immediately after — it only surfaced later via the session's
-  wrap-up sweep, not in the moment. See
+  state it in prose. A promise that only exists as text is invisible to
+  any later self-check; a tracked item survives interruptions. See
   `documentation/bugs/claude/2026-07-18-promised-a-follow-up-mid-conversation-without-tracking-it-as-a-todo.md`.
-  A promise that only exists as text is invisible to any later
-  self-check; a tracked item survives interruptions.
 - **Lean, exact, and compact**: no filler, no restating what's already
   documented elsewhere, no speculative abstraction for hypothetical
   future needs. Prefer the more precise word or number over the vaguer

@@ -11,6 +11,37 @@ including the 07-19 duplicate `(3)`, are left exactly as originally
 written — not retroactively renumbered, per the never-rewrite rule
 below.
 
+## 2026-07-19T03:50:56+00:00 — trim CLAUDE.md's recurring accumulated-detail pattern; add a "starting a session" pointer
+
+Joakim asked why CLAUDE.md was 251 lines when he'd expected mostly
+pointers, and why sessions need 3-5 correction messages before they're
+oriented. Both had concrete answers.
+
+- **Accumulated detail, again**: the TDD, "never claim an action taken,"
+  and "promised follow-up" bullets each carried a full inline incident
+  narrative — the exact pattern a 2026-07-17 pass already caught and
+  partly fixed once. Two of the three already linked to a
+  `bugs/claude/*.md` file that had the same story; trimmed both to
+  rule + pointer. The TDD bullet had no such file at all, which is
+  itself a gap against the "every lapse is its own file" hard rule —
+  backfilled
+  `bugs/claude/2026-07-19-skipped-tdd-for-a-small-helper-reasoning-it-wouldn-t-matter.md`
+  with the narrative, then trimmed CLAUDE.md's bullet to match the other
+  two.
+- **New "Starting a session" section**: CLAUDE.md is the one file
+  guaranteed to auto-load; everything else (status, open bugs, TODO
+  progress) only gets read if a session goes looking. CLAUDE.md
+  deliberately holds rules, not status, so a fresh session had nothing
+  telling it to go find that status before acting. Added a short pointer
+  at the top: read `documentation/README.md`'s index, then the relevant
+  topic's `Status:` line, before assuming current state.
+- Doc-only change; full local test sweep: 53 `app/tests` + 49
+  `server/tests`, all green.
+- **Doc size**: `CLAUDE.md` 15,707 → 14,828 chars (-879 net — the three
+  trims outweighed the new section). New file
+  `bugs/claude/2026-07-19-skipped-tdd-for-a-small-helper-...md`: 1,673
+  chars.
+
 ## 2026-07-19T03:42:35+00:00 — adopt timestamped changelog headings, drop the same-day counter
 
 Follow-up to the documentation audit two entries below: that audit found
