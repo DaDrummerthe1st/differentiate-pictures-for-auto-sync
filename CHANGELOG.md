@@ -11,6 +11,70 @@ including the 07-19 duplicate `(3)`, are left exactly as originally
 written — not retroactively renumbered, per the never-rewrite rule
 below.
 
+## 2026-07-19T04:11:00+00:00 — second documentation-cleaning pass: a cross-branch drift, a stale caveat's ordering, a checklist row left behind by an earlier fix
+
+Joakim asked for another full pass over `documentation/` (a fresh session,
+scoped via `AskUserQuestion` to CLEANING.md's own on-demand audit process
+rather than the picture-cleaning-workflow docs). Read every file under
+`documentation/` in full, ran a dead-link sweep, and cross-checked claims
+against the actual code (routes, schema, config, JS) rather than trusting
+prose. Three real findings, all fixed:
+
+- **Cross-branch file-path drift**: `picture-handling/README.md`'s "What
+  exists today" lists `app/utils/directory_picker.py`, `app/gpsdata.py`,
+  etc. — none of which exist anywhere in this branch's `app/` (confirmed
+  via `find`), because `mamma-photo-viewer` is an orphan branch with no
+  shared history with `master`, where those files actually live
+  (confirmed via `git ls-tree origin/master`). A reader on this branch
+  following that section would go looking for files that were never
+  here. Added a note pointing at `master` and at this branch's own
+  (unrelated) `app/` — the GUI code — instead.
+- **Caveat ordering**: `gui/README.md`'s "Run it" section states the
+  `docker compose up -d` command before the note that it currently
+  crashes (`MissingConfigError`, stale `JWT_SECRET_KEY`-less compose
+  file) — the earlier same-day pass (entry below) added that caveat
+  "next to" the instructions, but "next to" still meant *after* the
+  command a reader would copy first. Reordered so the warning reads
+  before the command.
+- **Checklist row left stale by its own referenced rule**:
+  `tooling/README.md`'s wrap-up checklist had "Full test suite | before
+  every commit | local" as one row — but the actual rule (CHANGELOG
+  2026-07-19T03:53:21+00:00, decided *after* the prior cleaning pass
+  below) scopes `server/tests` to skip re-running against unchanged code
+  for a doc-only commit. Split into two rows matching `app/tests` vs
+  `server/tests`'s real, different trigger conditions, same granularity
+  the table's other rows already use.
+- **Checked clean, no changes needed**: zero broken relative links across
+  all 67 git-tracked `.md` files (dead-link sweep before and after);
+  `DATA_DICTIONARY.md`'s "only `users`/`audit_log` exist" claim confirmed
+  against `server/app/db.py`; Phase 2+ "not built" claim confirmed (no
+  `/tags`/`/photos`/`/catalogues` routes exist); `DEFERRED.md`'s 5-minute
+  access-token TTL confirmed against `server/app/tokens.py`; Swagger
+  lockdown (`docs_url=None` etc.) confirmed in both `server/app/main.py`
+  and `app/main.py`; `gui/README.md`'s "53 tests" claim confirmed via
+  `pytest --collect-only`; `file-integrity/TODO.md`'s `.mkv`/`.webm`
+  signature-check gap confirmed against `app/main.py`'s `VIDEO_EXTS` vs
+  `_EXPECTED_LABEL_FOR_EXT`; every `bugs/reports/*.md` file has its
+  promised `Status:` line; structural convention compliance (stub-only
+  code-dir READMEs, every topic folder's `TODO.md`, nothing project-wide
+  duplicated outside `POLICY.md`) all held.
+- **Found, deliberately not fixed**: this file's own `(6)` entry below
+  states "82 `.md` files in the repo" at the time of that pass; the
+  actual git-tracked count, both then (per that entry's own dead-link
+  sweep) and now, doesn't reconcile with today's confirmed 67 — most
+  likely the same class of unfiltered-walk pollution `DOC_METRICS.md`
+  already documents fixing once (vendored `.md` files under a gitignored
+  directory inflating a naive `rglob`-based count), but not confirmed,
+  and fixing the number would mean editing an already-published entry.
+  Flagging for Joakim's call rather than silently editing history.
+- `app/tests` run clean (53 passed) after the doc-only edits;
+  `server/tests` not re-run — no `server/`/`app/` code changed this
+  session, so the newly-clarified checklist row above doesn't call for
+  it.
+- **Doc size**: `documentation/picture-handling/README.md` 1,062 → 1,486
+  (+424). `documentation/gui/README.md` 7,842 → 7,923 (+81).
+  `documentation/tooling/README.md` 3,854 → 4,073 (+219).
+
 ## 2026-07-19T04:00:36+00:00 — document today's documentation-cleaning pass as a reusable, on-demand routine
 
 Joakim asked for the goals behind today's audit to be written down as a

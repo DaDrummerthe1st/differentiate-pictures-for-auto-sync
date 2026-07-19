@@ -27,21 +27,20 @@ single Docker container, self-signed HTTPS (required — the folder-picker
 and microphone features both need a secure browser context, which plain
 HTTP outside `localhost` doesn't satisfy).
 
-**Run it**:
+**Run it — currently broken on this dev workstation, read before
+running**: as of 2026-07-19 the repo-root `docker-compose.yml` is stale —
+it predates `app/auth.py`'s login requirement and has no
+`JWT_SECRET_KEY` set, so the command below crashes at startup
+(`MissingConfigError`). No local full-stack dev environment exists yet;
+the only live deployment is production (`https://photos.reuterborg.se`,
+see `DEPLOYMENT.md`). See `TODO.md`'s 2026-07-19 section before relying
+on this locally. The command below is what runs it once that's fixed:
 ```
 cd /home/joakim/code/project/differentiate-pictures-for-auto-sync
 docker compose up -d
 ```
 Open `https://<host LAN IP>:8420`. First load shows a self-signed-cert
 warning — click through, that's expected. Stop with `docker compose down`.
-
-Note: as of 2026-07-19 the repo-root `docker-compose.yml` on this dev
-workstation is stale — it predates `app/auth.py`'s login requirement and
-has no `JWT_SECRET_KEY` set, so a rebuild here crashes at startup
-(`MissingConfigError`). No local full-stack dev environment exists yet;
-the only live deployment is production (`https://photos.reuterborg.se`,
-see `DEPLOYMENT.md`). See `TODO.md`'s 2026-07-19 section before relying
-on this command locally.
 
 **Tests**: `.venv-test/bin/python -m pytest app/tests/ -q` (53 tests as of
 this writing — tree scanning, thumbnails, path-traversal guards, session

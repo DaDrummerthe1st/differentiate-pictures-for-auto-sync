@@ -9,6 +9,14 @@ migration note; see [TODO.md](TODO.md).
 
 ## What exists today
 
+**On `master` only** — this branch (`mamma-photo-viewer`) is an orphan
+branch with no shared git history with `master` (see
+[photo-server/TODO.md](../photo-server/TODO.md)'s "Branch relationship"
+section), so none of the files below exist in *this* branch's `app/`
+directory, which instead holds the unrelated `mamma-photo-viewer` GUI
+app (see [../gui/README.md](../gui/README.md)). Checked out `master` to
+read this code.
+
 - A directory picker (`app/utils/directory_picker.py`) and file-handling
   utilities (`app/file_handling.py`, `app/file_handling/`).
 - EXIF/GPS metadata extraction (`app/gpsdata.py`).

@@ -30,7 +30,8 @@ closing out.
 
 | Check | Trigger | Source |
 | --- | --- | --- |
-| Full test suite | before every commit | local |
+| `app/tests` (fast, in-process) | before every commit, docs-only or not | local |
+| `server/tests` (container-based) | every commit touching `server/`/`app/` code; for a doc-only commit, only if it hasn't already run clean this session against the same code | local |
 | Secrets-in-diff scan | before every commit | global |
 | `doc_metrics` logging | every commit touching a `*.md` file | local |
 | `commit_cost` logging | every commit | local |
