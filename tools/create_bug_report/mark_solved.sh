@@ -32,4 +32,3 @@ mkdir -p "$SOLVED_DIR"
 git -C "$REPO_ROOT" mv "$SRC" "$DEST"
 
 echo "Moved: $DEST"
-echo "Now remove the corresponding entry from documentation/bugs/TODO.md."

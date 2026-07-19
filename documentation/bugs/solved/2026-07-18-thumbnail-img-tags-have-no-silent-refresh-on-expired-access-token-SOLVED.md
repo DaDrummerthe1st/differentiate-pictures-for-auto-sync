@@ -1,10 +1,14 @@
 # Thumbnail img tags have no silent-refresh on expired access token
 
-Status: **confirmed as a real, everyday bug (2026-07-19), not fixed**.
-Originally found alongside a Redis restart
+Status: **fixed and deployed, 2026-07-19**. `app.js`'s `silentRefresh()`
+now proactively calls `/refresh` every 4 minutes (under the 5-minute
+access-token expiry) the entire time the gallery is open, so `<img>`-tag
+thumbnail/lightbox loads never depend on a token that's gone stale — see
+CHANGELOG.md's "2026-07-19 (2)" entry. Originally found alongside a
+Redis restart
 (`2026-07-18-redis-has-no-persistent-volume-every-restart-wipes-active-sessions.md`),
-but this update confirms it also happens with no restart involved at
-all - answers this file's own "next session should start with" question.
+then confirmed to also happen in normal, uninterrupted browsing with no
+restart involved at all.
 
 ## Confirmed 2026-07-19: happens in normal, uninterrupted browsing too
 

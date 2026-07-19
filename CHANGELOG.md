@@ -5,6 +5,105 @@ before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
 CLAUDE.md's project-memory note on that trade-off).
 
+## 2026-07-19 (6) — full documentation audit: dead facts, a stale index, a lost root pitch
+
+Joakim asked for a thorough pass over every doc in `documentation/`
+against the guidelines and against the actual code, aimed at cutting a
+fresh session's ramp-up time/tokens without losing context. Ran three
+parallel research agents (bugs+tooling, photo-server+architecture,
+policy+cross-links) plus a full-repo dead-link sweep, then fixed
+everything that was a clear-cut factual error or contradiction.
+
+- **Bug tracking**: the thumbnail silent-refresh bug (already fixed
+  2026-07-19 per entry (2) below) was still listed open in
+  `photo-server/README.md` and its own report's `Status:` line — moved
+  to `bugs/solved/` via `mark_solved.sh` and both updated. Also removed
+  a dead instruction ("remove the entry from `bugs/TODO.md`") from
+  `bugs/solved/README.md` and `mark_solved.sh`'s own printed output —
+  `bugs/TODO.md` keeps no per-bug index (deliberately dropped
+  2026-07-17), so the instruction referred to a convention that no
+  longer exists.
+- **Stale facts contradicting code**: access-token TTL corrected from
+  "15 min" to the actual 5 min (`server/app/tokens.py`) in three spots
+  in `photo-server/TODO.md`; `gui/TODO.md` called `app/` "Flask" — it's
+  FastAPI, contradicting `gui/README.md`'s own correct line one file
+  over.
+- **Missing caveat**: `gui/README.md`'s "Run it" instructions didn't
+  mention that the repo-root `docker-compose.yml` is stale and will
+  crash on a missing `JWT_SECRET_KEY` — that fact existed only buried in
+  `TODO.md`'s dated session log. Added next to the instructions
+  themselves.
+- **Doc index and status drift**: `documentation/README.md`'s top-level
+  folder table was missing `bugs/`, `file-integrity/`, and `gui/`
+  entirely (the last being where this branch's whole feature lives) and
+  had `picture-handling/`/`photo-server/` backwards (calling the
+  superseded single-machine tool "current work"). Fixed the table and
+  `picture-handling/README.md`'s own stale "current phase" claim.
+  `photo-server/README.md`'s Status line and open-problems list were a
+  day stale (missing the 07-19 redeploy and the new picture-click-failed
+  bug) — updated.
+- **Root README.md**: on this branch it had been fully overwritten with
+  branch-specific content, losing the general project pitch CLAUDE.md
+  describes this file as ("public-facing landing page"). Restored the
+  pitch (matching `master`) with a branch-specific pointer section added
+  underneath; fixed `gui/README.md`'s claim that the branch-only stub
+  was "per this repo's doc-layout convention" (it wasn't — that
+  convention is for code-directory READMEs, not the root one).
+- **DATA_DICTIONARY.md**: its "'now' = built" framing read as "already
+  exists in the database" when only `users`/`audit_log` actually do
+  (`db.py`'s `ensure_schema()`) — Phase 2's tables are designed, not
+  built. Reworded the definition and added an explicit today-status
+  note. Also reattached an "Ownership" row that had drifted ~25 lines
+  below the table it belonged to.
+- **Redundant/undocumented mechanics**: trimmed `create_bug_report.sh`'s
+  `--claude` template, which hardcoded a near-verbatim restatement of
+  `bugs/claude/README.md`'s own opening paragraph into every future
+  file; added the missing `## What changed` section to
+  `2026-07-17-claude-md-accumulating-detail-...md` (the one file that
+  didn't comply with `bugs/claude/README.md`'s own hard rule);
+  documented `check_coverage.sh` in `COMMIT_COST.md` (referenced from
+  three other places, never explained there); stated the
+  closed-by-default privacy rule explicitly in `POLICY.md` itself
+  (previously only asserted independently in `photo-server/README.md`
+  and presupposed by `VISION.md`, inverted from this project's own
+  "nothing project-wide duplicated outside POLICY.md" rule) and pointed
+  both `photo-server/README.md` and `DATA_DICTIONARY.md`'s GPS/EXIF-log
+  line at it instead of restating.
+- **Found, deliberately not fixed**: `CHANGELOG.md`'s own 2026-07-19
+  entries have a duplicate `(3)` label (this file's own entries (2)-(5)
+  are internally consistent — cross-referenced against each other and
+  correct — but two entries below share the number `(3)`, and there are
+  two unnumbered entries instead of the usual single oldest-of-the-day).
+  Left untouched: fixing entry *labels* still means editing already-
+  published CHANGELOG entries, and this file's own rule is "never
+  rewrite or reorder past entries" — flagging for Joakim's call rather
+  than silently editing history, even for a numbering-only fix.
+- **Checked clean, no changes needed**: zero broken relative links
+  across all 82 `.md` files in the repo (full sweep, both before and
+  after these edits); no circular/non-terminating cross-references
+  anywhere; `DEPLOYMENT.md`/`HARDWARE.md`/`TOOLCHAIN.md`/file-integrity
+  docs all match code; `DOC_METRICS.md`/`COMMIT_COST.md`'s documented
+  CLI flags match the actual argparse code exactly; the MySQL-vs-
+  Postgres drift flagged in `picture-handling/TODO.md` is still
+  accurate, not stale.
+- Full local test sweep after the doc-only changes (two shell scripts
+  touched, no app code): 53 `app/tests` + 49 `server/tests`, all green.
+- **Doc size**: `README.md` 261 → 963 (+702, restored pitch + branch
+  pointer). `documentation/README.md` 733 → 1,038 (+305, index fixed).
+  `documentation/photo-server/DATA_DICTIONARY.md` 6,105 → 6,538 (+433).
+  `documentation/photo-server/README.md` 6,162 → 6,221 (+59).
+  `documentation/photo-server/TODO.md` 38,870 → 38,867 (-3, TTL fixes).
+  `documentation/gui/README.md` 7,427 → 7,893 (+466).
+  `documentation/gui/TODO.md` 17,110 → 17,112 (+2).
+  `documentation/picture-handling/README.md` 878 → 1,066 (+188).
+  `documentation/policies/POLICY.md` 6,006 → 6,372 (+366).
+  `documentation/tooling/COMMIT_COST.md` 5,417 → 5,922 (+505).
+  `documentation/bugs/solved/README.md` 815 → 668 (-147, dead instruction
+  removed). `documentation/bugs/claude/2026-07-17-claude-md-
+  accumulating-detail-...md` 2,865 → 3,234 (+369). New file
+  `documentation/bugs/solved/2026-07-18-thumbnail-img-tags-...-SOLVED.md`:
+  4,157 chars (moved + updated from `bugs/reports/`).
+
 ## 2026-07-19 (5) — confirmed the `Bash(*)`-still-prompts pattern is an upstream Claude Code bug; consolidated CLAUDE.md
 
 Continuation of this same day's permission-prompt investigation (see the

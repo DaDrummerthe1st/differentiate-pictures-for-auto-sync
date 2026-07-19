@@ -13,6 +13,12 @@ high-blast-radius definition), see [CLAUDE.md](../../CLAUDE.md).
   (see `app/gpsdata.py`). Location data is sensitive by default — never
   transmit, log, or expose it more broadly than the feature being built
   strictly requires.
+- **Closed-by-default (project-wide)**: no photo or user data ever
+  leaves the server the user controls. No cloud APIs, no telemetry.
+  Applies to every topic folder, not just photo-server (whose own
+  README.md states this same rule for its scope — this is the source of
+  truth it inherits from). Sole exception: Let's Encrypt certificate
+  issuance for HTTPS.
 - The planned distributed-sync/shared-storage feature (see
   [../distributed-sync/README.md](../distributed-sync/README.md)) means
   this project will eventually hold other people's files and metadata on

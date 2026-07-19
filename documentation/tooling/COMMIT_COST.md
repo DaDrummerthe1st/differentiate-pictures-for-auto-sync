@@ -101,4 +101,12 @@ python3 -m unittest tools.commit_cost.test_metrics -v   # tests
 python3 tools/commit_cost/log.py                         # scan, write new commits found
 python3 tools/commit_cost/report.py                       # per-commit trend
 python3 tools/commit_cost/report.py --by-session          # summed per session
+tools/commit_cost/check_coverage.sh                       # flag commits with no logged cost row
 ```
+
+`check_coverage.sh` cross-checks `git log` against `commit_costs.jsonl`
+and lists any commit with no logged row at all (as opposed to a real,
+correctly-logged `0` for a human-authored commit — see above). Run it as
+part of session wrap-up. Its one expected "missing" entry is always the
+commit just made in the current session (not logged yet because logging
+happens after committing) — not a real gap.

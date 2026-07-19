@@ -53,7 +53,7 @@ no-login LAN-only posture.
   existing buzzkit login implementation (argon2id, JWT access+refresh via
   redis). That question is resolved, don't re-ask it.
 
-**Genuinely open** — this GUI (`app/`, Flask) is a separate codebase from
+**Genuinely open** — this GUI (`app/`, FastAPI) is a separate codebase from
 the photo-server backend (`server/`, FastAPI) — resolve before writing
 any code: does GUI login mean (a) adapting the same ported approach
 directly onto `app/`, or (b) `app/` eventually authenticating against

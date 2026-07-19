@@ -10,8 +10,8 @@ docs as superseded where they conflict with what's built and documented here.
 Code lives at the repo root on the `mamma-photo-viewer` branch (`app/`,
 `Dockerfile`, `docker-compose.yml`, `requirements.txt`) rather than under a
 subdirectory, since it started as a separate repo before ending up here (see
-TODO.md's history note). Root `README.md` is a one-line stub pointing back
-here, per this repo's doc-layout convention.
+TODO.md's history note). Root `README.md` carries the normal project pitch
+plus a section pointing back here for this branch's work.
 
 ## What it is
 
@@ -34,6 +34,14 @@ docker compose up -d
 ```
 Open `https://<host LAN IP>:8420`. First load shows a self-signed-cert
 warning — click through, that's expected. Stop with `docker compose down`.
+
+Note: as of 2026-07-19 the repo-root `docker-compose.yml` on this dev
+workstation is stale — it predates `app/auth.py`'s login requirement and
+has no `JWT_SECRET_KEY` set, so a rebuild here crashes at startup
+(`MissingConfigError`). No local full-stack dev environment exists yet;
+the only live deployment is production (`https://photos.reuterborg.se`,
+see `DEPLOYMENT.md`). See `TODO.md`'s 2026-07-19 section before relying
+on this command locally.
 
 **Tests**: `.venv-test/bin/python -m pytest app/tests/ -q` (53 tests as of
 this writing — tree scanning, thumbnails, path-traversal guards, session

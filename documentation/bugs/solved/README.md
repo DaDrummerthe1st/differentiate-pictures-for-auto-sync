@@ -11,6 +11,4 @@ later.
 `2026-07-17-thumbnail-oom-under-load-SOLVED.md`), keeping the original
 `<date>-<slug>` prefix so it still sorts and greps the same way. Use
 `tools/create_bug_report/mark_solved.sh <report-filename>` to do the
-move+rename consistently rather than by hand. Also remove the
-corresponding entry from [../TODO.md](../TODO.md) at the same time — a
-solved bug shouldn't still show up in the untriaged list.
+move+rename consistently rather than by hand.

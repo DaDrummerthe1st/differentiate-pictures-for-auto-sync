@@ -1,8 +1,11 @@
 # picture-handling/
 
 Everything to do with viewing, sorting, labeling, deleting, and indexing
-pictures and movie clips on a single local machine. This is the current
-phase of work — see [TODO.md](TODO.md) for open items.
+pictures and movie clips on a single local machine. **Superseded**: this
+single-machine MVP/POC is resolved — active work moved to
+[../photo-server/](../photo-server/README.md)'s multi-user web server.
+Kept here as reference for what already exists and the MySQL-to-Postgres
+migration note; see [TODO.md](TODO.md).
 
 ## What exists today
 

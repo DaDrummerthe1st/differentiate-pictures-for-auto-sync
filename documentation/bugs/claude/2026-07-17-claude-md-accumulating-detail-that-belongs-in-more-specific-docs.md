@@ -53,3 +53,11 @@ already fully written elsewhere, and replace with a short pointer -
 keeping only the actual working-agreement decision (what to do) in
 CLAUDE.md, not the reasoning/mechanics (why, how), which belongs in the
 specific doc that already has it.
+
+## What changed
+
+Two of the three candidates were trimmed to one-line pointers (the
+"every bug/lapse is its own file" bullet, and the wrap-up coverage-check
+bullet, folded into `documentation/tooling/README.md`'s new wrap-up
+checklist); the third was found already absent. The push-policy bullet
+was deliberately left as-is pending the "not evaluated" question above.

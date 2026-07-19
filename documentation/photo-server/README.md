@@ -8,24 +8,25 @@ existing single-machine, single-user Python sorting tool) and from
 [../distributed-sync/](../distributed-sync/README.md) (future multi-device
 P2P sync — not started, unaffected by this work).
 
-**Status (2026-07-18, end of session): live and working, production
-redeployed and current as of commit `a8979c0`.** Elisabeth can log in
-and browse at `https://photos.reuterborg.se` (branch
-`mamma-photo-viewer`). Today: a full outage (aging switch, not the
-server — see `bugs/solved/`), a since-fixed publicly-exposed Swagger/
-OpenAPI docs vulnerability (`docs_url=None` now on both services), and
-the Postgres schema-init + `Dockerfile` fixes from earlier are all live
-in production as of today's redeploy.
+**Status (2026-07-19, end of session): live and working, production
+redeployed and current.** Elisabeth can log in and browse at
+`https://photos.reuterborg.se` (branch `mamma-photo-viewer`). Since
+2026-07-18: a full outage (aging switch, not the server — see
+`bugs/solved/`), a since-fixed publicly-exposed Swagger/OpenAPI docs
+vulnerability, the Postgres schema-init + `Dockerfile` fixes, single-
+album view + DOM-unload of inactive albums, and the thumbnail
+silent-refresh fix below are all live in production.
 
 **Open, real problems** (each its own file in `bugs/reports/`, no index
 kept - browse that folder directly, each file's `Status:` line says
 where it stands): Redis has no persistent volume (every container
-restart silently logs out every active session); thumbnail/lightbox
-`<img>` tags have no silent-refresh on an expired access token (a
-possible everyday bug, not just a restart edge case); the lightbox
-shows wrong/no content when clicking a not-yet-loaded thumbnail
-(symptom changed after today's redeploy, not yet root-caused); Swagger
-docs public exposure (**fixed**, see `bugs/solved/`).
+restart silently logs out every active session); the lightbox shows
+wrong/no content when clicking a not-yet-loaded thumbnail (not yet
+root-caused); a picture click intermittently fails to show after less
+than 5 minutes, other albums' thumbnails fine (2026-07-19, investigating).
+Fixed since 2026-07-18: Swagger docs public exposure, thumbnail/lightbox
+`<img>` tags having no silent-refresh on an expired access token (both
+**fixed**, see `bugs/solved/`).
 
 **Starting a new session on this topic?** Don't re-derive today's
 history from scratch: `DEPLOYMENT.md` has the current, correct deploy
@@ -61,8 +62,8 @@ read, not several competing drafts.
 
 ## Non-negotiables specific to this topic
 
-- No photo or user data ever leaves the server. No cloud APIs, no
-  telemetry. Sole exception: Let's Encrypt certificate issuance.
+- Inherits [POLICY.md](../policies/POLICY.md)'s closed-by-default rule:
+  no photo or user data ever leaves the server.
 - Two accounts only: joakim.reuterborg@gmail.com (admin),
   elisabeth.reuterborg@gmail.com (member).
 - Same subdomain (`photos.reuterborg.se`) serves both the browser UI and

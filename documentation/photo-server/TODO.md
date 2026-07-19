@@ -164,7 +164,7 @@ confirmed with Joakim rather than assumed:
   carried over; see this file's Docker rule). Refresh-token TTL is 12h
   here (not buzzkit's 30 days) to preserve this spec's original "session
   expires after 12h" intent for a small, private, two-account server;
-  access-token TTL is short (15 min) so a stolen access-token cookie
+  access-token TTL is short (5 min) so a stolen access-token cookie
   alone doesn't grant the full 12h.
 - **Rate limiting is `slowapi` + the same Redis instance**, IP-keyed
   (ported from buzzkit's `app/core/rate_limit.py` near-verbatim) — this
@@ -240,7 +240,7 @@ in `app/auth_routes.py` (ported from buzzkit's dependency, adapted to
 raw psycopg instead of SQLAlchemy), exercised via a new `GET /whoami`
 route.
 
-1.6 (done) Refresh token expires after 12h, access token after 15 min —
+1.6 (done) Refresh token expires after 12h, access token after 5 min —
 already tested in the token-layer prerequisite commit
 (`tests/test_tokens.py`), via a backdated `now` parameter passed to
 token creation rather than a real sleep or a separate mocked-clock
@@ -305,7 +305,7 @@ Phase 1 done:**
    test-driving this**: TODO.md's own wording here already presumed a
    `POST /refresh` endpoint existed ("the old refresh cookie no longer
    authenticates a `/refresh` call") but no step had ever built one —
-   without it, the 15-minute access token had no renewal path at all,
+   without it, the 5-minute access token had no renewal path at all,
    defeating the point of a 12h refresh token. Added `POST /refresh`
    (rotates both tokens, single-use refresh token like buzzkit) alongside
    logout. Tests: refresh rotates and the new cookie still authenticates;

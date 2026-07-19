@@ -1,8 +1,14 @@
 # Data dictionary — photo-server
 
 PostgreSQL, one instance, no separate search or vector store (see
-[README.md](README.md)). "Now" = built in the Phase 0–6 roadmap in
-[TODO.md](TODO.md); "reserved" = column/table exists, not populated yet.
+[README.md](README.md)). "Now" = in scope for the Phase 0–6 roadmap in
+[TODO.md](TODO.md) — **not the same as already implemented**; check
+TODO.md's own phase status for what actually exists today. As of
+2026-07-19 (Phase 1 done, Phase 2 not started), only `users` and
+`audit_log` are real tables in the database (`server/app/db.py`'s
+`ensure_schema()`) — `photos`, `photo_owners`, and `tags` are designed
+but not yet created. "Reserved" = column/table exists in the schema,
+not populated/used yet.
 
 ## Flagged call: `selections` is dropped, not just amended
 
@@ -95,7 +101,8 @@ Schema only, no endpoints (see DEFERRED.md).
 
 Login, mark/unmark-equivalent (tag add/remove), and download actions are
 logged. Browsing itself is not. `details` must never carry raw GPS/EXIF
-values into logs — see the security checklist in TODO.md.
+values into logs — ties to [POLICY.md](../policies/POLICY.md)'s
+location-data rule; see also the security checklist in TODO.md.
 
 ## Tag dimensions
 
@@ -117,6 +124,7 @@ values into logs — see the security checklist in TODO.md.
 | Content tags, face regions/identity | on-device model, phone side; pgvector server-side once it exists | DPFAS phase |
 | People count | derived from face regions | DPFAS phase |
 | Outcome/usage | album tags plus audit_log | now for data, used later |
+| Ownership | photo_owners | now, schema only |
 
 ### Future tag schema (captured 2026-07-18, not designed/committed)
 
@@ -142,4 +150,3 @@ above natively in Postgres - already this project's database, already
 handling similar polymorphic/semi-structured data (see `details JSONB`
 in `audit_log` above). Revisit only if real scale ever demands it, not
 preemptively.
-| Ownership | photo_owners | now, schema only |
