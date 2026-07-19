@@ -3,7 +3,49 @@
 One entry per revision, newest first. Started 2026-07-17 — branch history
 before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
-CLAUDE.md's project-memory note on that trade-off).
+CLAUDE.md's project-memory note on that trade-off). Entries from
+2026-07-19T03:42:35+00:00 onward head same-day entries with a UTC ISO
+8601 timestamp instead of a `(N)` counter (see CLAUDE.md's changelog
+rule and that entry itself for why); earlier `(N)`-numbered headings,
+including the 07-19 duplicate `(3)`, are left exactly as originally
+written — not retroactively renumbered, per the never-rewrite rule
+below.
+
+## 2026-07-19T03:42:35+00:00 — adopt timestamped changelog headings, drop the same-day counter
+
+Follow-up to the documentation audit two entries below: that audit found
+this file's own 2026-07-19 block had two entries both labeled `(3)`,
+caused by two concurrent conversation threads each keeping an
+independent same-day counter with no way to see what number the other
+had already used. Deliberately left unfixed at the time (fixing it meant
+editing already-published entries, against this file's own never-
+rewrite rule) — Joakim asked for the actual convention change instead.
+
+- **Changed**: new entries now head with a UTC ISO 8601 timestamp
+  instead of an incrementing `(N)`. First tried a bare local `HH:MM`;
+  Joakim pointed out that's still coarse enough to collide within the
+  same minute and leaves the timezone implicit. Switched to
+  `datetime.now(timezone.utc).isoformat(timespec="seconds")` —
+  second-precision, explicit UTC, and not a new format at all: it's the
+  exact convention `tools/doc_metrics/log.py` and
+  `tools/commit_cost/log.py` already use for their `recorded_at` field,
+  so the repo now has one timestamp convention instead of two. A
+  timestamp needs no coordination with what a different, concurrent
+  session already wrote, which is exactly the coordination that broke
+  down. Documented in [CLAUDE.md](CLAUDE.md)'s changelog rule; this
+  file's own header now explains where the old convention stops and the
+  new one starts, so a reader isn't left guessing why the heading format
+  changes partway through the file.
+- **Not changed**: no past entries were renumbered or reheaded,
+  including the duplicate `(3)` — that stays as a permanent, visible
+  record of why this convention exists, rather than being quietly
+  smoothed over.
+- Doc-only change (two files); full local test sweep still run per this
+  project's "even docs-only edits" rule: 53 `app/tests` + 49
+  `server/tests`, all green (unaffected, as expected).
+- **Doc size**: `CLAUDE.md` 15,240 → 15,707 chars (+467). This file:
+  47,773 → ~50,300 chars (this entry, approximate — this line's own
+  length feeds back into the count it's reporting).
 
 ## 2026-07-19 (6) — full documentation audit: dead facts, a stale index, a lost root pitch
 

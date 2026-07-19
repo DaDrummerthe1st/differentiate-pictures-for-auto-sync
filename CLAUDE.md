@@ -94,7 +94,14 @@ see the self-sufficiency rule below.
   README.md ↔ HARDWARE.md; check for it whenever adding a "see X" link).
 - **One revision per update**: add a new entry to the top of
   CHANGELOG.md for every meaningful change (what + why, one or two
-  lines) — newest first. Never rewrite or reorder past entries.
+  lines) — newest first. Head each entry with a UTC ISO 8601 timestamp
+  (`datetime.now(timezone.utc).isoformat(timespec="seconds")` — same
+  convention `tools/doc_metrics`/`tools/commit_cost` already use for
+  `recorded_at`), not a same-day `(N)` counter (dropped 2026-07-19 — two
+  concurrent sessions collided on the same number; a timestamp needs no
+  coordination with what a different thread already wrote, and UTC
+  avoids local-timezone ambiguity a bare local time would have). Never
+  rewrite or reorder past entries.
 - **Report the character-count change** for every documentation edit —
   before → after count for the file or folder touched, in the
   CHANGELOG.md entry and in the session's closing summary. Makes drift
