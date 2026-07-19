@@ -129,17 +129,6 @@ see the self-sufficiency rule below.
   preference either.
 - **Ask for constraints before high-blast-radius work**, rather than
   waiting for them to surface organically mid-task.
-- **Never read or search outside this repo's own directory tree without
-  asking first — this is a hard boundary, not friction to engineer
-  around.** The Bash tool's directory-access permission check is a gate
-  separate from command-pattern allow rules (`Bash(*)` does not bypass
-  it — confirmed 2026-07-17, see CHANGELOG). Never propose or add a
-  broad/system-wide path (e.g. `/`, `$HOME`) to
-  `permissions.additionalDirectories` to reduce popups — the popup
-  firing on an outside-repo read is the safeguard working correctly, not
-  a bug to route around. Decided 2026-07-19 after Joakim reacted
-  strongly against even being offered that option ("I never want you to
-  go through my ... laundry").
 - **Copyable text goes in one fenced code block** — any text meant to be
   copied verbatim (commands, handoff prompts, etc.), never inline prose
   mixed with bold/headers.
@@ -192,14 +181,31 @@ current branch — is fine to do without asking each time.
 ## Known, accepted permission popups
 
 Distinct from the hand-over-only list above — not a blast-radius call,
-just commands that hit Claude Code's own hardcoded floor for `docker
-run`/`rmi`/`volume rm`: it always prompts, regardless of any `Bash(*)`/
-allow-list setting (confirmed 2026-07-17, see CHANGELOG — no setting can
-suppress it). Attempt these directly rather than routing around them;
-Joakim approves the popup live when it appears.
+just Claude Code's own hardcoded floors that no `.claude/settings.json`
+allow-list setting can suppress (confirmed 2026-07-17/19, see CHANGELOG).
+Attempt these directly rather than routing around them; Joakim approves
+the popup live when it appears.
 
-- `server/scripts/test_db.sh up` / `test_redis.sh up` — both call
-  `docker run` internally to start disposable test fixtures.
+- **`docker run`/`rmi`/`volume rm`** always prompts, regardless of
+  `Bash(*)`. `server/scripts/test_db.sh up` / `test_redis.sh up` hit this
+  internally to start disposable test fixtures.
+- **Reads outside this repo's own directory tree** always prompt —
+  directory access is a permission dimension separate from
+  command-pattern allow rules. **Never propose or add a broad/
+  system-wide path (e.g. `/`, `$HOME`) to
+  `permissions.additionalDirectories` to work around this** — the popup
+  is the safeguard working correctly, not friction to engineer around.
+  Decided 2026-07-19 after Joakim reacted strongly against even being
+  offered that as a menu option ("I never want you to go through my ...
+  laundry").
+- **This entire "prompts even with `Bash(*)`" behavior is broader and
+  flakier than the two floors above** — plain, already-allowlisted git
+  commands (`git status`, `git commit`, `git push`) intermittently
+  prompt too, reproduced across independent sessions. Tracked upstream
+  as [claude-code#20449](https://github.com/anthropics/claude-code/issues/20449)
+  (closed and locked, but still the closest match) — nothing to fix on
+  this repo's side; don't re-diagnose this from scratch in a future
+  session, extend that upstream report instead.
 
 ## Branching and merging
 

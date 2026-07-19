@@ -5,6 +5,50 @@ before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
 CLAUDE.md's project-memory note on that trade-off).
 
+## 2026-07-19 (5) — confirmed the `Bash(*)`-still-prompts pattern is an upstream Claude Code bug; consolidated CLAUDE.md
+
+Continuation of this same day's permission-prompt investigation (see the
+07-19 entry below, two below this one). That entry's conclusion — "two
+distinct causes, `Bash(*)` works correctly for ordinary in-repo commands"
+— was too narrow: Joakim then showed plain, already-allowlisted
+`git status`/`git commit`/`git push` prompting in other windows, with no
+`cd`-prefix and no outside-repo read involved, ruling that conclusion
+out as the full explanation.
+
+- **Searched for prior reports before filing anything new** (per this
+  project's "ask or search" rule): found
+  [claude-code#20449](https://github.com/anthropics/claude-code/issues/20449) —
+  the canonical upstream issue (three other reports closed into it as
+  duplicates), confirmed reproducing in the VS Code extension
+  specifically, including a bare `git add` prompting despite overlapping
+  allow patterns, as late as 2026-05-17. This is the real explanation for
+  the original "almost every session" complaint — not a config gap on
+  this repo's side.
+- **Attempted to add our specific evidence as a comment** (`Bash(*)` — the
+  broadest possible wildcard — still not fully reliable, plus the
+  same-session inconsistency: one window ran plain `git status`/`git log`
+  silently while others didn't). **Failed**: the issue was auto-locked
+  after 7 days of post-closure inactivity; GitHub rejects new comments on
+  it from anyone. Filing a fresh issue referencing #20449 is the only
+  remaining path, not done yet — Joakim's call whether/when.
+- **Also traced, live in this session, why "four windows" happened
+  today**: not the duplicate-session VS Code bug — that theory was
+  already corrected in the entry above (edited/re-sent prompts fork a new
+  tab, expected behavior) — but a red herring for the *original*
+  complaint regardless, since Joakim confirmed the prompt frequency
+  doesn't depend on session count; #20449 is the actual cause.
+- **CLAUDE.md consolidated**: the "never read outside this repo" bullet
+  added earlier today duplicated "Known, accepted permission popups" in
+  spirit (both are Claude-Code-level hardcoded floors no setting can
+  suppress) but lived in a separate, disconnected part of the file —
+  against this file's own "lean, no restating elsewhere" rule. Merged
+  into that section as a second bullet alongside the Docker floor, and
+  added a third bullet there pointing at #20449 so a future session
+  doesn't re-diagnose this from scratch.
+- **Doc size**: `CLAUDE.md` 14,892 → 15,240 chars (+348, net of removing
+  the standalone bullet and folding it into the existing section with
+  more detail). This file: 38,720 → 41,558 chars (+2,838, this entry).
+
 ## 2026-07-19 (4) — session wrap-up: corrected a stale root-cause theory, opened one live bug
 
 Closing out a very large session (single-album view through idle
