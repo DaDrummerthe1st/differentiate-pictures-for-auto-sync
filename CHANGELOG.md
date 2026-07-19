@@ -11,6 +11,28 @@ including the 07-19 duplicate `(3)`, are left exactly as originally
 written — not retroactively renumbered, per the never-rewrite rule
 below.
 
+## 2026-07-19T04:00:36+00:00 — document today's documentation-cleaning pass as a reusable, on-demand routine
+
+Joakim asked for the goals behind today's audit to be written down as a
+standing routine for "this kind of cleaning job" — explicitly not in
+CLAUDE.md, since it isn't something every session needs to run.
+
+- **New file** `documentation/tooling/CLEANING.md`: the goals (reduce a
+  fresh session's ramp-up time and token cost without losing context,
+  via thorough/precise auditing rather than just brevity), the
+  methodology actually used today (read everything in full, cross-check
+  against code not just other docs, dead-link sweep, structural
+  convention compliance, fix-vs-flag judgment calls, verify before
+  committing), and a pointer back to today's `(6)` entry as the concrete
+  precedent. Placed as a peer to `COMMIT_COST.md`/`DOC_METRICS.md`
+  (recommended over a new `tooling/cleaning/` subfolder + mandatory
+  `TODO.md` — those two established tools don't get their own
+  subfolders either, and this isn't an ongoing topic with its own
+  backlog).
+- `tooling/README.md`'s contents table updated to list it.
+- **Doc size**: `documentation/tooling/CLEANING.md`: 3,401 chars (new).
+  `documentation/tooling/README.md` 3,754 → 3,874 chars (+120).
+
 ## 2026-07-19T03:54:48+00:00 — session wrap-up: commit_cost's known boundary bug reproduced live
 
 While logging commit_cost for the previous entry, noticed this
