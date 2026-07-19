@@ -266,6 +266,17 @@ usual once decided.
   can't go through `authFetch`'s reactive retry - never actually goes
   stale during normal use. `?test_refresh_ms` overrides the interval so
   the new Selenium test doesn't wait out the real 4 minutes.
+- **Follow-up, same day**: Joakim flagged that the fix above has a real
+  side effect - it keeps a session alive forever as long as a tab stays
+  open, even genuinely unattended, with no idle timeout at all. Fixed:
+  `app.js` now tracks real user activity (`mousemove`/`keydown`/`click`/
+  `scroll`/`touchstart`), and `silentRefresh()` skips the proactive
+  `/refresh` call once 30 minutes have passed with none. This doesn't
+  force an abrupt logout - it just stops artificially extending the
+  session past what the existing 5-minute access-token / 12-hour
+  refresh-token lifetimes already impose, restoring the bound that
+  existed before today's silent-refresh fix. `?test_idle_ms` overrides
+  the threshold for the new Selenium test.
 
 ## Other open items (carried over, not yet done)
 

@@ -39,7 +39,21 @@ async function authFetch(url, options) {
   return fetch(url, options);
 }
 
+// Real user activity only - not just "the tab is open" - so a browser
+// left open and unattended doesn't stay logged in forever just because
+// the proactive refresh below would otherwise keep renewing it forever.
+let lastActivityAt = Date.now();
+["mousemove", "keydown", "click", "scroll", "touchstart"].forEach((evt) =>
+  window.addEventListener(evt, () => (lastActivityAt = Date.now()), { passive: true })
+);
+
+// ?test_idle_ms overrides this for Selenium tests, which can't wait out
+// the real 30 minutes.
+const IDLE_TIMEOUT_MS =
+  Number(new URLSearchParams(location.search).get("test_idle_ms")) || 30 * 60 * 1000;
+
 function silentRefresh() {
+  if (Date.now() - lastActivityAt > IDLE_TIMEOUT_MS) return;
   if (_refreshInFlight) return;
   _refreshInFlight = fetch("/refresh", { method: "POST" }).finally(() => {
     _refreshInFlight = null;

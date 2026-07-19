@@ -5,6 +5,28 @@ before this point lives only in `git log` (this branch skipped the
 CHANGELOG discipline the main branch already has, for speed early on; see
 CLAUDE.md's project-memory note on that trade-off).
 
+## 2026-07-19 (3) — idle timeout for the new silent-refresh keep-alive
+
+Joakim caught a real side effect of the entry below's fix immediately
+after it shipped: proactively refreshing the session cookie every 4
+minutes means a browser tab left open indefinitely - genuinely
+unattended, not just idle within a browsing session - now stays logged
+in forever, with no timeout at all.
+
+- **Fixed**: `app.js` tracks real user activity (mouse move/keydown/
+  click/scroll/touch), and `silentRefresh()` now skips its proactive
+  `/refresh` call once 30 minutes have passed with none. Not an abrupt
+  forced logout - it just stops the new mechanism from artificially
+  extending a session past the existing 5-minute access-token / 12-hour
+  refresh-token lifetimes, restoring the bound that already existed
+  before today's fix.
+- **New Selenium test**: confirms zero `/refresh` calls fire once idle
+  (via `?test_idle_ms`, tiny for the test), written and confirmed red
+  before the fix. 8 Selenium + 53 `app/tests` + 49 `server/tests`, all
+  green after.
+- **Doc size**: `documentation/gui/TODO.md` 16,130 → 16,870 chars
+  (+740).
+
 ## 2026-07-19 (2) — real-library feedback: DOM-unload inactive albums, fix sticky-header overlap
 
 Follow-up to the entry below, after deploying to production and testing
