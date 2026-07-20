@@ -62,22 +62,18 @@ See [README.md](README.md) for what belongs here.
 
 ## What changed
 
-(a CLAUDE.md rule tightened, a routine made more explicit, a check
-added - every entry here should end with something that actually
-changed, not just a description of the lapse)
+(a CLAUDE.md rule tightened, a routine made more explicit, a check added - every entry here should end with something that actually changed, not just a description of the lapse)
 EOF
   echo "Created: $FILE"
 else
   cat > "$FILE" <<EOF
 # $TITLE
 
-Status: **investigating, not fixed**. Keep this file as the full
-chronological trail as more is learned - don't overwrite conclusions.
+Status: **investigating, not fixed**. Keep this file as the full chronological trail as more is learned - don't overwrite conclusions.
 
 ## Symptom
 
-(what's actually observed - be concrete, include exact error text/status
-codes where possible)
+(what's actually observed - be concrete, include exact error text/status codes where possible)
 
 ## Investigation log
 

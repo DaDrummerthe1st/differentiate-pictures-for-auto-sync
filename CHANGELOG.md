@@ -2,6 +2,14 @@
 
 One entry per revision, newest first. Started 2026-07-17 — branch history before this point lives only in `git log` (this branch skipped the CHANGELOG discipline the main branch already has, for speed early on; see CLAUDE.md's project-memory note on that trade-off). Entries from 2026-07-19T03:42:35+00:00 onward head same-day entries with a UTC ISO 8601 timestamp instead of a `(N)` counter (see CLAUDE.md's changelog rule and that entry itself for why); earlier `(N)`-numbered headings, including the 07-19 duplicate `(3)`, are left exactly as originally written — not retroactively renumbered, per the never-rewrite rule below.
 
+## 2026-07-20T21:14:43+00:00 — file the Ishotellet bottom-first thumbnail-load bug; fix a stale hard-wrap in the bug-report template
+
+Joakim flagged, in passing, that the "Ishotellet" album's thumbnails visibly loaded bottom-of-page first during the thumbnail-OOM re-test above — confirmed via a clarifying question this means render order, not page auto-scroll. Filed as its own investigation-open file per CLAUDE.md's bug-report rule, not left as a chat aside: [2026-07-20-ishotellet-album-thumbnails-load-bottom-first-instead-of-top-first.md](documentation/bugs/reports/2026-07-20-ishotellet-album-thumbnails-load-bottom-first-instead-of-top-first.md). Leading theory (unconfirmed): native `loading="lazy"` on grid thumbnails interacting unexpectedly with a large album's layout - needs a live DevTools repro, not chased down yet.
+
+Also fixed, found while filling in the report: `tools/create_bug_report/create_bug_report.sh`'s two templates still hard-wrapped their placeholder prose to a fixed column, a leftover from before the repo-wide "one paragraph per line" convention was dropped (2026-07-16/19) - every bug report generated since then inherited that stale wrapping in its placeholder text. Joined the wrapped lines; existing `test_create_bug_report.sh` still passes (doesn't assert on wrapping).
+
+- **Doc size**: new bug report file, 2204 chars. `create_bug_report.sh` unchanged in size (2089 → 2089, pure rewrapping).
+
 ## 2026-07-20T21:07:59+00:00 — re-confirm thumbnail-OOM mitigation live; shelve the pre-compile-thumbnails build
 
 Resumed the paused live-GUI bug-test cycle. Joakim re-tested thumbnail loading on `photos.reuterborg.se` against an uncached album — no broken images, no unresponsiveness, just consistent per-thumbnail latency: matches the existing "mitigated, not fully fixed" status exactly, logged in the thumbnail-OOM report's investigation log.
