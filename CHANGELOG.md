@@ -2,6 +2,14 @@
 
 One entry per revision, newest first. Started 2026-07-17 — branch history before this point lives only in `git log` (this branch skipped the CHANGELOG discipline the main branch already has, for speed early on; see CLAUDE.md's project-memory note on that trade-off). Entries from 2026-07-19T03:42:35+00:00 onward head same-day entries with a UTC ISO 8601 timestamp instead of a `(N)` counter (see CLAUDE.md's changelog rule and that entry itself for why); earlier `(N)`-numbered headings, including the 07-19 duplicate `(3)`, are left exactly as originally written — not retroactively renumbered, per the never-rewrite rule below.
 
+## 2026-07-20T21:07:59+00:00 — re-confirm thumbnail-OOM mitigation live; shelve the pre-compile-thumbnails build
+
+Resumed the paused live-GUI bug-test cycle. Joakim re-tested thumbnail loading on `photos.reuterborg.se` against an uncached album — no broken images, no unresponsiveness, just consistent per-thumbnail latency: matches the existing "mitigated, not fully fixed" status exactly, logged in the thumbnail-OOM report's investigation log.
+
+He then asked to build the already-designed pre-compile-thumbnails fix, with three added requirements (cache alongside the photo files instead of its own volume, cleanup on a delete-flag, multi-user readiness). Investigated before building (no code written) and found real forks in all three: the photos mount is read-only in both compose files, no delete-flag feature exists anywhere in the running service to hook into, and no per-user ownership model exists yet either. Computed real disk-size numbers along the way: current 340×340/quality-82 thumbnails run ~15-30KB each, so even 20,000 of them (~400MB) is under 0.02% of the server's 2.7TB free ZFS space — disk size was not actually a blocking constraint by the numbers. Joakim opted to shelve the build anyway and wait for the incoming RAM upgrade to see if it addresses the latency differently, rather than take on the added scope now.
+
+- **Doc size**: `2026-07-17-thumbnail-oom-under-load.md` 5718 → 6242 (+524), `2026-07-17-pre-compile-thumbnails-ahead-of-time.md` 3315 → 5486 (+2171), `documentation/gui/TODO.md` 17507 → 17486 (-21).
+
 ## 2026-07-20T20:48:10+00:00 — formalize the documentation cleaning protocol: ordering, a new script, referenced from CLAUDE.md
 
 Joakim asked for an explicit cleanup protocol (with scripts, not just prose) covering three specific rules: prefer a cross-reference over duplicated content, actively compact/merge prose rather than only deleting exact duplicates, and keep `CLAUDE.md` itself shrinking over time. `CLEANING.md` already existed (built 2026-07-19) but had never been referenced from `CLAUDE.md` itself, and the redundant-phrase scan used in yesterday's cleaning pass (2026-07-20T19:43:47+00:00 entry) was done ad hoc, not as a real tool.
