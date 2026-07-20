@@ -46,6 +46,7 @@ CODE_DIRS_WITH_STUB_READMES = [
     "tools/doc_metrics",
     "tools/create_bug_report",
     "tools/documentation_checks",
+    "tools/redundancy_scan",
 ]
 STUB_MAX_CHARS = 400
 
