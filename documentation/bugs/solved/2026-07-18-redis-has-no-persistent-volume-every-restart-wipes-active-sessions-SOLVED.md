@@ -1,6 +1,10 @@
 # Redis has no persistent volume - every restart wipes active sessions
 
-Status: **root cause confirmed, not fixed**.
+Status: **fixed, 2026-07-20**. `docker-compose.prod.yml`'s `redis` service now mounts a named `redis_data` volume at `/data` and runs with `--appendonly yes`, so refresh tokens (and their TTLs) survive a container restart.
+
+## Fix applied, 2026-07-20
+
+Added `redis_data:/data` to the `redis` service's `volumes:` and `--appendonly yes` to its `command:` in `docker-compose.prod.yml`, plus the matching top-level `redis_data:` volume declaration - same shape as `postgres_data`. Verified locally with a disposable `redis:8.8-alpine` container (same image/version, same flags, its own throwaway volume - not the real prod stack): set a key with `EX 3600`, restarted the container, confirmed the key and its remaining TTL were both intact afterward. Not yet verified against the actual production stack (that restart is a live, user-facing action - hand this off to Joakim to redeploy and confirm a real logged-in session survives a `docker compose restart redis` before fully trusting it end-to-end).
 
 ## Symptom
 
