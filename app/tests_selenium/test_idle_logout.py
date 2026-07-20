@@ -10,9 +10,9 @@ from .conftest import _SELENIUM_URL, _valid_access_token
 
 def test_silent_refresh_stops_after_idle_timeout(app_server):
     # test_idle_ms is tiny and well below test_refresh_ms's first tick,
-    # so by the time the timer ever checks, "no activity since the
-    # skipFolderBtn click" already counts as idle - isolates the
-    # idle-skip behavior without needing to race real timing.
+    # so by the time the timer ever checks, "no activity since page
+    # load" already counts as idle - isolates the idle-skip behavior
+    # without needing to race real timing.
     options = Options()
     options.add_argument("--headless=new")
     options.add_argument("--window-size=1024,700")
@@ -33,7 +33,6 @@ def test_silent_refresh_stops_after_idle_timeout(app_server):
             };
             """
         )
-        driver.find_element(By.ID, "skipFolderBtn").click()
         WebDriverWait(driver, 10).until(
             lambda d: len(d.find_elements(By.CSS_SELECTOR, ".nav-pill")) == 3
         )

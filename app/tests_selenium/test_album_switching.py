@@ -63,7 +63,6 @@ def test_active_album_persists_across_reload(driver, app_server):
     WebDriverWait(driver, 10).until(lambda d: _dom_albums(d) == ["AlbumC"])
 
     driver.get(app_server + "/")
-    driver.find_element(By.ID, "skipFolderBtn").click()
     _wait_for_pills(driver)
     time.sleep(0.2)
     assert _dom_albums(driver) == ["AlbumC"]

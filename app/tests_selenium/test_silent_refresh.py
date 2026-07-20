@@ -39,7 +39,6 @@ def test_gallery_proactively_calls_refresh_before_token_expires(app_server):
             };
             """
         )
-        driver.find_element(By.ID, "skipFolderBtn").click()
         WebDriverWait(driver, 10).until(
             lambda d: len(d.find_elements(By.CSS_SELECTOR, ".nav-pill")) == 3
         )

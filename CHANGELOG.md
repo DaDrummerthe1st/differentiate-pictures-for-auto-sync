@@ -2,6 +2,16 @@
 
 One entry per revision, newest first. Started 2026-07-17 — branch history before this point lives only in `git log` (this branch skipped the CHANGELOG discipline the main branch already has, for speed early on; see CLAUDE.md's project-memory note on that trade-off). Entries from 2026-07-19T03:42:35+00:00 onward head same-day entries with a UTC ISO 8601 timestamp instead of a `(N)` counter (see CLAUDE.md's changelog rule and that entry itself for why); earlier `(N)`-numbered headings, including the 07-19 duplicate `(3)`, are left exactly as originally written — not retroactively renumbered, per the never-rewrite rule below.
 
+## 2026-07-20T20:18:54+00:00 — remove the upfront folder-choice screen, offer it lazily instead
+
+Built the download-folder UX rework flagged as designed-but-not-built in `documentation/gui/TODO.md`'s "Open from the 2026-07-18 session" — Joakim asked to implement it after finding the note. On a new branch `mamma-photo-viewer-folder-ux` (off `mamma-photo-viewer`), per CLAUDE.md's ask-before-new-branch rule.
+
+- **Removed**: the `#setup` screen (`<h1>Mammas bilder</h1>` + "choose folder"/"skip" buttons) that used to block the gallery on every load without a restorable folder handle. The gallery now shows immediately.
+- **Added**: `maybeOfferFolderPicker()` in `app.js` offers the native folder picker lazily, the first time any save action happens (single lightbox download or bulk) — not upfront. A decline, cancel, or unsupported browser is remembered forever (`localStorage`'s `mpv_folder_prompt_done`), so it never asks again; re-picking afterward happens only via clicking the toolbar's folder-status label, now a real `<button>` (`#downloadFolderLabel`).
+- **Deviation from the original TODO note, confirmed via a web search before implementing** (logged in `~/.claude/research_log.jsonl`, MDN/Chrome docs): "hoverable to show the full path" isn't achievable — `FileSystemDirectoryHandle` only ever exposes the picked folder's own `.name`, never a full OS path, by deliberate browser privacy design. The hover title shows the folder name instead; flagged to Joakim and confirmed before building rather than silently dropped or guessed around.
+- TDD: 5 new Selenium tests (`app/tests_selenium/test_folder_prompt.py`) written and confirmed failing for the right reason before implementation; `conftest.py` and 3 existing Selenium tests that clicked the now-removed `skipFolderBtn` updated to match. `app/tests` (53) and `app/tests_selenium` (13) both green.
+- **Doc size**: `documentation/gui/README.md` 7810 → 8157 (+347), `documentation/gui/TODO.md` 16741 → 17507 (+766).
+
 ## 2026-07-20T19:43:47+00:00 — trim genuine cross-file redundancy, found by scanning for repeated phrases
 
 Joakim asked for a pass reading every doc for redundancy and cutting characters "by making the text more reliable" — with an explicit flag on my part first that this project's own CLEANING.md warns against optimizing for char count over correctness, and CLAUDE.md requires `Why:` reasoning to stay attached to rules, not get stripped for size. Used an objective signal instead of subjective judgment calls: scanned every file (except the append-only CHANGELOG.md) for word-sequences repeated verbatim across 2+ files, at both a 12-word and 10-word window, then manually reviewed every group found rather than cutting on the signal alone.

@@ -7,20 +7,6 @@ body {
 }
 .hidden { display: none !important; }
 
-#setup {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 1rem;
-  padding: 2rem;
-}
-#setup h1 { font-size: 2.2rem; margin: 0; }
-#setup p { font-size: 1.3rem; max-width: 30rem; }
-.error { color: #ff8080; }
-
 .big-btn {
   font-size: 1.6rem;
   padding: 1.2rem 2.4rem;
@@ -31,8 +17,6 @@ body {
   cursor: pointer;
 }
 .big-btn:active { background: #326ad6; }
-.skip-btn { background: #555; font-size: 1.1rem; padding: 0.7rem 1.4rem; }
-.skip-btn:active { background: #3d3d3d; }
 
 #stickyHeader {
   position: sticky;
@@ -76,7 +60,18 @@ body {
   cursor: pointer;
 }
 #downloadAllBtn:disabled { opacity: 0.6; cursor: default; }
-#downloadFolderLabel { opacity: 0.7; font-size: 1rem; }
+#downloadFolderLabel {
+  opacity: 0.7;
+  font-size: 1rem;
+  background: none;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline dotted;
+}
+#downloadFolderLabel:hover { opacity: 1; }
 
 #albumNavBar {
   display: flex;

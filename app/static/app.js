@@ -201,6 +201,7 @@ async function uniqueFileHandle(dirHandle, filename) {
 }
 
 async function saveImage(relpath) {
+  await maybeOfferFolderPicker();
   if (downloadDirHandle) {
     const res = await authFetch(`/original?p=${encodeURIComponent(relpath)}`);
     if (!res.ok) throw new Error("download failed: " + relpath);
@@ -323,18 +324,55 @@ document.getElementById("cancelDownloadBtn").addEventListener("click", () => {
   bulkDownloadCancelled = true;
 });
 
-async function setupDownloadFolder() {
-  const setupError = document.getElementById("setupError");
+const FOLDER_PROMPT_DONE_KEY = "mpv_folder_prompt_done";
+
+async function pickDownloadFolder() {
   try {
     const handle = await window.showDirectoryPicker({ mode: "readwrite" });
-    await idbSet("dir", handle);
     downloadDirHandle = handle;
+    await primeUsedNames();
+    updateDownloadFolderLabel();
     logEvent("folder_picked", handle.name || "");
-    enterGallery();
-  } catch (e) {
-    if (e.name !== "AbortError") {
-      setupError.textContent = "Kunde inte välja mapp: " + e.message;
+    try {
+      await idbSet("dir", handle);
+    } catch (e) {
+      // best-effort persistence only - losing this just means the
+      // folder won't auto-restore on the next visit, not a functional
+      // failure right now
     }
+    return true;
+  } catch (e) {
+    logEvent("folder_skipped");
+    return false;
+  }
+}
+
+// Offered once, lazily, on the first actual save action rather than
+// blocking the gallery upfront - see documentation/gui/TODO.md's
+// "Download-folder UX rework". "Once" is remembered forever via
+// localStorage so a decline/cancel doesn't nag on every download;
+// re-picking afterward only happens via the toolbar label click.
+async function maybeOfferFolderPicker() {
+  if (downloadDirHandle) return;
+  if (localStorage.getItem(FOLDER_PROMPT_DONE_KEY)) return;
+  localStorage.setItem(FOLDER_PROMPT_DONE_KEY, "1");
+  if (typeof window.showDirectoryPicker !== "function") return;
+  await pickDownloadFolder();
+}
+
+function updateDownloadFolderLabel() {
+  const label = document.getElementById("downloadFolderLabel");
+  if (downloadDirHandle) {
+    // The File System Access API never exposes a full filesystem path
+    // (deliberate browser privacy sandboxing) - only the picked
+    // folder's own name is ever available, so that's all the hover
+    // title can show too.
+    const name = downloadDirHandle.name || "vald mapp";
+    label.textContent = "Bilder sparas i: " + name;
+    label.title = name;
+  } else {
+    label.textContent = "Nedladdningar sparas enligt webbläsarens nedladdningsinställning";
+    label.removeAttribute("title");
   }
 }
 
@@ -365,11 +403,7 @@ async function enterGallery() {
   if (downloadDirHandle) {
     await primeUsedNames();
   }
-  document.getElementById("setup").classList.add("hidden");
-  document.getElementById("gallery").classList.remove("hidden");
-  document.getElementById("downloadFolderLabel").textContent = downloadDirHandle
-    ? "Bilder sparas i: " + (downloadDirHandle.name || "vald mapp")
-    : "Nedladdningar sparas enligt webbläsarens nedladdningsinställning";
+  updateDownloadFolderLabel();
   loadTree();
   setInterval(silentRefresh, SILENT_REFRESH_INTERVAL_MS);
 }
@@ -779,35 +813,11 @@ async function loadTree() {
   renderTree(sections);
 }
 
-document.getElementById("pickFolderBtn").addEventListener("click", setupDownloadFolder);
-document.getElementById("skipFolderBtn").addEventListener("click", () => {
-  downloadDirHandle = null;
-  logEvent("folder_skipped");
-  enterGallery();
+document.getElementById("downloadFolderLabel").addEventListener("click", () => {
+  pickDownloadFolder();
 });
 
-function checkCompatibility() {
-  if (typeof window.showDirectoryPicker === "function") {
-    document.getElementById("pickFolderBtn").classList.remove("hidden");
-    return;
-  }
-  document.getElementById("pickFolderBtn").classList.add("hidden");
-  const setupError = document.getElementById("setupError");
-  if (!window.isSecureContext) {
-    setupError.textContent =
-      "Sidan är inte öppnad över https://. Kontrollera att adressen i webbläsaren " +
-      "börjar med https:// (inte http://). Adress just nu: " + location.href;
-  } else {
-    setupError.textContent =
-      "Den här webbläsaren stöder inte mappval (Microsoft Edge eller Google Chrome " +
-      "behövs för det) - men du kan fortsätta ändå, nedladdningar sparas då enligt " +
-      "webbläsarens vanliga nedladdningsinställning.";
-  }
-}
-
 (async function init() {
-  checkCompatibility();
-  if (await tryRestoreDownloadFolder()) {
-    enterGallery();
-  }
+  await tryRestoreDownloadFolder();
+  enterGallery();
 })();

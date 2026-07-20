@@ -108,7 +108,6 @@ def driver(app_server):
         d.get(app_server + "/")
         d.add_cookie({"name": "photo_server_access", "value": _valid_access_token(), "path": "/"})
         d.get(app_server + "/")
-        d.find_element("id", "skipFolderBtn").click()
         yield d
     finally:
         d.quit()
