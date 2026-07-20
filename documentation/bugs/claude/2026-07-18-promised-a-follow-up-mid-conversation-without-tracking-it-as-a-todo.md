@@ -1,6 +1,6 @@
 # Promised a follow-up mid-conversation without tracking it as a todo
 
-A routine that should have run per an existing rule, and didn't - or a claim made without properly checking it first. See [README.md](README.md) for what belongs here.
+See [README.md](README.md) for what belongs here.
 
 ## What happened
 

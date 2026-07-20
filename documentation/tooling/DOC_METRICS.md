@@ -1,6 +1,6 @@
 # doc_metrics
 
-Moved here from `tools/doc_metrics/README.md`, per [CLAUDE.md](../../CLAUDE.md)'s documentation-layout rule — all documentation lives under `documentation/`, including tooling notes. The code itself stays at `tools/doc_metrics/`.
+Moved here from `tools/doc_metrics/README.md`, per [CLAUDE.md](../../CLAUDE.md)'s documentation-layout rule. Code stays at `tools/doc_metrics/`.
 
 **Purpose:** a durable ledger of what each iteration of work cost in documentation, and what it paid for — not just a char-count trend line. Every logged commit answers three questions at once: how much did the repo's docs grow or shrink, in service of which TODO item or outcome (`task`, see below), and — the mechanical baseline this was originally built for — measured the same consistent way every time, instead of manually eyeballed with `wc -c` (which counts bytes, not characters, and diverges from a true count once em dashes or other multi-byte characters are involved). The character-count-change rule this serves lives in [CLAUDE.md](../../CLAUDE.md). For what a commit *cost* (real billed tokens/dollars) rather than what it *produced* in doc size, see [COMMIT_COST.md](COMMIT_COST.md) — a different axis, not a duplicate of this tool.
 

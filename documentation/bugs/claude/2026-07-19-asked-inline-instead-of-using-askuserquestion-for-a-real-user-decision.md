@@ -1,6 +1,6 @@
 # Asked inline instead of using AskUserQuestion for a real user decision
 
-A routine that should have run per an existing rule, and didn't - or a claim made without properly checking it first. See [README.md](README.md) for what belongs here.
+See [README.md](README.md) for what belongs here.
 
 ## What happened
 

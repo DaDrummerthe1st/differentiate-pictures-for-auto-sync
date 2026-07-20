@@ -1,6 +1,6 @@
 # commit_cost
 
-Moved here from `tools/commit_cost/README.md`, per [CLAUDE.md](../../CLAUDE.md)'s documentation-layout rule — all documentation lives under `documentation/`, including tooling notes. The code itself stays at `tools/commit_cost/`.
+Moved here from `tools/commit_cost/README.md`, per [CLAUDE.md](../../CLAUDE.md)'s documentation-layout rule. Code stays at `tools/commit_cost/`.
 
 **Purpose:** the real cost of each commit, in actual billed tokens and dollars — not an estimate derived from file size. [DOC_METRICS.md](DOC_METRICS.md) tracks documentation *size*; this tracks what it *cost to produce a given commit*, which are unrelated things — a one-line fix can cost thousands of tokens in back-and-forth, and a large generated file can cost almost nothing.
 
