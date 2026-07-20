@@ -2,6 +2,14 @@
 
 One entry per revision, newest first. Started 2026-07-17 — branch history before this point lives only in `git log` (this branch skipped the CHANGELOG discipline the main branch already has, for speed early on; see CLAUDE.md's project-memory note on that trade-off). Entries from 2026-07-19T03:42:35+00:00 onward head same-day entries with a UTC ISO 8601 timestamp instead of a `(N)` counter (see CLAUDE.md's changelog rule and that entry itself for why); earlier `(N)`-numbered headings, including the 07-19 duplicate `(3)`, are left exactly as originally written — not retroactively renumbered, per the never-rewrite rule below.
 
+## 2026-07-20T21:27:17+00:00 — session wrap-up: cross-reference the new bug, forward-effectiveness note
+
+Session-close sweep: `tools/documentation_checks/run.py` clean (dead links, topic `TODO.md`s, stub sizes), no dangling Docker images/containers, `python -m unittest` (29 tests across `redundancy_scan`/`documentation_checks`/`doc_metrics`) green - `app/`/`server/` untouched since the last full test run this session, so not re-run. Added the still-missing cross-reference from `documentation/gui/TODO.md` to today's new Ishotellet bug report, matching the existing pattern for other open bugs in that file (e.g. the lightbox bug).
+
+**Forward-effectiveness note**: the stale hard-wrap found in `create_bug_report.sh` (fixed earlier this session) is a specific instance of a general gap - the 2026-07-16/19 repo-wide convention drop only touched *existing* files, never checked code that *generates* docs (shell-script templates, `cat <<EOF` blocks). A future repo-wide convention change should explicitly grep `tools/*/`'s heredocs/templates too, not just `*.md` files, or the old convention keeps quietly reproducing itself in every new file the tool creates.
+
+- **Doc size**: `documentation/gui/TODO.md` 17486 → 17863 (+377).
+
 ## 2026-07-20T21:24:04+00:00 — record Ishotellet's real file count/size in the bug report
 
 Joakim ran `find Ishotellet -type f | wc -l` / `du -sh Ishotellet` directly on the server from `/tank/momfiles`: 354 files, 718M. Logged into the investigation log as the size data point the report's "next session" note was waiting on. Also fixed a leftover hard-wrapped Status line in that same file (created just before the template fix in the previous entry, so it still carried the old wrapping).

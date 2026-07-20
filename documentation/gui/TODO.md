@@ -52,6 +52,7 @@ Idea floated by Joakim 2026-07-17, not decided or started: today's `_log_event()
 - **Thumbnail pre-compile — shelved 2026-07-20** - see `../bugs/reports/2026-07-17-pre-compile-thumbnails-ahead-of-time.md`'s "Shelved" section: an investigation into three added requirements (cache location, delete-flag cleanup, multi-user readiness) surfaced real open forks in all three; Joakim opted to wait for the incoming RAM upgrade instead of building now.
 - **Grid pagination**, a separate/complementary idea to pre-compiling - see `../bugs/reports/2026-07-18-paginate-the-grid-instead-of-loading-all-thumbnails-at-once.md`. Candidate, not evaluated.
 - **Lightbox bug, not root-caused** - see `../bugs/reports/2026-07-18-lightbox-shows-previous-photo-when-clicking-a-not-yet-loaded-thumbnail.md`. Symptom changed after today's redeploy (now shows nothing instead of the previous photo) - needs a live repro with DevTools open, not more static code reading.
+- **New, 2026-07-20: thumbnails load bottom-first in a large album** - see `../bugs/reports/2026-07-20-ishotellet-album-thumbnails-load-bottom-first-instead-of-top-first.md`. Confirmed on the "Ishotellet" album (354 files, 718M); leading theory is native `loading="lazy"` interacting unexpectedly with a large album's layout - needs a live DevTools repro, not chased down yet.
 
 ## 2026-07-19 session: single-album view, and a local-dev gap found along the way
 
