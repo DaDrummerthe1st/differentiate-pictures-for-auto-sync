@@ -2,6 +2,11 @@
 
 One entry per revision, newest first. Started 2026-07-17 — branch history before this point lives only in `git log` (this branch skipped the CHANGELOG discipline the main branch already has, for speed early on; see CLAUDE.md's project-memory note on that trade-off). Entries from 2026-07-19T03:42:35+00:00 onward head same-day entries with a UTC ISO 8601 timestamp instead of a `(N)` counter (see CLAUDE.md's changelog rule and that entry itself for why); earlier `(N)`-numbered headings, including the 07-19 duplicate `(3)`, are left exactly as originally written — not retroactively renumbered, per the never-rewrite rule below.
 
+## 2026-07-20T21:24:04+00:00 — record Ishotellet's real file count/size in the bug report
+
+Joakim ran `find Ishotellet -type f | wc -l` / `du -sh Ishotellet` directly on the server from `/tank/momfiles`: 354 files, 718M. Logged into the investigation log as the size data point the report's "next session" note was waiting on. Also fixed a leftover hard-wrapped Status line in that same file (created just before the template fix in the previous entry, so it still carried the old wrapping).
+- **Doc size**: `2026-07-20-ishotellet-...md` 2204 → 2570 (+366).
+
 ## 2026-07-20T21:14:43+00:00 — file the Ishotellet bottom-first thumbnail-load bug; fix a stale hard-wrap in the bug-report template
 
 Joakim flagged, in passing, that the "Ishotellet" album's thumbnails visibly loaded bottom-of-page first during the thumbnail-OOM re-test above — confirmed via a clarifying question this means render order, not page auto-scroll. Filed as its own investigation-open file per CLAUDE.md's bug-report rule, not left as a chat aside: [2026-07-20-ishotellet-album-thumbnails-load-bottom-first-instead-of-top-first.md](documentation/bugs/reports/2026-07-20-ishotellet-album-thumbnails-load-bottom-first-instead-of-top-first.md). Leading theory (unconfirmed): native `loading="lazy"` on grid thumbnails interacting unexpectedly with a large album's layout - needs a live DevTools repro, not chased down yet.
