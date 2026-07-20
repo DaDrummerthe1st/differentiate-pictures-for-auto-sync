@@ -1,6 +1,8 @@
 # Deployment — photo-server + photo-viewer, production stack
 
-Everything here runs on the home server (192.168.1.10, see [HARDWARE.md](HARDWARE.md) — including its currently-overridden memtest gate, re-check that note before running anything below). Written, not run, by the AI session per [POLICY.md](../policies/POLICY.md)'s "Deployment and system access" rule — copy/paste these yourself.
+Everything here runs on the home server (192.168.1.10, see [HARDWARE.md](HARDWARE.md) for the SSH user and its currently-overridden memtest gate, re-check that note before running anything below). Written, not run, by the AI session per [POLICY.md](../policies/POLICY.md)'s "Deployment and system access" rule — copy/paste these yourself.
+
+SSH in first (see HARDWARE.md's table for the user): `ssh joakim@192.168.1.10`
 
 ## Prerequisites (must be done first)
 

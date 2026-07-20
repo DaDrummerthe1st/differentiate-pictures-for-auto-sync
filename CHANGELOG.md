@@ -2,6 +2,11 @@
 
 One entry per revision, newest first. Started 2026-07-17 — branch history before this point lives only in `git log` (this branch skipped the CHANGELOG discipline the main branch already has, for speed early on; see CLAUDE.md's project-memory note on that trade-off). Entries from 2026-07-19T03:42:35+00:00 onward head same-day entries with a UTC ISO 8601 timestamp instead of a `(N)` counter (see CLAUDE.md's changelog rule and that entry itself for why); earlier `(N)`-numbered headings, including the 07-19 duplicate `(3)`, are left exactly as originally written — not retroactively renumbered, per the never-rewrite rule below.
 
+## 2026-07-20T20:36:39+00:00 — document the production server's SSH user
+
+Joakim asked me to remember the server's SSH user (`joakim`) for future pull/restart commands — recorded in `HARDWARE.md`'s hardware table (the existing "how to reach 192.168.1.10" home) instead of private AI memory, per this repo's self-sufficiency rule: a fresh session or a human dev needs this fact too, not just this conversation. `DEPLOYMENT.md` now opens with the explicit `ssh joakim@192.168.1.10` step, pointing at HARDWARE.md's table rather than repeating the user inline a second place.
+- **Doc size**: `HARDWARE.md` 5013 → 5037 (+24), `DEPLOYMENT.md` 7560 → 7649 (+89).
+
 ## 2026-07-20T20:18:54+00:00 — remove the upfront folder-choice screen, offer it lazily instead
 
 Built the download-folder UX rework flagged as designed-but-not-built in `documentation/gui/TODO.md`'s "Open from the 2026-07-18 session" — Joakim asked to implement it after finding the note. On a new branch `mamma-photo-viewer-folder-ux` (off `mamma-photo-viewer`), per CLAUDE.md's ask-before-new-branch rule.

@@ -10,6 +10,7 @@ The machine this runs on. It also hosts the ZFS pool other things depend on, so 
 | Storage | 3.6TB ZFS pool at `/tank`, 2.7TB free |
 | OS | Ubuntu 24.04 LTS, Python 3.12.3 |
 | LAN address | 192.168.1.10, under Joakim's desk |
+| SSH user | `joakim` |
 | Router | Ubiquiti EdgeRouter X, firmware 3.0.1 (Joakim, 2026-07-17) — LAN gateway `192.168.1.1`. Port-forwarding 80/443 -> 192.168.1.10 needed for the photo-server P0 deploy; see [DEPLOYMENT.md](DEPLOYMENT.md) and CHANGELOG for current status — don't assume done, this drifted stale once already (2026-07-17: an SSH-based attempt to set it silently failed since SSH wasn't enabled on the router yet, and the doc briefly said "configured" when it wasn't). |
 | Switch | Linksys LGS1xx-series (unmanaged — no web UI, no port-level software diagnostics), between the server and the router — the server does **not** plug directly into the EdgeRouter. Found 2026-07-18 during an outage investigation this table didn't previously document at all: the switch had run continuously for "probably a couple of years" with no reboot and got into a stuck port state (`NO-CARRIER` on the server's NIC); a power cycle fixed it immediately. See `documentation/bugs/solved/2026-07-18-photos-reuterborg-se-unreachable-SOLVED.md`. Worth a periodic preventative reboot given this history — not automated, no schedule set. |
 
