@@ -1,252 +1,63 @@
 # Working agreement
 
-This file is the working agreement between Joakim and any AI session (or
-future human contributor) working in this repo. The repo is the memory —
-see the self-sufficiency rule below.
+This file is the working agreement between Joakim and any AI session (or future human contributor) working in this repo. The repo is the memory — see the self-sufficiency rule below.
 
 ## Starting a session
 
-This file is the only doc guaranteed to be loaded automatically — it
-holds the rules, not the current state. Before assuming anything about
-where the project actually stands, read
-[documentation/README.md](documentation/README.md)'s folder index, then
-the relevant topic's own README/TODO — most carry a dated `Status:` line
-kept current for exactly this reason.
+This file is the only doc guaranteed to be loaded automatically — it holds the rules, not the current state. Before assuming anything about where the project actually stands, read [documentation/README.md](documentation/README.md)'s folder index, then the relevant topic's own README/TODO — most carry a dated `Status:` line kept current for exactly this reason.
 
 ## Non-negotiables
 
-- **Security and privacy first**: consider it for every change, not just
-  ones that look security-related — a first-class constraint from day
-  one, not something bolted on later. Specifics (what data is sensitive,
-  why) live in [POLICY.md](documentation/policies/POLICY.md), not
-  repeated here.
-- **Test-Driven Development, no exceptions for "small" or "obvious"
-  code**: write a failing test before the implementation, every time,
-  confirm it actually fails for the expected reason, then implement. Run
-  the fast in-process `app/tests` before every commit, even a docs-only
-  one. Also run the container-based `server/tests` suite before every
-  commit that touches `server/`/`app/` code — for a doc-only commit,
-  skip re-running it if it already ran clean earlier in the same session
-  against the same code (repeating it against unchanged code is pure
-  cost, not insurance; decided 2026-07-19 after doing exactly that
-  twice with nothing to catch). See
-  `documentation/bugs/claude/2026-07-19-skipped-tdd-for-a-small-helper-reasoning-it-wouldn-t-matter.md`
-  for why the old "where practical" qualifier was dropped 2026-07-16.
-- **Check for newest dependency versions before every numbered TODO
-  step** (0.1, 0.2, 1.3, etc. — not just once per phase), not only when a
-  CVE prompts it. If a newer version is available, update to it as part
-  of that step rather than starting the step on a stale pin. If the
-  newer version turns out incompatible or breaks a test once updated,
-  fixing that break is itself the priority — don't quietly revert to the
-  old pin and move on; the step isn't done until the suite is green on
-  the current version. Decided 2026-07-16.
-- **Ask or search — never guess.** If a fact is unknown or uncertain (a
-  library's current API/version, a legal/compliance detail, a business
-  rule, anything project-specific not already stated here) stop and either
-  ask directly or run a real web search. Never present an assumption or a
-  plausible-sounding guess as fact.
-- **This repo is fully self-sufficient — no external memory required.** A
-  human developer, or a fresh AI session with zero prior context, must be
-  able to pick this project up entirely from what's checked in here.
-  Decision history, status, future plans, and reusable lessons belong in
-  this repo (CLAUDE.md, POLICY.md, CHANGELOG.md, the relevant
-  README/TODO per topic) — never only in a private/local AI memory store.
-- **Documentation stays current**: when a change affects schema, API
-  surface, or architecture, update the relevant doc in the same pass —
-  don't let docs drift from what the code does. (Known existing drift:
-  see [documentation/picture-handling/TODO.md](documentation/picture-handling/TODO.md)
-  for the MySQL-vs-PostgreSQL mismatch.)
-- **Never claim an action was taken without checking it against the tool
-  calls actually made that turn — not just file edits, any completed-
-  action claim** ("logged," "added," "fixed," "ran," "verified,"
-  "confirmed," etc.). Before sending any reply that asserts something is
-  already done, check the corresponding tool call actually ran in this
-  turn — don't infer it from intent or from having described the plan in
-  the response text. This repo *is* the durable record for anything
-  discussed in a session — a false "done" claim isn't a small slip, it's
-  a hole in the only safety net that exists. (Distinct from the next
-  rule below, which covers *forward*-looking promises, not backward-
-  looking completion claims.) See
-  `documentation/bugs/claude/2026-07-18-claimed-a-doc-edit-was-made-when-it-wasn-t.md`
-  for why this covers every action-completion claim, not just file edits.
-- **A promised follow-up gets a TodoWrite item, not just a sentence.**
-  Whenever a reply says something like "I'll present this for
-  confirmation," "I'll come back to this," or "let me get back to you
-  on X" — add a `TodoWrite` item for it in that same turn, don't just
-  state it in prose. A promise that only exists as text is invisible to
-  any later self-check; a tracked item survives interruptions. See
-  `documentation/bugs/claude/2026-07-18-promised-a-follow-up-mid-conversation-without-tracking-it-as-a-todo.md`.
-- **Lean, exact, and compact**: no filler, no restating what's already
-  documented elsewhere, no speculative abstraction for hypothetical
-  future needs. Prefer the more precise word or number over the vaguer
-  one — effective text over more text. Documentation should be thorough
-  but slim — sectioned, skimmable, no duplication between files.
-  Cross-references must terminate: a "see X for why" pointer has to land
-  on the actual explanation, not on another pointer back — that's a
-  circular reference, not a cross-reference, and it silently loses the
-  information both files were supposed to preserve (caught once in
-  README.md ↔ HARDWARE.md; check for it whenever adding a "see X" link).
-- **One revision per update**: add a new entry to the top of
-  CHANGELOG.md for every meaningful change (what + why, one or two
-  lines) — newest first. Head each entry with a UTC ISO 8601 timestamp
-  (`datetime.now(timezone.utc).isoformat(timespec="seconds")` — same
-  convention `tools/doc_metrics`/`tools/commit_cost` already use for
-  `recorded_at`), not a same-day `(N)` counter (dropped 2026-07-19 — two
-  concurrent sessions collided on the same number; a timestamp needs no
-  coordination with what a different thread already wrote, and UTC
-  avoids local-timezone ambiguity a bare local time would have). Never
-  rewrite or reorder past entries.
-- **Report the character-count change** for every documentation edit —
-  before → after count for the file or folder touched, in the
-  CHANGELOG.md entry and in the session's closing summary. Makes drift
-  and bloat visible over time instead of assumed. Measure it with
-  [tools/doc_metrics](documentation/tooling/DOC_METRICS.md) (`log.py` after
-  committing, `report.py` to see the trend) rather than ad hoc `wc`
-  calls, so every session's numbers use the same method and stay
-  comparable to each other.
-- **Log the real token/dollar cost of every commit** — run
-  [tools/commit_cost](documentation/tooling/COMMIT_COST.md)'s `log.py` after
-  committing (same discipline as `doc_metrics` above), commit the
-  resulting `commit_costs.jsonl` update. This reads actual billed usage
-  from Claude Code's own session transcripts, not an estimate — see that
-  tool's README for what it can and can't tell you (e.g. human-authored
-  commits log a real `0`, not "unknown").
-- **Commit continuously, and push after every commit**: commit coherent
-  chunks of work as you go, not one giant commit at the end of a session,
-  and push each one to the current branch's remote right after
-  committing. This is standing authorization to commit *and push*
-  without asking first (changed 2026-07-17, explicit instruction — this
-  project previously followed the global CLAUDE.md default of push being
-  hand-over-only; this project's own file now overrides that for plain
-  pushes to the current branch specifically). Still does NOT cover
-  force-push, history rewrites, pushing to a *different* branch than the
-  one already checked out, or any other high-blast-radius action (defined
-  below) — those are never run directly, only ever handed over as a
-  copyable command for Joakim to run himself.
-- **Argue with evidence**: if a proposal (naming, structure, approach)
-  has a concrete best-practice or precedent-based counter-argument, raise
-  it and explain the trade-off before implementing it as asked — don't
-  default to agreement, and don't silently substitute your own
-  preference either.
-- **Ask for constraints before high-blast-radius work**, rather than
-  waiting for them to surface organically mid-task.
-- **Copyable text goes in one fenced code block** — any text meant to be
-  copied verbatim (commands, handoff prompts, etc.), never inline prose
-  mixed with bold/headers.
-- **End substantive sessions with both a durable record and a chat
-  summary.**
-- **Bug/incident files start at investigation-open, not fix-time.** The
-  moment something's being diagnosed (a live outage, a bug worth more
-  than a one-line fix), create its file immediately via
-  `tools/create_bug_report/create_bug_report.sh` and update it as findings come
-  in, not just once it's solved. A session cut off mid-investigation must
-  still leave a trail the next session can pick up from — this is the
-  self-sufficiency rule applied *during* work, not only at wrap-up.
-  Decided 2026-07-18 after a live server-outage investigation. Browse
-  `documentation/bugs/reports/` directly (each file opens with a
-  `Status:` line) — no index is kept; one was tried and removed
-  2026-07-17/18 for drifting out of sync repeatedly.
-- **Every bug and AI-session process lapse is its own file** — rule and
-  tool are in [documentation/bugs/README.md](documentation/bugs/README.md)
-  and [documentation/bugs/claude/README.md](documentation/bugs/claude/README.md),
-  not restated here.
-- **Session wrap-up: the full checklist and its cadence live in
-  [documentation/tooling/README.md](documentation/tooling/README.md)**,
-  not here. Two standing decisions on top of that checklist: verify
-  (don't assume) that on-the-way routines actually ran before calling
-  wrap-up done; and once a session shows drift or has run long, say so
-  plainly in every message from that point on, not just once.
+- **Security and privacy first**: consider it for every change, not just ones that look security-related — a first-class constraint from day one, not something bolted on later. Specifics (what data is sensitive, why) live in [POLICY.md](documentation/policies/POLICY.md), not repeated here.
+- **Test-Driven Development, no exceptions for "small" or "obvious" code**: write a failing test before the implementation, every time, confirm it actually fails for the expected reason, then implement. Run the fast in-process `app/tests` before every commit, even a docs-only one. Also run the container-based `server/tests` suite before every commit that touches `server/`/`app/` code — for a doc-only commit, skip re-running it if it already ran clean earlier in the same session against the same code (repeating it against unchanged code is pure cost, not insurance; decided 2026-07-19 after doing exactly that twice with nothing to catch). See `documentation/bugs/claude/2026-07-19-skipped-tdd-for-a-small-helper-reasoning-it-wouldn-t-matter.md` for why the old "where practical" qualifier was dropped 2026-07-16.
+- **Check for newest dependency versions before every numbered TODO step** (0.1, 0.2, 1.3, etc. — not just once per phase), not only when a CVE prompts it. If a newer version is available, update to it as part of that step rather than starting the step on a stale pin. If the newer version turns out incompatible or breaks a test once updated, fixing that break is itself the priority — don't quietly revert to the old pin and move on; the step isn't done until the suite is green on the current version. Decided 2026-07-16.
+- **Ask or search — never guess.** If a fact is unknown or uncertain (a library's current API/version, a legal/compliance detail, a business rule, anything project-specific not already stated here) stop and either ask directly or run a real web search. Never present an assumption or a plausible-sounding guess as fact.
+- **This repo is fully self-sufficient — no external memory required.** A human developer, or a fresh AI session with zero prior context, must be able to pick this project up entirely from what's checked in here. Decision history, status, future plans, and reusable lessons belong in this repo (CLAUDE.md, POLICY.md, CHANGELOG.md, the relevant README/TODO per topic) — never only in a private/local AI memory store.
+- **Documentation stays current**: when a change affects schema, API surface, or architecture, update the relevant doc in the same pass — don't let docs drift from what the code does. (Known existing drift: see [documentation/picture-handling/TODO.md](documentation/picture-handling/TODO.md) for the MySQL-vs-PostgreSQL mismatch.)
+- **Never claim an action was taken without checking it against the tool calls actually made that turn — not just file edits, any completed-action claim** ("logged," "added," "fixed," "ran," "verified," "confirmed," etc.). Before sending any reply that asserts something is already done, check the corresponding tool call actually ran in this turn — don't infer it from intent or from having described the plan in the response text. This repo *is* the durable record for anything discussed in a session — a false "done" claim isn't a small slip, it's a hole in the only safety net that exists. (Distinct from the next rule below, which covers *forward*-looking promises, not backward-looking completion claims.) See `documentation/bugs/claude/2026-07-18-claimed-a-doc-edit-was-made-when-it-wasn-t.md` for why this covers every action-completion claim, not just file edits.
+- **A promised follow-up gets a TodoWrite item, not just a sentence.** Whenever a reply says something like "I'll present this for confirmation," "I'll come back to this," or "let me get back to you on X" — add a `TodoWrite` item for it in that same turn, don't just state it in prose. A promise that only exists as text is invisible to any later self-check; a tracked item survives interruptions. See `documentation/bugs/claude/2026-07-18-promised-a-follow-up-mid-conversation-without-tracking-it-as-a-todo.md`.
+- **Lean, exact, and compact**: no filler, no restating what's already documented elsewhere, no speculative abstraction for hypothetical future needs. Prefer the more precise word or number over the vaguer one — effective text over more text. Documentation should be thorough but slim — sectioned, skimmable, no duplication between files. Cross-references must terminate: a "see X for why" pointer has to land on the actual explanation, not on another pointer back — that's a circular reference, not a cross-reference, and it silently loses the information both files were supposed to preserve (caught once in README.md ↔ HARDWARE.md; check for it whenever adding a "see X" link).
+- **One revision per update**: add a new entry to the top of CHANGELOG.md for every meaningful change (what + why, one or two lines) — newest first. Head each entry with a UTC ISO 8601 timestamp (`datetime.now(timezone.utc).isoformat(timespec="seconds")` — same convention `tools/doc_metrics`/`tools/commit_cost` already use for `recorded_at`), not a same-day `(N)` counter (dropped 2026-07-19 — two concurrent sessions collided on the same number; a timestamp needs no coordination with what a different thread already wrote, and UTC avoids local-timezone ambiguity a bare local time would have). Never rewrite or reorder past entries.
+- **Report the character-count change** for every documentation edit — before → after count for the file or folder touched, in the CHANGELOG.md entry and in the session's closing summary. Makes drift and bloat visible over time instead of assumed. Measure it with [tools/doc_metrics](documentation/tooling/DOC_METRICS.md) (`log.py` after committing, `report.py` to see the trend) rather than ad hoc `wc` calls, so every session's numbers use the same method and stay comparable to each other.
+- **Log the real token/dollar cost of every commit** — run [tools/commit_cost](documentation/tooling/COMMIT_COST.md)'s `log.py` after committing (same discipline as `doc_metrics` above), commit the resulting `commit_costs.jsonl` update. This reads actual billed usage from Claude Code's own session transcripts, not an estimate — see that tool's README for what it can and can't tell you (e.g. human-authored commits log a real `0`, not "unknown").
+- **Commit continuously, and push after every commit**: commit coherent chunks of work as you go, not one giant commit at the end of a session, and push each one to the current branch's remote right after committing. This is standing authorization to commit *and push* without asking first (changed 2026-07-17, explicit instruction — this project previously followed the global CLAUDE.md default of push being hand-over-only; this project's own file now overrides that for plain pushes to the current branch specifically). Still does NOT cover force-push, history rewrites, pushing to a *different* branch than the one already checked out, or any other high-blast-radius action (defined below) — those are never run directly, only ever handed over as a copyable command for Joakim to run himself.
+- **Argue with evidence**: if a proposal (naming, structure, approach) has a concrete best-practice or precedent-based counter-argument, raise it and explain the trade-off before implementing it as asked — don't default to agreement, and don't silently substitute your own preference either.
+- **Ask for constraints before high-blast-radius work**, rather than waiting for them to surface organically mid-task.
+- **Copyable text goes in one fenced code block** — any text meant to be copied verbatim (commands, handoff prompts, etc.), never inline prose mixed with bold/headers.
+- **End substantive sessions with both a durable record and a chat summary.**
+- **Bug/incident files start at investigation-open, not fix-time.** The moment something's being diagnosed (a live outage, a bug worth more than a one-line fix), create its file immediately via `tools/create_bug_report/create_bug_report.sh` and update it as findings come in, not just once it's solved. A session cut off mid-investigation must still leave a trail the next session can pick up from — this is the self-sufficiency rule applied *during* work, not only at wrap-up. Decided 2026-07-18 after a live server-outage investigation. Browse `documentation/bugs/reports/` directly (each file opens with a `Status:` line) — no index is kept; one was tried and removed 2026-07-17/18 for drifting out of sync repeatedly.
+- **Every bug and AI-session process lapse is its own file** — rule and tool are in [documentation/bugs/README.md](documentation/bugs/README.md) and [documentation/bugs/claude/README.md](documentation/bugs/claude/README.md), not restated here.
+- **Session wrap-up: the full checklist and its cadence live in [documentation/tooling/README.md](documentation/tooling/README.md)**, not here. Two standing decisions on top of that checklist: verify (don't assume) that on-the-way routines actually ran before calling wrap-up done; and once a session shows drift or has run long, say so plainly in every message from that point on, not just once.
 
 ## What counts as high-blast-radius here
 
-Human-in-the-loop required — draft the action, hand it over, don't
-execute it directly:
+Human-in-the-loop required — draft the action, hand it over, don't execute it directly:
 
-- **Running the app against the real photo library.** The discard / save
-  / mark workflow moves and deletes actual files. Only run it against
-  `resources/testpics` (or other clearly-disposable fixtures) without
-  asking first.
-- **Database schema changes** — `CREATE`/`ALTER`/`DROP` or anything else
-  structural, and anything touching the gitignored credentials in
-  `app/local_mysql.py` (name is legacy — see the Postgres note in
-  [documentation/picture-handling/TODO.md](documentation/picture-handling/TODO.md)).
-- **Any system-level install, config, or deployment** — see
-  [policies/POLICY.md](documentation/policies/POLICY.md) ("Deployment
-  and system access") for the full rule; hand to Joakim as copyable
-  commands, never run directly.
+- **Running the app against the real photo library.** The discard / save / mark workflow moves and deletes actual files. Only run it against `resources/testpics` (or other clearly-disposable fixtures) without asking first.
+- **Database schema changes** — `CREATE`/`ALTER`/`DROP` or anything else structural, and anything touching the gitignored credentials in `app/local_mysql.py` (name is legacy — see the Postgres note in [documentation/picture-handling/TODO.md](documentation/picture-handling/TODO.md)).
+- **Any system-level install, config, or deployment** — see [policies/POLICY.md](documentation/policies/POLICY.md) ("Deployment and system access") for the full rule; hand to Joakim as copyable commands, never run directly.
 - **`git push`, force-push, or any history rewrite.**
 
-Everything else — local edits, running the test suite, committing to the
-current branch — is fine to do without asking each time.
+Everything else — local edits, running the test suite, committing to the current branch — is fine to do without asking each time.
 
 ## Known, accepted permission popups
 
-Distinct from the hand-over-only list above — not a blast-radius call,
-just Claude Code's own hardcoded floors that no `.claude/settings.json`
-allow-list setting can suppress (confirmed 2026-07-17/19, see CHANGELOG).
-Attempt these directly rather than routing around them; Joakim approves
-the popup live when it appears.
+Distinct from the hand-over-only list above — not a blast-radius call, just Claude Code's own hardcoded floors that no `.claude/settings.json` allow-list setting can suppress (confirmed 2026-07-17/19, see CHANGELOG). Attempt these directly rather than routing around them; Joakim approves the popup live when it appears.
 
-- **`docker run`/`rmi`/`volume rm`** always prompts, regardless of
-  `Bash(*)`. `server/scripts/test_db.sh up` / `test_redis.sh up` hit this
-  internally to start disposable test fixtures.
-- **Reads outside this repo's own directory tree** always prompt —
-  directory access is a permission dimension separate from
-  command-pattern allow rules. **Never propose or add a broad/
-  system-wide path (e.g. `/`, `$HOME`) to
-  `permissions.additionalDirectories` to work around this** — the popup
-  is the safeguard working correctly, not friction to engineer around.
-  Decided 2026-07-19 after Joakim reacted strongly against even being
-  offered that as a menu option ("I never want you to go through my ...
-  laundry").
-- **This entire "prompts even with `Bash(*)`" behavior is broader and
-  flakier than the two floors above** — plain, already-allowlisted git
-  commands (`git status`, `git commit`, `git push`) intermittently
-  prompt too, reproduced across independent sessions. Tracked upstream
-  as [claude-code#20449](https://github.com/anthropics/claude-code/issues/20449)
-  (closed and locked, but still the closest match) — nothing to fix on
-  this repo's side; don't re-diagnose this from scratch in a future
-  session, extend that upstream report instead.
+- **`docker run`/`rmi`/`volume rm`** always prompts, regardless of `Bash(*)`. `server/scripts/test_db.sh up` / `test_redis.sh up` hit this internally to start disposable test fixtures.
+- **Reads outside this repo's own directory tree** always prompt — directory access is a permission dimension separate from command-pattern allow rules. **Never propose or add a broad/system-wide path (e.g. `/`, `$HOME`) to `permissions.additionalDirectories` to work around this** — the popup is the safeguard working correctly, not friction to engineer around. Decided 2026-07-19 after Joakim reacted strongly against even being offered that as a menu option ("I never want you to go through my ... laundry").
+- **This entire "prompts even with `Bash(*)`" behavior is broader and flakier than the two floors above** — plain, already-allowlisted git commands (`git status`, `git commit`, `git push`) intermittently prompt too, reproduced across independent sessions. Tracked upstream as [claude-code#20449](https://github.com/anthropics/claude-code/issues/20449) (closed and locked, but still the closest match) — nothing to fix on this repo's side; don't re-diagnose this from scratch in a future session, extend that upstream report instead.
 
 ## Branching and merging
 
-- **New branch, ask first.** Before starting non-trivial new development
-  work (a new TODO.md step, a feature, anything beyond a small fix), ask
-  whether to create a new branch and suggest one — don't assume the
-  current branch is the right place for it.
-- **Merging into main needs confirmation, every time.** Never merge a
-  branch into main without asking first. Unlike push/force-push/history
-  rewrites above (always handed over as a copyable command, never run
-  directly), a merge can be run directly once Joakim confirms — the
-  confirmation itself is the authorization, not a request to hand over
-  the command.
+- **New branch, ask first.** Before starting non-trivial new development work (a new TODO.md step, a feature, anything beyond a small fix), ask whether to create a new branch and suggest one — don't assume the current branch is the right place for it.
+- **Merging into main needs confirmation, every time.** Never merge a branch into main without asking first. Unlike push/force-push/history rewrites above (always handed over as a copyable command, never run directly), a merge can be run directly once Joakim confirms — the confirmation itself is the authorization, not a request to hand over the command.
 
 ## Documentation layout
 
-- `documentation/` — every subfolder (root included) has its own
-  `README.md`: what the folder is for, plus an index of its children
-  only if that index adds something a reader wouldn't already get from
-  each child's own opening line.
-- `documentation/policies/POLICY.md` (not `README.md` — a deliberate
-  naming exception so "hard rules live here" is unmistakable) holds
-  genuinely project-wide hard constraints. Nothing project-wide gets
-  duplicated outside this file.
-- **Topic folders** (a subject with its own ongoing open work) get a
-  mandatory `TODO.md` — open/deferred items, or "nothing planned right
-  now" if empty. Never delete it for being empty; the point is proving
-  absence was checked. Pure reference folders (like `policies/`) don't
-  need one.
-- Root `README.md` is the public-facing GitHub landing page (short pitch
-  + pointer into `documentation/`); this file (`CLAUDE.md`) is the
-  working agreement for whoever — human or AI — is doing the work.
-- **All documentation lives under `documentation/` — no exceptions
-  beyond the two above.** Code directories (`server/`, `tools/*/`) get at
-  most a one-line stub `README.md` pointing into `documentation/`, never
-  their own real content — the actual doc goes in the matching topic
-  folder (e.g. `server/`'s toolchain notes live in
-  `documentation/photo-server/TOOLCHAIN.md`) or, for project-wide
-  utilities not tied to one topic, under
-  [documentation/tooling/](documentation/tooling/README.md). Decided
-  2026-07-16 after `server/README.md` and two `tools/*/README.md`s had
-  drifted into real content living outside `documentation/` — moved and
-  replaced with stubs.
+- `documentation/` — every subfolder (root included) has its own `README.md`: what the folder is for, plus an index of its children only if that index adds something a reader wouldn't already get from each child's own opening line.
+- `documentation/policies/POLICY.md` (not `README.md` — a deliberate naming exception so "hard rules live here" is unmistakable) holds genuinely project-wide hard constraints. Nothing project-wide gets duplicated outside this file.
+- **Topic folders** (a subject with its own ongoing open work) get a mandatory `TODO.md` — open/deferred items, or "nothing planned right now" if empty. Never delete it for being empty; the point is proving absence was checked. Pure reference folders (like `policies/`) don't need one.
+- Root `README.md` is the public-facing GitHub landing page (short pitch + pointer into `documentation/`); this file (`CLAUDE.md`) is the working agreement for whoever — human or AI — is doing the work.
+- **No hard-wrapping prose to a fixed column width — one paragraph/list-item/blockquote per line, let the viewer soft-wrap.** Changed 2026-07-19: hard-wrap was this repo's original convention (readability in a non-wrapping viewer, smaller `git diff`s), but measured against the real corpus that day, it added characters (~1.4% of total doc size, from the extra newline+indent at every wrap point) rather than saving them, and a realistic edit (inserting/removing words, not just same-length swaps) reflows every wrap point after it anyway — so the diff-locality benefit was smaller than assumed too. CommonMark/GitHub already render a single internal newline as a soft break (a space), so this is purely a source-file convention with no rendering effect either way.
+- **All documentation lives under `documentation/` — no exceptions beyond the two above.** Code directories (`server/`, `tools/*/`) get at most a one-line stub `README.md` pointing into `documentation/`, never their own real content — the actual doc goes in the matching topic folder (e.g. `server/`'s toolchain notes live in `documentation/photo-server/TOOLCHAIN.md`) or, for project-wide utilities not tied to one topic, under [documentation/tooling/](documentation/tooling/README.md). Decided 2026-07-16 after `server/README.md` and two `tools/*/README.md`s had drifted into real content living outside `documentation/` — moved and replaced with stubs.

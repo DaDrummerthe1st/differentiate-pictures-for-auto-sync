@@ -1,8 +1,6 @@
 # documentation/
 
-Project documentation, organized by topic. Structure/maintenance rules:
-[CLAUDE.md](../CLAUDE.md). Long-term direction across all topics:
-[VISION.md](VISION.md).
+Project documentation, organized by topic. Structure/maintenance rules: [CLAUDE.md](../CLAUDE.md). Long-term direction across all topics: [VISION.md](VISION.md).
 
 | Folder | What's there |
 | --- | --- |

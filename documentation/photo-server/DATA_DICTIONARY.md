@@ -1,29 +1,10 @@
 # Data dictionary — photo-server
 
-PostgreSQL, one instance, no separate search or vector store (see
-[README.md](README.md)). "Now" = in scope for the Phase 0–6 roadmap in
-[TODO.md](TODO.md) — **not the same as already implemented**; check
-TODO.md's own phase status for what actually exists today. As of
-2026-07-19 (Phase 1 done, Phase 2 not started), only `users` and
-`audit_log` are real tables in the database (`server/app/db.py`'s
-`ensure_schema()`) — `photos`, `photo_owners`, and `tags` are designed
-but not yet created. "Reserved" = column/table exists in the schema,
-not populated/used yet.
+PostgreSQL, one instance, no separate search or vector store (see [README.md](README.md)). "Now" = in scope for the Phase 0–6 roadmap in [TODO.md](TODO.md) — **not the same as already implemented**; check TODO.md's own phase status for what actually exists today. As of 2026-07-19 (Phase 1 done, Phase 2 not started), only `users` and `audit_log` are real tables in the database (`server/app/db.py`'s `ensure_schema()`) — `photos`, `photo_owners`, and `tags` are designed but not yet created. "Reserved" = column/table exists in the schema, not populated/used yet.
 
 ## Flagged call: `selections` is dropped, not just amended
 
-The original build plan specced a `selections` table (per-user,
-per-photo mark/download state) for Phase D. The later GUI-spec amendment
-introduced `tags` with `kind = 'album'`, carrying its own per-(tag,
-photo) `downloaded_at`/`download_count` and its own zip-download
-endpoint. Both mechanisms solve the same problem — "which photos has
-this user picked, and have they been downloaded yet" — and running both
-would mean two competing sources of truth for the same fact. This
-document assumes **`selections` is superseded and dropped**; tags
-(`kind='album'`) is the only mark/download mechanism. This is an
-inference, not something either source document said explicitly —
-confirm with Joakim before building Phase 2, and revert this call if
-wrong.
+The original build plan specced a `selections` table (per-user, per-photo mark/download state) for Phase D. The later GUI-spec amendment introduced `tags` with `kind = 'album'`, carrying its own per-(tag, photo) `downloaded_at`/`download_count` and its own zip-download endpoint. Both mechanisms solve the same problem — "which photos has this user picked, and have they been downloaded yet" — and running both would mean two competing sources of truth for the same fact. This document assumes **`selections` is superseded and dropped**; tags (`kind='album'`) is the only mark/download mechanism. This is an inference, not something either source document said explicitly — confirm with Joakim before building Phase 2, and revert this call if wrong.
 
 ## users
 
@@ -64,8 +45,7 @@ wrong.
 | visibility | now |
 | added_at | now |
 
-A photo exists once on disk regardless of how many users can see it;
-deleting a row removes only that owner's access until zero remain.
+A photo exists once on disk regardless of how many users can see it; deleting a row removes only that owner's access until zero remain.
 
 ## tags (the album mechanism — also the mark/download mechanism)
 
@@ -74,16 +54,9 @@ deleting a row removes only that owner's access until zero remain.
 | id, photo_id, user_id, tag, kind, created_at | now |
 | downloaded_at, download_count | now — **per (tag, photo) pair**, not per photo |
 
-`unique(photo_id, user_id, tag)`. `kind = 'album'` is the only value
-built now (default); `kind = 'content'` is reserved for the deferred
-free-text manual-tagging path (see DEFERRED.md) so the two never mix in
-a person's album list.
+`unique(photo_id, user_id, tag)`. `kind = 'album'` is the only value built now (default); `kind = 'content'` is reserved for the deferred free-text manual-tagging path (see DEFERRED.md) so the two never mix in a person's album list.
 
-Endpoints (kind='album' only): `GET/POST /tags`, `POST`/`DELETE
-/tags/{tag}/photos/{photo_id}`, `GET /tags/{tag}/photos`, `GET
-/tags/{tag}/download` (zip; default = only photos with null
-`downloaded_at` for that tag, `?full=true` re-zips everything, both
-update `downloaded_at`/`download_count`).
+Endpoints (kind='album' only): `GET/POST /tags`, `POST`/`DELETE /tags/{tag}/photos/{photo_id}`, `GET /tags/{tag}/photos`, `GET /tags/{tag}/download` (zip; default = only photos with null `downloaded_at` for that tag, `?full=true` re-zips everything, both update `downloaded_at`/`download_count`).
 
 ## share_links
 
@@ -99,10 +72,7 @@ Schema only, no endpoints (see DEFERRED.md).
 | --- | --- |
 | id, user_id, action, catalogue, filename, details (JSONB), created_at | now |
 
-Login, mark/unmark-equivalent (tag add/remove), and download actions are
-logged. Browsing itself is not. `details` must never carry raw GPS/EXIF
-values into logs — ties to [POLICY.md](../policies/POLICY.md)'s
-location-data rule; see also the security checklist in TODO.md.
+Login, mark/unmark-equivalent (tag add/remove), and download actions are logged. Browsing itself is not. `details` must never carry raw GPS/EXIF values into logs — ties to [POLICY.md](../policies/POLICY.md)'s location-data rule; see also the security checklist in TODO.md.
 
 ## Tag dimensions
 
@@ -128,25 +98,9 @@ location-data rule; see also the security checklist in TODO.md.
 
 ### Future tag schema (captured 2026-07-18, not designed/committed)
 
-Joakim proposed a general shape for tags once the dimensions above grow
-past today's album/content split - captured here for a future session,
-not scoped for this project's current phase:
+Joakim proposed a general shape for tags once the dimensions above grow past today's album/content split - captured here for a future session, not scoped for this project's current phase:
 
-- `tags`: `id, name, type (folder|blur|identified_individual|...), flag
-  (global — system-set, vs. private — user's own), created_at`.
-- A separate reference table (not a graph DB - see below) for what a tag
-  points at: a user, a pixel region (e.g. a face's bounding box,
-  `[(23,466),(186,1234)]`), another tag, or a plain email address (an
-  invite/"recruit to view these pictures" mechanism, not yet designed
-  elsewhere).
+- `tags`: `id, name, type (folder|blur|identified_individual|...), flag (global — system-set, vs. private — user's own), created_at`.
+- A separate reference table (not a graph DB - see below) for what a tag points at: a user, a pixel region (e.g. a face's bounding box, `[(23,466),(186,1234)]`), another tag, or a plain email address (an invite/"recruit to view these pictures" mechanism, not yet designed elsewhere).
 
-**Relational, not graph DB** (Joakim agreed 2026-07-18, "at least for
-now"): a graph database earns its cost at a node/edge count and
-traversal complexity this project doesn't have (one household, later
-some invited relatives - not a dense social graph). A `tags` +
-`tag_references` pair, with `reference_kind` discriminating what
-`reference_value` (JSONB or text) means per row, covers every case
-above natively in Postgres - already this project's database, already
-handling similar polymorphic/semi-structured data (see `details JSONB`
-in `audit_log` above). Revisit only if real scale ever demands it, not
-preemptively.
+**Relational, not graph DB** (Joakim agreed 2026-07-18, "at least for now"): a graph database earns its cost at a node/edge count and traversal complexity this project doesn't have (one household, later some invited relatives - not a dense social graph). A `tags` + `tag_references` pair, with `reference_kind` discriminating what `reference_value` (JSONB or text) means per row, covers every case above natively in Postgres - already this project's database, already handling similar polymorphic/semi-structured data (see `details JSONB` in `audit_log` above). Revisit only if real scale ever demands it, not preemptively.

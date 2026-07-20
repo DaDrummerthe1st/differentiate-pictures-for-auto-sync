@@ -1,9 +1,6 @@
 # tooling/
 
-Documentation for project-wide utilities under `tools/` — not tied to
-any single topic (`picture-handling/`, `photo-server/`,
-`distributed-sync/`), so they live here rather than in one of those
-folders. See [TODO.md](TODO.md) for open work.
+Documentation for project-wide utilities under `tools/` — not tied to any single topic (`picture-handling/`, `photo-server/`, `distributed-sync/`), so they live here rather than in one of those folders. See [TODO.md](TODO.md) for open work.
 
 | File | What's there |
 | --- | --- |
@@ -14,20 +11,9 @@ folders. See [TODO.md](TODO.md) for open work.
 
 ## Session wrap-up checklist
 
-Every check an AI session working in this repo is expected to run
-before calling a session done, collected in one place — some are
-defined in this project's own [CLAUDE.md](../../CLAUDE.md), some in
-Joakim's cross-project `~/.claude/CLAUDE.md` (marked "global" below;
-that file applies to every project he works in, so its wording stays
-generic there — this table is the project-specific copy for quick
-reference, not a second source of truth to edit independently).
+Every check an AI session working in this repo is expected to run before calling a session done, collected in one place — some are defined in this project's own [CLAUDE.md](../../CLAUDE.md), some in Joakim's cross-project `~/.claude/CLAUDE.md` (marked "global" below; that file applies to every project he works in, so its wording stays generic there — this table is the project-specific copy for quick reference, not a second source of truth to edit independently).
 
-Each check has a trigger condition. Most only apply when something
-specific happened this session — run the check if the condition is
-true, skip it (not "run it and find nothing") if it isn't. Decided
-2026-07-19: previously every check ran on every session regardless,
-which made wrap-up itself take about as long as the work it was
-closing out.
+Each check has a trigger condition. Most only apply when something specific happened this session — run the check if the condition is true, skip it (not "run it and find nothing") if it isn't. Decided 2026-07-19: previously every check ran on every session regardless, which made wrap-up itself take about as long as the work it was closing out.
 
 | Check | Trigger | Source |
 | --- | --- | --- |
@@ -48,12 +34,4 @@ closing out.
 | Forward-effectiveness note (one concrete note on what would make the next session cheaper) | every session close | global |
 | Systematic security-discovery pass (`pip-audit`, OWASP ZAP scan — see [PHOTO_SERVER's TODO.md](../photo-server/TODO.md)) | not diff-triggered — audits the live deployed surface, not a change; needs a real recurring schedule once built, not a per-session check | local, not built yet |
 
-**Persistent nudge, not a one-time flag**: once a session shows drift (a
-second, unrelated concern enters the conversation) or has clearly run
-long, say so plainly in every subsequent message until the session
-actually ends — starting as soon as the signal appears, not at a
-context-limit warning. This is a nudge Joakim decides whether to act
-on, not a hard stop. Decided 2026-07-19 after wrap-up itself had grown
-open-ended enough that ending a session took about as long as the work
-that preceded it (see
-[documentation/bugs/claude/2026-07-18-session-wrap-up-itself-grows-unpredictably-long.md](../bugs/claude/2026-07-18-session-wrap-up-itself-grows-unpredictably-long.md)).
+**Persistent nudge, not a one-time flag**: once a session shows drift (a second, unrelated concern enters the conversation) or has clearly run long, say so plainly in every subsequent message until the session actually ends — starting as soon as the signal appears, not at a context-limit warning. This is a nudge Joakim decides whether to act on, not a hard stop. Decided 2026-07-19 after wrap-up itself had grown open-ended enough that ending a session took about as long as the work that preceded it (see [documentation/bugs/claude/2026-07-18-session-wrap-up-itself-grows-unpredictably-long.md](../bugs/claude/2026-07-18-session-wrap-up-itself-grows-unpredictably-long.md)).

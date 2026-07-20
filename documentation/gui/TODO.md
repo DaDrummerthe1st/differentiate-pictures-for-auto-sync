@@ -2,289 +2,71 @@
 
 ## Next phase: login/authentication
 
-Currently no-login by design (LAN-only, single-household, one-off use
-case). Before this app is used by multiple people or leaves the LAN,
-add a proper login layer. Requirements as given:
+Currently no-login by design (LAN-only, single-household, one-off use case). Before this app is used by multiple people or leaves the LAN, add a proper login layer. Requirements as given:
 
-- **Passkeys** as the primary login method (WebAuthn), not just
-  password-based auth.
-- **Session hijacking protection**: secure, httpOnly, SameSite cookies
-  for session tokens; rotate session identifiers on login; consider
-  binding sessions to IP/user-agent fingerprint with re-auth on
-  mismatch.
-- **Real TLS**, not the current self-signed cert (e.g. via a reverse
-  proxy with a proper certificate, or a local CA the household trusts) -
-  needed once this isn't purely LAN-local.
-- **Password length requirement only** - no composition rules (no
-  forced mix of uppercase/digits/symbols). This matches current
-  NIST guidance and avoids pushing users toward predictable patterns.
-- **Reject known-breached passwords** (e.g. check against
-  Have I Been Pwned's range API or an equivalent offline breached-
-  password list) so a legitimate user isn't tempted to reuse an old,
-  already-leaked password just because it's convenient - the login
-  flow needs to stay easy enough (passkeys, password manager-friendly)
-  that reuse is never the path of least resistance.
-- **Per-user isolation of PII**: each user should only ever see their
-  own photos/stories/voiceovers once multi-user support exists, not a
-  shared pool.
+- **Passkeys** as the primary login method (WebAuthn), not just password-based auth.
+- **Session hijacking protection**: secure, httpOnly, SameSite cookies for session tokens; rotate session identifiers on login; consider binding sessions to IP/user-agent fingerprint with re-auth on mismatch.
+- **Real TLS**, not the current self-signed cert (e.g. via a reverse proxy with a proper certificate, or a local CA the household trusts) - needed once this isn't purely LAN-local.
+- **Password length requirement only** - no composition rules (no forced mix of uppercase/digits/symbols). This matches current NIST guidance and avoids pushing users toward predictable patterns.
+- **Reject known-breached passwords** (e.g. check against Have I Been Pwned's range API or an equivalent offline breached-password list) so a legitimate user isn't tempted to reuse an old, already-leaked password just because it's convenient - the login flow needs to stay easy enough (passkeys, password manager-friendly) that reuse is never the path of least resistance.
+- **Per-user isolation of PII**: each user should only ever see their own photos/stories/voiceovers once multi-user support exists, not a shared pool.
 
-Not started - no code, no design doc yet. Flagged by Joakim on
-2026-07-16 as the deliberate next step after the current no-login
-single-user version is done.
+Not started - no code, no design doc yet. Flagged by Joakim on 2026-07-16 as the deliberate next step after the current no-login single-user version is done.
 
 ### Starting this work: read first, then resolve the open question below
 
-**Purpose, stated plainly so it doesn't get lost in the mechanics below**:
-next session's job is to merge `phase-1-login`, `mamma-photo-viewer`, and
-`master` into one working system, not just land isolated features. The
-result has to hit both bars at once — good UX (this is still Elisabeth's
-mum's app, ease of use hasn't stopped mattering) and genuinely high
-security, because this is becoming Joakim's own real server, not a
-one-off LAN tool scoped to a single Sunday. Treat the security
-requirements below (passkeys, session-hijacking protection, real TLS,
-breach-password checks, per-user isolation) as the actual bar, not
-aspirational — closer to buzzkit's production rigor than the current
-no-login LAN-only posture.
+**Purpose, stated plainly so it doesn't get lost in the mechanics below**: next session's job is to merge `phase-1-login`, `mamma-photo-viewer`, and `master` into one working system, not just land isolated features. The result has to hit both bars at once — good UX (this is still Elisabeth's mum's app, ease of use hasn't stopped mattering) and genuinely high security, because this is becoming Joakim's own real server, not a one-off LAN tool scoped to a single Sunday. Treat the security requirements below (passkeys, session-hijacking protection, real TLS, breach-password checks, per-user isolation) as the actual bar, not aspirational — closer to buzzkit's production rigor than the current no-login LAN-only posture.
 
 - [CLAUDE.md](../../CLAUDE.md) (working agreement), [POLICY.md](../policies/POLICY.md).
-- [photo-server/README.md](../photo-server/README.md)'s Status section: the
-  *backend* login-architecture decision is already made and executed
-  (`phase-1-login` branch, steps 1.1–1.8 done) — ported from Joakim's
-  existing buzzkit login implementation (argon2id, JWT access+refresh via
-  redis). That question is resolved, don't re-ask it.
+- [photo-server/README.md](../photo-server/README.md)'s Status section: the *backend* login-architecture decision is already made and executed (`phase-1-login` branch, steps 1.1–1.8 done) — ported from Joakim's existing buzzkit login implementation (argon2id, JWT access+refresh via redis). That question is resolved, don't re-ask it.
 
-**Genuinely open** — this GUI (`app/`, FastAPI) is a separate codebase from
-the photo-server backend (`server/`, FastAPI) — resolve before writing
-any code: does GUI login mean (a) adapting the same ported approach
-directly onto `app/`, or (b) `app/` eventually authenticating against
-the `server/` backend instead of implementing its own auth? Ask Joakim,
-don't assume.
+**Genuinely open** — this GUI (`app/`, FastAPI) is a separate codebase from the photo-server backend (`server/`, FastAPI) — resolve before writing any code: does GUI login mean (a) adapting the same ported approach directly onto `app/`, or (b) `app/` eventually authenticating against the `server/` backend instead of implementing its own auth? Ask Joakim, don't assume.
 
-**Branch state** (measured 2026-07-17, current commit on
-`mamma-photo-viewer` was `a7d72d5` — re-check `git log`/`git status` if
-stale):
-- `phase-1-login`: 18 ahead / 0 behind `master` — backend login done
-  through step 1.8, clean, no catch-up needed to merge.
-- `mamma-photo-viewer` (this branch): 22 ahead / 134 behind `master` —
-  needs `master` merged in first, per [CLAUDE.md](../../CLAUDE.md)'s
-  merge procedure (merge target → feature branch first, resolve
-  conflicts there, only then feature → target).
-- `md5_duplicate_drop`, `photo-server-planning`: 0 ahead of `master`,
-  stale — not merge candidates, just old branches to confirm-then-delete
-  with Joakim.
+**Branch state** (measured 2026-07-17, current commit on `mamma-photo-viewer` was `a7d72d5` — re-check `git log`/`git status` if stale):
+- `phase-1-login`: 18 ahead / 0 behind `master` — backend login done through step 1.8, clean, no catch-up needed to merge.
+- `mamma-photo-viewer` (this branch): 22 ahead / 134 behind `master` — needs `master` merged in first, per [CLAUDE.md](../../CLAUDE.md)'s merge procedure (merge target → feature branch first, resolve conflicts there, only then feature → target).
+- `md5_duplicate_drop`, `photo-server-planning`: 0 ahead of `master`, stale — not merge candidates, just old branches to confirm-then-delete with Joakim.
 
-Per [CLAUDE.md](../../CLAUDE.md)'s branching rules: ask before starting
-on a new branch vs. continuing here, and get explicit confirmation
-before any merge into `master`, every time.
+Per [CLAUDE.md](../../CLAUDE.md)'s branching rules: ask before starting on a new branch vs. continuing here, and get explicit confirmation before any merge into `master`, every time.
 
 ## Voiceover feature
 
-Moved to its own subfolder: [voiceover/README.md](voiceover/README.md)
-(how it works today) and [voiceover/TODO.md](voiceover/TODO.md) (the
-planned MP4-export work) — substantial enough a feature to warrant its
-own doc root rather than living inline here.
+Moved to its own subfolder: [voiceover/README.md](voiceover/README.md) (how it works today) and [voiceover/TODO.md](voiceover/TODO.md) (the planned MP4-export work) — substantial enough a feature to warrant its own doc root rather than living inline here.
 
 ## History note: why this project lives in this repo at all
 
-Started as a genuinely separate repo (`~/code/project/mamma-photo-viewer`),
-but an accidental concurrent Claude Code session fetched that repo's
-history into this one under a same-named branch. **Corrected 2026-07-19**:
-originally attributed to a suspected VS Code extension bug (typing while
-a popup was opening); the actual cause, identified by Joakim, is that
-editing/changing a previously-sent prompt forks the conversation into a
-new tab - expected behavior, not a bug, that only looked alarming because
-both tabs' sessions shared this same working tree. Once discovered,
-Joakim opted to keep building here rather than untangle it back out.
+Started as a genuinely separate repo (`~/code/project/mamma-photo-viewer`), but an accidental concurrent Claude Code session fetched that repo's history into this one under a same-named branch. **Corrected 2026-07-19**: originally attributed to a suspected VS Code extension bug (typing while a popup was opening); the actual cause, identified by Joakim, is that editing/changing a previously-sent prompt forks the conversation into a new tab - expected behavior, not a bug, that only looked alarming because both tabs' sessions shared this same working tree. Once discovered, Joakim opted to keep building here rather than untangle it back out.
 
 ## History note: why bulk downloads are sequential, not a zip
 
-Originally "download all"/"download selected" built one zip server-side,
-then streamed it. Switched away from this 2026-07-16 after mum's actual
-download over real (slow, USB-drive-destination) conditions showed the
-real problems: a single zip is all-or-nothing (any interruption loses
-the whole batch), gives no real progress feedback until fully built, and
-can't be cancelled cleanly. Per-file sequential transfer (now used by
-both buttons) shows honest incremental progress, survives individual
-file failures, and can be cancelled without losing anything already
-saved. Confirmed as a permanent decision (not just a workaround) the
-same day - the zip endpoint (`POST /api/zip`), its client-side code, and
-its tests were removed entirely rather than left dormant.
+Originally "download all"/"download selected" built one zip server-side, then streamed it. Switched away from this 2026-07-16 after mum's actual download over real (slow, USB-drive-destination) conditions showed the real problems: a single zip is all-or-nothing (any interruption loses the whole batch), gives no real progress feedback until fully built, and can't be cancelled cleanly. Per-file sequential transfer (now used by both buttons) shows honest incremental progress, survives individual file failures, and can be cancelled without losing anything already saved. Confirmed as a permanent decision (not just a workaround) the same day - the zip endpoint (`POST /api/zip`), its client-side code, and its tests were removed entirely rather than left dormant.
 
 ## Analytics log format — more narrative, less terse
 
-Idea floated by Joakim 2026-07-17, not decided or started: today's
-`_log_event()` rows are terse structured fields (event type + a short
-detail string, e.g. `download_zip_done count=12`). Over many iterations
-of this app, terse IDs stop being legible on their own (`"#12345 opened
-by #22345 zoomed in"`). Direction being considered: freetext-style log
-lines that stay self-explanatory read cold, e.g. `"User #12345 opened
-picture #2344554 and spent 234 secs zooming and pressing buttons"`.
-Trade-off not yet weighed: more legible over time vs. harder to query/
-aggregate than structured fields. Needs a design decision (keep
-structured fields and add a rendered freetext view, or replace the
-stored format outright) before any implementation — TDD applies as
-usual once decided.
+Idea floated by Joakim 2026-07-17, not decided or started: today's `_log_event()` rows are terse structured fields (event type + a short detail string, e.g. `download_zip_done count=12`). Over many iterations of this app, terse IDs stop being legible on their own (`"#12345 opened by #22345 zoomed in"`). Direction being considered: freetext-style log lines that stay self-explanatory read cold, e.g. `"User #12345 opened picture #2344554 and spent 234 secs zooming and pressing buttons"`. Trade-off not yet weighed: more legible over time vs. harder to query/aggregate than structured fields. Needs a design decision (keep structured fields and add a rendered freetext view, or replace the stored format outright) before any implementation — TDD applies as usual once decided.
 
 ## Open from the 2026-07-18 session
 
-- **Download-folder UX rework, designed, not built**: remove the
-  upfront "choose folder" screen (currently shown before the gallery,
-  blocking first use). Instead: go straight to the gallery; prompt for
-  a folder lazily, only on the first actual save action; bake the
-  current-folder indicator into the toolbar's existing
-  `downloadFolderLabel` sentence ("Bilder sparas i: ..." /
-  "Nedladdningar sparas enligt webbläsarens nedladdningsinställning"),
-  made clickable/hoverable to show the full path and let the user
-  re-pick. TDD-ready now that the test-tool decision below is made.
-- **Decided 2026-07-18: Selenium, not Playwright** — per
-  `POLICY.md`'s new vendor-lock-in-and-openness principle (prefer
-  vendor-neutral tools; Playwright is Microsoft-driven, Selenium is a
-  W3C standard with no single owner). Selenium's usual downsides
-  (verbose API, historically flakier waits) matter less here than
-  usual: this app's test surface is small, and the File System Access
-  API it depends on is Chromium-only anyway (Firefox already gets a
-  documented fallback), so there's no real cross-browser-coverage
-  benefit from Playwright being given up. Containerized only
-  (`POLICY.md`'s no-system-installs rule) - `selenium/standalone-chrome`
-  is the equivalent of the Playwright image previously considered.
-  **Built 2026-07-19** (first real payoff of this decision): see
-  `scripts/test_selenium.sh` and `app/tests_selenium/` — used for the
-  single-album-view switching tests below.
-- **Thumbnail pre-compile design synthesis** - see
-  `../bugs/reports/2026-07-17-pre-compile-thumbnails-ahead-of-time.md`,
-  updated 2026-07-18 with a concrete design from Joakim's answers
-  (versioned cache path, one idempotent `ensure_thumbnail` method
-  serving manual backfill + on-demand fallback + any future event
-  trigger). Still needs Joakim's sign-off on the synthesis before
-  building.
-- **Grid pagination**, a separate/complementary idea to pre-compiling -
-  see `../bugs/reports/2026-07-18-paginate-the-grid-instead-of-loading-all-thumbnails-at-once.md`.
-  Candidate, not evaluated.
-- **Lightbox bug, not root-caused** - see
-  `../bugs/reports/2026-07-18-lightbox-shows-previous-photo-when-clicking-a-not-yet-loaded-thumbnail.md`.
-  Symptom changed after today's redeploy (now shows nothing instead of
-  the previous photo) - needs a live repro with DevTools open, not more
-  static code reading.
+- **Download-folder UX rework, designed, not built**: remove the upfront "choose folder" screen (currently shown before the gallery, blocking first use). Instead: go straight to the gallery; prompt for a folder lazily, only on the first actual save action; bake the current-folder indicator into the toolbar's existing `downloadFolderLabel` sentence ("Bilder sparas i: ..." / "Nedladdningar sparas enligt webbläsarens nedladdningsinställning"), made clickable/hoverable to show the full path and let the user re-pick. TDD-ready now that the test-tool decision below is made.
+- **Decided 2026-07-18: Selenium, not Playwright** — per `POLICY.md`'s new vendor-lock-in-and-openness principle (prefer vendor-neutral tools; Playwright is Microsoft-driven, Selenium is a W3C standard with no single owner). Selenium's usual downsides (verbose API, historically flakier waits) matter less here than usual: this app's test surface is small, and the File System Access API it depends on is Chromium-only anyway (Firefox already gets a documented fallback), so there's no real cross-browser-coverage benefit from Playwright being given up. Containerized only (`POLICY.md`'s no-system-installs rule) - `selenium/standalone-chrome` is the equivalent of the Playwright image previously considered. **Built 2026-07-19** (first real payoff of this decision): see `scripts/test_selenium.sh` and `app/tests_selenium/` — used for the single-album-view switching tests below.
+- **Thumbnail pre-compile design synthesis** - see `../bugs/reports/2026-07-17-pre-compile-thumbnails-ahead-of-time.md`, updated 2026-07-18 with a concrete design from Joakim's answers (versioned cache path, one idempotent `ensure_thumbnail` method serving manual backfill + on-demand fallback + any future event trigger). Still needs Joakim's sign-off on the synthesis before building.
+- **Grid pagination**, a separate/complementary idea to pre-compiling - see `../bugs/reports/2026-07-18-paginate-the-grid-instead-of-loading-all-thumbnails-at-once.md`. Candidate, not evaluated.
+- **Lightbox bug, not root-caused** - see `../bugs/reports/2026-07-18-lightbox-shows-previous-photo-when-clicking-a-not-yet-loaded-thumbnail.md`. Symptom changed after today's redeploy (now shows nothing instead of the previous photo) - needs a live repro with DevTools open, not more static code reading.
 
 ## 2026-07-19 session: single-album view, and a local-dev gap found along the way
 
-- **Done**: only one album renders at a time now; the nav-pill bar
-  switches which one (`setActiveAlbum()` in `app.js`), persisted across
-  reloads via `localStorage` (`mpv_active_headline`). Covered by the new
-  Selenium suite (`app/tests_selenium/test_album_switching.py`) - see
-  the Selenium bullet above.
-- **Not changed, flagged for a future decision**: "download all" and the
-  lightbox's prev/next still span every album, including hidden ones
-  (`allImages` in `app.js` is still built from every section, not just
-  the active one) - this was already the case before today and is
-  preserved as-is, not addressed by this session. Worth a deliberate
-  decision later (scope both to the active album only? keep global?),
-  not a silent behavior change to make alongside the display switch.
-- **Found, not this session's scope to fix**: the root `docker-compose.yml`
-  (this repo's own dev machine, not the production server) is stale
-  relative to `app/auth.py` — it predates the 2026-07-17 P0 commit
-  (`9c090b0`) that made the app require a `JWT_SECRET_KEY` env var (and,
-  in production, a running `auth`/postgres/redis stack) just to start.
-  The one container that ever ran here did so for a few hours on
-  2026-07-16, before that commit, and has sat `Exited` ever since - it
-  was never evidence of an ongoing local workflow. The actual live
-  system is production only, kept current by push-here/pull-and-rebuild
-  on the server (`192.168.1.10`, `docker-compose.prod.yml`) - confirmed
-  reachable and current as of 2026-07-19. A rebuild of the root
-  `docker-compose.yml` as it stands today would fail at startup
-  (`MissingConfigError`). No local full-stack dev environment (photo-
-  viewer + auth + postgres + redis, reachable in a browser on this
-  workstation) exists today; this session's new Selenium suite works
-  around that by running `uvicorn` directly against a disposable test
-  photo tree with a fixed `JWT_SECRET_KEY`; it doesn't fix or replace
-  the stale root compose file itself.
-- **Follow-up fix, same day, after production feedback with Joakim's real
-  16-album library**: two real bugs the 3-fake-album local test hadn't
-  caught. (1) The single-album view above only hid inactive albums with
-  CSS (`display: none`) - all of them were still fully built into the
-  DOM with real thumbnail `<img>` tags, which Joakim correctly flagged
-  as unnecessary weight at real-library scale (not just a "make it
-  invisible" ask). Fixed: `renderActiveAlbum()` now builds *only* the
-  active album's DOM at all; switching tears it down and rebuilds,
-  confirmed via a new Selenium test asserting the other albums have zero
-  matching DOM nodes, not just a `hidden` class. (2) The toolbar and
-  pill bar were two independently `position: sticky` elements, the pill
-  bar's offset hardcoded to `top: 3.6rem` assuming a toolbar height that
-  didn't match reality (measured 111.78px vs assumed 57.6px on the real
-  page) - scrolling left the pill bar partly covered. Fixed by wrapping
-  both in one `#stickyHeader` container that alone is sticky, so there's
-  no offset to keep in sync at all. Covered by a new Selenium test
-  (`test_sticky_header.py`) asserting no vertical overlap after
-  scrolling, via real `getBoundingClientRect()` geometry, not a visual
-  guess.
-- **Raised by Joakim, explicitly not for now**: consider adopting
-  Bootstrap and jQuery (or similar established libraries) instead of
-  the current no-framework/no-build-step vanilla JS+CSS, to make future
-  GUI changes easier and more standard to reason about; also consider
-  adding a CSS reset/normalize library (Joakim said "zeroing.css" -
-  likely means [normalize.css](https://necolas.github.io/normalize.css/)
-  or a plain CSS reset; confirm the exact intended library before
-  implementing). Logged as a future direction only - not evaluated
-  against the "no build step" design choice this app started with, not
-  started.
-- **Removed entirely, same day**: "Markera som klar" (per-album visited
-  toggle + the toolbar's "X av Y album visade" counter) and "Dölj"
-  (per-album collapse). Joakim didn't remember what either did when
-  asked where their buttons should move to once the header row goes
-  away - on finding out "Dölj" specifically had been designed for the
-  old all-albums-stacked layout (collapsing a reviewed album saved
-  scroll space) and had no clear purpose left now that only one album
-  is ever shown at all, he asked to delete both outright rather than
-  relocate them. Removed from `app.js` (`toggleVisited`,
-  `updateVisitedUI`, `loadSet`/`saveSet`, the `visitedHeadlines`/
-  `collapsedHeadlines` Sets, the per-album `visitedBtn`/`collapseBtn`/
-  `headline-actions` markup), `index.html` (`#visitedCounter`), and
-  `style.css` (`.visited-btn`, `.collapse-btn`, `.headline-actions`,
-  `.nav-pill.visited`, `.album-body.collapsed`) - nothing left pointing
-  at the removed feature.
-- **Bigger redesign raised, not built**: Joakim wants folder-path
-  segments reframed explicitly as tags/sub-tags (album = tag, dated
-  subfolder = sub-tag) and the per-album `<h2>` header removed entirely
-  - "each section of pictures represented by tags, choosable in the now
-  pills section." Genuinely open before building: where do sub-tags
-  live (a second pill row under the active tag? inline chips above the
-  grid? folded into one flat pill list?), and does a sub-tag filter the
-  grid or just scroll to it. Not decided - needs its own design pass,
-  not a guess.
-- **Fixed: thumbnails silently breaking on token expiry, without ever
-  needing a reload.** The already-known bug
-  (`../bugs/reports/2026-07-18-thumbnail-img-tags-have-no-silent-refresh-on-expired-access-token.md`)
-  went from "a mechanism that exists" to confirmed-live during this
-  session - Joakim hit it in normal browsing, no server restart
-  involved. "Just reload" turned out not to be a real workaround either
-  (the File System Access folder permission doesn't reliably survive a
-  reload, bouncing back to the folder-picker screen, plus losing scroll
-  position). Fixed with the standard "silent refresh" pattern
-  (confirmed against external sources, not guessed - see the
-  2026-07-19 CHANGELOG entry for the citations): `app.js` now runs a
-  proactive timer (`silentRefresh()`, every 4 minutes, safely under the
-  5-minute access-token expiry) calling `/refresh` in the background the
-  entire time the gallery is open, so the session cookie - which plain
-  `<img src>` thumbnail/lightbox loads rely on entirely, since they
-  can't go through `authFetch`'s reactive retry - never actually goes
-  stale during normal use. `?test_refresh_ms` overrides the interval so
-  the new Selenium test doesn't wait out the real 4 minutes.
-- **Follow-up, same day**: Joakim flagged that the fix above has a real
-  side effect - it keeps a session alive forever as long as a tab stays
-  open, even genuinely unattended, with no idle timeout at all. Fixed:
-  `app.js` now tracks real user activity (`mousemove`/`keydown`/`click`/
-  `scroll`/`touchstart`), and `silentRefresh()` skips the proactive
-  `/refresh` call once 30 minutes have passed with none. This doesn't
-  force an abrupt logout - it just stops artificially extending the
-  session past what the existing 5-minute access-token / 12-hour
-  refresh-token lifetimes already impose, restoring the bound that
-  existed before today's silent-refresh fix. `?test_idle_ms` overrides
-  the threshold for the new Selenium test.
+- **Done**: only one album renders at a time now; the nav-pill bar switches which one (`setActiveAlbum()` in `app.js`), persisted across reloads via `localStorage` (`mpv_active_headline`). Covered by the new Selenium suite (`app/tests_selenium/test_album_switching.py`) - see the Selenium bullet above.
+- **Not changed, flagged for a future decision**: "download all" and the lightbox's prev/next still span every album, including hidden ones (`allImages` in `app.js` is still built from every section, not just the active one) - this was already the case before today and is preserved as-is, not addressed by this session. Worth a deliberate decision later (scope both to the active album only? keep global?), not a silent behavior change to make alongside the display switch.
+- **Found, not this session's scope to fix**: the root `docker-compose.yml` (this repo's own dev machine, not the production server) is stale relative to `app/auth.py` — it predates the 2026-07-17 P0 commit (`9c090b0`) that made the app require a `JWT_SECRET_KEY` env var (and, in production, a running `auth`/postgres/redis stack) just to start. The one container that ever ran here did so for a few hours on 2026-07-16, before that commit, and has sat `Exited` ever since - it was never evidence of an ongoing local workflow. The actual live system is production only, kept current by push-here/pull-and-rebuild on the server (`192.168.1.10`, `docker-compose.prod.yml`) - confirmed reachable and current as of 2026-07-19. A rebuild of the root `docker-compose.yml` as it stands today would fail at startup (`MissingConfigError`). No local full-stack dev environment (photo-viewer + auth + postgres + redis, reachable in a browser on this workstation) exists today; this session's new Selenium suite works around that by running `uvicorn` directly against a disposable test photo tree with a fixed `JWT_SECRET_KEY`; it doesn't fix or replace the stale root compose file itself.
+- **Follow-up fix, same day, after production feedback with Joakim's real 16-album library**: two real bugs the 3-fake-album local test hadn't caught. (1) The single-album view above only hid inactive albums with CSS (`display: none`) - all of them were still fully built into the DOM with real thumbnail `<img>` tags, which Joakim correctly flagged as unnecessary weight at real-library scale (not just a "make it invisible" ask). Fixed: `renderActiveAlbum()` now builds *only* the active album's DOM at all; switching tears it down and rebuilds, confirmed via a new Selenium test asserting the other albums have zero matching DOM nodes, not just a `hidden` class. (2) The toolbar and pill bar were two independently `position: sticky` elements, the pill bar's offset hardcoded to `top: 3.6rem` assuming a toolbar height that didn't match reality (measured 111.78px vs assumed 57.6px on the real page) - scrolling left the pill bar partly covered. Fixed by wrapping both in one `#stickyHeader` container that alone is sticky, so there's no offset to keep in sync at all. Covered by a new Selenium test (`test_sticky_header.py`) asserting no vertical overlap after scrolling, via real `getBoundingClientRect()` geometry, not a visual guess.
+- **Raised by Joakim, explicitly not for now**: consider adopting Bootstrap and jQuery (or similar established libraries) instead of the current no-framework/no-build-step vanilla JS+CSS, to make future GUI changes easier and more standard to reason about; also consider adding a CSS reset/normalize library (Joakim said "zeroing.css" - likely means [normalize.css](https://necolas.github.io/normalize.css/) or a plain CSS reset; confirm the exact intended library before implementing). Logged as a future direction only - not evaluated against the "no build step" design choice this app started with, not started.
+- **Removed entirely, same day**: "Markera som klar" (per-album visited toggle + the toolbar's "X av Y album visade" counter) and "Dölj" (per-album collapse). Joakim didn't remember what either did when asked where their buttons should move to once the header row goes away - on finding out "Dölj" specifically had been designed for the old all-albums-stacked layout (collapsing a reviewed album saved scroll space) and had no clear purpose left now that only one album is ever shown at all, he asked to delete both outright rather than relocate them. Removed from `app.js` (`toggleVisited`, `updateVisitedUI`, `loadSet`/`saveSet`, the `visitedHeadlines`/ `collapsedHeadlines` Sets, the per-album `visitedBtn`/`collapseBtn`/ `headline-actions` markup), `index.html` (`#visitedCounter`), and `style.css` (`.visited-btn`, `.collapse-btn`, `.headline-actions`, `.nav-pill.visited`, `.album-body.collapsed`) - nothing left pointing at the removed feature.
+- **Bigger redesign raised, not built**: Joakim wants folder-path segments reframed explicitly as tags/sub-tags (album = tag, dated subfolder = sub-tag) and the per-album `<h2>` header removed entirely
+  - "each section of pictures represented by tags, choosable in the now pills section." Genuinely open before building: where do sub-tags live (a second pill row under the active tag? inline chips above the grid? folded into one flat pill list?), and does a sub-tag filter the grid or just scroll to it. Not decided - needs its own design pass, not a guess.
+- **Fixed: thumbnails silently breaking on token expiry, without ever needing a reload.** The already-known bug (`../bugs/reports/2026-07-18-thumbnail-img-tags-have-no-silent-refresh-on-expired-access-token.md`) went from "a mechanism that exists" to confirmed-live during this session - Joakim hit it in normal browsing, no server restart involved. "Just reload" turned out not to be a real workaround either (the File System Access folder permission doesn't reliably survive a reload, bouncing back to the folder-picker screen, plus losing scroll position). Fixed with the standard "silent refresh" pattern (confirmed against external sources, not guessed - see the 2026-07-19 CHANGELOG entry for the citations): `app.js` now runs a proactive timer (`silentRefresh()`, every 4 minutes, safely under the 5-minute access-token expiry) calling `/refresh` in the background the entire time the gallery is open, so the session cookie - which plain `<img src>` thumbnail/lightbox loads rely on entirely, since they can't go through `authFetch`'s reactive retry - never actually goes stale during normal use. `?test_refresh_ms` overrides the interval so the new Selenium test doesn't wait out the real 4 minutes.
+- **Follow-up, same day**: Joakim flagged that the fix above has a real side effect - it keeps a session alive forever as long as a tab stays open, even genuinely unattended, with no idle timeout at all. Fixed: `app.js` now tracks real user activity (`mousemove`/`keydown`/`click`/ `scroll`/`touchstart`), and `silentRefresh()` skips the proactive `/refresh` call once 30 minutes have passed with none. This doesn't force an abrupt logout - it just stops artificially extending the session past what the existing 5-minute access-token / 12-hour refresh-token lifetimes already impose, restoring the bound that existed before today's silent-refresh fix. `?test_idle_ms` overrides the threshold for the new Selenium test.
 
 ## Other open items (carried over, not yet done)
 
-- Recheck for anything else possibly missing from the branch-mixup
-  incident referenced above.
-- If this app is ever shared/open-sourced, re-check this documentation
-  and the code for personal/family references (paths, filenames,
-  memorial context) that shouldn't be public.
+- Recheck for anything else possibly missing from the branch-mixup incident referenced above.
+- If this app is ever shared/open-sourced, re-check this documentation and the code for personal/family references (paths, filenames, memorial context) that shouldn't be public.
