@@ -1,6 +1,6 @@
 # Skipped TDD for a small helper, reasoning it wouldn't matter
 
-See [README.md](README.md) for what belongs here.
+See [README.md](../README.md) for what belongs here.
 
 Backfilled 2026-07-19 from CLAUDE.md's own TDD bullet, which had been carrying this incident's full narrative inline since 2026-07-16 — a violation of the very "every lapse is its own file" rule this folder exists to enforce, caught while trimming CLAUDE.md's accumulated detail.
 

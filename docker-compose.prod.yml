@@ -44,7 +44,7 @@ services:
     # pressure) shortly after serving /thumb requests. Steady-state usage
     # is only ~40MB; the crash pattern points at transient spikes during
     # Pillow's decode+resize+encode, not steady growth. See
-    # documentation/bugs/reports/2026-07-17-thumbnail-oom-under-load.md -
+    # documentation/bugs/repo/under_process/2026-07-17-thumbnail-oom-under-load.md -
     # this is a mitigation, not a confirmed root-cause fix; re-verify
     # under real load before assuming it's fully solved.
     mem_limit: 512m
@@ -80,7 +80,7 @@ services:
     # --appendonly fsyncs every write (refresh-token SET/DEL) to
     # redis_data, so a restart (crash, host reboot, docker compose
     # down/up) doesn't wipe every logged-in user's session - see
-    # documentation/bugs/solved/2026-07-18-redis-has-no-persistent-volume-every-restart-wipes-active-sessions-SOLVED.md
+    # documentation/bugs/repo/fixed/2026-07-18-redis-has-no-persistent-volume-every-restart-wipes-active-sessions-SOLVED.md
     command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?set REDIS_PASSWORD in .env, never hardcode it}", "--appendonly", "yes"]
     volumes:
       - redis_data:/data

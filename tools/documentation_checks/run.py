@@ -34,8 +34,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # here rather than baked into checks.py's logic.
 EXEMPT_FROM_TODO = frozenset({
     "policies",       # pure reference (POLICY.md), no README.md anyway
-    "bugs/solved",    # archive of resolved investigations, not open work
-    "bugs/claude",    # archive of process-lapse write-ups, not open work
 })
 
 # Code directories that may carry a stub README.md pointing into

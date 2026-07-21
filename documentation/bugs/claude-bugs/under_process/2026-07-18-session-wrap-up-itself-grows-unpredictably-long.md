@@ -1,6 +1,6 @@
 # Session wrap-up itself grows unpredictably long
 
-Not quite the usual shape for this folder (a routine that didn't run, or an unchecked claim) - this is a process observation Joakim raised directly: session wrap-up itself doesn't reliably terminate. See [README.md](README.md) for the general pattern this folder covers.
+Not quite the usual shape for this folder (a routine that didn't run, or an unchecked claim) - this is a process observation Joakim raised directly: session wrap-up itself doesn't reliably terminate. See [README.md](../README.md) for the general pattern this folder covers.
 
 ## What happened
 

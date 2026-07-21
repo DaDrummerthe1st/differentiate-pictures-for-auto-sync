@@ -1,6 +1,6 @@
 # Didn't create bug report at investigation-open, only when asked if progress was saved
 
-See [README.md](README.md) for what belongs here.
+See [README.md](../README.md) for what belongs here.
 
 ## What happened
 

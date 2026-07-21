@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Creates a new dated, consistently-named bug file with a starter
 # template - one file per bug, always, never a bullet added to a shared
-# list. See documentation/bugs/README.md and documentation/bugs/claude/README.md.
+# list. See documentation/bugs/README.md and documentation/bugs/claude-bugs/README.md.
 #
 # Usage:
 #   tools/create_bug_report/create_bug_report.sh "Thumbnail OOM under load"
@@ -33,9 +33,9 @@ DATE=$(date +%Y-%m-%d)
 REPO_ROOT=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 
 if [ "$CLAUDE_MODE" -eq 1 ]; then
-  TARGET_DIR="$REPO_ROOT/documentation/bugs/claude"
+  TARGET_DIR="$REPO_ROOT/documentation/bugs/claude-bugs/under_process"
 else
-  TARGET_DIR="$REPO_ROOT/documentation/bugs/reports"
+  TARGET_DIR="$REPO_ROOT/documentation/bugs/repo/under_process"
 fi
 FILE="$TARGET_DIR/$DATE-$SLUG.md"
 
@@ -50,7 +50,7 @@ if [ "$CLAUDE_MODE" -eq 1 ]; then
   cat > "$FILE" <<EOF
 # $TITLE
 
-See [README.md](README.md) for what belongs here.
+See [README.md](../README.md) for what belongs here.
 
 ## What happened
 

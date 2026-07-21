@@ -52,10 +52,9 @@ def find_topic_folders_missing_todo(root: Path, exempt: frozenset[str]) -> list[
     """Per CLAUDE.md's "Documentation layout" rule: any documentation/
     subfolder that has its own README.md (i.e. is a real topic, not just a
     stray directory) must also have a TODO.md, unless it's in `exempt` —
-    a pure-reference or pure-archive folder with no open-work backlog of
-    its own (e.g. policies/, bugs/solved/, bugs/claude/). That distinction
-    is a judgment call this function can't make on its own — the caller
-    supplies it.
+    a pure-reference folder with no open-work backlog of its own (e.g.
+    policies/). That distinction is a judgment call this function can't
+    make on its own — the caller supplies it.
     """
     doc_root = root / "documentation"
     if not doc_root.is_dir():

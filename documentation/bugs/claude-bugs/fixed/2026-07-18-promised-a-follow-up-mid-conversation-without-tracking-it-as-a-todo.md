@@ -1,6 +1,6 @@
 # Promised a follow-up mid-conversation without tracking it as a todo
 
-See [README.md](README.md) for what belongs here.
+See [README.md](../README.md) for what belongs here.
 
 ## What happened
 

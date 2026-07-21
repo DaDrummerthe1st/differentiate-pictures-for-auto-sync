@@ -50,7 +50,7 @@ docker compose -f docker-compose.prod.yml logs -f caddy
 
 ## 4. Database schema
 
-Nothing to do here — `app/main.py`'s FastAPI `lifespan` handler calls `ensure_schema()` against the real database automatically on every `auth` container startup (idempotent `CREATE TABLE IF NOT EXISTS`, safe on every restart). Fixed 2026-07-18, see [documentation/bugs/solved/2026-07-17-postgres-schema-never-initialized-in-production-SOLVED.md](../bugs/solved/2026-07-17-postgres-schema-never-initialized-in-production-SOLVED.md).
+Nothing to do here — `app/main.py`'s FastAPI `lifespan` handler calls `ensure_schema()` against the real database automatically on every `auth` container startup (idempotent `CREATE TABLE IF NOT EXISTS`, safe on every restart). Fixed 2026-07-18, see [documentation/bugs/repo/fixed/2026-07-17-postgres-schema-never-initialized-in-production-SOLVED.md](../bugs/repo/fixed/2026-07-17-postgres-schema-never-initialized-in-production-SOLVED.md).
 
 ## 5. Create the first member account
 
@@ -60,7 +60,7 @@ docker compose -f docker-compose.prod.yml exec -e CREATE_ACCOUNT_PASSWORD="$CREA
 echo "Password: $CREATE_ACCOUNT_PASSWORD"
 ```
 
-Replace the email/role as needed. Password is read from `CREATE_ACCOUNT_PASSWORD` (generated above so it's not typed into shell history) rather than prompted, since `docker compose exec` isn't a TTY by default here — the final `echo` is the only place it's surfaced, so it can be shared with the account holder immediately and not left sitting in shell history. Fixed 2026-07-18, see [documentation/bugs/solved/2026-07-17-dockerfile-missing-scripts-directory-SOLVED.md](../bugs/solved/2026-07-17-dockerfile-missing-scripts-directory-SOLVED.md).
+Replace the email/role as needed. Password is read from `CREATE_ACCOUNT_PASSWORD` (generated above so it's not typed into shell history) rather than prompted, since `docker compose exec` isn't a TTY by default here — the final `echo` is the only place it's surfaced, so it can be shared with the account holder immediately and not left sitting in shell history. Fixed 2026-07-18, see [documentation/bugs/repo/fixed/2026-07-17-dockerfile-missing-scripts-directory-SOLVED.md](../bugs/repo/fixed/2026-07-17-dockerfile-missing-scripts-directory-SOLVED.md).
 
 Share the printed password with the account holder out of band (not over email/chat in plaintext, per [POLICY.md](../policies/POLICY.md)).
 

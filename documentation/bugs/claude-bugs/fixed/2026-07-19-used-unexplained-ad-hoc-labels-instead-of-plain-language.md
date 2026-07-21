@@ -1,6 +1,6 @@
 # Used unexplained ad hoc labels instead of plain language
 
-See [README.md](README.md) for what belongs here.
+See [README.md](../README.md) for what belongs here.
 
 ## What happened
 

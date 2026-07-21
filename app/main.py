@@ -27,7 +27,7 @@ THUMB_CACHE.mkdir(parents=True, exist_ok=True)
 # real memory/CPU spike; letting an unbounded number run at once on a
 # 2-core, memory-tight host (see HARDWARE.md) is what was silently
 # killing this container in production (2026-07-17 - see
-# documentation/bugs/reports/2026-07-17-thumbnail-oom-under-load.md).
+# documentation/bugs/repo/under_process/2026-07-17-thumbnail-oom-under-load.md).
 # Cache-hit serving (the common case after warmup) is NOT gated by this -
 # only the expensive generation path is.
 MAX_CONCURRENT_THUMBNAILS = int(os.environ.get("MAX_CONCURRENT_THUMBNAILS", "2"))

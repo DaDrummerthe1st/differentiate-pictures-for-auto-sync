@@ -17,7 +17,7 @@ Unlike [documentation_checks](DOCUMENTATION_CHECKS.md)'s dead-link/missing-`TODO
 - Markdown syntax itself (table header rows) matching across files — not content.
 - Templated boilerplate that's the *current*, intentional output of a generator script (e.g. `create_bug_report.sh`'s report template) — appearing in every file it generated, not stale duplication.
 - A restatement kept so a file can stand alone (e.g. two `README.md` stub files sharing the same one-line "moved to documentation/" sentence — a reader landing on either directly still needs the pointer).
-- CLAUDE.md rule text quoted inside a `bugs/claude/` incident report documenting a violation of that exact rule — citing the rule you broke is the point of an incident report, not duplication to cut.
+- CLAUDE.md rule text quoted inside a `bugs/claude-bugs/` incident report documenting a violation of that exact rule — citing the rule you broke is the point of an incident report, not duplication to cut.
 
 Run `run.py` first to generate candidates, then judge each one by CLEANING.md's ordering (cross-reference first, then compaction) — never delete/merge on the tool's output alone.
 

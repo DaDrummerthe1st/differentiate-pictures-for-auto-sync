@@ -1,6 +1,6 @@
 # Claimed a doc edit was made when it wasn't
 
-See [README.md](README.md) for what belongs here.
+See [README.md](../README.md) for what belongs here.
 
 ## What happened
 

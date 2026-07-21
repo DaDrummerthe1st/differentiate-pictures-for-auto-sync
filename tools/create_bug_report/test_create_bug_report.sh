@@ -12,12 +12,12 @@ fail() { echo "FAIL: $1" >&2; exit 1; }
 # --claude in the wrong position (after the title) must error clearly,
 # not silently get absorbed into the title text - fixed 2026-07-18 after
 # it wasted time creating a wrongly-named file, see CHANGELOG.
-BEFORE_COUNT=$(find "$REPO_ROOT/documentation/bugs/claude" "$REPO_ROOT/documentation/bugs/reports" -type f | wc -l)
+BEFORE_COUNT=$(find "$REPO_ROOT/documentation/bugs/claude-bugs/under_process" "$REPO_ROOT/documentation/bugs/repo/under_process" -type f | wc -l)
 set +e
 OUTPUT=$("$SCRIPT" "test misplaced flag title zzz" --claude 2>&1)
 STATUS=$?
 set -e
-AFTER_COUNT=$(find "$REPO_ROOT/documentation/bugs/claude" "$REPO_ROOT/documentation/bugs/reports" -type f | wc -l)
+AFTER_COUNT=$(find "$REPO_ROOT/documentation/bugs/claude-bugs/under_process" "$REPO_ROOT/documentation/bugs/repo/under_process" -type f | wc -l)
 
 [ "$STATUS" -ne 0 ] || fail "expected non-zero exit when --claude is misplaced, got 0"
 [ "$AFTER_COUNT" -eq "$BEFORE_COUNT" ] || fail "a file was created despite the misplaced --claude flag"

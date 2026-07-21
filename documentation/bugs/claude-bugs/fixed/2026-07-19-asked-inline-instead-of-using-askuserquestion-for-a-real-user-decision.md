@@ -1,6 +1,6 @@
 # Asked inline instead of using AskUserQuestion for a real user decision
 
-See [README.md](README.md) for what belongs here.
+See [README.md](../README.md) for what belongs here.
 
 ## What happened
 
