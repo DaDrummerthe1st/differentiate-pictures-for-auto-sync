@@ -2,6 +2,14 @@
 
 One entry per revision, newest first. This file merges two changelog histories that grew independently after `mamma-photo-viewer` forked as an orphan branch (2026-07-16, no shared git history with `master`) — folded back into one surviving `master` on 2026-07-21 (see [photo-server/TODO.md](documentation/photo-server/TODO.md)'s "Branch relationship" note). Entries from 2026-07-17 through the merge are `mamma-photo-viewer`'s own changelog, newest first; entries from 2026-07-16 backward are this repo's original mainline history, continuing unbroken from 2026-07-15. Never rewrite or reorder past entries in either half. Entries from 2026-07-19T03:42:35+00:00 onward head same-day entries with a UTC ISO 8601 timestamp instead of a `(N)` counter (see CLAUDE.md's changelog rule); earlier `(N)`-numbered headings, including the 07-19 duplicate `(3)`, are left exactly as originally written.
 
+## 2026-07-21T02:53:54+00:00 — wrap-up for the bugs/ restructure: coverage/hygiene checks, one forward-effectiveness note
+
+Ran the session wrap-up checklist (`documentation/tooling/README.md`): `commit_cost/check_coverage.sh`'s one "missing" hit was the logging commit itself — the documented, expected one-commit lag, not a real gap. Disposable `test_db.sh`/`test_redis.sh` containers and volumes confirmed fully torn down (only the two now-cached base images remain, already flagged to Joakim as reusable, not abandoned). Dead-link sweep re-run clean. No loose ends in the chat, no stale TODOs resolved-but-still-open.
+
+**Forward-effectiveness note**: splitting `claude/` into `fixed/`/`under_process/` required reading every file's tail in full to judge resolved-vs-open, since claude-bugs entries have no `Status:` line the way `repo/` entries already do. Logged as a candidate in [claude-bugs/TODO.md](documentation/bugs/claude-bugs/TODO.md) — adopting the same convention would turn that judgment call into a grep.
+
+- **Doc size**: `documentation/bugs/claude-bugs/TODO.md` 270 → 697 (+427).
+
 ## 2026-07-21T02:46:50+00:00 — bugs/ tracker restructured to match global CLAUDE.md's prescribed layout
 
 Joakim pointed out `documentation/bugs/` (`claude/`, `reports/`, `solved/`) didn't actually match the per-project bug-tracker layout `~/.claude/CLAUDE.md` describes (`claude-bugs/{fixed,under_process}/`, `repo/{fixed,under_process}/`). Restructured to match: `claude/` split into `claude-bugs/fixed/` (11 already-resolved lapses) and `claude-bugs/under_process/` (2 still open — the bug-tracking token-cost question and the wrap-up-length question, both explicitly deferred pending Joakim's input); `reports/` renamed to `repo/under_process/`; `solved/` renamed to `repo/fixed/` (kept the existing `-SOLVED` filename suffix there — new-status-via-folder-alone is the convention going forward, but renaming 6 already-solved files too would have broken every existing link to them for no benefit). All moves used `git mv` to preserve file history.
