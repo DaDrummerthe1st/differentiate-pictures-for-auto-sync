@@ -12,6 +12,12 @@ Ran the session wrap-up checklist (`documentation/tooling/README.md`). `commit_c
 
 - **Doc size**: `documentation/gui/README.md` 8,212 → 8,340 (+128).
 
+## 2026-07-21T15:58:57+00:00 — queued a remote-admin-access (VPN) task in photo-server/TODO.md, not yet designed or built
+
+Joakim asked, in an AI session outside this repo, whether to forward SSH (port 22) through the EdgeRouter X so 192.168.1.10 is reachable for admin/maintenance from outside the LAN. Recommendation reached and logged as a queued TODO item rather than built now (Joakim asked to just queue it): don't forward 22 directly — a raw shell login is a categorically bigger blast radius than the already-exposed photo-viewer (gated by its own auth/rate-limiting) on a host that's already publicly bot-scanned once exposed (DEPLOYMENT.md) and RAM-constrained (HARDWARE.md). Planned instead: a self-hosted WireGuard tunnel (native kernel module, not Tailscale, to stay consistent with this project's no-cloud-APIs posture), one UDP port forwarded for WireGuard only, `sshd` staying LAN/VPN-only. See the new bullet at the end of [documentation/photo-server/TODO.md](documentation/photo-server/TODO.md)'s "Cross-cutting security checklist" for the full note — not designed or built yet, needs its own runbook.
+
+- **Doc size**: `documentation/photo-server/TODO.md` 38,674 → 39,849 (+1,175).
+
 ## 2026-07-21T15:48:03+00:00 — vendored jQuery, Bootstrap, and Material Symbols into the photo-viewer frontend (branch `design/icons-and-ui-libs`, not yet merged)
 
 Joakim asked to start using established UI libraries (jQuery, Bootstrap) and free icons (Google's Material Symbols) instead of the current hand-rolled vanilla JS/CSS in `app/`, per the direction already logged in `documentation/gui/TODO.md`. This session covered the setup only: jQuery 4.0.0 (slim minified build, current as of 2026-07 — checked, not assumed), Bootstrap 5.3.8 (CSS + JS bundle), and a self-hosted Material Symbols Outlined variable font (Apache-2.0, `google/material-design-icons`) are downloaded and committed under `app/static/vendor/`, linked from `index.html` via local `<link>`/`<script>` tags.
