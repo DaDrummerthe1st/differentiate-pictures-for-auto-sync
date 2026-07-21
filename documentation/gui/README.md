@@ -8,7 +8,7 @@ Code lives at the repo root on the `mamma-photo-viewer` branch (`app/`, `Dockerf
 
 Single-container, no-login web app for browsing a photo library and picking files to keep. Built for Joakim's mum to browse `mammas_bilder` (thousands of family photos) and download the ones she wants — but the underlying mechanics (album grouping, media-type handling, bulk download, in-picture voice narration) are meant to generalize to the real photo-server GUI, not stay one-off.
 
-**Stack**: FastAPI + vanilla JS (no frontend framework, no build step), single Docker container, self-signed HTTPS (required — the folder-picker and microphone features both need a secure browser context, which plain HTTP outside `localhost` doesn't satisfy).
+**Stack**: FastAPI + vanilla JS, with jQuery and Bootstrap vendored in as of 2026-07-21 (self-hosted under `app/static/vendor/`, no CDN — see `TODO.md`; still no frontend framework, no build step), single Docker container, self-signed HTTPS (required — the folder-picker and microphone features both need a secure browser context, which plain HTTP outside `localhost` doesn't satisfy).
 
 **Run it — currently broken on this dev workstation, read before running**: as of 2026-07-19 the repo-root `docker-compose.yml` is stale — it predates `app/auth.py`'s login requirement and has no `JWT_SECRET_KEY` set, so the command below crashes at startup (`MissingConfigError`). No local full-stack dev environment exists yet; the only live deployment is production (`https://photos.reuterborg.se`, see `DEPLOYMENT.md`). See `TODO.md`'s 2026-07-19 section before relying on this locally. The command below is what runs it once that's fixed:
 ```

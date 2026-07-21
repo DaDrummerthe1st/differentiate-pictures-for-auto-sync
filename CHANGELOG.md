@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-07-21T15:58:00+00:00 — session wrap-up for the icons/UI-libs vendoring work
+
+Since the previous entry: `design/icons-and-ui-libs` was merged into `master` (clean fast-forward, `master` hadn't moved since branching, no conflicts) and pushed; Joakim then deployed to production (`photos.reuterborg.se`) — confirmed via `docker compose ps` showing fresh `auth`/`photo-viewer` container restarts against long-uptime `postgres`/`redis`/`caddy`, the expected signature of a successful rebuild-and-restart.
+
+Ran the session wrap-up checklist (`documentation/tooling/README.md`). `commit_cost/check_coverage.sh`'s one "missing" hit was the logging commit itself — the documented, expected one-commit lag, not a real gap. No dangling Docker images/stray containers on this local machine. `tools/documentation_checks/run.py` clean (dead links, topic TODOs, stub READMEs). Doc-drift found and fixed: `documentation/gui/README.md`'s "Stack" line still said pure vanilla JS with no frontend framework, now stale since this session vendored jQuery/Bootstrap in — updated to note that while still flagging no build step was added. No loose ends in the chat, no stale TODOs found resolved-but-still-open beyond the one already closed out in `documentation/gui/TODO.md` earlier this session.
+
+**Correction during this session, recorded for traceability**: initially misread a pasted deploy transcript as having run against the wrong host (a local dev machine instead of the production server), based on the shell prompt's hostname (`ubuntu2404lts`) not matching this session's own machine (`Lenovo`) — flagged it as a possible stray local Docker stack. Joakim clarified he was already SSH'd into the server under that hostname; the deploy had in fact succeeded on the real server. Root cause of the confusion: the deploy commands were pasted ahead of the SSH host-key prompt, so it wasn't visually obvious from the transcript alone which host was live at each line.
+
+**Forward-effectiveness note**: pasting multiple shell commands ahead of an interactive prompt (SSH host-key confirmation, sudo password, etc.) means everything after that prompt silently runs on whatever shell is active once the prompt resolves — local or remote — with no visual marker in the transcript showing which. Worth sending host-touching commands one at a time (or confirming the prompt resolved) when reviewing a pasted terminal transcript for this project's home-server deploys, rather than assuming the command block ran where it was written to run.
+
+- **Doc size**: `documentation/gui/README.md` 8,212 → 8,340 (+128).
+
 ## 2026-07-21T15:48:03+00:00 — vendored jQuery, Bootstrap, and Material Symbols into the photo-viewer frontend (branch `design/icons-and-ui-libs`, not yet merged)
 
 Joakim asked to start using established UI libraries (jQuery, Bootstrap) and free icons (Google's Material Symbols) instead of the current hand-rolled vanilla JS/CSS in `app/`, per the direction already logged in `documentation/gui/TODO.md`. This session covered the setup only: jQuery 4.0.0 (slim minified build, current as of 2026-07 — checked, not assumed), Bootstrap 5.3.8 (CSS + JS bundle), and a self-hosted Material Symbols Outlined variable font (Apache-2.0, `google/material-design-icons`) are downloaded and committed under `app/static/vendor/`, linked from `index.html` via local `<link>`/`<script>` tags.
