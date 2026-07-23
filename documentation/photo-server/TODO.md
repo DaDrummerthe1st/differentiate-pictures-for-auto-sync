@@ -13,9 +13,11 @@
 
 **Before Phase 1 starts**: confirm whether Joakim's existing login implementation (from another project) replaces the spec below or is adapted into it. Phase 1 as written is a fallback spec, not a locked-in design.
 
-## Branch relationship — resolved 2026-07-21
+## Branch relationship — resolved 2026-07-21, diverged and re-merged 2026-07-23
 
 **Merged.** `phase-1-login` folded into `master` first (clean fast-forward, zero conflicts, as expected below), then `master` was merged into `mamma-photo-viewer` via `git merge --allow-unrelated-histories`, resolving 33 real file conflicts (more than the 24 found 2026-07-17, since both branches kept moving in the meantime) — `master` was then fast-forwarded to the resulting merge commit, so all three branches' history survives, unsquashed, in one surviving `master`. `app/` stayed the live photo-viewer (the actively-deployed product); `master`'s original file-differentiation tool moved to [prototypes/differentiate_pictures/](../../prototypes/differentiate_pictures/) rather than being deleted or overwritten (Joakim's call — it's prototype/reference material for this folder's own future analysis backend, not obsolete). See CHANGELOG.md for the full resolution log.
+
+**Not a one-time event — it happened again.** After 2026-07-21, `master` and `mamma-photo-viewer` kept receiving independent commits (a server-hardware incident and jQuery/Bootstrap vendoring on `master`; the local dev stack and auth hardening on `mamma-photo-viewer`) and diverged a second time — 12 commits unique to one side, 26 to the other, by 2026-07-23. Re-merged the same way: `master` into `mamma-photo-viewer` first (conflicts in `CHANGELOG.md`, `documentation/gui/README.md`, and the two append-only `tools/*/*.jsonl` logs — see `documentation/bugs/claude-bugs/under_process/2026-07-23-changelog-header-paragraph-silently-displaced-by-a-naive-top-insert.md` for a related structural bug found and fixed in the process), then `master` fast-forwarded to the result. Take "resolved" above as "reconciled as of that date," not "permanently converged" — nothing prevents a third divergence if work continues on both branches independently.
 
 History, for context on how the branches got here in the first place:
 
