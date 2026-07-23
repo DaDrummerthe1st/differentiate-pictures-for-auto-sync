@@ -23,7 +23,7 @@ Each check has a trigger condition. Most only apply when something specific happ
 | Secrets-in-diff scan | before every commit | global |
 | `doc_metrics` logging | every commit touching a `*.md` file | local |
 | `commit_cost` logging | every commit | local |
-| CHANGELOG entry | every meaningful change | local |
+| Changelog entry | every meaningful change | local |
 | `commit_cost` coverage check (`tools/commit_cost/check_coverage.sh`) | every session close | local |
 | Lockfile/manifest consistency | only if a manifest file changed this session | global |
 | Docker hygiene (dangling/abandoned images) | only if `docker build`/`compose build` ran this session | global |

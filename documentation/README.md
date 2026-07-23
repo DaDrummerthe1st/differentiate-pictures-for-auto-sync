@@ -11,4 +11,5 @@ Project documentation, organized by topic. Structure/maintenance rules: [CLAUDE.
 | [distributed-sync/](distributed-sync/README.md) | Future work: multi-device sync, distributed storage/compute |
 | [file-integrity/](file-integrity/README.md) | Content-sniffed file-type verification apparatus |
 | [bugs/](bugs/README.md) | Bug/incident reports and AI-session process-lapse tracking |
+| [changelog/](changelog/README.md) | One-file-per-entry changelog; old `CHANGELOG.md` frozen as [CHANGELOG_ARCHIVE.md](../CHANGELOG_ARCHIVE.md) |
 | [tooling/](tooling/README.md) | Project-wide dev utilities (`tools/`) — not topic-specific |

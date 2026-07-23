@@ -1,14 +1,14 @@
 # redundancy_scan
 
-**Purpose:** mechanizes the "find phrases repeated verbatim across files" step of a [CLEANING.md](CLEANING.md) pass. First done ad hoc 2026-07-20 (see that CHANGELOG entry: a manual scan at 12-word and 10-word windows, reviewed by hand) — built as a real tool 2026-07-20 so it isn't hand-rolled again, same reasoning that already justified [DOC_METRICS.md](DOC_METRICS.md)/[DOCUMENTATION_CHECKS.md](DOCUMENTATION_CHECKS.md) existing.
+**Purpose:** mechanizes the "find phrases repeated verbatim across files" step of a [CLEANING.md](CLEANING.md) pass. First done ad hoc 2026-07-20 (see `CHANGELOG_ARCHIVE.md`'s 2026-07-20 entry: a manual scan at 12-word and 10-word windows, reviewed by hand) — built as a real tool 2026-07-20 so it isn't hand-rolled again, same reasoning that already justified [DOC_METRICS.md](DOC_METRICS.md)/[DOCUMENTATION_CHECKS.md](DOCUMENTATION_CHECKS.md) existing.
 
 **What it does NOT replace**: it only finds *verbatim* repetition — same words, same order, same case. It says nothing about whether a match should be cut (see CLEANING.md's ordering: check whether a cross-reference could replace it, before deciding to delete/merge), and it can't find *paraphrased* redundancy (the same fact stated in different words) at all — that still needs a real read.
 
 ## How it works
 
-Every pair of git-tracked `*.md` files (excluding `CHANGELOG.md` — see below) is tokenized into words and compared via `difflib.SequenceMatcher`, which finds maximal contiguous matching runs rather than fixed-size n-gram windows. A 30-word repeated block is reported once, not as a dozen overlapping 10-word windows — the main advantage over the original ad hoc approach. Matching is case-sensitive by design: this tool looks for truly verbatim text, not paraphrase, so a capitalization difference at a sentence boundary is treated as a real (if minor) difference, not noise to collapse away.
+Every pair of git-tracked `*.md` files (excluding the changelog — see below) is tokenized into words and compared via `difflib.SequenceMatcher`, which finds maximal contiguous matching runs rather than fixed-size n-gram windows. A 30-word repeated block is reported once, not as a dozen overlapping 10-word windows — the main advantage over the original ad hoc approach. Matching is case-sensitive by design: this tool looks for truly verbatim text, not paraphrase, so a capitalization difference at a sentence boundary is treated as a real (if minor) difference, not noise to collapse away.
 
-`CHANGELOG.md` is always excluded: it's append-only and its dated entries share template boilerplate by design (per CLEANING.md) — including it would drown real candidates in expected repetition.
+The changelog is always excluded — both the frozen `CHANGELOG_ARCHIVE.md` and every file under `documentation/changelog/` (see [documentation/changelog/README.md](../changelog/README.md)): entries are append-only and share template boilerplate by design (per CLEANING.md) — including them would drown real candidates in expected repetition.
 
 ## Every match is a candidate, never an automatic fix
 

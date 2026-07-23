@@ -2,11 +2,11 @@
 
 ## What happened
 
-A run of ~8 commits (the localStorage revert, the full `bugs/claude/` setup, the `bugs/` one-file-per-bug restructuring, the coverage-check script, several `CLAUDE.md` updates) went out with no `CHANGELOG.md` entry for any of them, despite CLAUDE.md's non-negotiable "one revision per update" rule. Joakim caught the gap by asking directly.
+A run of ~8 commits (the localStorage revert, the full `bugs/claude/` setup, the `bugs/` one-file-per-bug restructuring, the coverage-check script, several `CLAUDE.md` updates) went out with no `CHANGELOG_ARCHIVE.md` entry for any of them, despite CLAUDE.md's non-negotiable "one revision per update" rule. Joakim caught the gap by asking directly.
 
 ## Why it happened
 
-Same shape as the missed commit_cost logging earlier in this session: a fast-moving stretch of small, related commits, and the "update CHANGELOG.md" step quietly fell out of the loop with nothing forcing it back in.
+Same shape as the missed commit_cost logging earlier in this session: a fast-moving stretch of small, related commits, and the "update CHANGELOG_ARCHIVE.md" step quietly fell out of the loop with nothing forcing it back in.
 
 ## What changed
 

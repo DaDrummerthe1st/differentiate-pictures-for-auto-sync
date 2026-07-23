@@ -23,10 +23,13 @@ from scan import find_repeated_phrases  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-# CHANGELOG.md is append-only and its dated entries share template
-# boilerplate by design (see CLEANING.md) - excluding it here keeps the
-# scan focused on prose that's actually a candidate for de-duplication.
-EXCLUDED = frozenset({"CHANGELOG.md"})
+# The changelog is append-only and its entries share template boilerplate
+# by design (see CLEANING.md) - excluding it here keeps the scan focused
+# on prose that's actually a candidate for de-duplication. Covers both the
+# frozen single-file archive and the one-file-per-entry directory that
+# replaced it (see documentation/changelog/README.md).
+EXCLUDED_FILES = frozenset({"CHANGELOG_ARCHIVE.md"})
+EXCLUDED_DIRS = ("documentation/changelog/",)
 
 
 def _tracked_md_files(root: Path) -> dict[str, str]:
@@ -35,7 +38,7 @@ def _tracked_md_files(root: Path) -> dict[str, str]:
     ).stdout
     files = {}
     for line in out.splitlines():
-        if line in EXCLUDED:
+        if line in EXCLUDED_FILES or line.startswith(EXCLUDED_DIRS):
             continue
         files[line] = (root / line).read_text(encoding="utf-8", errors="replace")
     return files
