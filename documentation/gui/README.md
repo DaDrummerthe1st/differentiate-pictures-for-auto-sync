@@ -8,14 +8,21 @@ Code lives at the repo root on the `mamma-photo-viewer` branch (`app/`, `Dockerf
 
 Single-container, no-login web app for browsing a photo library and picking files to keep. Built for Joakim's mum to browse `mammas_bilder` (thousands of family photos) and download the ones she wants — but the underlying mechanics (album grouping, media-type handling, bulk download, in-picture voice narration) are meant to generalize to the real photo-server GUI, not stay one-off.
 
-**Stack**: FastAPI + vanilla JS (no frontend framework, no build step), single Docker container, self-signed HTTPS (required — the folder-picker and microphone features both need a secure browser context, which plain HTTP outside `localhost` doesn't satisfy).
+**Stack**: FastAPI + vanilla JS (no frontend framework, no build step), session-gated behind a separate auth backend (`server/`, JWT cookie, shared secret — see `app/auth.py`). The photo-viewer's own `Dockerfile` still bakes in a self-signed cert as a fallback, but neither the local (`docker-compose.yml`, Caddy on plain `http://localhost`) nor production (`docker-compose.prod.yml`, Caddy with a real Let's Encrypt cert) deployment actually uses it — both terminate TLS (or skip it, on localhost) at Caddy instead. A secure browser context is still required either way, for the folder-picker and microphone features.
 
-**Run it — currently broken on this dev workstation, read before running**: as of 2026-07-19 the repo-root `docker-compose.yml` is stale — it predates `app/auth.py`'s login requirement and has no `JWT_SECRET_KEY` set, so the command below crashes at startup (`MissingConfigError`). No local full-stack dev environment exists yet; the only live deployment is production (`https://photos.reuterborg.se`, see `DEPLOYMENT.md`). See `TODO.md`'s 2026-07-19 section before relying on this locally. The command below is what runs it once that's fixed:
+**Run it — full local stack, fixed 2026-07-23**: the repo-root `docker-compose.yml` now runs the whole thing locally (caddy + photo-viewer + this branch's auth backend + postgres + redis — same shape as `docker-compose.prod.yml`), so login actually works, not just the no-auth gallery. Every credential in the file is a fixed, checked-in, obviously-fake value ("local-dev-only...") rather than a `.env` — nothing there is worth protecting, since no host port is published except via Caddy on `127.0.0.1`. Caddy serves plain `http://localhost` instead of a self-signed cert: Chromium treats `http://localhost` as a secure context, so the Secure-flagged session cookie and the File System Access folder-picker both still work, with no cert-warning click-through needed.
 ```
 cd /home/joakim/code/project/differentiate-pictures-for-auto-sync
 docker compose up -d
 ```
-Open `https://<host LAN IP>:8420`. First load shows a self-signed-cert warning — click through, that's expected. Stop with `docker compose down`.
+Open `http://localhost:8420`. Photos are read read-only from the real `/home/joakim/Pictures/mammas_bilder` library (same path as production) — this app never writes back into `/photos`, only copies out on download. Stop with `docker compose down`.
+
+First boot has no accounts yet — create the project's two real accounts (see `photo-server/README.md`'s "Two accounts only" rule) directly against the local auth container, once, interactively so the password is never written to a file:
+```
+docker compose exec auth python -m scripts.create_account --email joakim.reuterborg@gmail.com --role admin
+docker compose exec auth python -m scripts.create_account --email elisabeth.reuterborg@gmail.com --role member
+```
+Accounts persist in the `postgres_data` named volume across `docker compose down`/`up` (only `docker compose down -v` would wipe them).
 
 **Tests**: `.venv-test/bin/python -m pytest app/tests/ -q` (53 tests as of this writing — tree scanning, thumbnails, path-traversal guards, session auth gating, the file-type summary's content-sniffing and its interaction with /api/tree, voiceover upload/list/playback). These run in-process (FastAPI `TestClient`) and don't exercise the browser/DOM at all.
 
@@ -51,6 +58,5 @@ Suspend (unlike a full shutdown) technically preserves a running container's sta
 
 ## Known limitations
 
-- No auth — LAN-only by design; see TODO.md for the planned login phase.
-- Self-signed cert triggers one browser warning on first visit; needs a real reverse-proxy cert once this leaves the LAN.
+- Auth state and what's still open: [../policies/AUTHENTICATION.md](../policies/AUTHENTICATION.md).
 - The File System Access folder-picker only works in Chromium browsers.

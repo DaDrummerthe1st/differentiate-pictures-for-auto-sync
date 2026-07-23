@@ -1,0 +1,15 @@
+:80 {
+	# Plain http:// — no TLS. Chromium treats http://localhost as a
+	# secure context, so the Secure-flagged session cookie still works.
+	# See docker-compose.yml's header comment for why this is safe here
+	# but never for the production Caddyfile.
+
+	@auth path /login /whoami /refresh /logout
+	handle @auth {
+		reverse_proxy auth:8000
+	}
+
+	handle {
+		reverse_proxy photo-viewer:8420
+	}
+}

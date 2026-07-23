@@ -4,7 +4,7 @@ Project documentation, organized by topic. Structure/maintenance rules: [CLAUDE.
 
 | Folder | What's there |
 | --- | --- |
-| [policies/](policies/POLICY.md) | Hard, project-wide constraints |
+| [policies/](policies/README.md) | Hard, project-wide constraints, and cross-cutting topics like authentication |
 | [photo-server/](photo-server/README.md) | Current work: multi-user web server — browse, search, tag, download |
 | [gui/](gui/README.md) | The photo-server GUI's first working version (`mamma-photo-viewer` branch) |
 | [picture-handling/](picture-handling/README.md) | Superseded single-machine sorting tool — resolved, moved to photo-server/ |
