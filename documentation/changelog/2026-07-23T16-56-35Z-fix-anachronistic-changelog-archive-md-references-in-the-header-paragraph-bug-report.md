@@ -1,0 +1,5 @@
+# Fix anachronistic CHANGELOG_ARCHIVE.md references in the header-paragraph bug report
+
+Reviewed the other session's `documentation/changelog/` rebuild (asked to check it over): well executed overall, independently re-verified its test-count and dead-link claims (all matched). Found one real bug in its mechanical `CHANGELOG.md` → `CHANGELOG_ARCHIVE.md` repoint pass — it over-corrected inside `documentation/bugs/claude-bugs/under_process/2026-07-23-changelog-header-paragraph-silently-displaced-by-a-naive-top-insert.md`, rewriting *historical* git commands/claims (e.g. `git show cefdf78:CHANGELOG_ARCHIVE.md`) to the new filename even though the file was still named `CHANGELOG.md` at every point in time that report describes — verified the quoted command literally failed (`fatal: path 'CHANGELOG_ARCHIVE.md' exists on disk, but not in 'cefdf78'`) before fixing it. Reverted all 7 occurrences to `CHANGELOG.md`; confirmed the command now succeeds.
+
+- **Doc size**: bug report 4,446 → 4,544 (+98, one occurrence gained a clarifying aside; the other 6 were 1:1 reverts).
