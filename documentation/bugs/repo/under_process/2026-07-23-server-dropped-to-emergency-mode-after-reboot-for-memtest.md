@@ -9,6 +9,7 @@ Joakim rebooted `192.168.1.10` (`sudo reboot`) intending to hit the boot-menu ke
 ## Investigation log
 
 1. 2026-07-23 — Incident opened. No diagnostic commands run yet; Joakim is at the physical console (screen+keyboard already connected for the memtest work) but the machine is in emergency mode, not a normal shell — SSH is almost certainly down while in this state (network stack not brought up this early in boot).
+2. 2026-07-23 — Blocked: root password unknown (never set/recorded — not in HARDWARE.md, this repo has no record of it), so `sulogin`'s emergency-mode password prompt can't be satisfied. Recovery path handed to Joakim: hard power-cycle back to GRUB (unavoidable — no way out of `sulogin` without the password), edit the boot entry (`e`) to append `rw init=/bin/bash` to the `linux` line, boot that one-time edit (`Ctrl+X`/`F10`) to land in a root shell that bypasses systemd/sulogin entirely, no password needed. From there: `mount -o remount,rw /`, then `journalctl -b -1 -xb` (previous boot's log, since this rescue boot itself never ran systemd) plus `cat /etc/fstab`, `lsblk`, `blkid`. Not yet run — awaiting output.
 
 ## Leading theory (unconfirmed)
 
