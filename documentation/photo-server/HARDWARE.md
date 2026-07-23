@@ -5,7 +5,8 @@ The machine this runs on. It also hosts the ZFS pool other things depend on, so 
 | Component | Spec |
 | --- | --- |
 | CPU | Intel i5-650, 2 cores / 4 threads, 3.2GHz |
-| RAM | 15GB total, ~14GB free at idle (upgraded from 3.8GB, confirmed 2026-07-23 via `free -h`) |
+| Motherboard | Gigabyte P55M-UD2 (rev x.x), Award BIOS F8 (2010-02-11) — 4 DDR3 DIMM slots, 16GB max, natively up to 1333MHz (confirmed via `dmidecode` + [gigabyte.com](https://www.gigabyte.com/us/Motherboard/GA-P55M-UD2-rev-10/sp), 2026-07-23) |
+| RAM | 16GB total (4x4GB, ~15GB usable at idle) — G.Skill NT Series DDR3, PC3-10600/1333MHz, CL9, 1.5V, unbuffered non-ECC, part `F3-10600CL9D-8GBNT`, bought as two 8GB (2x4GB) kits per order email. Upgraded from 3.8GB; installation confirmed 2026-07-23 via `free -h` + `dmidecode --type 17` (memtest status: see note below) |
 | GPU | NVIDIA GeForce 210 — not usable for AI, treat the server as CPU-only |
 | Storage | 3.6TB ZFS pool at `/tank`, 2.7TB free |
 | OS | Ubuntu 24.04 LTS, Python 3.12.3 |
@@ -22,7 +23,7 @@ The `192.168.1.1` gateway address is inferred from the dev workstation's own `ip
 
 **This is a physically separate machine from wherever an AI session (or Joakim) edits code or runs a dev shell.** Confirmed 2026-07-15: dev/build work (including any Claude Code session) happens on a different Ubuntu machine; only the table above describes 192.168.1.10 itself. Don't infer which host you're on from `uname`/OS match alone — check the IP or ask.
 
-**RAM upgrade installed, confirmed 2026-07-23**: `free -h` run live on the server now shows `15Gi` total, `14Gi` available — up from the pre-upgrade `3.8Gi` (last confirmed still-not-installed 2026-07-18). **The memtest gate is not yet cleared** — installation is confirmed, but a Memtest86+ full pass on the new sticks is not (unconfirmed as of 2026-07-23, needs a physical boot into the diagnostic environment, not remotely checkable over SSH). Do not run `docker compose up` against this host, and treat the earlier 3.8GB `mem_limit` sizing assumptions below as stale pending a deliberate re-review, until that pass is confirmed — build and test images on a dev machine until then, per TODO.md.
+**RAM upgrade installed (spec above), confirmed 2026-07-23** — up from the pre-upgrade `3.8Gi` (last confirmed still-not-installed 2026-07-18). **The memtest gate is not yet cleared**: installation is confirmed, but a Memtest86+ full pass on the new sticks is not (needs a physical boot into the diagnostic environment, not remotely checkable over SSH). Do not run `docker compose up` against this host, and treat the earlier 3.8GB `mem_limit` sizing assumptions below as stale pending a deliberate re-review, until that pass is confirmed — build and test images on a dev machine until then, per TODO.md.
 
 **Old `3.8Gi` figure likely meant one of the two old 4GB sticks was already dead**, not just that the box genuinely had 8GB installed (noted 2026-07-23, working backward from the new figure): `3.8Gi` usable is roughly what a single 4GB stick yields after typical BIOS/GPU reserved-memory overhead (~5%), not what two sticks (8GB) would give at that same overhead (~7.6Gi). The new `15Gi` usable from a nominal 16GB *is* consistent with that overhead ratio for both new sticks being correctly recognized. Raises the possibility the fault was a bad slot on the board rather than (or in addition to) a bad stick — one more reason the memtest pass above isn't optional before trusting this host under load again.
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-07-23T08:08:44+00:00 — recorded full RAM/motherboard specs; dropped the SSH-preamble convention from copyable server commands
+
+Joakim pulled `dmidecode --type 17` (4x4GB DIMMs, 1333 MT/s) and `--type baseboard/bios/system/chassis` (Gigabyte P55M-UD2, Award BIOS F8/2010) on `192.168.1.10`, plus the order-email part number (G.Skill NT `F3-10600CL9D-8GBNT`, DDR3 PC3-10600 CL9 1.5V non-ECC, bought as two 8GB/2x4GB kits). Web-search-confirmed (not assumed) the P55M-UD2 natively supports DDR3 up to 1333MHz across 4 slots, 16GB max — this upgrade fills the board exactly to spec. All of it now lives in `HARDWARE.md`'s table instead of only in this entry, since dmidecode's own manufacturer/part-number fields came back blank.
+
+Separately, Joakim asked to stop prefixing copyable server commands with `ssh joakim@192.168.1.10` since he's usually already connected. Traced the convention to its one live source — `DEPLOYMENT.md`'s opening "SSH in first" line (no duplicates found elsewhere) — and reworded it to state commands assume an existing connection, rather than repeating the login step.
+
+- **Doc size**: `documentation/photo-server/HARDWARE.md` 5,989 → 6,373 (+384); `documentation/photo-server/DEPLOYMENT.md` 7,665 → 7,642 (-23).
+
 ## 2026-07-23T07:50:43+00:00 — confirmed server RAM upgrade installed, memtest gate still open
 
 Joakim ran `free -h` on `192.168.1.10` (handed over as a copyable command, not run directly, per this host being outside the AI session's own machine): total RAM is now `15Gi`, up from the previously-documented `3.8Gi`. Updated `documentation/photo-server/HARDWARE.md`'s hardware table and its standing note accordingly. **The memtest gate itself is not cleared** — installation is confirmed, but at least one full Memtest86+ pass on the new sticks is not, and that check needs a physical boot into a diagnostic environment rather than anything checkable over SSH. `docker compose up` on this host stays blocked until that pass is confirmed; the doc also now flags the old 3.8GB-based `mem_limit` sizing in TODO.md/DEPLOYMENT.md as worth a deliberate re-review once the gate clears, rather than silently carrying stale assumptions forward. Also recorded a diagnostic note Joakim raised: the old `3.8Gi` figure (vs. two 4GB sticks nominally installed) is much closer to what a single working 4GB stick yields after normal reserved-memory overhead than to two — meaning one of the old sticks (or its slot) was likely already dead, not just under-provisioned. One more reason the memtest pass isn't skippable before trusting this host under load.
