@@ -9,12 +9,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Query, Request, UploadFile
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from PIL import Image, ImageDraw, ImageOps
 from pydantic import BaseModel
 
-from app.auth import load_auth_config, require_session
+from app.auth import has_valid_session, load_auth_config, require_session
 
 load_auth_config()
 
@@ -445,6 +445,17 @@ def voiceover_audio(filename: str, _: int = Depends(require_session)):
     if not path.is_file():
         raise HTTPException(status_code=404, detail="not found")
     return FileResponse(path, media_type="audio/webm")
+
+
+@app.get("/", include_in_schema=False)
+def index(request: Request):
+    # Gate the app shell itself, not just the API - otherwise an
+    # unauthenticated visitor sees the full working-looking UI before the
+    # first data fetch discovers there's no session and redirects. See
+    # documentation/bugs/repo/fixed/2026-07-17-unauthenticated-static-shell-before-login.md
+    if not has_valid_session(request):
+        return RedirectResponse(url="/login")
+    return FileResponse(Path(__file__).parent / "static" / "index.html")
 
 
 app.mount("/", StaticFiles(directory=Path(__file__).parent / "static", html=True), name="static")

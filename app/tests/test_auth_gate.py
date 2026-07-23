@@ -64,3 +64,42 @@ def test_protected_route_with_valid_access_token_returns_200(client, path, param
     client.cookies.set("photo_server_access", _access_token())
     res = client.get(path, params=params)
     assert res.status_code == 200
+
+
+# The app shell itself (GET /) isn't a protected API route - it's the
+# static index.html - but an unauthenticated visitor should never see it
+# render before a login check, so it gets its own gate: redirect to
+# /login instead of a 401, and serve the shell only with a valid session.
+def test_root_without_session_cookie_redirects_to_login(client):
+    client.cookies.delete("photo_server_access")
+    res = client.get("/", follow_redirects=False)
+    assert res.status_code in (302, 307)
+    assert res.headers["location"] == "/login"
+
+
+def test_root_with_garbage_cookie_redirects_to_login(client):
+    client.cookies.set("photo_server_access", "not-a-real-token")
+    res = client.get("/", follow_redirects=False)
+    assert res.status_code in (302, 307)
+    assert res.headers["location"] == "/login"
+
+
+def test_root_with_expired_token_redirects_to_login(client):
+    client.cookies.set("photo_server_access", _access_token(exp_offset=-10))
+    res = client.get("/", follow_redirects=False)
+    assert res.status_code in (302, 307)
+    assert res.headers["location"] == "/login"
+
+
+def test_root_with_refresh_token_type_redirects_to_login(client):
+    client.cookies.set("photo_server_access", _access_token(token_type="refresh"))
+    res = client.get("/", follow_redirects=False)
+    assert res.status_code in (302, 307)
+    assert res.headers["location"] == "/login"
+
+
+def test_root_with_valid_access_token_serves_app_shell(client):
+    client.cookies.set("photo_server_access", _access_token())
+    res = client.get("/", follow_redirects=False)
+    assert res.status_code == 200
+    assert "text/html" in res.headers["content-type"]

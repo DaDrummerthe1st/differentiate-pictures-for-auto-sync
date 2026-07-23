@@ -33,14 +33,27 @@ def load_auth_config() -> None:
     _jwt_secret_key()
 
 
-def require_session(request: Request) -> int:
+def _decode_access_token(request: Request) -> dict | None:
     token = request.cookies.get(ACCESS_COOKIE)
     if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
+        return None
     try:
         payload = jwt.decode(token, _jwt_secret_key(), algorithms=[_JWT_ALGORITHM])
     except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid or expired session")
+        return None
     if payload.get("type") != "access":
+        return None
+    return payload
+
+
+def has_valid_session(request: Request) -> bool:
+    """Like require_session, but for callers that want a redirect (e.g.
+    the app shell route) instead of a 401 - never raises."""
+    return _decode_access_token(request) is not None
+
+
+def require_session(request: Request) -> int:
+    payload = _decode_access_token(request)
+    if payload is None:
         raise HTTPException(status_code=401, detail="Invalid or expired session")
     return int(payload["sub"])
