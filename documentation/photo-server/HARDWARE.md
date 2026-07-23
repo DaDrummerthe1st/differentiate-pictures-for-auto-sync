@@ -5,7 +5,7 @@ The machine this runs on. It also hosts the ZFS pool other things depend on, so 
 | Component | Spec |
 | --- | --- |
 | CPU | Intel i5-650, 2 cores / 4 threads, 3.2GHz |
-| RAM | 3.8GB total, ~1.3GB free at idle |
+| RAM | 15GB total, ~14GB free at idle (upgraded from 3.8GB, confirmed 2026-07-23 via `free -h`) |
 | GPU | NVIDIA GeForce 210 — not usable for AI, treat the server as CPU-only |
 | Storage | 3.6TB ZFS pool at `/tank`, 2.7TB free |
 | OS | Ubuntu 24.04 LTS, Python 3.12.3 |
@@ -22,6 +22,8 @@ The `192.168.1.1` gateway address is inferred from the dev workstation's own `ip
 
 **This is a physically separate machine from wherever an AI session (or Joakim) edits code or runs a dev shell.** Confirmed 2026-07-15: dev/build work (including any Claude Code session) happens on a different Ubuntu machine; only the table above describes 192.168.1.10 itself. Don't infer which host you're on from `uname`/OS match alone — check the IP or ask.
 
-**RAM upgrade still not installed, confirmed 2026-07-18**: `free -h` run live on the server during today's outage investigation still shows `3.8Gi` total — same as the pre-upgrade figure above, so the ordered upgrade has not been installed yet (or at least hadn't as of today). The memtest gate below remains in force. Do not run `docker compose up` against this host until the upgrade is installed and memtested (Memtest86+, at least one full pass) — build and test images on a dev machine until then, per TODO.md.
+**RAM upgrade installed, confirmed 2026-07-23**: `free -h` run live on the server now shows `15Gi` total, `14Gi` available — up from the pre-upgrade `3.8Gi` (last confirmed still-not-installed 2026-07-18). **The memtest gate is not yet cleared** — installation is confirmed, but a Memtest86+ full pass on the new sticks is not (unconfirmed as of 2026-07-23, needs a physical boot into the diagnostic environment, not remotely checkable over SSH). Do not run `docker compose up` against this host, and treat the earlier 3.8GB `mem_limit` sizing assumptions below as stale pending a deliberate re-review, until that pass is confirmed — build and test images on a dev machine until then, per TODO.md.
+
+**Old `3.8Gi` figure likely meant one of the two old 4GB sticks was already dead**, not just that the box genuinely had 8GB installed (noted 2026-07-23, working backward from the new figure): `3.8Gi` usable is roughly what a single 4GB stick yields after typical BIOS/GPU reserved-memory overhead (~5%), not what two sticks (8GB) would give at that same overhead (~7.6Gi). The new `15Gi` usable from a nominal 16GB *is* consistent with that overhead ratio for both new sticks being correctly recognized. Raises the possibility the fault was a bad slot on the board rather than (or in addition to) a bad stick — one more reason the memtest pass above isn't optional before trusting this host under load again.
 
 **Gate knowingly overridden, 2026-07-17**: the memtest gate above is still the standing rule and still applies going forward — it was NOT cleared, the RAM sticks are ordered/paid but not yet installed (expected early the following week). Joakim made an explicit, informed call to run `docker compose -f docker-compose.prod.yml up -d` on this host today anyway, ahead of a hard external deadline, accepting the OOM/instability risk on 3.8GB RAM under five services (Caddy, photo-viewer, auth, Postgres, Redis — the compose file's `mem_limit`s cap worst case at ~1.2GB combined, but that's still tight headroom on this box). This is a one-time, dated exception, not a retroactive removal of the gate — the gate re-applies to any future `docker compose up` on this host once this deploy is torn down or once the RAM arrives, whichever a session should re-verify rather than assume.

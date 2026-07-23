@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-07-23T07:50:43+00:00 — confirmed server RAM upgrade installed, memtest gate still open
+
+Joakim ran `free -h` on `192.168.1.10` (handed over as a copyable command, not run directly, per this host being outside the AI session's own machine): total RAM is now `15Gi`, up from the previously-documented `3.8Gi`. Updated `documentation/photo-server/HARDWARE.md`'s hardware table and its standing note accordingly. **The memtest gate itself is not cleared** — installation is confirmed, but at least one full Memtest86+ pass on the new sticks is not, and that check needs a physical boot into a diagnostic environment rather than anything checkable over SSH. `docker compose up` on this host stays blocked until that pass is confirmed; the doc also now flags the old 3.8GB-based `mem_limit` sizing in TODO.md/DEPLOYMENT.md as worth a deliberate re-review once the gate clears, rather than silently carrying stale assumptions forward. Also recorded a diagnostic note Joakim raised: the old `3.8Gi` figure (vs. two 4GB sticks nominally installed) is much closer to what a single working 4GB stick yields after normal reserved-memory overhead than to two — meaning one of the old sticks (or its slot) was likely already dead, not just under-provisioned. One more reason the memtest pass isn't skippable before trusting this host under load.
+
+- **Doc size**: `documentation/photo-server/HARDWARE.md` 5,077 → 5,989 (+912).
+
 ## 2026-07-21T15:58:00+00:00 — session wrap-up for the icons/UI-libs vendoring work
 
 Since the previous entry: `design/icons-and-ui-libs` was merged into `master` (clean fast-forward, `master` hadn't moved since branching, no conflicts) and pushed; Joakim then deployed to production (`photos.reuterborg.se`) — confirmed via `docker compose ps` showing fresh `auth`/`photo-viewer` container restarts against long-uptime `postgres`/`redis`/`caddy`, the expected signature of a successful rebuild-and-restart.
