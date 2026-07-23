@@ -19,6 +19,17 @@ This also answers why local dev never needed anything resembling OAuth-grade inf
 
 Passkeys/WebAuthn (below) are **not** the same category — they're a W3C standard verified locally against public keys the app itself stores (no third-party relying-party service), so they stay inside the closed-by-default posture. A self-hosted OAuth/OIDC *server* (as opposed to a third-party one) would technically also be closed-by-default-compatible, but isn't currently planned or needed at two-account family scale.
 
+## Planned: move off manual CLI account creation (next server deployment)
+
+Raised 2026-07-23: today, every account is created manually — an admin runs `server/scripts/create_account.py` on the server itself. Joakim wants this to change on the next server deployment, in two steps:
+
+1. **First** (Joakim's own suggested mechanism, 2026-07-23): a self-service signup form on the login page creates the account row immediately — no separate pending-request table — but every route stays gated behind an `approved`-style flag, so the new account has **no access to any app functionality until an admin approves it**. This is not the same as the open public `/signup` endpoint already excluded above — it keeps admin gatekeeping in front of any real access, just moves *account creation itself* off an admin-run CLI command and onto the login page, with a hold on functional access rather than a hold on the account's existence.
+2. **Later**: once that pattern is proven out, simplify further to direct self-service account creation (no approval gate) — not scoped or timed yet, just the stated direction.
+
+Not designed: the `users` table's new approval-state column, the admin's approval UI/notification, what an unapproved account's login attempt actually shows (a "pending approval" message vs. a generic-looking failure, to avoid leaking account existence), and how this reconciles with `photo-server/README.md`'s current "two accounts only, ever" wording — that line will need revisiting once this is built, not before.
+
+One thing this *does* resolve on its own: a self-service request form has the user type their own password directly into the browser, so it's naturally consistent with [CLAUDE.md](../../CLAUDE.md)'s "AI session never handles real credentials" rule — unlike the CLI flow it replaces, where a human (never the AI session, per that rule) has had to run the command by hand.
+
 ## Priority order for remaining hardening
 
 Requirements as originally given by Joakim (2026-07-16), none built yet beyond the base layer above. Ordered by what closes the biggest real gap first, not by how the list was originally written:

@@ -24,7 +24,7 @@ Not yet done, lower priority than the open items in `../bugs/repo/under_process/
 ## Non-negotiables specific to this topic
 
 - Inherits [POLICY.md](../policies/POLICY.md)'s closed-by-default rule: no photo or user data ever leaves the server.
-- Two accounts only: joakim.reuterborg@gmail.com (admin), elisabeth.reuterborg@gmail.com (member).
+- Two accounts only: joakim.reuterborg@gmail.com (admin), elisabeth.reuterborg@gmail.com (member). **Planned to change** on the next server deployment — see [../policies/AUTHENTICATION.md](../policies/AUTHENTICATION.md)'s "move off manual CLI account creation" section; this line hasn't been updated yet since that work hasn't landed.
 - Same subdomain (`photos.reuterborg.se`) serves both the browser UI and the JSON API, split by path prefix (`/api/*`) or `Accept` header — never user-agent sniffing.
 - The root domain (`reuterborg.se`) already serves something that must keep working. Only ever touch the `photos.` subdomain, and double-check DNS changes don't affect the root (see TODO.md's HTTPS phase).
 - Docker Compose, not a native install (see [HARDWARE.md](HARDWARE.md) for why). PostgreSQL is the only database engine; no separate search or vector store (tsvector now, pgvector later, same instance).

@@ -22,6 +22,6 @@ Defaulted to a non-interactive, scripted `docker compose exec -e ...` invocation
 
 ## What changed
 
-- Going forward, real account creation via `server/scripts/create_account.py` — even against a local/disposable environment — uses the interactive password prompt (or the command is handed to the human to run themselves, entering their own password), never a scripted `-e`/CLI-argument password, matching the script's own stated intent.
-- A real credential is stated in chat at most once if unavoidable, never repeated across turns.
-- The two local accounts' passwords should be treated as compromised (known via shell history/process listing and this chat transcript) and rotated the next time either account is touched, rather than left in place on the assumption that "local-only" made the exposure moot.
+- **New CLAUDE.md non-negotiable (2026-07-23)**: the AI session never handles real credentials at all — not "use the interactive prompt instead," but never sets, sees, or transmits a real password/API-key value a human will actually keep using, in any environment including local/disposable ones. Account creation always uses the tool's own interactive prompt with the human typing the value directly, or the command is handed over for the human to run themselves. Placeholder/fixture values that protect nothing reachable from outside the host (e.g. a local dev stack's fixed DB/JWT secrets) remain a different, unaffected category.
+- A real credential is never stated or repeated in chat, period (tightened from "at most once" once the no-handling rule above made "once" unnecessary too).
+- **Remediated same session**: both compromised accounts (`joakim.reuterborg@gmail.com`, `elisabeth.reuterborg@gmail.com`) deleted from the local Postgres (`DELETE FROM users`, plus their now-orphaned `audit_log` rows) rather than left in place — Joakim recreated them himself via the interactive prompt, entering his own passwords, which the AI session never saw.
