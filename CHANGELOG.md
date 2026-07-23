@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-07-23T11:08:19+00:00 — session close: forward-effectiveness note, one open thread flagged
+
+**Forward-effectiveness note**: this incident burned several correction cycles on imprecise relayed descriptions of on-screen text (the emergency-mode prompt's exact wording, the "default.target" fallback message, the Hard Disk Boot Priority list contents) - each guess based on a paraphrase cost a round-trip once the real wording turned out to matter. Next time a physical-console incident involves BIOS/boot-time text, ask for a photo or exact transcription *before* reasoning from a paraphrase, not after a guess needs correcting.
+
+**Open thread, not designed or decided**: Joakim floated continuing development work against a VPS instead of the physical server while it's inaccessible (he's off-site ~1 week from 2026-07-23). Not scoped, not started - worth raising again next session rather than assuming it was dropped intentionally.
+
 ## 2026-07-23T10:58:02+00:00 — server outage after the RAM install: dock cable + BIOS boot-priority, both fixed; pool healthy
 
 The post-upgrade reboot for the pending memtest pass turned into a multi-hour live incident (full trail in `documentation/bugs/repo/under_process/2026-07-23-server-dropped-to-emergency-mode-after-reboot-for-memtest.md`): the server first dropped to systemd emergency mode with no root password on record, then - once past that - `journalctl` showed the entire onboard SATA controller (6 ports) link-down, meaning the ZFS pool's drives were completely invisible to the OS. Root cause: the external 4-bay dock's SATA cable had come unplugged at the dock end. Reconnecting it (SATA only - deliberately left the dock's USB cable disconnected, native SATA being more reliable for ZFS than a USB bridge chip, web-search-confirmed) surfaced a second, separate issue: this board's Award BIOS `Hard Disk Boot Priority` list gets disrupted whenever the dock's drive count changes, ranking a generic `Bootable Add-In Cards` entry above the actual boot drive and hanging on a blank screen instead of booting. Fixed by manually reordering the boot drive to the top.
