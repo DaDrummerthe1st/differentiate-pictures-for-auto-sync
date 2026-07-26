@@ -11,10 +11,9 @@ The host generates a QR code for the event. It encodes a token resolving to that
 Confirmed as separate, not one combined preset — any combination is valid:
 
 1. **Upload access** — host-configurable per event:
-   - **Free-for-all**: anyone with the link/QR uploads, no account. Highest reach, immediately triggers the moderation/legal flag in [OWNERSHIP.md](OWNERSHIP.md) since truly anonymous strangers can upload.
+   - **Free-for-all**: anyone with the link/QR uploads, no account. Highest reach, immediately triggers the moderation/legal flag in [OWNERSHIP.md](OWNERSHIP.md) since truly anonymous strangers can upload. **Ownership, resolved 2026-07-26**: the uploaded photo's owner is the **event's own account** — a dedicated `users` row the event was set up with — never the anonymous guest, and never a claimable pending record (the `pending_shares` idea considered earlier for this case is dropped; that mechanism still stands for the unrelated email-invite share path in [SHARING.md](SHARING.md)). Keeps every anonymous contribution cleanly scoped to the event, separate from the host's own personal library, with one clear account holding moderation/legal responsibility for that event's pool until anything is shared onward from it.
    - **Pre-approved**: host invites specific people ahead of time (by email/username); only those accounts can upload.
    - **Register-then-approve**: anyone can sign up against the event, but the host approves each registrant before her uploads count/appear.
-   *(Who owns an anonymous free-for-all upload is not yet resolved — see Open questions below.)*
 2. **Visibility scope** — independent of who uploaded or how: **all uploads visible** to every invitee, or a **curated best-of subset** (AI-assisted, human-reviewed, or both) that invitees see instead/in addition.
 3. **Live TV-screen display** — a separate output channel entirely, not a visibility-scope setting: an on/off switch for showing a live feed (all uploads, or the curated subset — the host's call) on a screen at the venue, independent of the other two axes.
 
@@ -24,8 +23,7 @@ Confirmed as separate, not one combined preset — any combination is valid:
 
 ## Open questions, not resolved — flag before building free-for-all upload
 
-- **Anonymous upload ownership**: with no account, who is `photo_owners.user_id`? Proposed (not yet confirmed): reuse the `pending_shares` mechanism ([SHARING.md](SHARING.md)) — even a free-for-all upload asks for at least a name/email, creating a claimable pending-owner record the uploader can later attach a real account to, rather than truly ownerless photos. Needs explicit confirmation before it's built.
-- **Legal reporting obligations** once strangers can upload without identity verification (see [OWNERSHIP.md](OWNERSHIP.md)'s Moderation section) — a lawyer question, not an engineering one.
+- **Legal reporting obligations** once strangers can upload without identity verification (see [OWNERSHIP.md](OWNERSHIP.md)'s Moderation section) — a lawyer question, not an engineering one. (Anonymous upload *ownership* is resolved, above — this is the one remaining blocker before build.)
 
 ## Status
 

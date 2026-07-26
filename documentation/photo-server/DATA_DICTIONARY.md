@@ -95,11 +95,11 @@ Reserved, no endpoints — admin-only moderation override, supersedes ownership/
 
 ## events
 
-Reserved, no endpoints — one row per party/wedding/funeral-style event ([../upload-and-share/EVENTS.md](../upload-and-share/EVENTS.md)). `tag_id` is the event's underlying `kind='album'` tag, auto-applied to every photo uploaded through the event's QR token.
+Reserved, no endpoints — one row per party/wedding/funeral-style event ([../upload-and-share/EVENTS.md](../upload-and-share/EVENTS.md)). `tag_id` is the event's underlying `kind='album'` tag, auto-applied to every photo uploaded through the event's QR token. `event_account_user_id` is a dedicated `users` row created with the event — free-for-all uploads' `photo_owners.user_id` is this account, never the anonymous guest and never a claimable pending record (resolved 2026-07-26); `host_user_id` is the human who administers the event and is a separate row from it.
 
 | Column | Status |
 | --- | --- |
-| id, host_user_id, name, tag_id, qr_token, upload_access (free_for_all / pre_approved / register_then_approve), visibility_scope (all / curated), tv_display (bool), created_at | reserved |
+| id, host_user_id, event_account_user_id, name, tag_id, qr_token, upload_access (free_for_all / pre_approved / register_then_approve), visibility_scope (all / curated), tv_display (bool), created_at | reserved |
 
 ## audit_log
 
