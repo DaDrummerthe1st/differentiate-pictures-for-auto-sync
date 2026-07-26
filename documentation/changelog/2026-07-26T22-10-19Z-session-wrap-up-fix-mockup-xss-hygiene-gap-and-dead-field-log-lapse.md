@@ -1,0 +1,5 @@
+# Session wrap-up: fix mockup XSS-hygiene gap and dead field, log lapse
+
+Wrap-up sweep on this session's touched files found two real gaps in the mockup: user-typed batch names became tag text inserted unescaped via `innerHTML` (a typed `<img onerror=...>` would have executed - fixed with `escapeHtml()`), and the register-approve guest flow's "Ditt namn" field was decorative, never read. Also caught and logged a process lapse: `app/tests` was run before the first commit but not re-run before the second, though this project's wrap-up table gives it no skip exception (unlike `server/tests`) - re-run now, still 58 passed, no regression, but the check itself should have run each time. Left a forward-effectiveness note in `documentation/gui/TODO.md` pointing its still-open "restyle app/static/ with the vendored icon library" item at the mockup as a working reference implementation.
+
+- **Doc size**: `documentation/gui/TODO.md` 15350 → 15999 chars (+649); new bug report `documentation/bugs/claude-bugs/fixed/2026-07-27-skipped-app-tests-rerun-before-the-second-commit-this-session.md`, 1750 chars.

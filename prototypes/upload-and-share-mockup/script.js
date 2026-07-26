@@ -5,6 +5,12 @@
 function icon(name) { return `<span class="material-symbols-outlined">${name}</span>`; }
 function termsLabel(terms) { return terms === "free" ? "Fri" : "Strikt"; }
 function termsIcon(terms) { return terms === "free" ? "public" : "lock"; }
+// Batch names are user-typed (Upload tab / guest upload) and become tag
+// text rendered via innerHTML below — escape before interpolating so a
+// batch name like "<img onerror=...>" can't run as markup.
+function escapeHtml(s) {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
 
 // ---------------------------------------------------------------- seed data
 
@@ -464,7 +470,7 @@ function renderPhotoDetail(photoId) {
     <div class="detail-hero" style="background:${colorFor(p.id)}">${emojiFor(p)}</div>
     <h2>${p.filename}</h2>
     <div class="tag-row">
-      ${p.tags.map((t, i) => `<span class="tag-pill">${t.text}${t.endorsedBy.length ? ` &middot; +${t.endorsedBy.length}` : ""}
+      ${p.tags.map((t, i) => `<span class="tag-pill">${escapeHtml(t.text)}${t.endorsedBy.length ? ` &middot; +${t.endorsedBy.length}` : ""}
         ${t.by !== currentUserId && !t.endorsedBy.includes(currentUserId) && (iOwn || myShare) ? ` <button class="endorse-link" onclick="endorseTag('${p.id}',${i})">${icon("verified")}bekräfta</button>` : ""}
       </span>`).join("")}
     </div>
@@ -567,6 +573,13 @@ function openGuestUpload() {
   renderGuestUpload();
 }
 function closeGuestUpload() { document.getElementById("guestUploadScreen").classList.add("hidden"); }
+function requestEventAccess() {
+  const ev = DB.events[0];
+  const typed = document.getElementById("guestRegisterName").value.trim();
+  const name = escapeHtml(typed || "Du");
+  document.getElementById("guestUploadBody").innerHTML =
+    `<h2>${ev.name}</h2><p>Begäran skickad för ${name} — dina uppladdningar visas när ${userName(ev.hostUserId)} har godkänt dig.</p>`;
+}
 function renderGuestUpload() {
   const ev = DB.events[0];
   const body = document.getElementById("guestUploadBody");
@@ -577,8 +590,8 @@ function renderGuestUpload() {
   if (ev.axes.uploadAccess === "register-approve") {
     body.innerHTML = `<h2>${ev.name}</h2>
       <p>Registrera dig för att begära uppladdningsåtkomst — värden godkänner varje registrering innan uppladdningar räknas.</p>
-      <div class="mock-field"><label>Ditt namn</label><input type="text" placeholder="Gästens namn"></div>
-      <div class="row"><button class="btn primary" onclick="document.getElementById('guestUploadBody').innerHTML='&lt;h2&gt;' + ${JSON.stringify(ev.name)}.replace(/'/g, \"\\\\'\") + '&lt;/h2&gt;&lt;p&gt;Begäran skickad — dina uppladdningar visas när ' + ${JSON.stringify(userName(ev.hostUserId))} + ' har godkänt dig.&lt;/p&gt;'">${icon("how_to_reg")}Begär åtkomst</button></div>`;
+      <div class="mock-field"><label>Ditt namn</label><input type="text" id="guestRegisterName" placeholder="Gästens namn"></div>
+      <div class="row"><button class="btn primary" onclick="requestEventAccess()">${icon("how_to_reg")}Begär åtkomst</button></div>`;
     return;
   }
   // fritt fram
