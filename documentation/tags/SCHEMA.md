@@ -97,11 +97,10 @@ How each category uses it:
 ## `tag_endorsements`
 
 Unchanged from DATA_DICTIONARY.md's reserved definition — moved here as its
-authoritative home, not redesigned. Lets a user corroborate another user's tag (a
-face ID, a location, a quality call) as a stronger signal than an unverified
-single-source tag — see
-[../upload-and-share/SHARING.md](../upload-and-share/SHARING.md) for why this
-matters to the sharing/ML-training goal.
+authoritative home, not redesigned. Lets a user corroborate another user's tag as a
+stronger signal than an unverified single-source one — see
+[../upload-and-share/SHARING.md](../upload-and-share/SHARING.md)'s "Tag
+verification/endorsement" section for what it's for and why.
 
 | Column | Status |
 | --- | --- |
