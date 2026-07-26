@@ -6,7 +6,7 @@ Status: fixed same session — see "What changed".
 
 ## What happened
 
-Initially wrote the whole upload/sharing design as `documentation/photo-server/UPLOAD_AND_SHARE.md`, inside the `photo-server/` topic folder. That folder's own [README.md](../../photo-server/README.md), read minutes earlier in the same session, already stated: "Nothing here should grow toward distributed storage, cross-household sharing, or AI-driven curation suggestions without an explicit decision to do so; those are separate, not-yet-scheduled pillars, not this folder's job." I placed the new content there anyway, without cross-checking the placement against that line.
+Initially wrote the whole upload/sharing design as `documentation/photo-server/UPLOAD_AND_SHARE.md`, inside the `photo-server/` topic folder. That folder's own [README.md](../../../photo-server/README.md), read minutes earlier in the same session, already stated: "Nothing here should grow toward distributed storage, cross-household sharing, or AI-driven curation suggestions without an explicit decision to do so; those are separate, not-yet-scheduled pillars, not this folder's job." I placed the new content there anyway, without cross-checking the placement against that line.
 
 ## Why it happened
 

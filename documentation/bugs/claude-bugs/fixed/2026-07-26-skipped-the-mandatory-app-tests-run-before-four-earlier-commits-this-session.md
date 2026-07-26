@@ -6,7 +6,7 @@ Status: fixed same session — see "What changed".
 
 ## What happened
 
-[CLAUDE.md](../../../CLAUDE.md) states plainly: "Run the fast in-process `app/tests` before every commit, even a docs-only one." This session made four commits (the initial upload-and-share design docs, a doc-metrics/commit-cost ledger update, the scope-creep/Artifact-policy fix, and another ledger update) before running `app/tests` even once. Only caught when staging a fifth commit (the local HTML/CSS/JS mockup) and pausing to check the rule against what had actually been done.
+[CLAUDE.md](../../../../CLAUDE.md) states plainly: "Run the fast in-process `app/tests` before every commit, even a docs-only one." This session made four commits (the initial upload-and-share design docs, a doc-metrics/commit-cost ledger update, the scope-creep/Artifact-policy fix, and another ledger update) before running `app/tests` even once. Only caught when staging a fifth commit (the local HTML/CSS/JS mockup) and pausing to check the rule against what had actually been done.
 
 ## Why it happened
 
