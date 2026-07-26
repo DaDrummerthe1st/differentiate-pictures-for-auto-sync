@@ -19,6 +19,12 @@ across whichever topic happened to need a tag first.
 
 ## Status
 
+**Next session needing tag context starts here, not with a repeat multi-file
+survey** — before this folder existed, reconstructing "everything about tags"
+meant reading 9 separate files across two topic folders (done once, by hand, to
+open this design pass). That cost doesn't recur now; extend the 4 files above
+directly.
+
 Opened 2026-07-27 (branch `tags`), consolidating tag-related content that was
 previously scattered across `photo-server/DATA_DICTIONARY.md` and several
 `upload-and-share/` files. Design only — no schema migration, no endpoints. See
