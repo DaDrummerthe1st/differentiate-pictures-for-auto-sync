@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DPFAS — Upload &amp; Share mockup</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+  <header id="topbar">
+    <div class="kicker">DPFAS mockup &middot; documentation/upload-and-share/</div>
+    <div class="topbar-right">
+      <label class="user-switch">Viewing as
+        <select id="userSwitch"></select>
+      </label>
+      <button id="pendingBtn" class="nav-pill">Pending <span id="pendingCount" class="badge hidden">0</span></button>
+    </div>
+  </header>
+
+  <div class="flag">Local file only, client-side state only — nothing here is saved or sent anywhere. Reload the page to reset to seed data.</div>
+
+  <nav id="tabNav">
+    <button class="nav-pill current" data-tab="gallery">Gallery</button>
+    <button class="nav-pill" data-tab="upload">Upload</button>
+    <button class="nav-pill" data-tab="sharing">Sharing</button>
+    <button class="nav-pill" data-tab="events">Events</button>
+  </nav>
+
+  <main id="tabPanels">
+
+    <section id="tab-gallery" class="tab-panel">
+      <p class="section-sub" id="galleryEmptyHint"></p>
+      <div class="grid" id="galleryGrid"></div>
+    </section>
+
+    <section id="tab-upload" class="tab-panel hidden">
+      <h2>Upload</h2>
+      <div class="card" style="max-width:420px;">
+        <div class="mock-field">
+          <label>Name this batch (optional)</label>
+          <input type="text" id="batchName" placeholder="Summer 2019">
+        </div>
+        <p class="hint" id="batchDefaultHint"></p>
+        <div class="mock-field">
+          <label>Choose files — click to select from this session's stock</label>
+          <div class="file-pool" id="filePool"></div>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="uploadBtn" disabled>Upload (<span id="selectedCount">0</span> selected)</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-sharing" class="tab-panel hidden">
+      <h2>Sharing</h2>
+      <p class="section-sub">Share a photo from the Gallery tab to try the three mechanisms — this tab tracks what's outstanding.</p>
+
+      <h3>Incoming — needs your action</h3>
+      <ul class="list" id="incomingList"></ul>
+
+      <h3>Outgoing invites — waiting on signup</h3>
+      <ul class="list" id="outgoingInviteList"></ul>
+
+      <h3>What you've shared</h3>
+      <ul class="list" id="sharedByMeList"></ul>
+    </section>
+
+    <section id="tab-events" class="tab-panel hidden">
+      <h2>Event / party mode</h2>
+      <div class="card panel" id="eventCard"></div>
+
+      <div class="qr-block">
+        <div class="qr" aria-hidden="true">
+          <i></i><i></i><i></i><i class="off"></i><i></i><i></i><i></i>
+          <i></i><i class="off"></i><i class="off"></i><i></i><i class="off"></i><i class="off"></i><i></i>
+          <i></i><i class="off"></i><i></i><i></i><i></i><i class="off"></i><i></i>
+          <i class="off"></i><i class="off"></i><i></i><i class="off"></i><i></i><i class="off"></i><i class="off"></i>
+          <i></i><i class="off"></i><i></i><i></i><i></i><i class="off"></i><i></i>
+          <i></i><i class="off"></i><i class="off"></i><i></i><i class="off"></i><i class="off"></i><i></i>
+          <i></i><i></i><i></i><i class="off"></i><i></i><i></i><i></i>
+        </div>
+        <div>
+          <p class="qr-caption">Illustrative, not scannable. Encodes a token resolving to this event's tag — every photo uploaded through it is tagged automatically, before any other tagging happens.</p>
+          <button class="btn primary" id="openGuestUploadBtn">Open guest upload page &rarr;</button>
+        </div>
+      </div>
+
+      <div id="tvWallWrap" class="hidden">
+        <h3>&#128250; Live wall preview</h3>
+        <p class="section-sub small">A separate output channel — respects Visibility scope, independent of the TV toggle itself.</p>
+        <div class="grid" id="tvWallGrid"></div>
+      </div>
+
+      <div class="callout">
+        <span class="label">Open, not resolved</span>
+        <p>Legal reporting obligations once free-for-all lets strangers upload without identity verification — a lawyer question, not an engineering one. Not a build blocker for anonymous-upload <em>ownership</em>, which is resolved: the event's own dedicated account owns these uploads, never the guest.</p>
+      </div>
+
+      <h3>Event photo pool — curate for the wall / curated-visibility guests</h3>
+      <div class="grid" id="eventPoolGrid"></div>
+    </section>
+
+  </main>
+</div>
+
+<div id="guestUploadScreen" class="overlay hidden">
+  <div class="guest-shell">
+    <button class="lb-btn lb-close" id="guestCloseBtn">&#10005;</button>
+    <div id="guestUploadBody"></div>
+  </div>
+</div>
+
+<div id="photoDetail" class="overlay hidden">
+  <div class="detail-panel" id="photoDetailBody"></div>
+</div>
+
+<div id="shareModal" class="overlay hidden">
+  <div class="card modal-card" id="shareModalBody"></div>
+</div>
+
+<div id="toast" class="hidden"></div>
+
+<footer>documentation/upload-and-share/ (OWNERSHIP.md, UPLOAD.md, SHARING.md, EVENTS.md) &middot; prototypes/upload-and-share-mockup/</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
