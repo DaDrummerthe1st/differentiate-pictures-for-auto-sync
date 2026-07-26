@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DPFAS — Upload &amp; Share mockup</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="shell">
+
+  <div class="hero">
+    <div class="kicker">DPFAS &middot; documentation/upload-and-share/</div>
+    <h1>Upload &amp; share — clickable mockup</h1>
+    <p>Static local prototype of the design in <code>documentation/upload-and-share/</code>. No server, no persistence beyond this page load — every "sent"/"shared" state below is faked client-side in <code>script.js</code>.</p>
+    <div class="flag">Local file only — open directly in a browser, or <code>python3 -m http.server</code> from this folder. Never hosted externally.</div>
+  </div>
+
+  <section id="ownership">
+    <h2>Ownership model</h2>
+    <p class="section-sub">Every uploader owns her own copy. Two terms, set per photo with a per-album default.</p>
+    <div class="tiers">
+      <div class="tier-card strict">
+        <span class="pill strict">STRICT</span>
+        <h3>Revocable viewing grant</h3>
+        <p class="tagline">A live permission check, not a copy</p>
+        <ul>
+          <li>Resharing onward <b>blocked</b> without asking the owner</li>
+          <li>Download / export <b>blocked</b></li>
+          <li><b>Revocable</b> at any time</li>
+          <li>Enforced as a per-request check — one server, no new protocol</li>
+          <li>Tagging her own copy — <b>always allowed</b></li>
+        </ul>
+      </div>
+      <div class="tier-card free">
+        <span class="pill free">FREE</span>
+        <h3>Full, irrevocable co-ownership</h3>
+        <p class="tagline">"Once shared free, it can't be taken back"</p>
+        <ul>
+          <li>Resharing onward <b>allowed</b>, including further down the chain</li>
+          <li>Download / export <b>allowed</b></li>
+          <li><b>Not revocable</b> — a genuine independent owner</li>
+          <li>She sets her own terms for her own further shares</li>
+          <li>Tagging her own copy — <b>always allowed</b></li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout">
+      <span class="label">Moderation supersedes both tiers</span>
+      <p>A perceptual-hash blocklist removes flagged content unconditionally — no owner's or sharee's terms override a takedown. See OWNERSHIP.md.</p>
+    </div>
+  </section>
+
+  <section id="upload">
+    <h2>Upload flow</h2>
+    <p class="section-sub">A web upload has no source folder — the batch name is typed once and becomes an auto-created tag.</p>
+    <div class="card" style="max-width: 380px;">
+      <div class="mock-field">
+        <label>Name this batch (optional)</label>
+        <input type="text" id="batch-name" placeholder="Summer 2019">
+      </div>
+      <div class="mock-field">
+        <label>Files</label>
+        <input type="text" value="14 photos selected" disabled>
+      </div>
+      <div class="row"><button class="btn primary" onclick="alert('catalogue = ' + (document.getElementById('batch-name').value || 'web-upload-{user}-{timestamp}'))">Upload</button></div>
+    </div>
+  </section>
+
+  <section id="sharing">
+    <h2>Sharing mechanisms</h2>
+    <p class="section-sub">Try the platform share button (uses your real browser's Web Share API if available) and the in-app dialog below.</p>
+
+    <div class="card" style="margin-bottom: 18px;">
+      <h3 style="margin-top:0;">1 &middot; Platform share sheet</h3>
+      <button class="btn primary" id="platform-share-btn">Share via device</button>
+      <div class="status-msg" id="platform-share-status"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0;">2 &amp; 3 &middot; In-app dialog (username or email)</h3>
+      <div class="share-modes" id="share-modes">
+        <button data-mode="username" aria-pressed="true">DPFAS username</button>
+        <button data-mode="email" aria-pressed="false">Email address</button>
+      </div>
+      <div class="mock-field" id="field-username">
+        <label>Username</label>
+        <input type="text" id="username-input" placeholder="e.g. elisabeth (try one with an 'x' to see 'not found')">
+      </div>
+      <div class="mock-field" id="field-email" style="display:none;">
+        <label>Email address</label>
+        <input type="email" id="email-input" placeholder="new@example.com">
+      </div>
+      <div class="terms-toggle" id="terms-toggle">
+        <span style="font-size:0.82rem; color:var(--muted);">Terms:</span>
+        <div class="seg">
+          <button data-terms="free" aria-pressed="true">FREE</button>
+          <button data-terms="strict" aria-pressed="false">STRICT</button>
+        </div>
+      </div>
+      <div class="row"><button class="btn primary" id="share-send">Send</button></div>
+      <div class="status-msg" id="share-status"></div>
+      <ul class="pending-list" id="pending-list"></ul>
+    </div>
+  </section>
+
+  <section id="event">
+    <h2>Event / party mode</h2>
+    <p class="section-sub">Three independent axes — click any control, they don't affect each other.</p>
+    <div class="card panel">
+      <div class="axis">
+        <div class="axis-info">
+          <div class="axis-name">Upload access</div>
+          <p class="axis-desc">Who may contribute to this event's album</p>
+        </div>
+        <div class="seg" data-seg>
+          <button aria-pressed="false">Pre-approved</button>
+          <button aria-pressed="true">Free-for-all</button>
+          <button aria-pressed="false">Register &rarr; approve</button>
+        </div>
+      </div>
+      <div class="axis">
+        <div class="axis-info">
+          <div class="axis-name">Visibility scope</div>
+          <p class="axis-desc">What invitees can browse, independent of who uploaded</p>
+        </div>
+        <div class="seg" data-seg>
+          <button aria-pressed="true">All uploads</button>
+          <button aria-pressed="false">Curated best-of</button>
+        </div>
+      </div>
+      <div class="axis">
+        <div class="axis-info">
+          <div class="axis-name">Live TV-screen wall</div>
+          <p class="axis-desc">A separate output channel — not a visibility setting</p>
+        </div>
+        <button class="toggle" aria-pressed="true" aria-label="Toggle TV display"></button>
+      </div>
+    </div>
+
+    <div class="qr-block">
+      <div class="qr" aria-hidden="true">
+        <i></i><i></i><i></i><i class="off"></i><i></i><i></i><i></i>
+        <i></i><i class="off"></i><i class="off"></i><i></i><i class="off"></i><i class="off"></i><i></i>
+        <i></i><i class="off"></i><i></i><i></i><i></i><i class="off"></i><i></i>
+        <i class="off"></i><i class="off"></i><i></i><i class="off"></i><i></i><i class="off"></i><i class="off"></i>
+        <i></i><i class="off"></i><i></i><i></i><i></i><i class="off"></i><i></i>
+        <i></i><i class="off"></i><i class="off"></i><i></i><i class="off"></i><i class="off"></i><i></i>
+        <i></i><i></i><i></i><i class="off"></i><i></i><i></i><i></i>
+      </div>
+      <p class="qr-caption">Illustrative, not a scannable code. Encodes a token resolving to the event's tag — every photo uploaded through it is tagged automatically.</p>
+    </div>
+
+    <div class="callout">
+      <span class="label">Open, not resolved</span>
+      <p>Free-for-all has no account to own the upload against — see EVENTS.md's open questions.</p>
+    </div>
+  </section>
+
+  <footer>documentation/upload-and-share/ (OWNERSHIP.md, UPLOAD.md, SHARING.md, EVENTS.md) &middot; prototypes/upload-and-share-mockup/ &middot; 2026-07-26</footer>
+</div>
+<script src="script.js"></script>
+</body>
+</html>
