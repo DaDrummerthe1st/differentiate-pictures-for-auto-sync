@@ -15,7 +15,7 @@ Upload dialog:
 Empty name -> catalogue = "web-upload-{user}-{timestamp}"
 ```
 
-This isn't cosmetic: `catalogue` is half of the ingestion dedup key (`unique(catalogue, filename)`, see [../photo-server/DATA_DICTIONARY.md](../photo-server/DATA_DICTIONARY.md)) and the only "these happened together" signal the system gets for free, before any manual tagging — directly serving the tagging-density goal in [OWNERSHIP.md](OWNERSHIP.md) (a whole batch already carries one shared tag before a human tags a single photo).
+This isn't cosmetic: `catalogue` is half of the ingestion dedup key (`unique(catalogue, filename)`, see [../photo-server/DATA_DICTIONARY.md](../photo-server/DATA_DICTIONARY.md)) and the only "these happened together" signal the system gets for free, before any manual tagging — directly serving the tagging-density goal in [OWNERSHIP.md](OWNERSHIP.md) (a whole batch already carries one shared tag before a human tags a single photo). This batch tag is concretely the **origin** category in [../tags/TAXONOMY.md](../tags/TAXONOMY.md).
 
 ## Event uploads
 

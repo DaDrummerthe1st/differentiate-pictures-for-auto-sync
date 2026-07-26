@@ -14,7 +14,18 @@ Set per photo, with a per-album/tag **default** a host/owner can set once and ov
 | Access mechanism, this stage (one server) | A live permission check against `photo_owners.sharing_terms` on every view — no separate file, no local cache; revoking the row (or flipping it off) ends access on the next request | A genuine, independent `photo_owners` row — hers to view, download, or reshare like anything else she owns |
 | Tagging/annotating the sharee's own copy | **Always allowed, both tiers** — see below | Always allowed |
 
-**Tagging is never gated by strict/free.** `tags` is already keyed `unique(photo_id, user_id, tag)` — every user's tags on a photo are her own private rows, not attached to the photo globally. So a sharee can always add her own location/person/quality/comment tags to a photo she can see, regardless of the owner's strict/free setting, and the owner's *other* private tags on that same photo (e.g. an embarrassing in-joke) never travel to the sharee in the first place — she was never sharing that tag, only the photo (and, if she chose to share the containing tag/album itself, that album's name). Maximizing tagging volume is the whole point of this system (training data for the prediction model, see [../VISION.md](../VISION.md) Pillar 2) — ownership terms exist to control *exposure/redistribution*, never to gate *annotation*.
+**Tagging is never gated by strict/free — and this is a separate axis from tag
+visibility, not the same mechanism.** `tags` is already keyed
+`unique(photo_id, user_id, tag)` — every user's tags on a photo are her own rows,
+not attached to the photo globally. So a sharee can always add her own tags to a
+photo she can see, regardless of the owner's strict/free setting. What actually
+governs whether *that tag* is ever seen by anyone else is a second, narrower axis —
+each tag's own `private`/`shareable` visibility, independent of the photo's
+ownership terms — see [../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s Privacy section
+for the full model. Maximizing tagging volume is the whole point of this system
+(training data for the prediction model, see [../VISION.md](../VISION.md) Pillar 2)
+— ownership terms exist to control *photo* exposure/redistribution; tag visibility
+controls *tag* exposure; neither one gates *annotation* itself.
 
 **Reshare chain, resolved:** a **free** share is a full, irrevocable transfer of co-ownership — the new sharee is a real independent owner from that point on, sets her own terms for her own further shares, and the original owner has no further say or visibility into what happens downstream. A **strict** share is never ownership at all — it's a revocable viewing grant, enforced the same way every other authorization check in this app already works (session + a scoping join, see [../photo-server/TODO.md](../photo-server/TODO.md)'s cross-cutting security checklist) — no new protocol needed at this stage.
 

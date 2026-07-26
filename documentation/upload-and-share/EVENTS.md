@@ -4,7 +4,7 @@ Vision-level, thoroughly discussed 2026-07-26 — not scheduled, see [TODO.md](T
 
 ## QR code = event identity = auto-tag
 
-The host generates a QR code for the event. It encodes a token resolving to that event's underlying tag (a `kind='album'` tag the host owns, see [../photo-server/DATA_DICTIONARY.md](../photo-server/DATA_DICTIONARY.md)'s reserved `events` table). Scanning it opens an upload page pre-scoped to that tag — every photo uploaded through it gets that tag applied automatically as its origin, before any other tagging happens. This is the same "batch = auto-tag" mechanism as a plain web upload ([UPLOAD.md](UPLOAD.md)), just pre-named by the host instead of typed by the uploader.
+The host generates a QR code for the event. It encodes a token resolving to that event's underlying tag (a `kind='album'` tag the host owns, see [../photo-server/DATA_DICTIONARY.md](../photo-server/DATA_DICTIONARY.md)'s reserved `events` table). Scanning it opens an upload page pre-scoped to that tag — every photo uploaded through it gets that tag applied automatically as its origin, before any other tagging happens. This is the same "batch = auto-tag" mechanism as a plain web upload ([UPLOAD.md](UPLOAD.md)), just pre-named by the host instead of typed by the uploader — concretely the **origin** category in [../tags/TAXONOMY.md](../tags/TAXONOMY.md).
 
 ## Three independent axes
 

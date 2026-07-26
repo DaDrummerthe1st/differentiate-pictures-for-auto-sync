@@ -75,11 +75,24 @@ Owner shares to new@email.com
 
 ## Sharing a tag/album vs. a single picture
 
-Both are shareable through all three mechanisms above. Sharing a tag shares **live**, not a snapshot: the sharee sees whatever is currently in that tag; later additions/removals by the owner propagate automatically (matches an ongoing shared-album model). Each photo inside keeps its own strict/free terms (the album-level default only applies at the moment a photo is added to it, per-photo override always wins) — sharing the album doesn't silently change any individual photo's terms.
+Both are shareable through all three mechanisms above. **Any tag, of any category,
+is shareable as an album** — not only origin/event tags — see
+[../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s "every tag is a shareable album"
+section, including the blur-preview review the owner sees before/while sharing.
+Sharing a tag shares **live**, not a snapshot: the sharee sees whatever is currently
+in that tag; later additions/removals by the owner propagate automatically (matches
+an ongoing shared-album model). Each photo inside keeps its own strict/free terms
+(the album-level default only applies at the moment a photo is added to it,
+per-photo override always wins) — sharing the album doesn't silently change any
+individual photo's terms.
 
 ## Tag verification/endorsement
 
-Other users can corroborate a tag they didn't write — a face ID, a location, a quality call — as a stronger signal than an unverified single-source tag, directly serving the ML-training goal ([../VISION.md](../VISION.md) Pillar 2). Reserved `tag_endorsements` table: `id, tag_id, endorsing_user_id, created_at`, `unique(tag_id, endorsing_user_id)`. Schema only this iteration, no endpoints — same pattern as `share_links` today.
+Other users can corroborate a tag they didn't write — a face ID, a location, a
+quality call — as a stronger signal than an unverified single-source tag, directly
+serving the ML-training goal ([../VISION.md](../VISION.md) Pillar 2). Schema:
+[../tags/SCHEMA.md](../tags/SCHEMA.md)'s `tag_endorsements` table — reserved this
+iteration, no endpoints, same pattern as `share_links` today.
 
 ## Prior art considered
 

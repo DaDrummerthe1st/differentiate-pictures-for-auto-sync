@@ -131,6 +131,10 @@ Everything from the original `photos`, `photo_owners`, `share_links`, `tags`, `a
 
 ## Phase 5 — Tags (albums) and download
 
+This phase builds only the **origin** category (`kind='album'`) — see
+[../tags/TAXONOMY.md](../tags/TAXONOMY.md) for the other 11 categories, all future
+phases, not scoped here.
+
 5.1 `POST /tags` create, `GET /tags` list caller's own `kind='album'` tags with live count/size (`SUM(photos.file_size)`, no cache table).
 
 5.2 `POST`/`DELETE /tags/{tag}/photos/{photo_id}` — idempotent both ways, test double-add and double-remove.
