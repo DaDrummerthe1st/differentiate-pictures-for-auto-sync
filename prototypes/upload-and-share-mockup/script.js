@@ -1,6 +1,10 @@
-// Client-side only. Everything here is a fake in-memory database that real
-// clicks actually mutate — no server, nothing leaves this page. See
-// documentation/upload-and-share/ for the design this demonstrates.
+// Endast klientsidan. Allt här är en fejkad databas i minnet som riktiga
+// klick faktiskt förändrar — ingen server, inget lämnar den här sidan. Se
+// documentation/upload-and-share/ för designen detta illustrerar.
+
+function icon(name) { return `<span class="material-symbols-outlined">${name}</span>`; }
+function termsLabel(terms) { return terms === "free" ? "Fri" : "Strikt"; }
+function termsIcon(terms) { return terms === "free" ? "public" : "lock"; }
 
 // ---------------------------------------------------------------- seed data
 
@@ -8,11 +12,11 @@ const DB = {
   users: {
     u1: { id: "u1", name: "Joakim", username: "joakim", email: "joakim.reuterborg@gmail.com" },
     u2: { id: "u2", name: "Elisabeth", username: "elisabeth", email: "elisabeth.reuterborg@gmail.com" },
-    ev1acct: { id: "ev1acct", name: "Anna & Erik's Wedding (event account)", username: "event-annaerik", email: null, isEventAccount: true },
+    ev1acct: { id: "ev1acct", name: "Anna & Eriks bröllop (eventkonto)", username: "event-annaerik", email: null, isEventAccount: true },
   },
   photos: [],
   events: [
-    { id: "ev1", name: "Anna & Erik's Wedding", hostUserId: "u1", accountId: "ev1acct",
+    { id: "ev1", name: "Anna & Eriks bröllop", hostUserId: "u1", accountId: "ev1acct",
       axes: { uploadAccess: "free-for-all", visibility: "all", tv: true } },
   ],
 };
@@ -34,27 +38,27 @@ function mkPhoto(filename, batch, ownerId, tags, opts) {
 }
 
 DB.photos.push(
-  mkPhoto("beach1.jpg", "Summer 2019", "u1", [{ text: "Summer 2019", by: "u1" }, { text: "Beach", by: "u1" }], {
+  mkPhoto("beach1.jpg", "Sommaren 2019", "u1", [{ text: "Sommaren 2019", by: "u1" }, { text: "Strand", by: "u1" }], {
     shares: [{ id: "s" + nextShareSeq++, kind: "username", toUserId: "u2", terms: "strict", status: "active", sharedByUserId: "u1" }],
   }),
-  mkPhoto("cake.jpg", "Summer 2019", "u1", [{ text: "Summer 2019", by: "u1" }, { text: "Birthday", by: "u1" }]),
-  mkPhoto("mountain.jpg", "Hiking trip", "u2", [{ text: "Hiking trip", by: "u2" }], {
+  mkPhoto("cake.jpg", "Sommaren 2019", "u1", [{ text: "Sommaren 2019", by: "u1" }, { text: "Kalas", by: "u1" }]),
+  mkPhoto("mountain.jpg", "Vandringstur", "u2", [{ text: "Vandringstur", by: "u2" }], {
     shares: [{ id: "s" + nextShareSeq++, kind: "username", toUserId: "u1", terms: "free", status: "active", sharedByUserId: "u2" }],
   }),
-  mkPhoto("loki.jpg", "Hiking trip", "u2", [{ text: "Hiking trip", by: "u2" }, { text: "Loki", by: "u2" }], {
+  mkPhoto("loki.jpg", "Vandringstur", "u2", [{ text: "Vandringstur", by: "u2" }, { text: "Loki", by: "u2" }], {
     shares: [{ id: "s" + nextShareSeq++, kind: "username", toUserId: "u1", terms: "strict", status: "active", sharedByUserId: "u2" }],
   }),
   mkPhoto("sunset.jpg", "web-upload-elisabeth-20260601", "u2", [{ text: "web-upload-elisabeth-20260601", by: "u2" }], {
     shares: [{ id: "s" + nextShareSeq++, kind: "email", toEmail: "anna.friend@example.com", terms: "free", status: "pending_signup", sharedByUserId: "u2" }],
   }),
-  mkPhoto("christmas.jpg", "Christmas 2025", "u1", [{ text: "Christmas 2025", by: "u1" }, { text: "Kids", by: "u1" }], {
+  mkPhoto("christmas.jpg", "Jul 2025", "u1", [{ text: "Jul 2025", by: "u1" }, { text: "Barnen", by: "u1" }], {
     shares: [{ id: "s" + nextShareSeq++, kind: "platform", toUserId: null, toEmail: null, terms: "free", status: "link_open_pending", token: "tok_9f2a", sharedByUserId: "u1" }],
   }),
-  mkPhoto("snow.jpg", "Christmas 2025", "u1", [{ text: "Christmas 2025", by: "u1" }]),
-  mkPhoto("puppy2.jpg", "Hiking trip", "u2", [{ text: "Hiking trip", by: "u2" }, { text: "Loki again", by: "u2" }])
+  mkPhoto("snow.jpg", "Jul 2025", "u1", [{ text: "Jul 2025", by: "u1" }]),
+  mkPhoto("puppy2.jpg", "Vandringstur", "u2", [{ text: "Vandringstur", by: "u2" }, { text: "Loki igen", by: "u2" }])
 );
 
-const EVENT_TAG = "Anna & Erik's Wedding";
+const EVENT_TAG = "Anna & Eriks bröllop";
 [
   ["ceremony1.jpg", true], ["ceremony2.jpg", false], ["firstdance.jpg", true],
   ["cake-cutting.jpg", false], ["guests-dancing.jpg", true], ["blurry-hallway.jpg", false],
@@ -91,7 +95,7 @@ let pool = STOCK_POOL.slice();
 let openPhotoId = null;
 
 function me() { return DB.users[currentUserId]; }
-function userName(id) { return DB.users[id] ? DB.users[id].name : "(unknown)"; }
+function userName(id) { return DB.users[id] ? DB.users[id].name : "(okänd)"; }
 
 // ------------------------------------------------------------ permissions
 
@@ -142,12 +146,12 @@ function switchUser(id) {
 function thumbHtml(photo, opts) {
   opts = opts || {};
   let chip = "";
-  if (photo.ownerId === currentUserId) chip = '<span class="chip owner">Yours</span>';
+  if (photo.ownerId === currentUserId) chip = `<span class="chip owner">${icon("person")}Din</span>`;
   else {
     const s = activeShareFor(photo, currentUserId);
-    if (s) chip = `<span class="chip ${s.terms}">${s.terms}</span>`;
+    if (s) chip = `<span class="chip ${s.terms}">${icon(termsIcon(s.terms))}${termsLabel(s.terms)}</span>`;
   }
-  if (opts.curatedChip && photo.curated) chip += '<span class="chip curated" style="right:auto;left:0.4rem;">Curated</span>';
+  if (opts.curatedChip && photo.curated) chip += `<span class="chip curated" style="right:auto;left:0.4rem;">${icon("star")}Kurerad</span>`;
   return `<div class="thumb ${photo.curated && opts.curatedChip ? "curated" : ""}" style="background:${colorFor(photo.id)}" onclick="openPhotoDetail('${photo.id}')">
     <span class="emoji">${emojiFor(photo)}</span>
     ${chip}
@@ -176,17 +180,17 @@ function renderGallery() {
   document.getElementById("galleryGrid").innerHTML = mine.map((p) => thumbHtml(p)).join("");
   document.getElementById("galleryEmptyHint").textContent = mine.length
     ? ""
-    : "No photos yet for " + me().name + " — upload some, or accept/receive a share.";
+    : "Inga bilder än för " + me().name + " — ladda upp några, eller ta emot en delning.";
 }
 
 // --------------------------------------------------------------- upload
 
 function renderUpload() {
   document.getElementById("batchDefaultHint").textContent =
-    "Empty name → catalogue = web-upload-" + me().username + "-{timestamp}";
+    "Tomt namn → katalog = web-upload-" + me().username + "-{tidsstämpel}";
   const poolEl = document.getElementById("filePool");
   if (!pool.length) {
-    poolEl.innerHTML = '<p class="empty-note">No more stock photos this session — reload the page to reset.</p>';
+    poolEl.innerHTML = '<p class="empty-note">Inga fler exempelbilder den här sessionen — ladda om sidan för att återställa.</p>';
   } else {
     poolEl.innerHTML = pool.map((f) =>
       `<div class="pool-item ${selectedPool.has(f.poolId) ? "selected" : ""}" style="background:${colorFor(f.poolId)}" onclick="togglePoolItem('${f.poolId}')" title="${f.filename}">${f.emoji}</div>`
@@ -213,7 +217,7 @@ function doUpload() {
   const count = chosen.length;
   selectedPool.clear();
   document.getElementById("batchName").value = "";
-  toast(`Uploaded ${count} photo${count === 1 ? "" : "s"} as "${batch}"`);
+  toast(`Laddade upp ${count} bild${count === 1 ? "" : "er"} som "${batch}"`);
   switchTab("gallery");
 }
 
@@ -233,25 +237,25 @@ function renderSharing() {
   });
 
   document.getElementById("incomingList").innerHTML = incoming.length ? incoming.map(([p, s]) =>
-    `<li><div class="li-main"><span style="font-size:1.4rem;">${emojiFor(p)}</span><div>${p.filename}<div class="muted">from ${userName(s.sharedByUserId)} · ${s.terms} · via platform-share link</div></div></div>
-     <div class="li-actions"><button class="btn small good" onclick="acceptIncoming('${p.id}','${s.id}')">Accept</button><button class="btn small ghost" onclick="declineIncoming('${p.id}','${s.id}')">Decline</button></div></li>`
-  ).join("") : '<li class="empty-note" style="background:none;">Nothing waiting on you.</li>';
+    `<li><div class="li-main"><span style="font-size:1.4rem;">${emojiFor(p)}</span><div>${p.filename}<div class="muted">från ${userName(s.sharedByUserId)} · ${icon(termsIcon(s.terms))}${termsLabel(s.terms)} · via delningslänk</div></div></div>
+     <div class="li-actions"><button class="btn small good" onclick="acceptIncoming('${p.id}','${s.id}')">${icon("check")}Acceptera</button><button class="btn small ghost" onclick="declineIncoming('${p.id}','${s.id}')">${icon("close")}Neka</button></div></li>`
+  ).join("") : '<li class="empty-note" style="background:none;">Inget väntar på dig.</li>';
 
   document.getElementById("outgoingInviteList").innerHTML = outgoing.length ? outgoing.map(([p, s]) => {
     if (s.status === "pending_signup") {
-      return `<li><div class="li-main"><span style="font-size:1.4rem;">${emojiFor(p)}</span><div>${p.filename}<div class="muted">invited ${s.toEmail} · ${s.terms}</div></div></div>
-        <div class="li-actions"><button class="btn small ghost" onclick="simulateSignup('${p.id}','${s.id}')">🔧 simulate: they sign up</button></div></li>`;
+      return `<li><div class="li-main"><span style="font-size:1.4rem;">${emojiFor(p)}</span><div>${p.filename}<div class="muted">bjöd in ${s.toEmail} · ${icon(termsIcon(s.terms))}${termsLabel(s.terms)}</div></div></div>
+        <div class="li-actions"><button class="btn small ghost" onclick="simulateSignup('${p.id}','${s.id}')">${icon("bolt")}simulera: personen registrerar sig</button></div></li>`;
     }
-    return `<li><div class="li-main"><span style="font-size:1.4rem;">${emojiFor(p)}</span><div>${p.filename}<div class="muted">platform link generated, not opened yet · ${s.terms}</div></div></div>
-      <div class="li-actions"><span class="muted">open from the photo's detail panel</span></div></li>`;
-  }).join("") : '<li class="empty-note" style="background:none;">No outstanding invites.</li>';
+    return `<li><div class="li-main"><span style="font-size:1.4rem;">${emojiFor(p)}</span><div>${p.filename}<div class="muted">delningslänk skapad, inte öppnad än · ${icon(termsIcon(s.terms))}${termsLabel(s.terms)}</div></div></div>
+      <div class="li-actions"><span class="muted">öppnas från bildens detaljpanel</span></div></li>`;
+  }).join("") : '<li class="empty-note" style="background:none;">Inga obehandlade inbjudningar.</li>';
 
   document.getElementById("sharedByMeList").innerHTML = sharedByMe.length ? sharedByMe.map(([p, s]) =>
-    `<li><div class="li-main"><span style="font-size:1.4rem;">${emojiFor(p)}</span><div>${p.filename}<div class="muted">with ${userName(s.toUserId)} · ${s.terms}</div></div></div>
+    `<li><div class="li-main"><span style="font-size:1.4rem;">${emojiFor(p)}</span><div>${p.filename}<div class="muted">med ${userName(s.toUserId)} · ${icon(termsIcon(s.terms))}${termsLabel(s.terms)}</div></div></div>
      <div class="li-actions">${s.terms === "strict"
-        ? `<button class="btn small danger" onclick="revokeShare('${p.id}','${s.id}')">Revoke</button>`
-        : `<span class="muted">irrevocable</span>`}</div></li>`
-  ).join("") : '<li class="empty-note" style="background:none;">You haven\'t shared anything yet.</li>';
+        ? `<button class="btn small danger" onclick="revokeShare('${p.id}','${s.id}')">${icon("delete")}Återkalla</button>`
+        : `<span class="muted">kan inte återkallas</span>`}</div></li>`
+  ).join("") : '<li class="empty-note" style="background:none;">Du har inte delat något än.</li>';
 }
 
 function updatePendingBadge() {
@@ -265,14 +269,14 @@ function acceptIncoming(photoId, shareId) {
   const p = DB.photos.find((x) => x.id === photoId);
   const s = p.shares.find((x) => x.id === shareId);
   s.status = "active";
-  toast(`Accepted "${p.filename}" — now in your gallery.`);
+  toast(`Accepterade "${p.filename}" — finns nu i ditt galleri.`);
   render();
 }
 function declineIncoming(photoId, shareId) {
   const p = DB.photos.find((x) => x.id === photoId);
   const s = p.shares.find((x) => x.id === shareId);
   s.status = "declined";
-  toast(`Declined "${p.filename}".`);
+  toast(`Nekade "${p.filename}".`);
   render();
 }
 function revokeShare(photoId, shareId) {
@@ -280,7 +284,7 @@ function revokeShare(photoId, shareId) {
   const s = p.shares.find((x) => x.id === shareId);
   const who = userName(s.toUserId);
   s.status = "revoked";
-  toast(`Revoked ${who}'s access to "${p.filename}".`);
+  toast(`Återkallade ${who}s åtkomst till "${p.filename}".`);
   render();
 }
 function simulateSignup(photoId, shareId) {
@@ -296,7 +300,7 @@ function simulateSignup(photoId, shareId) {
   }
   s.toUserId = user.id;
   s.status = "active";
-  toast(`${s.toEmail} signed up — pending share resolved automatically into ${user.name}'s gallery.`);
+  toast(`${s.toEmail} registrerade sig — den väntande delningen löstes automatiskt in i ${user.name}s galleri.`);
   render();
 }
 function simulateOpenLink(photoId, shareId, asUserId) {
@@ -304,7 +308,7 @@ function simulateOpenLink(photoId, shareId, asUserId) {
   const s = p.shares.find((x) => x.id === shareId);
   s.toUserId = asUserId;
   s.status = "pending_accept";
-  toast(`Simulated: ${userName(asUserId)} opened the link while logged in — now in their Pending inbox.`);
+  toast(`Simulerat: ${userName(asUserId)} öppnade länken medan hen var inloggad — finns nu i hens väntande inkorg.`);
   render();
 }
 
@@ -313,33 +317,33 @@ function shareViaUsername(photoId, username, terms) {
   const target = Object.values(DB.users).find((u) => u.username === username && !u.isEventAccount);
   const statusEl = document.getElementById("shareStatus");
   if (!target) {
-    statusEl.textContent = `No user found for "${username}".`;
+    statusEl.textContent = `Ingen användare hittades för "${username}".`;
     statusEl.className = "status-msg err";
     return;
   }
   if (target.id === p.ownerId) {
-    statusEl.textContent = "That's already the owner.";
+    statusEl.textContent = "Det är redan ägaren.";
     statusEl.className = "status-msg err";
     return;
   }
   p.shares.push({ id: "s" + nextShareSeq++, kind: "username", toUserId: target.id, terms, status: "active", sharedByUserId: currentUserId });
-  statusEl.textContent = `Shared with ${target.name} (${terms}).`;
+  statusEl.textContent = `Delad med ${target.name} (${termsLabel(terms)}).`;
   statusEl.className = "status-msg ok";
-  toast(`Shared "${p.filename}" with ${target.name}.`);
+  toast(`Delade "${p.filename}" med ${target.name}.`);
   render();
 }
 function shareViaEmail(photoId, email, terms) {
   const p = DB.photos.find((x) => x.id === photoId);
   const statusEl = document.getElementById("shareStatus");
   if (!email || !email.includes("@")) {
-    statusEl.textContent = "Enter a valid email address.";
+    statusEl.textContent = "Ange en giltig e-postadress.";
     statusEl.className = "status-msg err";
     return;
   }
   p.shares.push({ id: "s" + nextShareSeq++, kind: "email", toEmail: email, terms, status: "pending_signup", sharedByUserId: currentUserId });
-  statusEl.textContent = `Invite sent to ${email} — resolves automatically once they sign up.`;
+  statusEl.textContent = `Inbjudan skickad till ${email} — löses automatiskt när personen registrerar sig.`;
   statusEl.className = "status-msg ok";
-  toast(`Invited ${email} to "${p.filename}".`);
+  toast(`Bjöd in ${email} till "${p.filename}".`);
   render();
 }
 function shareViaPlatform(photoId, terms) {
@@ -350,16 +354,16 @@ function shareViaPlatform(photoId, terms) {
   const link = `https://dpfas.local/s/${token}`;
   const statusEl = document.getElementById("shareStatus");
   const finish = (via) => {
-    statusEl.innerHTML = `Link generated (${via}): <code>${link}</code><br>Opening it while logged out prompts signup; opening it while already logged in shows it as a pending share to accept.`;
+    statusEl.innerHTML = `Länk skapad (${via}): <code>${link}</code><br>Att öppna den utloggad leder till registrering; att öppna den redan inloggad visar den som en väntande delning att acceptera.`;
     statusEl.className = "status-msg ok";
     render();
-    openShareModal(photoId); // re-render modal to show the simulate-open affordance
+    openShareModal(photoId); // rendera om modalen för att visa "simulera öppning"
   };
   if (navigator.share) {
-    navigator.share({ title: `DPFAS — ${p.filename}`, text: `Shared via DPFAS (${terms})`, url: link })
-      .then(() => finish("your device's share sheet")).catch(() => finish("share sheet dismissed"));
+    navigator.share({ title: `DPFAS — ${p.filename}`, text: `Delad via DPFAS (${termsLabel(terms)})`, url: link })
+      .then(() => finish("enhetens delningsmeny")).catch(() => finish("delningsmenyn stängdes"));
   } else {
-    finish("Web Share API unavailable — link shown directly");
+    finish("Web Share API saknas — länken visas direkt");
   }
 }
 
@@ -368,26 +372,26 @@ function openShareModal(photoId) {
   const others = Object.values(DB.users).filter((u) => !u.isEventAccount && u.id !== currentUserId);
   const pendingLinks = p.shares.filter((s) => s.kind === "platform" && s.status === "link_open_pending");
   document.getElementById("shareModalBody").innerHTML = `
-    <button class="lb-btn lb-close" onclick="closeShareModal()">&#10005;</button>
-    <h2>Share "${p.filename}"</h2>
+    <button class="lb-btn lb-close" onclick="closeShareModal()">${icon("close")}</button>
+    <h2>${icon("share")}Dela "${p.filename}"</h2>
     <div class="mock-field">
-      <label>Terms</label>
+      <label>Villkor</label>
       <div class="seg" id="shareTermsSeg">
-        <button data-terms="free" aria-pressed="true" onclick="setShareTerms(this,'free')">Free</button>
-        <button data-terms="strict" aria-pressed="false" onclick="setShareTerms(this,'strict')">Strict</button>
+        <button data-terms="free" aria-pressed="true" onclick="setShareTerms(this,'free')">${icon("public")}Fri</button>
+        <button data-terms="strict" aria-pressed="false" onclick="setShareTerms(this,'strict')">${icon("lock")}Strikt</button>
       </div>
     </div>
     <div class="mock-field">
-      <label>Method</label>
+      <label>Metod</label>
       <div class="seg" id="shareMethodSeg">
-        <button data-method="platform" aria-pressed="true" onclick="setShareMethod('${photoId}',this,'platform')">Platform share sheet</button>
-        <button data-method="username" aria-pressed="false" onclick="setShareMethod('${photoId}',this,'username')">Username</button>
-        <button data-method="email" aria-pressed="false" onclick="setShareMethod('${photoId}',this,'email')">Email invite</button>
+        <button data-method="platform" aria-pressed="true" onclick="setShareMethod('${photoId}',this,'platform')">${icon("ios_share")}Delningsmeny</button>
+        <button data-method="username" aria-pressed="false" onclick="setShareMethod('${photoId}',this,'username')">${icon("person")}Användarnamn</button>
+        <button data-method="email" aria-pressed="false" onclick="setShareMethod('${photoId}',this,'email')">${icon("mail")}E-post</button>
       </div>
     </div>
     <div id="shareMethodBody"></div>
     <div class="status-msg" id="shareStatus"></div>
-    ${pendingLinks.length ? `<div class="hint" style="margin-top:0.8rem;">🔧 dev: simulate opening the last generated link while logged in as —
+    ${pendingLinks.length ? `<div class="hint" style="margin-top:0.8rem;">${icon("science")}utvecklarläge: simulera att den senaste länken öppnas medan man är inloggad som —
       ${others.map((u) => `<button class="btn small ghost" onclick="simulateOpenLink('${photoId}','${pendingLinks[pendingLinks.length - 1].id}','${u.id}')">${u.name}</button>`).join(" ")}
       </div>` : ""}
   `;
@@ -410,14 +414,14 @@ function setShareMethod(photoId, btn, method) {
 function renderShareMethodBody(photoId, method) {
   const body = document.getElementById("shareMethodBody");
   if (method === "platform") {
-    body.innerHTML = `<p class="hint">Generates a token + link, then invokes your device's real share sheet if available.</p>
-      <div class="row"><button class="btn primary" onclick="shareViaPlatform('${photoId}', currentShareTerms())">Generate &amp; share</button></div>`;
+    body.innerHTML = `<p class="hint">Skapar en token + länk och öppnar sedan enhetens riktiga delningsmeny om den finns.</p>
+      <div class="row"><button class="btn primary" onclick="shareViaPlatform('${photoId}', currentShareTerms())">${icon("ios_share")}Skapa &amp; dela</button></div>`;
   } else if (method === "username") {
-    body.innerHTML = `<div class="mock-field"><label>DPFAS username</label><input type="text" id="shareUsernameInput" placeholder="elisabeth (try a typo to see 'not found')"></div>
-      <div class="row"><button class="btn primary" onclick="shareViaUsername('${photoId}', document.getElementById('shareUsernameInput').value.trim(), currentShareTerms())">Send</button></div>`;
+    body.innerHTML = `<div class="mock-field"><label>DPFAS-användarnamn</label><input type="text" id="shareUsernameInput" placeholder="elisabeth (testa en felstavning för att se 'hittades inte')"></div>
+      <div class="row"><button class="btn primary" onclick="shareViaUsername('${photoId}', document.getElementById('shareUsernameInput').value.trim(), currentShareTerms())">${icon("send")}Skicka</button></div>`;
   } else {
-    body.innerHTML = `<div class="mock-field"><label>Email address</label><input type="email" id="shareEmailInput" placeholder="new@example.com"></div>
-      <div class="row"><button class="btn primary" onclick="shareViaEmail('${photoId}', document.getElementById('shareEmailInput').value.trim(), currentShareTerms())">Send invite</button></div>`;
+    body.innerHTML = `<div class="mock-field"><label>E-postadress</label><input type="email" id="shareEmailInput" placeholder="ny@example.com"></div>
+      <div class="row"><button class="btn primary" onclick="shareViaEmail('${photoId}', document.getElementById('shareEmailInput').value.trim(), currentShareTerms())">${icon("send")}Skicka inbjudan</button></div>`;
   }
 }
 
@@ -442,35 +446,35 @@ function renderPhotoDetail(photoId) {
   let accessHtml;
   if (iOwn) {
     const activeShares = p.shares.filter((s) => s.status === "active");
-    accessHtml = `<p>You own this photo.</p>` + (activeShares.length ? `
+    accessHtml = `<p>Du äger den här bilden.</p>` + (activeShares.length ? `
       <div>${activeShares.map((s) => `
-        <div class="share-row"><span>${s.toUserId ? userName(s.toUserId) : s.toEmail} — <span class="chip ${s.terms}" style="position:static;">${s.terms}</span></span>
-        ${s.terms === "strict" ? `<button class="btn small danger" onclick="revokeShare('${p.id}','${s.id}')">Revoke</button>` : `<span class="muted">irrevocable</span>`}</div>`).join("")}
-      </div>` : `<p class="muted">Not shared with anyone yet.</p>`);
+        <div class="share-row"><span>${s.toUserId ? userName(s.toUserId) : s.toEmail} — <span class="chip ${s.terms}" style="position:static;">${icon(termsIcon(s.terms))}${termsLabel(s.terms)}</span></span>
+        ${s.terms === "strict" ? `<button class="btn small danger" onclick="revokeShare('${p.id}','${s.id}')">${icon("delete")}Återkalla</button>` : `<span class="muted">kan inte återkallas</span>`}</div>`).join("")}
+      </div>` : `<p class="muted">Inte delad med någon än.</p>`);
   } else if (myShare) {
     accessHtml = myShare.terms === "free"
-      ? `<p>Shared with you by ${userName(p.ownerId)} — <b>free</b>: full access, you can download and reshare. Not revocable.</p>`
-      : `<p>Shared with you by ${userName(p.ownerId)} — <b>strict</b>: view + tag only. Download and resharing are blocked, and ${userName(p.ownerId)} can revoke this at any time.</p>`;
+      ? `<p>Delad med dig av ${userName(p.ownerId)} — <b>${termsLabel("free")}</b>: full åtkomst, du kan ladda ner och dela vidare. Kan inte återkallas.</p>`
+      : `<p>Delad med dig av ${userName(p.ownerId)} — <b>${termsLabel("strict")}</b>: bara visning + taggning. Nedladdning och vidaredelning är blockerat, och ${userName(p.ownerId)} kan återkalla detta när som helst.</p>`;
   } else {
-    accessHtml = `<p class="muted">Not shared with you.</p>`;
+    accessHtml = `<p class="muted">Inte delad med dig.</p>`;
   }
 
   document.getElementById("photoDetailBody").innerHTML = `
-    <button class="lb-btn lb-close" onclick="closePhotoDetail()">&#10005;</button>
+    <button class="lb-btn lb-close" onclick="closePhotoDetail()">${icon("close")}</button>
     <div class="detail-hero" style="background:${colorFor(p.id)}">${emojiFor(p)}</div>
     <h2>${p.filename}</h2>
     <div class="tag-row">
       ${p.tags.map((t, i) => `<span class="tag-pill">${t.text}${t.endorsedBy.length ? ` &middot; +${t.endorsedBy.length}` : ""}
-        ${t.by !== currentUserId && !t.endorsedBy.includes(currentUserId) && (iOwn || myShare) ? ` <a href="#" onclick="endorseTag('${p.id}',${i});return false;">endorse</a>` : ""}
+        ${t.by !== currentUserId && !t.endorsedBy.includes(currentUserId) && (iOwn || myShare) ? ` <button class="endorse-link" onclick="endorseTag('${p.id}',${i})">${icon("verified")}bekräfta</button>` : ""}
       </span>`).join("")}
     </div>
-    <h3>Owner</h3>
-    <p>${userName(p.ownerId)}${iOwn ? " (you)" : ""}</p>
-    <h3>Access</h3>
+    <h3>${icon("person")}Ägare</h3>
+    <p>${userName(p.ownerId)}${iOwn ? " (du)" : ""}</p>
+    <h3>${icon("lock_open")}Åtkomst</h3>
     ${accessHtml}
     <div class="row" style="margin-top:1rem;">
-      <button class="btn ${dl ? "good" : "ghost"}" ${dl ? "" : "disabled"} onclick="mockDownload('${p.id}')" title="${dl ? "" : "Blocked by strict terms, or not shared with you"}">Download</button>
-      ${canManageSharing(p, currentUserId) ? `<button class="btn primary" onclick="openShareModal('${p.id}')">Share</button>` : ""}
+      <button class="btn ${dl ? "good" : "ghost"}" ${dl ? "" : "disabled"} onclick="mockDownload('${p.id}')" title="${dl ? "" : "Blockerat av strikta villkor, eller inte delad med dig"}">${icon("download")}Ladda ner</button>
+      ${canManageSharing(p, currentUserId) ? `<button class="btn primary" onclick="openShareModal('${p.id}')">${icon("share")}Dela</button>` : ""}
     </div>
   `;
 }
@@ -482,7 +486,7 @@ function endorseTag(photoId, tagIndex) {
 }
 function mockDownload(photoId) {
   const p = DB.photos.find((x) => x.id === photoId);
-  toast(`(mock) downloading "${p.filename}" — no real file, this is a prototype.`);
+  toast(`(mock) laddar ner "${p.filename}" — ingen riktig fil, det här är en prototyp.`);
 }
 
 // ---------------------------------------------------------------- events
@@ -492,25 +496,25 @@ function renderEvents() {
   const acct = DB.users[ev.accountId];
   document.getElementById("eventCard").innerHTML = `
     <h3 style="margin-top:0;">${ev.name}</h3>
-    <p class="section-sub small">Hosted by ${userName(ev.hostUserId)} &middot; event account: ${acct.username}</p>
+    <p class="section-sub small">Värd: ${userName(ev.hostUserId)} &middot; eventkonto: ${acct.username}</p>
     <div class="axis">
-      <div class="axis-info"><div class="axis-name">Upload access</div><p class="axis-desc">Who may contribute to this event's album</p></div>
+      <div class="axis-info"><div class="axis-name">${icon("upload_file")}Uppladdningsåtkomst</div><p class="axis-desc">Vem som får bidra till eventets album</p></div>
       <div class="seg">
         ${["pre-approved", "free-for-all", "register-approve"].map((v, i) =>
-          `<button aria-pressed="${ev.axes.uploadAccess === v}" onclick="setEventAxis('uploadAccess','${v}')">${["Pre-approved", "Free-for-all", "Register → approve"][i]}</button>`
+          `<button aria-pressed="${ev.axes.uploadAccess === v}" onclick="setEventAxis('uploadAccess','${v}')">${["Förgodkänd", "Fritt fram", "Registrera → godkänn"][i]}</button>`
         ).join("")}
       </div>
     </div>
     <div class="axis">
-      <div class="axis-info"><div class="axis-name">Visibility scope</div><p class="axis-desc">What invitees browse, independent of who uploaded</p></div>
+      <div class="axis-info"><div class="axis-name">${icon("visibility")}Synlighetsomfång</div><p class="axis-desc">Vad gäster ser, oberoende av vem som laddade upp</p></div>
       <div class="seg">
         ${["all", "curated"].map((v, i) =>
-          `<button aria-pressed="${ev.axes.visibility === v}" onclick="setEventAxis('visibility','${v}')">${["All uploads", "Curated best-of"][i]}</button>`
+          `<button aria-pressed="${ev.axes.visibility === v}" onclick="setEventAxis('visibility','${v}')">${["Alla uppladdningar", "Utvalt urval"][i]}</button>`
         ).join("")}
       </div>
     </div>
     <div class="axis">
-      <div class="axis-info"><div class="axis-name">Live TV-screen wall</div><p class="axis-desc">A separate output channel — not a visibility setting</p></div>
+      <div class="axis-info"><div class="axis-name">${icon("tv")}Live-vägg på TV-skärm</div><p class="axis-desc">En separat visningskanal — inte en synlighetsinställning</p></div>
       <button class="toggle" aria-pressed="${ev.axes.tv}" onclick="toggleTv()"></button>
     </div>
   `;
@@ -522,8 +526,8 @@ function setEventAxis(axis, value) {
   const ev = DB.events[0];
   ev.axes[axis] = value;
   const messages = {
-    uploadAccess: { "free-for-all": "Anyone with the link/QR can now upload, no account.", "pre-approved": "Only guests the host invited ahead of time can upload now.", "register-approve": "Guests can request access; uploads count once the host approves them." },
-    visibility: { all: "Invitees now see every upload.", curated: "Invitees now see only the curated best-of subset." },
+    uploadAccess: { "free-for-all": "Vem som helst med länken/QR-koden kan nu ladda upp, inget konto krävs.", "pre-approved": "Bara gäster värden bjudit in i förväg kan ladda upp nu.", "register-approve": "Gäster kan begära åtkomst; uppladdningar räknas när värden godkänt dem." },
+    visibility: { all: "Gäster ser nu alla uppladdningar.", curated: "Gäster ser nu bara det utvalda urvalet." },
   };
   toast(messages[axis][value]);
   renderEvents();
@@ -531,7 +535,7 @@ function setEventAxis(axis, value) {
 function toggleTv() {
   const ev = DB.events[0];
   ev.axes.tv = !ev.axes.tv;
-  toast(ev.axes.tv ? "TV wall is now live." : "TV wall turned off.");
+  toast(ev.axes.tv ? "TV-väggen är nu live." : "TV-väggen är avstängd.");
   renderEvents();
 }
 function eventPhotos() { return DB.photos.filter((p) => p.isEventPhoto); }
@@ -544,14 +548,14 @@ function renderEventPool() {
   document.getElementById("eventPoolGrid").innerHTML = eventPhotos().map((p) => `
     <div class="thumb ${p.curated ? "curated" : ""}" style="background:${colorFor(p.id)}" onclick="toggleCurated('${p.id}')">
       <span class="emoji">${emojiFor(p)}</span>
-      ${p.curated ? '<span class="chip curated">Curated</span>' : ""}
+      ${p.curated ? `<span class="chip curated">${icon("star")}Kurerad</span>` : ""}
       <span class="fname">${p.filename}</span>
     </div>`).join("");
 }
 function toggleCurated(photoId) {
   const p = DB.photos.find((x) => x.id === photoId);
   p.curated = !p.curated;
-  toast(`${p.filename} ${p.curated ? "added to" : "removed from"} the curated set.`);
+  toast(`${p.filename} ${p.curated ? "lades till i" : "togs bort från"} det kuraterade urvalet.`);
   renderEvents();
 }
 
@@ -567,29 +571,29 @@ function renderGuestUpload() {
   const ev = DB.events[0];
   const body = document.getElementById("guestUploadBody");
   if (ev.axes.uploadAccess === "pre-approved") {
-    body.innerHTML = `<h2>${ev.name}</h2><p>This event only accepts uploads from people the host invited ahead of time. Ask ${userName(ev.hostUserId)} for an invite.</p>`;
+    body.innerHTML = `<h2>${ev.name}</h2><p>Det här eventet tar bara emot uppladdningar från personer värden bjudit in i förväg. Be ${userName(ev.hostUserId)} om en inbjudan.</p>`;
     return;
   }
   if (ev.axes.uploadAccess === "register-approve") {
     body.innerHTML = `<h2>${ev.name}</h2>
-      <p>Sign up to request upload access — the host approves each registrant before uploads count.</p>
-      <div class="mock-field"><label>Your name</label><input type="text" placeholder="Guest name"></div>
-      <div class="row"><button class="btn primary" onclick="document.getElementById('guestUploadBody').innerHTML='<h2>' + ${JSON.stringify(ev.name)}.replace(/'/g, \"\\\\'\") + '</h2><p>Request sent — your uploads will appear once ' + ${JSON.stringify(userName(ev.hostUserId))} + ' approves you.</p>'">Request access</button></div>`;
+      <p>Registrera dig för att begära uppladdningsåtkomst — värden godkänner varje registrering innan uppladdningar räknas.</p>
+      <div class="mock-field"><label>Ditt namn</label><input type="text" placeholder="Gästens namn"></div>
+      <div class="row"><button class="btn primary" onclick="document.getElementById('guestUploadBody').innerHTML='&lt;h2&gt;' + ${JSON.stringify(ev.name)}.replace(/'/g, \"\\\\'\") + '&lt;/h2&gt;&lt;p&gt;Begäran skickad — dina uppladdningar visas när ' + ${JSON.stringify(userName(ev.hostUserId))} + ' har godkänt dig.&lt;/p&gt;'">${icon("how_to_reg")}Begär åtkomst</button></div>`;
     return;
   }
-  // free-for-all
+  // fritt fram
   guestSelectedPool = new Set();
   body.innerHTML = `<h2>${ev.name}</h2>
-    <p class="hint">No account needed. Photos you upload here are owned by the event's own account (${DB.users[ev.accountId].username}), never by you as an anonymous guest — see EVENTS.md's resolved ownership decision.</p>
-    <div class="mock-field"><label>Choose files</label><div class="file-pool" id="guestFilePool"></div></div>
-    <div class="row"><button class="btn primary" id="guestUploadBtn" disabled onclick="doGuestUpload()">Upload (<span id="guestSelectedCount">0</span> selected)</button></div>
+    <p class="hint">Inget konto krävs. Bilder du laddar upp här ägs av eventets eget konto (${DB.users[ev.accountId].username}), aldrig av dig som anonym gäst — se EVENTS.md:s lösta ägarskapsbeslut.</p>
+    <div class="mock-field"><label>Välj filer</label><div class="file-pool" id="guestFilePool"></div></div>
+    <div class="row"><button class="btn primary" id="guestUploadBtn" disabled onclick="doGuestUpload()">${icon("upload")}Ladda upp (<span id="guestSelectedCount">0</span> valda)</button></div>
     <div class="status-msg" id="guestUploadStatus"></div>`;
   renderGuestPool();
 }
 function renderGuestPool() {
   const poolEl = document.getElementById("guestFilePool");
   if (!pool.length) {
-    poolEl.innerHTML = '<p class="empty-note">No more stock photos this session.</p>';
+    poolEl.innerHTML = '<p class="empty-note">Inga fler exempelbilder den här sessionen.</p>';
   } else {
     poolEl.innerHTML = pool.map((f) =>
       `<div class="pool-item ${guestSelectedPool.has(f.poolId) ? "selected" : ""}" style="background:${colorFor(f.poolId)}" onclick="toggleGuestPoolItem('${f.poolId}')" title="${f.filename}">${f.emoji}</div>`
@@ -612,7 +616,7 @@ function doGuestUpload() {
   pool = pool.filter((f) => !guestSelectedPool.has(f.poolId));
   const count = chosen.length;
   guestSelectedPool.clear();
-  document.getElementById("guestUploadStatus").innerHTML = `Uploaded ${count} photo${count === 1 ? "" : "s"}, owned by <b>${DB.users[ev.accountId].username}</b> (the event account) — not by you.`;
+  document.getElementById("guestUploadStatus").innerHTML = `Laddade upp ${count} bild${count === 1 ? "" : "er"}, ägda av <b>${DB.users[ev.accountId].username}</b> (eventkontot) — inte av dig.`;
   document.getElementById("guestUploadStatus").className = "status-msg ok";
   renderGuestPool();
   render();

@@ -1,10 +1,11 @@
 <!doctype html>
-<html lang="en">
+<html lang="sv">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DPFAS — Upload &amp; Share mockup</title>
+<title>DPFAS — Uppladdning &amp; delning (mockup)</title>
 <link rel="icon" href="data:,">
+<link rel="stylesheet" href="vendor/material-symbols/material-symbols.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,20 +14,20 @@
   <header id="topbar">
     <div class="kicker">DPFAS mockup &middot; documentation/upload-and-share/</div>
     <div class="topbar-right">
-      <label class="user-switch">Viewing as
+      <label class="user-switch">Visas som
         <select id="userSwitch"></select>
       </label>
-      <button id="pendingBtn" class="nav-pill">Pending <span id="pendingCount" class="badge hidden">0</span></button>
+      <button id="pendingBtn" class="nav-pill"><span class="material-symbols-outlined">notifications</span>Väntande <span id="pendingCount" class="badge hidden">0</span></button>
     </div>
   </header>
 
-  <div class="flag">Local file only, client-side state only — nothing here is saved or sent anywhere. Reload the page to reset to seed data.</div>
+  <div class="flag">Endast lokal fil, tillstånd finns bara i webbläsaren — inget sparas eller skickas någonstans. Ladda om sidan för att återställa exempeldata.</div>
 
   <nav id="tabNav">
-    <button class="nav-pill current" data-tab="gallery">Gallery</button>
-    <button class="nav-pill" data-tab="upload">Upload</button>
-    <button class="nav-pill" data-tab="sharing">Sharing</button>
-    <button class="nav-pill" data-tab="events">Events</button>
+    <button class="nav-pill current" data-tab="gallery"><span class="material-symbols-outlined">photo_library</span>Galleri</button>
+    <button class="nav-pill" data-tab="upload"><span class="material-symbols-outlined">upload</span>Ladda upp</button>
+    <button class="nav-pill" data-tab="sharing"><span class="material-symbols-outlined">share</span>Delning</button>
+    <button class="nav-pill" data-tab="events"><span class="material-symbols-outlined">celebration</span>Event</button>
   </nav>
 
   <main id="tabPanels">
@@ -37,39 +38,39 @@
     </section>
 
     <section id="tab-upload" class="tab-panel hidden">
-      <h2>Upload</h2>
+      <h2>Ladda upp</h2>
       <div class="card" style="max-width:420px;">
         <div class="mock-field">
-          <label>Name this batch (optional)</label>
-          <input type="text" id="batchName" placeholder="Summer 2019">
+          <label>Namnge denna omgång (valfritt)</label>
+          <input type="text" id="batchName" placeholder="Sommaren 2019">
         </div>
         <p class="hint" id="batchDefaultHint"></p>
         <div class="mock-field">
-          <label>Choose files — click to select from this session's stock</label>
+          <label>Välj filer — klicka för att välja bland sessionens exempelbilder</label>
           <div class="file-pool" id="filePool"></div>
         </div>
         <div class="row">
-          <button class="btn primary" id="uploadBtn" disabled>Upload (<span id="selectedCount">0</span> selected)</button>
+          <button class="btn primary" id="uploadBtn" disabled><span class="material-symbols-outlined">upload</span>Ladda upp (<span id="selectedCount">0</span> valda)</button>
         </div>
       </div>
     </section>
 
     <section id="tab-sharing" class="tab-panel hidden">
-      <h2>Sharing</h2>
-      <p class="section-sub">Share a photo from the Gallery tab to try the three mechanisms — this tab tracks what's outstanding.</p>
+      <h2>Delning</h2>
+      <p class="section-sub">Dela en bild från fliken Galleri för att testa de tre delningssätten — den här fliken visar vad som är obehandlat.</p>
 
-      <h3>Incoming — needs your action</h3>
+      <h3><span class="material-symbols-outlined">mark_email_unread</span>Inkommande — kräver din åtgärd</h3>
       <ul class="list" id="incomingList"></ul>
 
-      <h3>Outgoing invites — waiting on signup</h3>
+      <h3><span class="material-symbols-outlined">outgoing_mail</span>Utgående inbjudningar — väntar på registrering</h3>
       <ul class="list" id="outgoingInviteList"></ul>
 
-      <h3>What you've shared</h3>
+      <h3><span class="material-symbols-outlined">folder_shared</span>Det du har delat</h3>
       <ul class="list" id="sharedByMeList"></ul>
     </section>
 
     <section id="tab-events" class="tab-panel hidden">
-      <h2>Event / party mode</h2>
+      <h2>Event/fest-läge</h2>
       <div class="card panel" id="eventCard"></div>
 
       <div class="qr-block">
@@ -83,23 +84,23 @@
           <i></i><i></i><i></i><i class="off"></i><i></i><i></i><i></i>
         </div>
         <div>
-          <p class="qr-caption">Illustrative, not scannable. Encodes a token resolving to this event's tag — every photo uploaded through it is tagged automatically, before any other tagging happens.</p>
-          <button class="btn primary" id="openGuestUploadBtn">Open guest upload page &rarr;</button>
+          <p class="qr-caption">Illustrativ, inte skanningsbar. Kodar en token som pekar på eventets tagg — varje bild som laddas upp via den taggas automatiskt, innan någon annan taggning sker.</p>
+          <button class="btn primary" id="openGuestUploadBtn"><span class="material-symbols-outlined">qr_code_2</span>Öppna gästens uppladdningssida</button>
         </div>
       </div>
 
       <div id="tvWallWrap" class="hidden">
-        <h3>&#128250; Live wall preview</h3>
-        <p class="section-sub small">A separate output channel — respects Visibility scope, independent of the TV toggle itself.</p>
+        <h3><span class="material-symbols-outlined">tv</span>Förhandsvisning av live-vägg</h3>
+        <p class="section-sub small">En separat visningskanal — följer synlighetsomfånget, oberoende av själva TV-knappen.</p>
         <div class="grid" id="tvWallGrid"></div>
       </div>
 
       <div class="callout">
-        <span class="label">Open, not resolved</span>
-        <p>Legal reporting obligations once free-for-all lets strangers upload without identity verification — a lawyer question, not an engineering one. Not a build blocker for anonymous-upload <em>ownership</em>, which is resolved: the event's own dedicated account owns these uploads, never the guest.</p>
+        <span class="label">Öppen fråga, inte löst</span>
+        <p>Juridiska anmälningsskyldigheter uppstår när Fritt fram låter främlingar ladda upp utan identitetskontroll — en juristfråga, inte en teknisk fråga. Inget hinder för byggstart vad gäller ägarskap av anonyma uppladdningar, som redan är löst: eventets eget dedikerade konto äger dessa uppladdningar, aldrig gästen.</p>
       </div>
 
-      <h3>Event photo pool — curate for the wall / curated-visibility guests</h3>
+      <h3>Eventets bildpool — kuratera för väggen / gäster med begränsad synlighet</h3>
       <div class="grid" id="eventPoolGrid"></div>
     </section>
 
@@ -108,7 +109,7 @@
 
 <div id="guestUploadScreen" class="overlay hidden">
   <div class="guest-shell">
-    <button class="lb-btn lb-close" id="guestCloseBtn">&#10005;</button>
+    <button class="lb-btn lb-close" id="guestCloseBtn"><span class="material-symbols-outlined">close</span></button>
     <div id="guestUploadBody"></div>
   </div>
 </div>

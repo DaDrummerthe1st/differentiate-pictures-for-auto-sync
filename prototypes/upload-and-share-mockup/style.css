@@ -204,6 +204,7 @@ a { color: #7ab0ff; }
   background: #2c2c33;
   color: #ccc;
   cursor: pointer;
+  white-space: nowrap;
 }
 .seg button[aria-pressed="true"] { background: #4a8cff; color: white; font-weight: 600; }
 .seg button + button { border-left: 1px solid #555; }
@@ -364,3 +365,30 @@ footer {
 @media (max-width: 640px) {
   .qr-block { flex-direction: column; align-items: flex-start; }
 }
+
+/* Material Symbols — self-hosted, no CDN (see vendor/material-symbols/) */
+.material-symbols-outlined { vertical-align: -0.2em; }
+.nav-pill .material-symbols-outlined,
+.btn .material-symbols-outlined,
+.seg button .material-symbols-outlined {
+  font-size: 1.1rem;
+  margin-right: 0.35rem;
+}
+.btn.small .material-symbols-outlined { font-size: 1rem; margin-right: 0.25rem; }
+h3 .material-symbols-outlined { font-size: 1.1rem; margin-right: 0.4rem; opacity: 0.75; }
+.axis-name .material-symbols-outlined { font-size: 1.05rem; margin-right: 0.35rem; opacity: 0.8; }
+.chip .material-symbols-outlined { font-size: 0.8rem; margin-right: 0.15rem; vertical-align: -0.12em; }
+.lb-btn.lb-close .material-symbols-outlined { font-size: 1.3rem; vertical-align: -0.22em; }
+.endorse-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.78rem;
+  color: #7ab0ff;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+}
+.endorse-link .material-symbols-outlined { font-size: 0.95rem; margin-right: 0; }
+.endorse-link:disabled { color: #666; cursor: default; }
