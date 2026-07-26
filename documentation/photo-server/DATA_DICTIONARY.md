@@ -48,16 +48,12 @@ The original build plan specced a `selections` table (per-user, per-photo mark/d
 
 A photo exists once on disk regardless of how many users can see it; deleting a row removes only that owner's access until zero remain. A **free** share creates a genuine, independent owner row (irrevocable); a **strict** share is a revocable viewing grant, not full ownership — see [../upload-and-share/OWNERSHIP.md](../upload-and-share/OWNERSHIP.md) for the full model.
 
-## tags (the album mechanism — also the mark/download mechanism)
+## tags
 
-| Column | Status |
-| --- | --- |
-| id, photo_id, user_id, tag, kind, created_at | now |
-| downloaded_at, download_count | now — **per (tag, photo) pair**, not per photo |
-
-`unique(photo_id, user_id, tag)`. `kind = 'album'` is the only value built now (default); `kind = 'content'` is reserved for the deferred free-text manual-tagging path (see DEFERRED.md) so the two never mix in a person's album list.
-
-Endpoints (kind='album' only): `GET/POST /tags`, `POST`/`DELETE /tags/{tag}/photos/{photo_id}`, `GET /tags/{tag}/photos`, `GET /tags/{tag}/download` (zip; default = only photos with null `downloaded_at` for that tag, `?full=true` re-zips everything, both update `downloaded_at`/`download_count`).
+Reserved/now — full schema (columns, `category`/`visibility`, endpoints, and how
+this relates to the taxonomy's other tables) moved to
+[../tags/SCHEMA.md](../tags/SCHEMA.md), the tag system's authoritative home. The
+`kind='album'` mechanism described there is what's actually built and live today.
 
 ## share_links
 
@@ -77,13 +73,7 @@ Reserved, no endpoints — backs the email-invite share mechanism ([../upload-an
 
 ## tag_endorsements
 
-Reserved, no endpoints — lets a user corroborate another user's tag (face ID, location, quality) as a stronger training signal than an unverified single-source tag ([../upload-and-share/SHARING.md](../upload-and-share/SHARING.md)).
-
-| Column | Status |
-| --- | --- |
-| id, tag_id, endorsing_user_id, created_at | reserved |
-
-`unique(tag_id, endorsing_user_id)`.
+Reserved, no endpoints — full schema moved to [../tags/SCHEMA.md](../tags/SCHEMA.md).
 
 ## blocklist_hashes
 
@@ -111,31 +101,7 @@ Login, mark/unmark-equivalent (tag add/remove), and download actions are logged.
 
 ## Tag dimensions
 
-| Dimension | Source | When |
-| --- | --- | --- |
-| Catalogue | folder name | now |
-| Media type | file signature | now |
-| Provenance | ingestion context | now |
-| Date/time | EXIF only, no mtime fallback | now |
-| GPS position | EXIF | now |
-| User location tag | user input | now, empty until entered |
-| Orientation | computed | now |
-| Full-text search | Postgres tsvector | now, demoted in UI (small, collapsed by default) |
-| Album tags (`kind='album'`) | user input | now — the core browsing/selection mechanism |
-| Manual content tags (`kind='content'`) | user input | schema now, endpoints fast-follow |
-| Monochrome/blur | — | deferred entirely, not designed |
-| Near-duplicate cluster | perceptual hash | fast-follow |
-| Scan heuristic | heuristic | fast-follow |
-| Content tags, face regions/identity | on-device model, phone side; pgvector server-side once it exists | DPFAS phase |
-| People count | derived from face regions | DPFAS phase |
-| Outcome/usage | album tags plus audit_log | now for data, used later |
-| Ownership | photo_owners | now, schema only |
-
-### Future tag schema (captured 2026-07-18, not designed/committed)
-
-Joakim proposed a general shape for tags once the dimensions above grow past today's album/content split - captured here for a future session, not scoped for this project's current phase:
-
-- `tags`: `id, name, type (folder|blur|identified_individual|...), flag (global — system-set, vs. private — user's own), created_at`.
-- A separate reference table (not a graph DB - see below) for what a tag points at: a user, a pixel region (e.g. a face's bounding box, `[(23,466),(186,1234)]`), another tag, or a plain email address (an invite/"recruit to view these pictures" mechanism, not yet designed elsewhere).
-
-**Relational, not graph DB** (Joakim agreed 2026-07-18, "at least for now"): a graph database earns its cost at a node/edge count and traversal complexity this project doesn't have (one household, later some invited relatives - not a dense social graph). A `tags` + `tag_references` pair, with `reference_kind` discriminating what `reference_value` (JSONB or text) means per row, covers every case above natively in Postgres - already this project's database, already handling similar polymorphic/semi-structured data (see `details JSONB` in `audit_log` above). Revisit only if real scale ever demands it, not preemptively.
+Superseded by [../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s 12-category taxonomy —
+that file is now the source of truth for what a tag can represent and how the
+categories relate; the old draft "Future tag schema" sketch this section used to
+carry is fully absorbed into [../tags/SCHEMA.md](../tags/SCHEMA.md).
