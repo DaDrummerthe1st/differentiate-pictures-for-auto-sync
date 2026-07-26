@@ -44,8 +44,10 @@ The original build plan specced a `selections` table (per-user, per-photo mark/d
 | photo_id, user_id | now |
 | visibility | now |
 | added_at | now |
+| sharing_terms (strict / free), shared_from_owner_id | reserved — see [../upload-and-share/OWNERSHIP.md](../upload-and-share/OWNERSHIP.md) |
+| holds_replica, storage_node_id | reserved, foundation for the distributed-sync phase — today's one server is implicitly every owner's node |
 
-A photo exists once on disk regardless of how many users can see it; deleting a row removes only that owner's access until zero remain.
+A photo exists once on disk regardless of how many users can see it; deleting a row removes only that owner's access until zero remain. A **free** share creates a genuine, independent owner row (irrevocable); a **strict** share is a revocable viewing grant, not full ownership — see [../upload-and-share/OWNERSHIP.md](../upload-and-share/OWNERSHIP.md) for the full model.
 
 ## tags (the album mechanism — also the mark/download mechanism)
 
@@ -65,6 +67,40 @@ Schema only, no endpoints (see DEFERRED.md).
 | Column | Status |
 | --- | --- |
 | id, owner_user_id, scope_type, scope_id, token, created_at, expires_at, revoked | reserved |
+
+## pending_shares
+
+Reserved, no endpoints — backs the email-invite share mechanism ([../upload-and-share/SHARING.md](../upload-and-share/SHARING.md)): a share aimed at an email with no DPFAS account yet, resolved into a real `photo_owners` row automatically on that email's first login.
+
+| Column | Status |
+| --- | --- |
+| id, target_email, scope_type (photo/tag), scope_id, sharing_terms, invited_by_user_id, created_at, resolved_at | reserved |
+
+## tag_endorsements
+
+Reserved, no endpoints — lets a user corroborate another user's tag (face ID, location, quality) as a stronger training signal than an unverified single-source tag ([../upload-and-share/SHARING.md](../upload-and-share/SHARING.md)).
+
+| Column | Status |
+| --- | --- |
+| id, tag_id, endorsing_user_id, created_at | reserved |
+
+`unique(tag_id, endorsing_user_id)`.
+
+## blocklist_hashes
+
+Reserved, no endpoints — admin-only moderation override, supersedes ownership/sharing terms entirely for illegal/abusive content ([../upload-and-share/OWNERSHIP.md](../upload-and-share/OWNERSHIP.md)'s Moderation section). Perceptual hash (PDQ), not `photos.file_hash` (sha256 exact-match) — catches re-encoded/resized copies of flagged content.
+
+| Column | Status |
+| --- | --- |
+| id, perceptual_hash, algorithm, reason, added_by_admin_id, created_at | reserved |
+
+## events
+
+Reserved, no endpoints — one row per party/wedding/funeral-style event ([../upload-and-share/EVENTS.md](../upload-and-share/EVENTS.md)). `tag_id` is the event's underlying `kind='album'` tag, auto-applied to every photo uploaded through the event's QR token.
+
+| Column | Status |
+| --- | --- |
+| id, host_user_id, name, tag_id, qr_token, upload_access (free_for_all / pre_approved / register_then_approve), visibility_scope (all / curated), tv_display (bool), created_at | reserved |
 
 ## audit_log
 

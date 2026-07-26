@@ -6,6 +6,7 @@ Project documentation, organized by topic. Structure/maintenance rules: [CLAUDE.
 | --- | --- |
 | [policies/](policies/README.md) | Hard, project-wide constraints, and cross-cutting topics like authentication |
 | [photo-server/](photo-server/README.md) | Current work: multi-user web server — browse, search, tag, download |
+| [upload-and-share/](upload-and-share/README.md) | Design work: per-user upload, ownership/sharing terms, event/party mode (`upload-and-share` branch) |
 | [gui/](gui/README.md) | The photo-server GUI's first working version (`mamma-photo-viewer` branch) |
 | [picture-handling/](picture-handling/README.md) | Superseded single-machine sorting tool — resolved, moved to photo-server/ |
 | [distributed-sync/](distributed-sync/README.md) | Future work: multi-device sync, distributed storage/compute |

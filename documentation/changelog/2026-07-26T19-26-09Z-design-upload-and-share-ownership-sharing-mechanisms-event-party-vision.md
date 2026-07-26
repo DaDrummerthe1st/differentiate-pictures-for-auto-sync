@@ -1,0 +1,5 @@
+# Design upload-and-share: ownership, sharing mechanisms, event/party vision
+
+Full design pass (no code) for letting every user upload and own her own photos, share them under revocable "strict" or irrevocable "free" terms, and for a party/wedding/funeral event mode with QR-code auto-tagging — resolves three items DEFERRED.md had flagged with no design (upload function, multi-tenant partitioning, consolidated media root) and lays real foundation for VISION.md Pillars 1 (DFS) and 3 (presentation/sharing). New topic folder `documentation/upload-and-share/` (README, TODO, OWNERSHIP, UPLOAD, SHARING, EVENTS), plus a moderation-supersedes-ownership rule added to POLICY.md and reserved schema (`pending_shares`, `tag_endorsements`, `blocklist_hashes`, `events`, `photo_owners` additions) added to photo-server/DATA_DICTIONARY.md. A visual wireframe companion was also published as an Artifact this session.
+
+- **Doc size**: new `upload-and-share/` files, 22,228 chars. Edited files (VISION.md, POLICY.md, photo-server/README.md, TODO.md, DEFERRED.md, DATA_DICTIONARY.md, top-level README.md): 77,717 → 84,639 chars (+6,922). Total added: ~29,150 chars.

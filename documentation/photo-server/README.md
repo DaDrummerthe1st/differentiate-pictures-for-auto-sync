@@ -40,6 +40,6 @@ Elisabeth's mother is holding a memorial for Per, her late partner, on a specifi
 
 ## Relationship to the wider vision
 
-This folder is one narrow, closed slice of a much larger system Joakim is maturing over time — see [../VISION.md](../VISION.md)'s Pillar 2 for the full metadata/curation direction this feeds into. Nothing here should grow toward distributed storage, cross-household sharing, or AI-driven curation suggestions without an explicit decision to do so; those are separate, not-yet-scheduled pillars, not this folder's job.
+This folder is one narrow, closed slice of a much larger system Joakim is maturing over time — see [../VISION.md](../VISION.md)'s Pillar 2 for the full metadata/curation direction this feeds into. Nothing here should grow toward distributed storage, cross-household sharing, or AI-driven curation suggestions without an explicit decision to do so; those are separate, not-yet-scheduled pillars, not this folder's job. **That explicit decision was made 2026-07-26**: upload/multi-user sharing now has its own design in [../upload-and-share/](../upload-and-share/README.md), deliberately kept out of this folder — this schema (`photo_owners`, `pending_shares`, `tag_endorsements`, `blocklist_hashes`, `events`) will extend the same running database once that work starts, but the design and vision live there, not here.
 
 This is also why Postgres was chosen as the sole database engine (see "Non-negotiables" above) — no second database will be needed if/when Pillar 2's on-device-inference direction reaches this folder.
