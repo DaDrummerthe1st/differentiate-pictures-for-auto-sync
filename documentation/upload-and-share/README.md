@@ -14,7 +14,7 @@ Resolves three items [photo-server/DEFERRED.md](../photo-server/DEFERRED.md) had
 | [EVENTS.md](EVENTS.md) | The party/wedding/funeral event mode — QR-code auto-tagging, upload access, visibility, TV display |
 | [TODO.md](TODO.md) | What's open before any of the above gets broken into TDD steps |
 
-A visual wireframe companion to this design also exists as a published Artifact (see the session that produced it) — the written files above are the durable, self-sufficient record per [../../CLAUDE.md](../../CLAUDE.md); the artifact is a viewing convenience, not a second source of truth.
+A visual wireframe companion was published as an Artifact during this session, before a since-added global rule ruled that out for good (see `documentation/bugs/claude-bugs/fixed/2026-07-26-published-design-doc-as-an-artifact-sending-project-info-off-the-closed-server.md`) — it sends content to Anthropic's own hosting, outside this project's infrastructure, which conflicts with [../policies/POLICY.md](../policies/POLICY.md)'s closed-by-default rule. Not repeated, and not kept in sync going forward: the files above are the sole, durable, self-sufficient record per [../../CLAUDE.md](../../CLAUDE.md).
 
 ## Non-negotiables specific to this topic
 

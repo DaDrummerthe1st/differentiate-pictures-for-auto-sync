@@ -44,8 +44,7 @@ The original build plan specced a `selections` table (per-user, per-photo mark/d
 | photo_id, user_id | now |
 | visibility | now |
 | added_at | now |
-| sharing_terms (strict / free), shared_from_owner_id | reserved — see [../upload-and-share/OWNERSHIP.md](../upload-and-share/OWNERSHIP.md) |
-| holds_replica, storage_node_id | reserved, foundation for the distributed-sync phase — today's one server is implicitly every owner's node |
+| sharing_terms (strict / free), shared_from_owner_id | reserved — see [../upload-and-share/OWNERSHIP.md](../upload-and-share/OWNERSHIP.md); one-server scope only, no network/node columns added at this stage |
 
 A photo exists once on disk regardless of how many users can see it; deleting a row removes only that owner's access until zero remain. A **free** share creates a genuine, independent owner row (irrevocable); a **strict** share is a revocable viewing grant, not full ownership — see [../upload-and-share/OWNERSHIP.md](../upload-and-share/OWNERSHIP.md) for the full model.
 

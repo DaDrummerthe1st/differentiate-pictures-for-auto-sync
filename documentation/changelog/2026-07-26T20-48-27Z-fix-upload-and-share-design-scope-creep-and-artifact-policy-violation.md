@@ -1,0 +1,5 @@
+# Fix upload-and-share design scope creep and Artifact policy violation
+
+Two process lapses caught mid-session and fixed. (1) OWNERSHIP.md/DATA_DICTIONARY.md/VISION.md described a torrent-style, multi-node piece-distribution mechanism in operational detail, when Joakim's instruction was that this stage is one server only, not the DFS network — trimmed to a plain per-server permission check, with the network-layer tension named but explicitly left to distributed-sync/'s future design, not designed here. (2) Publishing a wireframe as a claude.ai Artifact sent project content to Anthropic's hosting, outside this repo's own infrastructure, conflicting with POLICY.md's no-cloud-APIs rule — added a global "never use Artifacts, any project" rule to `~/.claude/CLAUDE.md`, and filed + resolved two `documentation/bugs/claude-bugs/` reports the same session.
+
+- **Doc size**: OWNERSHIP.md 7,599 → 6,217; DATA_DICTIONARY.md 8,881 → 8,804; VISION.md 6,731 → 6,630; upload-and-share/README.md 2,446 → 2,762 (net −1,244 across edited files). Two new bug reports, 5,635 chars.
