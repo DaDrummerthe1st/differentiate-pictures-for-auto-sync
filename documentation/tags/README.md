@@ -17,6 +17,12 @@ across whichever topic happened to need a tag first.
 | [UX_FLOWS.md](UX_FLOWS.md) | Interaction-level detail: bounding-box tagging, the invite CTA, the blur-preview sharing review. |
 | [TODO.md](TODO.md) | Open, not-designed-now items — a user bio for tag suggestions, contacts import, nudity auto-detection, entity dedup, and more. |
 
+Visual mockup: [prototypes/mockup/](../../prototypes/mockup/README.md), same
+in-memory-fake-database convention as
+[upload-and-share-mockup/](../../prototypes/upload-and-share-mockup/README.md) —
+a real clickable prototype covering all 12 categories, not a re-rendering of this
+written design. Illustrative UI only, no schema/endpoints implied.
+
 ## Status
 
 **Next session needing tag context starts here, not with a repeat multi-file
