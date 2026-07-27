@@ -6,6 +6,8 @@ Project-wide, like [policies/POLICY.md](policies/POLICY.md), but for direction r
 
 [photo-server/](photo-server/README.md) — the deliverable for a specific Sunday memorial, see its README — is a deliberately narrow, **closed** slice of Pillar 2 only: two known accounts, no data leaves the server, no network sharing. None of the other three pillars are in scope for that build.
 
+**Reaffirmed 2026-07-27, generalized beyond just that one build**: this applies to *every* current design thread, not only photo-server specifically — [tags/](tags/README.md), [upload-and-share/](upload-and-share/README.md), all of it. The single VPS is the sole source of truth for all current work; nothing in today's design should assume or route through Pillar 1's DFS. Pillar 1 is a real, active pillar of this vision — not necessarily distant on the calendar — but it is not part of the current design phase, and no current schema/UX decision should be shaped around it prematurely. `distributed-sync/TODO.md`'s open questions (including the metadata-placement one raised this session) are legitimate to capture there for later, but nothing about them constrains work happening now.
+
 ## Pillar 1 — Distributed storage network (DFS)
 
 Torrent-style distributed file system across users' own NAS devices; each user's files stay encrypted, and contributing spare storage/compute earns cloud storage/AI-compute credit elsewhere on the network, minus overhead. Full description already lives in [distributed-sync/README.md](distributed-sync/README.md) — not repeated here.
