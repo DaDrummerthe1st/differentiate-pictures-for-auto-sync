@@ -28,6 +28,14 @@ case below natively in Postgres.
 | visibility (`private` \| `shareable`, default `private`) | designed, not built |
 | downloaded_at, download_count | now, per (tag, photo) pair |
 
+**Why `downloaded_at`/`download_count` exist**: not usage telemetry for its own
+sake — they're the raw signal behind [../VISION.md](../VISION.md) Pillar 2's stated
+longer-term goal, "the system suggests photos to remove, learned globally across
+the network and personalized per user." Confirmed with Joakim 2026-07-27 as the
+priority piece of Pillar 2 to get right now, over the sharing/DFS threads — flagged
+here so the field's purpose stays traceable instead of reading as tracking without
+a stated reason (raised as a real question, not a rhetorical one, in that session).
+
 `unique(photo_id, user_id, tag)`. The `origin` category is the already-built
 `kind='album'` mechanism under a new name — every event tag ([EVENTS.md's](../upload-and-share/EVENTS.md)
 QR-driven auto-tag) and upload-batch tag ([UPLOAD.md](../upload-and-share/UPLOAD.md))

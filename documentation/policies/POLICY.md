@@ -4,7 +4,7 @@ Hard, project-wide constraints. This is the one file where "hard rules live here
 
 ## Privacy and safety
 
-- Applies to every change, not just ones that look security-related (see CLAUDE.md's "Security and privacy first" rule).
+- Applies to every change, not just ones that look security-related (see CLAUDE.md's "Security and privacy first" rule). Ongoing threat/concern tracking and open security questions live in [../security/README.md](../security/README.md), kept separate from this file's hard rules so this section doesn't grow into a running log.
 - This app extracts and stores EXIF/GPS metadata from personal photos (see `app/gpsdata.py`). Location data is sensitive by default — never transmit, log, or expose it more broadly than the feature being built strictly requires.
 - **Closed-by-default (project-wide)**: no photo or user data ever leaves the server the user controls. No cloud APIs, no telemetry. Applies to every topic folder, not just photo-server (whose own README.md states this same rule for its scope — this is the source of truth it inherits from). Sole exception: Let's Encrypt certificate issuance for HTTPS.
 - The planned distributed-sync/shared-storage feature (see [../distributed-sync/README.md](../distributed-sync/README.md)) means this project will eventually hold other people's files and metadata on infrastructure the user partially controls, and vice versa. Any design work in that area must treat "whose data is this, and who can see it" as a first-class question, not an afterthought — even before the architecture is finalized.
