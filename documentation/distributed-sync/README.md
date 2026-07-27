@@ -10,6 +10,8 @@ See [../VISION.md](../VISION.md) for how this fits alongside the other three lon
 
 Not yet a committed design — see [TODO.md](TODO.md)'s open question for what's still unresolved.
 
+[OWNERSHIP.md](OWNERSHIP.md) — paper-stage ownership tiers (strict/leased/free) once a second real node exists, resolving the strict-revocability-vs-durable-storage tension named in [../upload-and-share/OWNERSHIP.md](../upload-and-share/OWNERSHIP.md).
+
 ## Relevant external tools
 
 Not adopted yet.
