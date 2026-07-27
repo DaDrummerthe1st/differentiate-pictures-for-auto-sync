@@ -185,6 +185,8 @@ let galleryCategoryFilter = null;
 let addTagCtx = null;
 let searchMaxHops = 2;
 let lastSearchQuery = "";
+let drawMode = false;
+let dragState = null;
 
 // ---------------------------------------------------------------- toasts
 
@@ -275,25 +277,104 @@ function renderCategoryLegend() {
 
 function openPhotoDetail(photoId) {
   openPhotoId = photoId;
+  drawMode = false;
   renderPhotoDetail(photoId);
   document.getElementById("photoDetail").classList.remove("hidden");
 }
 function closePhotoDetail() {
   openPhotoId = null;
+  drawMode = false;
   document.getElementById("photoDetail").classList.add("hidden");
   renderGallery();
+}
+function toggleDrawMode() {
+  drawMode = !drawMode;
+  renderPhotoDetail(openPhotoId);
+}
+
+// manual bounding-box drawing — see documentation/tags/UX_FLOWS.md's "Manual
+// bounding-box tagging" section. Delegated on `document` (not re-attached per
+// render) since the .photo-stage element is replaced every renderPhotoDetail.
+function pctFromEvent(e, rect) {
+  const x = Math.min(Math.max(((e.clientX - rect.left) / rect.width) * 100, 0), 100);
+  const y = Math.min(Math.max(((e.clientY - rect.top) / rect.height) * 100, 0), 100);
+  return { x, y };
+}
+function initManualBoxDrawing() {
+  document.addEventListener("mousedown", (e) => {
+    if (!drawMode || !openPhotoId) return;
+    const stage = e.target.closest(".photo-stage");
+    if (!stage || e.target.closest(".bbox")) return;
+    const rect = stage.getBoundingClientRect();
+    const start = pctFromEvent(e, rect);
+    const previewEl = document.createElement("div");
+    previewEl.className = "bbox bbox-draw-preview";
+    stage.appendChild(previewEl);
+    dragState = { rect, start, previewEl };
+  });
+  document.addEventListener("mousemove", (e) => {
+    if (!dragState) return;
+    const cur = pctFromEvent(e, dragState.rect);
+    const left = Math.min(dragState.start.x, cur.x);
+    const top = Math.min(dragState.start.y, cur.y);
+    const w = Math.abs(cur.x - dragState.start.x);
+    const h = Math.abs(cur.y - dragState.start.y);
+    Object.assign(dragState.previewEl.style, { left: left + "%", top: top + "%", width: w + "%", height: h + "%" });
+  });
+  document.addEventListener("mouseup", (e) => {
+    if (!dragState) return;
+    const cur = pctFromEvent(e, dragState.rect);
+    const left = Math.min(dragState.start.x, cur.x);
+    const top = Math.min(dragState.start.y, cur.y);
+    const w = Math.abs(cur.x - dragState.start.x);
+    const h = Math.abs(cur.y - dragState.start.y);
+    dragState.previewEl.remove();
+    dragState = null;
+    if (w < 4 || h < 4) return; // too small — treat as an accidental click, not a drag
+    const round = (n) => Math.round(n * 10) / 10;
+    openKindPickerForNewBox(openPhotoId, [round(left), round(top), round(w), round(h)]);
+  });
+}
+function openKindPickerForNewBox(photoId, bbox) {
+  document.getElementById("addTagModalBody").innerHTML = `
+    <button class="lb-btn lb-close" onclick="closeAddTagModal()">${icon("close")}</button>
+    <h2>${icon("crop")}Ny ruta — vad visar den?</h2>
+    <p class="section-sub small">Geometrin är redan satt (samma <code>bounding_box</code>-fält som en detekterad ruta) — välj typ för att öppna rätt taggningsformulär.</p>
+    <div class="picker-grid">
+      <button class="picker-tile" onclick='createManualBox("${photoId}", "person", ${JSON.stringify(bbox)})'><div class="pt-title">${icon("person")}Person</div></button>
+      <button class="picker-tile" onclick='createManualBox("${photoId}", "animal", ${JSON.stringify(bbox)})'><div class="pt-title">${icon("pets")}Djur</div></button>
+      <button class="picker-tile" onclick='createManualBox("${photoId}", "object", ${JSON.stringify(bbox)})'><div class="pt-title">${icon("inventory_2")}Föremål</div></button>
+    </div>
+  `;
+  document.getElementById("addTagModal").classList.remove("hidden");
+}
+function createManualBox(photoId, kind, bbox) {
+  const photo = DB.photos.find((p) => p.id === photoId);
+  const box = { id: nid("box"), kind, bbox, tagId: null, manual: true };
+  photo.boxes.push(box);
+  openAddTagForBox(photoId, box.id);
+}
+function removeManualBox(photoId, boxId, evt) {
+  if (evt) evt.stopPropagation();
+  const photo = DB.photos.find((p) => p.id === photoId);
+  photo.boxes = photo.boxes.filter((b) => b.id !== boxId);
+  renderPhotoDetail(photoId);
 }
 
 function boxHtml(photo, box) {
   const style = `left:${box.bbox[0]}%; top:${box.bbox[1]}%; width:${box.bbox[2]}%; height:${box.bbox[3]}%;`;
+  const manualCls = box.manual ? " manual" : "";
+  const manualBadge = box.manual ? `<span title="Manuellt ritad, inte från detektorn">${icon("gesture")}</span>` : "";
   if (box.tagId) {
     const entity = tagEntity(box.tagId);
-    return `<div class="bbox tagged" style="${style}" onclick="onTaggedBoxClick('${box.tagId}')" title="Redan taggad — se tagglistan nedan för att ändra">
-      <span class="bbox-label">${icon(KIND_ICON[box.kind])}${escapeHtml(entity.displayName)} ${entityBadge(entity, true)}</span>
+    return `<div class="bbox tagged${manualCls}" style="${style}" onclick="onTaggedBoxClick('${box.tagId}')" title="Redan taggad — se tagglistan nedan för att ändra">
+      <span class="bbox-label">${manualBadge}${icon(KIND_ICON[box.kind])}${escapeHtml(entity.displayName)} ${entityBadge(entity, true)}</span>
     </div>`;
   }
-  return `<div class="bbox bbox-untagged" style="${style}" onclick="openAddTagForBox('${photo.id}','${box.id}')">
-    <span class="bbox-label">${icon(KIND_ICON[box.kind])}${KIND_QUESTION[box.kind]}</span>
+  const deleteBtn = box.manual ? `<button class="bbox-delete" onclick='event.stopPropagation(); removeManualBox("${photo.id}","${box.id}")' title="Ta bort ritad ruta">${icon("close")}</button>` : "";
+  return `<div class="bbox bbox-untagged${manualCls}" style="${style}" onclick="openAddTagForBox('${photo.id}','${box.id}')">
+    ${deleteBtn}
+    <span class="bbox-label">${manualBadge}${icon(KIND_ICON[box.kind])}${KIND_QUESTION[box.kind]}</span>
   </div>`;
 }
 function onTaggedBoxClick(tagId) {
@@ -360,7 +441,11 @@ function renderPhotoDetail(photoId) {
     : "";
   document.getElementById("photoDetailBody").innerHTML = `
     <button class="lb-btn lb-close" onclick="closePhotoDetail()">${icon("close")}</button>
-    <div class="photo-stage" style="background:${photo.color}">
+    <div class="row" style="margin-bottom:0.6rem;">
+      <button class="btn small ${drawMode ? "primary" : "ghost"}" onclick="toggleDrawMode()">${icon("gesture")}${drawMode ? "Avsluta ritläge" : "Rita en ruta manuellt"}</button>
+      ${drawMode ? `<span class="hint" style="margin:0;">Dra ett rektangel-lasso direkt på bilden ovan — geometrin sparas precis som en detekterad ruta.</span>` : ""}
+    </div>
+    <div class="photo-stage ${drawMode ? "draw-mode" : ""}" style="background:${photo.color}">
       ${photo.emoji}
       ${photo.boxes.map((b) => boxHtml(photo, b)).join("")}
       ${lockNote}
@@ -909,6 +994,7 @@ function renderSearchResultsFor(query) {
 // -------------------------------------------------------------------- init
 
 document.addEventListener("DOMContentLoaded", () => {
+  initManualBoxDrawing();
   document.querySelectorAll("#tabNav .nav-pill").forEach((b) => b.addEventListener("click", () => switchTab(b.dataset.tab)));
   document.getElementById("searchBtn").addEventListener("click", doSearch);
   document.getElementById("searchInput").addEventListener("keydown", (e) => { if (e.key === "Enter") doSearch(); });

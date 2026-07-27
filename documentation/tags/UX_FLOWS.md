@@ -29,6 +29,30 @@ always knows, at a glance, whether "Dad" here means an actual DPFAS account or j
 her own private note. Exact visual treatment not decided; the requirement is that it
 must be immediately obvious, not buried in a detail view.
 
+## Manual bounding-box tagging — the detector isn't always right or present
+
+A detector box is the common case, not the only case: some photos won't get a usable
+detection at all (no on-device pass run yet, a missed detection, a subject the
+detector doesn't recognize as a distinct object), and some detections are simply
+wrong or imprecise (a box drawn too tight, two people merged into one box). The user
+needs a way to draw a box by hand, not just confirm ones the detector already found.
+
+Raised 2026-07-27, alongside the mockup build that first exposed the gap (tap-only
+boxes with nothing to tap). Vision-level, same bar as the rest of this file — not
+build-ready:
+
+- A manual box is created the same way any freehand rectangle-select tool works —
+  drag a corner-to-corner rectangle over the region, on the photo itself. No new
+  interaction paradigm versus tapping a detector box: once drawn, it opens the exact
+  same contextual form (`SCHEMA.md`'s `bounding_box` column doesn't distinguish
+  detector-sourced from hand-drawn — geometry is geometry either way).
+- A manual box can also **replace or adjust** a detector box that's wrong (too tight,
+  merged subjects, wrong region) — not just add new ones. Exact edit affordance
+  (drag an existing box's edge/corner vs. delete-and-redraw) not decided.
+- Detector boxes stay visually "subtle, concealable" (this file's existing rule,
+  above); a manually-drawn box has no such requirement — the user placed it herself
+  and already knows it's there.
+
 ## Tagging an unregistered person — invite CTA
 
 Confirming a person-tag against a **local-only** entity (no `linked_account_user_id`

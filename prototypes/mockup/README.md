@@ -19,6 +19,14 @@ privacy category forcing a tag private regardless of the photo's other tags, and
 blur-preview review before sharing any tag as an album. The **Kategorier** tab is a
 clickable legend of all 12 categories, cross-linking into the gallery.
 
+Also covers manual bounding-box tagging (UX_FLOWS.md's "Manual bounding-box tagging"
+section, added 2026-07-27): a "Rita en ruta manuellt" toggle puts the photo stage into
+a click-drag draw mode, producing a box with the same shape/behavior as a
+detector-sourced one (solid amber border instead of the detector's dashed one, plus a
+small gesture-icon badge once tagged, so it's visually distinguishable but not
+functionally different) — same tagging form, same entity linkage, deletable before
+it's tagged.
+
 Two illustrative simplifications versus the real design, called out in a comment at
 the top of `script.js`: a relationship tag here carries two explicit reference rows
 (subject + object) rather than SCHEMA.md's single "tag being qualified" reference —
