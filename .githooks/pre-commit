@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Mechanical enforcement of CLAUDE.md's "run app/tests before every commit,
+# docs-only or not" rule — see documentation/bugs/claude-bugs/ for the lapse
+# this closes. Not activated by default; see documentation/tooling/README.md
+# for the one-time `git config core.hooksPath .githooks` setup.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+echo "[pre-commit] running app/tests (fast, in-process)..."
+if ! python3 -m pytest app/tests -q; then
+  echo "[pre-commit] app/tests failed — commit blocked. Fix the failure or use --no-verify (discouraged, see CLAUDE.md)." >&2
+  exit 1
+fi
+
+# server/tests is container-based and slower, and the rule allows skipping it
+# on a doc-only commit already run clean this session — that judgement call
+# isn't mechanically checkable here, so this only reminds, never blocks.
+if git diff --cached --name-only | grep -qE '^(server|app)/'; then
+  echo "[pre-commit] reminder: this commit touches server/ or app/ — run server/tests too if it hasn't already run clean this session against this code (see CLAUDE.md)." >&2
+fi

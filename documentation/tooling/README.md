@@ -18,7 +18,7 @@ Each check has a trigger condition. Most only apply when something specific happ
 
 | Check | Trigger | Source |
 | --- | --- | --- |
-| `app/tests` (fast, in-process) | before every commit, docs-only or not | local |
+| `app/tests` (fast, in-process) | before every commit, docs-only or not | local, mechanically enforced by `.githooks/pre-commit` — see below |
 | `server/tests` (container-based) | every commit touching `server/`/`app/` code; for a doc-only commit, only if it hasn't already run clean this session against the same code | local |
 | Secrets-in-diff scan | before every commit | global |
 | `doc_metrics` logging | every commit touching a `*.md` file | local |
@@ -34,5 +34,28 @@ Each check has a trigger condition. Most only apply when something specific happ
 | Stale-TODO glance (items already resolved but still marked open) | every session close | global |
 | Forward-effectiveness note (one concrete note on what would make the next session cheaper) | every session close | global |
 | Systematic security-discovery pass (`pip-audit`, OWASP ZAP scan — see [PHOTO_SERVER's TODO.md](../photo-server/TODO.md)) | not diff-triggered — audits the live deployed surface, not a change; needs a real recurring schedule once built, not a per-session check | local, not built yet |
+
+## Pre-commit hook (`app/tests`, mechanically enforced)
+
+Added 2026-07-27 after an AI session committed twice in a row without running
+`app/tests` first, despite the rule above already saying to
+(see `documentation/bugs/claude-bugs/`) — wording alone wasn't enough, so this
+makes the fast-suite-before-commit rule self-enforcing instead of
+memory-dependent. `.githooks/pre-commit` runs `app/tests` and blocks the commit
+on failure; it only reminds (doesn't block) about `server/tests` when a commit
+touches `server/`/`app/`, since that suite is container-based, slower, and the
+rule's "skip if already run clean this session" judgement call isn't
+mechanically checkable.
+
+**Not active by default** — git doesn't read hooks from a repo-tracked
+directory on its own. One-time setup, per clone:
+
+```
+git config core.hooksPath .githooks
+```
+
+This changes local git config, so it's a command to run yourself, not
+something an AI session runs on your behalf (see CLAUDE.md's git safety
+protocol) — hand it over once per clone.
 
 **Persistent nudge, not a one-time flag**: once a session shows drift (a second, unrelated concern enters the conversation) or has clearly run long, say so plainly in every subsequent message until the session actually ends — starting as soon as the signal appears, not at a context-limit warning. This is a nudge Joakim decides whether to act on, not a hard stop. Decided 2026-07-19 after wrap-up itself had grown open-ended enough that ending a session took about as long as the work that preceded it (see [documentation/bugs/claude-bugs/under_process/2026-07-18-session-wrap-up-itself-grows-unpredictably-long.md](../bugs/claude-bugs/under_process/2026-07-18-session-wrap-up-itself-grows-unpredictably-long.md)).
