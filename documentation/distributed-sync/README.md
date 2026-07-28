@@ -22,3 +22,6 @@ Not adopted yet.
 | --- | --- | --- |
 | SyncThing | https://syncthing.net/ | Continuous sync between units |
 | rClone | https://blog.rymcg.tech/blog/linux/rclone_sync/ | Auto-sync of files via bash |
+| IPFS (Kubo) | https://github.com/ipfs/kubo | Content-addressing + Kademlia DHT — **researched and ruled out 2026-07-29** for this project's Pi-class target: Kubo itself recommends 6 GB RAM/2 CPU cores, ~6x a Pi 3's total budget. The underlying DHT concept still stands; this specific implementation doesn't fit. See [TODO.md](TODO.md). |
+| Filecoin | https://filecoin.io/ | Paid-storage marketplace precedent (on-chain escrowed deals) — prices storage capacity over time, not content licensing. See [TODO.md](TODO.md)'s marketplace-idea note. |
+| Storj | https://www.storj.io/ | Paid-storage marketplace precedent ("satellite" coordination service, token or fiat payout) — same limitation as Filecoin for this project's purposes. |

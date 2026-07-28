@@ -1,0 +1,5 @@
+# Fold in IPFS/PoW-PoS/marketplace research; second claude-bug
+
+Folded a background research pass into `distributed-sync/TODO.md` and `README.md`: IPFS/Kubo is ruled out for this project's Pi-class target (Kubo recommends 6 GB RAM, ~6x the Pi 3 budget) though the underlying DHT concept still stands; PoW/PoS don't solve this project's actual contribution-scoring problem; "proof of useful work" (including AI-inference-as-consensus) is a real but immature research gap, not a working pattern; marketplace precedent (Filecoin/Storj/stock-photo sites/KodakCoin) is real but none maps directly, and a marketplace pulls in payment/tax obligations pure sharing doesn't. Also filed a second claude-bugs entry: not proactively self-reporting the earlier Sources-requirement lapse until asked a second time.
+
+- **Doc size** (Unicode codepoints): `distributed-sync/TODO.md` 3711 → 6394; `distributed-sync/README.md` 2255 → 2989; `bugs/claude-bugs/fixed/2026-07-29-did-not-proactively-self-report-the-sources-lapse.md` 0 → 1496 (new).
