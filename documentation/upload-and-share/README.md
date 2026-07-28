@@ -11,6 +11,7 @@ Resolves three items [photo-server/DEFERRED.md](../photo-server/DEFERRED.md) had
 | [OWNERSHIP.md](OWNERSHIP.md) | Per-photo ownership, strict vs. free terms, torrent-style piece distribution, the moderation override |
 | [UPLOAD.md](UPLOAD.md) | Upload-batch naming (replacing folder-derived `catalogue`), content-addressed storage layout |
 | [SHARING.md](SHARING.md) | The three share mechanisms (platform share sheet, in-app dialog, email invite), tag verification |
+| [ABUSE_MITIGATION.md](ABUSE_MITIGATION.md) | Mutual-acceptance default, blocking, and the unsolved unsolicited-explicit-content problem |
 | [EVENTS.md](EVENTS.md) | The party/wedding/funeral event mode — QR-code auto-tagging, upload access, visibility, TV display |
 | [TODO.md](TODO.md) | What's open before any of the above gets broken into TDD steps |
 

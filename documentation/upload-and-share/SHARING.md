@@ -43,14 +43,22 @@ Fallback: if the Web Share API isn't available (older desktop browsers), the sam
 
 Username path:
   -> look up account by username
-  -> exists? create photo_owners row
-     for that user_id directly
-     (shared_from_owner_id = sharer),
-     terms = strict/free as chosen
+  -> exists? does she allow open
+     sharing (sharing_policy='open')?
+     -> yes: create photo_owners row
+        for that user_id directly
+        (shared_from_owner_id = sharer),
+        terms = strict/free as chosen
+     -> no (default, mutual_accept):
+        same pending-share-to-accept
+        step as the share-sheet path
+        above, not immediate
   -> doesn't exist? "No user found"
      (usernames are exact-match,
       unlike the email path below)
 ```
+
+**Consent default, and blocking**: the flow above used to create the `photo_owners` row immediately, no accept step — see [ABUSE_MITIGATION.md](ABUSE_MITIGATION.md) for why that changed, the `sharing_policy` setting, blocking, and the still-unsolved unsolicited-content problem.
 
 ## 3. Email invite (no account required to receive)
 
