@@ -12,6 +12,8 @@ Not yet a committed design — see [TODO.md](TODO.md)'s open question for what's
 
 [OWNERSHIP.md](OWNERSHIP.md) — paper-stage ownership tiers (strict/leased/free) once a second real node exists, resolving the strict-revocability-vs-durable-storage tension named in [../upload-and-share/OWNERSHIP.md](../upload-and-share/OWNERSHIP.md).
 
+[METADATA.md](METADATA.md) — where tag/entity metadata lives once photo bytes are distributed: raw tag data vs. aggregate/derived signal as separate exposure classes, bounding-boxes-without-names, and a private cross-network face-matching sketch.
+
 ## Relevant external tools
 
 Not adopted yet.

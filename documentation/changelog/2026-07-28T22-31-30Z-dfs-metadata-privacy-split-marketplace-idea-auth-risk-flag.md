@@ -1,0 +1,5 @@
+# DFS metadata privacy split, marketplace idea, auth-risk flag
+
+Added `distributed-sync/METADATA.md`: raw tag/entity data vs. aggregate/derived signal as separate exposure classes (a photo's redistribution tier shouldn't decide whether people's names in it go network-public), bounding-boxes-without-names, and a private cross-network face-matching sketch tied into `security/TODO.md` item 6. Also flagged (not designed): a photo-marketplace idea in `distributed-sync/TODO.md`, and a new `security/THREATS.md` #10 — account credential compromise inherits every privilege this design assumes only the legitimate owner has, needing real auth-hardening design before any sharing/DFS feature ships. Deeper research (IPFS resource footprint, PoW/PoS/proof-of-useful-work, marketplace precedent) is running as a background task, not yet folded in.
+
+- **Doc size** (Unicode codepoints): `distributed-sync/METADATA.md` 0 → 4233 (new); `distributed-sync/README.md` 2007 → 2255; `distributed-sync/TODO.md` 2041 → 3711; `security/THREATS.md` 5573 → 6506; `security/TODO.md` 2576 → 3031.

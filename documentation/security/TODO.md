@@ -34,6 +34,12 @@ oversight, per this project's documentation-layout rule.
 - **Should labeled face-detection data (bounding box + person tag) get a
   stricter access bar than ordinary photo data**, not just the same
   closed-by-default rule everything else gets (THREATS.md #1)? Undecided.
+- **Auth hardening** (THREATS.md #10) — a compromised account inherits every
+  privilege this design assumes only its legitimate owner has (leased-tier
+  decrypt keys, private tags, item 6's face-matching reference embeddings if
+  built). Needs a real design pass (password hashing, rate limiting/lockout,
+  session/token management, MFA) before any sharing/DFS feature ships for
+  real. Raised 2026-07-28/29 during tag/sharing design; not resolved here.
 
 ## Status
 
