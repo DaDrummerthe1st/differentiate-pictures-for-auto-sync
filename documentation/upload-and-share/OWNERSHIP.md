@@ -37,7 +37,7 @@ Storj/Filecoin (erasure coding vs. replication) and SyncThing (rejected as a bas
 
 ## Moderation — supersedes ownership entirely, not a sharing-permission question
 
-Ownership terms (strict/free) govern who may see or redistribute *legitimate* content. They have **no bearing whatsoever** on illegal or abusive content (CSAM, non-consensual imagery, harassment) — that's a categorically different axis, an admin-level override that removes content unconditionally, regardless of any owner's or sharee's claimed rights. See [../policies/POLICY.md](../policies/POLICY.md)'s "Moderation supersedes ownership" rule — this is a hard, project-wide constraint, not just a design note here.
+See [../policies/POLICY.md](../policies/POLICY.md)'s "Moderation supersedes ownership" rule — a hard, project-wide constraint, not just a design note here.
 
 Proposed mechanism: every ingested/uploaded photo gets a perceptual hash via **[PDQ](https://github.com/jankais3r/jPhotoDNA)** (Facebook's open-source, BSD-licensed algorithm — not the proprietary, licensing-encumbered PhotoDNA). A reserved `blocklist_hashes` table (admin-only writes, see [../photo-server/DATA_DICTIONARY.md](../photo-server/DATA_DICTIONARY.md)) holds flagged hashes; any match — at ingest or retroactively — quarantines the photo network-wide, full stop. Later, once real multiple nodes exist, hash-blocklist propagation across nodes is exactly how NCMEC/IWF's real-world inter-platform hash-sharing already works — same pattern, smaller scale.
 

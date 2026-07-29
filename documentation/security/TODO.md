@@ -7,8 +7,8 @@ oversight, per this project's documentation-layout rule.
   world** (THREATS.md #6) — raised 2026-07-27, **researched 2026-07-29** against
   authoritative sources only (all lookups logged per `~/.claude/CLAUDE.md`'s
   research-log rule). Findings:
-  - **The EDPB (EU's top data-protection body), Opinion 11/2024 on airport facial
-    recognition, already ruled on almost exactly this scenario**: of four
+  - **The EDPB, in Opinion 11/2024 on airport facial recognition, already ruled
+    on almost exactly this scenario**: of four
     biometric-template storage architectures assessed, only two are
     GDPR-compatible — template on the subject's own device, or centralized
     storage encrypted with the **decryption key held solely by the subject**.
@@ -27,16 +27,12 @@ oversight, per this project's documentation-layout rule.
     ever decrypted.** Peer-reviewed literature (Mai et al., IEEE TPAMI 2018,
     through 2023-2025 follow-ups) shows face embeddings can be reconstructed
     into recognizable images with high fidelity — up to ~98% accuracy even
-    against embeddings with privacy-enhancement applied. ISO/IEC 24745
-    (irreversibility/unlinkability/renewability) is the field's answer to that
-    residual risk, but the same research found published "irreversible" schemes
-    were in fact reversible — don't trust a scheme's own claim without
-    independent adversarial testing.
-  - **GDPR's household/personal-activity exemption (Article 2(2)(c)) very
-    plausibly ends the moment this project publishes a network-wide face-embedding
-    index** — CJEU case law (Lindqvist, Rynes) ties the exemption to data staying
-    within a private/family setting, not "accessible to an indefinite number of
-    people." The private cross-network face-matching idea
+    against embeddings with privacy-enhancement applied — don't trust a
+    scheme's own irreversibility claim without independent adversarial
+    testing.
+  - **GDPR's household/personal-activity exemption very plausibly ends the
+    moment this project publishes a network-wide face-embedding index.** The
+    private cross-network face-matching idea
     ([distributed-sync/METADATA.md](../distributed-sync/METADATA.md)) is the one
     feature most likely to trigger full GDPR Article 9 exposure.
   - **Privacy-preserving matching (homomorphic encryption / secure multiparty
