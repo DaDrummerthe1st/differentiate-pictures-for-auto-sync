@@ -32,6 +32,15 @@ At an event — a party, up to something enormous — attendees take pictures an
 
 Future possibility: reconstruct a full "movie" of an event from the separate angles/clips different attendees filmed at the same place and time. Least defined of the four — no design yet, not even a rough one.
 
+## Rollout phases — when and for whom
+
+Distinct from the four Pillars above, which describe *what* gets built — this is Joakim's own three-version plan for *when* and *for whom*, folded in from [income/TODO.md](income/TODO.md) 2026-07-29:
+
+- **V1**: a service for 2-3 people, mostly to observe *how* they actually use it — naming pictures, sharing outside the group, marking people/objects, etc. Also runs and saves AI model output on every picture: object detection, picture quality, venue guessing, feelings/emotions.
+- **V2**: those 2-3 people each get their own NAS/router. Day-to-day experience stays unchanged — Pillar 1's DFS work happens behind the scenes. This is where centralization-vs-decentralization and load-balancing decisions actually get built, not before.
+- **V3**: commercialize — sell NAS/routers, keep developing the system. Needs slow, organic growth to find/fix problems, since the overhead budget at this stage will be very small if any exists at all.
+- **Long-term scale, explicitly not a small family-style network**: the stated goal is a service used by "everyone," concrete example — an AI curating the best photos/a photo-flow from an audience of 65,000 people at a large public event (ties to Pillar 3's event/party mode above). **Resolved 2026-07-29**: this doesn't mean cross-network face-matching needs a harder mechanism at that scale — see [distributed-sync/METADATA.md](distributed-sync/METADATA.md), access, not scale, is what bounds that search.
+
 ## Cross-cutting principle
 
 As much of this as possible runs distributed across users' own NAS hardware rather than centralized infrastructure — redundancy is what keeps a cloud-saved file available even when its origin device is offline.

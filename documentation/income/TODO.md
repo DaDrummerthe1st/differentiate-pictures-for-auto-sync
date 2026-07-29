@@ -4,13 +4,7 @@ Everything below was raised 2026-07-29 during a tag/sharing/security/DFS design 
 
 ## Rollout timeline — the "when/for whom" behind VISION.md's four Pillars
 
-Joakim's own three-version rollout plan, captured verbatim so it isn't lost before a proper [../VISION.md](../VISION.md) pass folds it in as that file's own "rollout phases" framing (distinct from the four Pillars, which describe *what* gets built, not *when*/*for whom*):
-
-- **V1**: a service for 2-3 people, mostly to observe *how* they actually use it — are they naming pictures, sharing outside the group, marking people/objects, etc. (everything `prototypes/mockup/` demonstrates). Also run and save AI model output on every picture: object detection, picture quality, venue guessing, feelings/emotions, etc.
-- **V2**: those 2-3 people get their own NAS/router each. Their day-to-day experience should be unchanged — the DFS work in `../distributed-sync/` (`OWNERSHIP.md`/`METADATA.md`/`TODO.md`) happens behind the scenes. This is where centralization-vs-decentralization decisions and load-balancing actually get built, not before.
-- **V3**: commercialize — sell NAS/routers, keep developing the system. Needs slow, organic growth to find/fix problems, since the overhead budget at this stage will be very small if any exists at all.
-- **This is explicitly not a small family-style network long-term** — the stated long-term goal is a service used by "everyone," with the concrete example of an AI curating the best photos/a photo-flow from an audience of 65,000 people at a large public event. `../VISION.md`'s existing Pillar 3 (event/party mode) already gestures at this; this note makes the eventual *scale* explicit rather than implicit. (Note, resolved 2026-07-29: this doesn't mean cross-network face-matching needs a harder mechanism at that scale — see `../distributed-sync/METADATA.md`, access, not scale, is what bounds that search.)
-- **Not started**: folding this into `../VISION.md` properly. Flagged so it survives to whichever session picks it up.
+**Folded into [../VISION.md](../VISION.md)'s own "Rollout phases" section, 2026-07-29** — not repeated here.
 
 ## Revenue ideas
 
