@@ -12,7 +12,9 @@ Not yet a committed design — see [TODO.md](TODO.md)'s open question for what's
 
 [OWNERSHIP.md](OWNERSHIP.md) — paper-stage ownership tiers (strict/leased/free) once a second real node exists, resolving the strict-revocability-vs-durable-storage tension named in [../upload-and-share/OWNERSHIP.md](../upload-and-share/OWNERSHIP.md).
 
-[METADATA.md](METADATA.md) — where tag/entity metadata lives once photo bytes are distributed: raw tag data vs. aggregate/derived signal as separate exposure classes, bounding-boxes-without-names, and a private cross-network face-matching sketch.
+[METADATA.md](METADATA.md) — where tag/entity metadata lives once photo bytes are distributed: raw tag data vs. aggregate/derived signal as separate exposure classes, bounding-boxes-without-names, and a private cross-network face-matching sketch (fully resolved 2026-07-29 — no published index needed at any scale).
+
+[NETWORK_MECHANISM.md](NETWORK_MECHANISM.md) — IPFS alternatives researched 2026-07-29: Tahoe-LAFS and Garage as the two real candidates, why MinIO is now ruled out, and what's still unverified.
 
 ## Relevant external tools
 
@@ -20,8 +22,12 @@ Not adopted yet.
 
 | Project | Site | Purpose |
 | --- | --- | --- |
-| SyncThing | https://syncthing.net/ | Continuous sync between units |
+| SyncThing | https://syncthing.net/ | Continuous sync between units — lightweight in typical use, but solves a different problem (device-to-device sync, not redundancy/erasure coding). See [NETWORK_MECHANISM.md](NETWORK_MECHANISM.md). |
 | rClone | https://blog.rymcg.tech/blog/linux/rclone_sync/ | Auto-sync of files via bash |
-| IPFS (Kubo) | https://github.com/ipfs/kubo | Content-addressing + Kademlia DHT — **researched and ruled out 2026-07-29** for this project's Pi-class target: Kubo itself recommends 6 GB RAM/2 CPU cores, ~6x a Pi 3's total budget. The underlying DHT concept still stands; this specific implementation doesn't fit. See [TODO.md](TODO.md). |
-| Filecoin | https://filecoin.io/ | Paid-storage marketplace precedent (on-chain escrowed deals) — prices storage capacity over time, not content licensing. See [TODO.md](TODO.md)'s marketplace-idea note. |
+| IPFS (Kubo) | https://github.com/ipfs/kubo | Content-addressing + Kademlia DHT — **researched and ruled out 2026-07-29** for this project's Pi-class target: Kubo itself recommends 6 GB RAM/2 CPU cores, ~6x a Pi 3's total budget. The underlying DHT concept still stands; this specific implementation doesn't fit. See [NETWORK_MECHANISM.md](NETWORK_MECHANISM.md). |
+| Tahoe-LAFS | https://tahoe-lafs.org/ | **Researched 2026-07-29, leading candidate.** Encrypts then erasure-codes files across storage servers — only the key-holder can reconstruct. Storage-server role runs on ~64MB RAM; real Raspberry Pi deployments confirmed. See [NETWORK_MECHANISM.md](NETWORK_MECHANISM.md). |
+| Garage | https://garagehq.deuxfleurs.fr/ | **Researched 2026-07-29, leading candidate.** Single-binary Rust S3-compatible store explicitly built for geo-distributed Raspberry-Pi-class nodes over ordinary internet (200ms latency tolerance) — closest match to this project's actual deployment shape. See [NETWORK_MECHANISM.md](NETWORK_MECHANISM.md). |
+| SeaweedFS | https://github.com/seaweedfs/seaweedfs | Checked 2026-07-29 — lighter than MinIO, supports erasure coding, but volume servers reportedly want 2-4GB RAM, more than a Pi 3 has. Second-tier candidate. |
+| MinIO | — | **Ruled out 2026-07-29** — ceased development, community edition archived April 2026, known security bugs, explicitly discouraged by current sources. |
+| Filecoin | https://filecoin.io/ | Paid-storage marketplace precedent (on-chain escrowed deals) — prices storage capacity over time, not content licensing. See [../income/TODO.md](../income/TODO.md)'s marketplace-idea note. |
 | Storj | https://www.storj.io/ | Paid-storage marketplace precedent ("satellite" coordination service, token or fiat payout) — same limitation as Filecoin for this project's purposes. |
