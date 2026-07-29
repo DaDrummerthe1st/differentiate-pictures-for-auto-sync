@@ -4,11 +4,11 @@ The metadata-and-serving phase of the project: a small multi-user web server so 
 
 **Status (2026-07-19, end of session): live and working, production redeployed and current.** Elisabeth can log in and browse at `https://photos.reuterborg.se` (branch `mamma-photo-viewer`). Since 2026-07-18: a full outage (aging switch, not the server — see `../bugs/repo/fixed/`), a since-fixed publicly-exposed Swagger/OpenAPI docs vulnerability, the Postgres schema-init + `Dockerfile` fixes, single-album view + DOM-unload of inactive albums, and the thumbnail silent-refresh fix below are all live in production.
 
-**Open, real problems** (each its own file in `../bugs/repo/under_process/`, no index kept - browse that folder directly, each file's `Status:` line says where it stands): Redis has no persistent volume (every container restart silently logs out every active session); the lightbox shows wrong/no content when clicking a not-yet-loaded thumbnail (not yet root-caused); a picture click intermittently fails to show after less than 5 minutes, other albums' thumbnails fine (2026-07-19, investigating). Fixed since 2026-07-18: Swagger docs public exposure, thumbnail/lightbox `<img>` tags having no silent-refresh on an expired access token (both **fixed**, see `../bugs/repo/fixed/`).
+**Open, real problems** (each its own file in `../bugs/repo/under_process/`, no index kept - browse that folder directly, each file's `Status:` line says where it stands): Redis has no persistent volume (every container restart silently logs out every active session); the lightbox shows wrong/no content when clicking a not-yet-loaded thumbnail (not yet root-caused); a picture click intermittently fails to show after less than 5 minutes, other albums' thumbnails fine (investigating).
 
-**Starting a new session on this topic?** Don't re-derive today's history from scratch: `DEPLOYMENT.md` has the current, correct deploy steps; `HARDWARE.md` now documents the switch between the server and router; [POLICY.md](../policies/POLICY.md) has a hard resource-efficiency constraint and (added today) a no-system-wide-installs, containers/venvs-only constraint; `CHANGELOG_ARCHIVE.md`'s 2026-07-17 and 2026-07-18 entries have the complete blow-by-blow if you need it, but shouldn't be required reading to start working.
+**Starting a new session on this topic?** `DEPLOYMENT.md` has the current, correct deploy steps; `HARDWARE.md` documents the switch between the server and router; [POLICY.md](../policies/POLICY.md) has a hard resource-efficiency constraint and a no-system-wide-installs, containers/venvs-only constraint; `CHANGELOG_ARCHIVE.md`'s 2026-07-17 and 2026-07-18 entries have the complete blow-by-blow if you need it, but shouldn't be required reading to start working.
 
-Not yet done, lower priority than the open items in `../bugs/repo/under_process/`: 1.9a–c (admin password reset), 1.11's human checkpoint, and the `master`/`phase-1-login`/`mamma-photo-viewer` branch reunification (deliberately deferred — see TODO.md's "Branch relationship" section). This folder originally absorbed two external planning documents Joakim supplied in chat — a build plan and a GUI spec amendment — into the repo's permanent documentation, per [CLAUDE.md](../../CLAUDE.md)'s self-sufficiency rule. Those two source documents were not kept as separate files here; their content was distilled into the files below so there is one place to read, not several competing drafts.
+Not yet done, lower priority than the open items in `../bugs/repo/under_process/`: 1.9a–c (admin password reset), 1.11's human checkpoint, and the `master`/`phase-1-login`/`mamma-photo-viewer` branch reunification (deliberately deferred — see TODO.md's "Branch relationship" section).
 
 ## Contents
 
@@ -24,7 +24,7 @@ Not yet done, lower priority than the open items in `../bugs/repo/under_process/
 ## Non-negotiables specific to this topic
 
 - Inherits [POLICY.md](../policies/POLICY.md)'s closed-by-default rule: no photo or user data ever leaves the server.
-- Two accounts only: joakim.reuterborg@gmail.com (admin), elisabeth.reuterborg@gmail.com (member). **Planned to change** on the next server deployment — see [../policies/AUTHENTICATION.md](../policies/AUTHENTICATION.md)'s "move off manual CLI account creation" section; this line hasn't been updated yet since that work hasn't landed.
+- Two accounts only: joakim.reuterborg@gmail.com (admin), elisabeth.reuterborg@gmail.com (member) — planned to change once [../policies/AUTHENTICATION.md](../policies/AUTHENTICATION.md)'s "move off manual CLI account creation" work lands.
 - Same subdomain (`photos.reuterborg.se`) serves both the browser UI and the JSON API, split by path prefix (`/api/*`) or `Accept` header — never user-agent sniffing.
 - The root domain (`reuterborg.se`) already serves something that must keep working. Only ever touch the `photos.` subdomain, and double-check DNS changes don't affect the root (see TODO.md's HTTPS phase).
 - Docker Compose, not a native install (see [HARDWARE.md](HARDWARE.md) for why). PostgreSQL is the only database engine; no separate search or vector store (tsvector now, pgvector later, same instance).
@@ -32,7 +32,7 @@ Not yet done, lower priority than the open items in `../bugs/repo/under_process/
 
 ## Priority order
 
-Login (TODO.md Phases 0–1) is being built **before** anything else in this folder, including before the rest of the original build plan's Phase A schema. Resolved (see Status above, decided before 1.1 was built): Phase 1 adapts Joakim's existing buzzkit login implementation rather than building fresh — this note used to pose that as an open question for "the next session"; fixed 2026-07-17 since it had gone stale, contradicting the file's own Status section above once the decision was actually made and executed.
+Login (TODO.md Phases 0–1) is being built **before** anything else in this folder, including before the rest of the original build plan's Phase A schema. Phase 1 adapts Joakim's existing buzzkit login implementation rather than building fresh.
 
 ## Why the Sunday deadline
 

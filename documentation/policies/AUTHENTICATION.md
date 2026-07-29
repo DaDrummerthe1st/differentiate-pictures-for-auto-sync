@@ -13,7 +13,7 @@ Current state, decisions, and priority order for login/session security across b
 
 ## Decision: no third-party/social OAuth (2026-07-23)
 
-Raised again this session ("if we use OAuth, does local dev need to be secure too?") — resolved by re-surfacing a decision already made 2026-07-16 and recorded in `../photo-server/TODO.md`'s Phase 1 note: **Google OAuth (or any third-party/social sign-in) is explicitly out of scope**, not merely deferred. It calls out to a cloud identity provider, which conflicts with [POLICY.md](POLICY.md)'s closed-by-default rule ("no photo or user data ever leaves the server... no cloud APIs"; the sole existing exception is Let's Encrypt certificate issuance). This isn't a priority call to revisit later — it's excluded by an existing hard constraint. Continue with the already-built preset-account + password (argon2id) + JWT flow.
+**Google OAuth (or any third-party/social sign-in) is explicitly out of scope**, not merely deferred — decided 2026-07-16, recorded in `../photo-server/TODO.md`'s Phase 1 note. It calls out to a cloud identity provider, which conflicts with [POLICY.md](POLICY.md)'s closed-by-default rule ("no photo or user data ever leaves the server... no cloud APIs"; the sole existing exception is Let's Encrypt certificate issuance). This isn't a priority call to revisit later — it's excluded by an existing hard constraint. Continue with the already-built preset-account + password (argon2id) + JWT flow.
 
 This also answers why local dev never needed anything resembling OAuth-grade infrastructure: the local stack ([../gui/README.md](../gui/README.md)) intentionally uses the *same* preset-account/password + JWT flow as production, just with fixed non-secret dev credentials — there's no separate "local needs to be secure for OAuth" concern, because OAuth was never the direction.
 
@@ -32,7 +32,7 @@ One thing this *does* resolve on its own: a self-service request form has the us
 
 ## Priority order for remaining hardening
 
-Requirements as originally given by Joakim (2026-07-16), none built yet beyond the base layer above. Ordered by what closes the biggest real gap first, not by how the list was originally written:
+Requirements as originally given by Joakim (2026-07-16), none built yet beyond the base layer above. Ordered by what closes the biggest real gap first:
 
 1. **Reject known-breached passwords** — the base layer has no blocklist check yet, and this is the one item current external guidance (below) actively requires, not just recommends. Prefer a **self-hosted** breached-password corpus (e.g. [IncogniPwn](https://github.com/millaguie/IncogniPwn) or [Have I Been Pwned's own offline Pwned Passwords downloader](https://haveibeenpwned.com/Passwords)) over calling the live `haveibeenpwned.com` k-anonymity API — self-hosting keeps this fully inside POLICY.md's closed-by-default posture rather than relying on "the prefix alone isn't sensitive" as a judgment call ([Troy Hunt's k-anonymity writeup](https://www.troyhunt.com/understanding-have-i-been-pwneds-use-of-sha-1-and-k-anonymity/)).
 2. **Session-hijacking hardening on top of the already-`Secure`/`httpOnly`/`SameSite=Strict` cookies**: rotate session identifiers on login; consider binding sessions to an IP/user-agent fingerprint with re-auth on mismatch. Not started.
