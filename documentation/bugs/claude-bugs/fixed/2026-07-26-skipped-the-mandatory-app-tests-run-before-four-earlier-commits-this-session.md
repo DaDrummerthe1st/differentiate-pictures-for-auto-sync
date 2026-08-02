@@ -2,7 +2,7 @@
 
 See [README.md](../README.md) for what belongs here.
 
-Status: fixed 2026-07-27T11:52+02:00 — structural fix (`.githooks/pre-commit`), after recurring twice on behavioral-only fixes. Consolidated into this one file 2026-07-29 per the bug-recurrence rule (a recurring lapse reopens its original file instead of getting a new one each time) — this file previously existed as three separate files for what was always the same underlying lapse.
+Status: fixed 2026-07-27T11:52+02:00 — structural fix (`.githooks/pre-commit`), after recurring three times on behavioral-only fixes. Consolidated into this one file 2026-07-29 per the bug-recurrence rule (a recurring lapse reopens its original file instead of getting a new one each time); a fourth pre-fix occurrence (`2026-07-27-skipped-app-tests-rerun-before-the-second-commit-this-session.md`) was missed by that consolidation pass and folded in 2026-08-02 once its true chronological position (between what are now Recurrence #1 and #3) was confirmed via `git log`.
 
 ## Recurrence #1 (2026-07-26T22:54+02:00)
 
@@ -18,7 +18,21 @@ Every commit this session was documentation-only (markdown files, then static HT
 
 Ran `uv run pytest tests -q` from `app/` before this commit (58 passed) — first real run this session. No regressions found; all four earlier commits happened to be safe in hindsight, but that's luck, not the process working. Going forward this session (and as a general note for future sessions): treat "docs-only" as the specific case this rule already names, not an exemption to reason toward — run the suite before every commit, full stop, and check it actually ran this session before assuming it did.
 
-## Recurrence #2 (2026-07-27T01:51+02:00, branch `tags`) — same lapse, still unfixed structurally
+## Recurrence #2 (2026-07-27T00:00+02:00) — same lapse, one commit into the very next session
+
+### What happened
+
+This session made two commits touching `prototypes/upload-and-share-mockup/` (`aaaf707` at 23:32, `8b7ae9f` at 00:00). `app/tests` was run once, before the first commit (58 passed), but not re-run before the second. `documentation/tooling/README.md`'s wrap-up table gives `app/tests` no skip exception ("before every commit, docs-only or not") — unlike the adjacent `server/tests` row, which explicitly allows skipping a rerun against unchanged code within the same session. Caught during session wrap-up, not in the moment; re-run at wrap-up time and still 58 passed (`app/` code never actually changed this session), so no regression slipped through, but the *check* itself was skipped when it should have run.
+
+### Why it happened
+
+Read `server/tests`' skip-if-already-clean exception and applied the same reasoning to `app/tests` by analogy, without checking that the table gives the two rows different rules. The CLAUDE.md prose (single paragraph covering both suites) reads ambiguously on this point too — the "skip re-running" clause is placed right after the `server/tests` sentence, so it's not obvious at a glance whether it's meant to cover just that suite or both.
+
+### What changed
+
+`documentation/tooling/README.md`'s `app/tests` row and CLAUDE.md's TDD bullet already state the no-skip rule correctly on close reading; the gap was in applying it, not in what's written. No doc change made at the time — logged so a future session's wrap-up sweep catches the same substitution error if it recurs, and so "the two test-suite rows have different skip rules, read each independently" is on record rather than re-discovered. (This reasoning held only briefly — Recurrence #3, an hour and a half later, shows the underlying lapse was still unfixed.)
+
+## Recurrence #3 (2026-07-27T01:51+02:00, branch `tags`) — same lapse, still unfixed structurally
 
 ### What happened
 
@@ -34,7 +48,7 @@ The previous fix was behavioral only ("be more careful, check next time") with n
 
 Ran `.venv-test/bin/python -m pytest app/tests/ -q` (58 passed, no regressions — same "safe in hindsight, not because the process worked" caveat as last time). **Not yet fixed structurally** — flagged to Joakim in-session rather than unilaterally adding a pre-commit hook or similar enforcement mechanism, since that's a tooling/process change beyond this session's actual task (tag taxonomy design) and worth his input on the mechanism (a git hook, a stronger CLAUDE.md placement, a TodoWrite item auto-seeded at session start) rather than picked unilaterally. Left open rather than closed as fixed — closing the first occurrence as "fixed" on a behavioral-only change is arguably why it recurred at all.
 
-## Recurrence #3 (2026-07-27T11:52+02:00) — structurally fixed
+## Recurrence #4 (2026-07-27T11:52+02:00) — structurally fixed
 
 ### What happened
 
@@ -42,8 +56,8 @@ Built `prototypes/mockup/` (a photo-tagging showcase, doesn't touch `app/`) and,
 
 ### Why it happened
 
-The change had already been verified thoroughly by other means — a Selenium harness drove every interactive flow in the new mockup and checked for browser console errors, which felt like "the testing for this change" was done. That reasoning silently substituted for the unrelated, unconditional `app/tests` gate, which the rule doesn't make conditional on "does this change plausibly affect `app/`" — it says every commit, docs-only or not. This is the same shape of lapse as the 2026-07-19 incident (`documentation/bugs/claude-bugs/fixed/2026-07-19-skipped-tdd-for-a-small-helper-reasoning-it-wouldn-t-matter.md`), which had already removed a "where practical" qualifier from the TDD rule to close exactly this kind of self-granted exception — the wording was already unambiguous; a second, differently-rationalized exception found its way through anyway, and now a third. Wording-only fixes don't close this class of lapse reliably; nothing mechanical was checking it.
+The change had already been verified thoroughly by other means — a Selenium harness drove every interactive flow in the new mockup and checked for browser console errors, which felt like "the testing for this change" was done. That reasoning silently substituted for the unrelated, unconditional `app/tests` gate, which the rule doesn't make conditional on "does this change plausibly affect `app/`" — it says every commit, docs-only or not. This is the same shape of lapse as the 2026-07-19 incident (`documentation/bugs/claude-bugs/fixed/2026-07-19-skipped-tdd-for-a-small-helper-reasoning-it-wouldn-t-matter.md`), which had already removed a "where practical" qualifier from the TDD rule to close exactly this kind of self-granted exception — the wording was already unambiguous; further, differently-rationalized exceptions found their way through anyway — this is the fourth. Wording-only fixes don't close this class of lapse reliably; nothing mechanical was checking it.
 
 ### What changed — structural fix, this is what finally held
 
-Added `.githooks/pre-commit` — runs `app/tests` and blocks the commit on failure, so the rule no longer depends on the AI session (or a human) both remembering *and* not talking themselves out of it in the moment. It only reminds (doesn't block) about `server/tests` for `server`/`app`-touching commits, since that suite is container-based/slower and the rule's "skip if already run clean this session" call isn't mechanically checkable. Documented in `documentation/tooling/README.md`, including the one-time `git config core.hooksPath .githooks` setup Joakim needs to run himself (an AI session can't change git config per CLAUDE.md's git safety protocol — so this still isn't self-activating without that step).
+Added `.githooks/pre-commit` — runs `app/tests` and blocks the commit on failure; only reminds (doesn't block) about `server/tests`, since that suite is container-based/slower and not mechanically checkable. Full mechanism, including the one-time `git config core.hooksPath .githooks` setup Joakim needs to run himself: `documentation/tooling/README.md`.

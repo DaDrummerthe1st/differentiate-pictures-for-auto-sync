@@ -2,6 +2,8 @@
 
 See [README.md](../README.md) for what belongs here.
 
+Status: **fixed 2026-07-23** — new CLAUDE.md non-negotiable added, both compromised accounts remediated same session. Moved from `under_process/` 2026-08-02 (was sitting there fully resolved with no open item stated).
+
 ## What happened
 
 While setting up the new local full-stack dev environment (2026-07-23 session), created the two real project accounts against the local auth container with:

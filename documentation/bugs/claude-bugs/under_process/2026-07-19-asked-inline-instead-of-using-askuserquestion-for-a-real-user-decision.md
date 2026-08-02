@@ -2,7 +2,11 @@
 
 See [README.md](../README.md) for what belongs here.
 
-## What happened
+Status: **recurring, not structurally fixed** — recurred 2026-08-02, two weeks after being closed as fixed on a behavioral-only correction. Reopened per the bug-recurrence rule (a recurring lapse reopens its original file instead of getting a new one each time).
+
+## Recurrence #1 (2026-07-19)
+
+### What happened
 
 While debugging the redundant chunk-title issue in the mamma-photo-viewer GUI (album header and its "loose files" chunk showing identical text back-to-back), this session ended a reply with plain running text - "Want me to fix that specifically...?" - instead of calling `AskUserQuestion`, even though this was exactly the kind of genuinely user-owned decision (fix now vs. defer) that global CLAUDE.md's "Questions go through the popup UI, not running text" rule covers. Joakim caught it and asked why the tool wasn't used, and asked for this repo's documentation to be corrected accordingly.
 
@@ -10,10 +14,24 @@ Verbatim, what this session said in response before correcting course (kept here
 
 > You're right — I asked "Want me to fix that specifically...?" as running text instead of AskUserQuestion, which is exactly the global rule I should have followed. Let me first actually ask it correctly, then log this as a process lapse per this repo's convention.
 
-## Why it happened
+### Why it happened
 
 The question felt like a small, low-stakes offer tacked onto the end of a factual explanation, which made it easy to phrase as a natural sentence rather than pausing to route it through the tool - but "small" isn't the test the rule uses; "is this the user's call to make" is, and this one clearly was.
 
-## What changed
+### What changed (behavioral only — did not hold, see Recurrence #2)
 
 No new CLAUDE.md rule added - the existing global rule already covers this exactly and this project's CLAUDE.md deliberately doesn't restate content that's already documented elsewhere (its own "lean, exact, compact" principle). Behavioral correction only: any reply ending in an offer/choice that's genuinely the user's to make goes through `AskUserQuestion`, regardless of how small or naturally-phraseable the question feels in the moment - re-asked correctly via the tool immediately after this was caught, in the same conversation.
+
+## Recurrence #2 (2026-08-02)
+
+### What happened
+
+While discussing where a new `resources/test_pictures` fixture directory should live, this session raised a genuine binary decision only Joakim could make — whether to note the directory's existence in private, non-repo AI memory instead of anywhere in the repo — as a trailing plain-text question at the end of a reply, instead of via `AskUserQuestion`. Joakim flagged it directly: "this should've been a AskUserQuestion. Bug report it. No, I do not want you to change it" — and declined the option. A separate file was created for this at the time (`2026-08-02-asked-a-decision-question-in-plain-text-instead-of-via-askuserquestion.md`); that was itself a second lapse — it should have reopened this file instead — corrected by folding it in here and deleting the standalone file.
+
+### Why it happened
+
+Same shape as Recurrence #1: the question read as a natural trailing sentence appended to an explanation rather than registering as a standalone, user-owned fork. Additionally, the global `~/.claude/CLAUDE.md`'s pointer to `claude-md/ask_ui.md` (where the rule's full text should live) is a dead link — the file doesn't exist at that path — so the rule's actual content wasn't loaded or checked before asking, on top of the framing problem from Recurrence #1.
+
+### What changed
+
+Behavioral-only fixes don't survive a fresh session with no memory of the prior occurrence — same lesson as this project's `app/tests`-skipping recurrence (`2026-07-26-skipped-the-mandatory-app-tests-run-before-four-earlier-commits-this-session.md`). Flagged the dead `ask_ui.md` link to Joakim (global config, out of this repo's scope to fix directly). Left open rather than re-closed as fixed: a wording-only rule already existed and didn't prevent this recurrence, so nothing structural has changed yet — a mechanical check (e.g. a session-start reminder, or self-review before sending any reply containing a question mark near a decision word) would need to exist before this could honestly close again.
