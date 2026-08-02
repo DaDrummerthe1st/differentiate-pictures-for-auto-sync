@@ -84,6 +84,20 @@ This is a visual confirmation step, **owner-side only** — confirmed with Joaki
 for photos she wasn't given access to. A recipient's view of an already-shared tag
 simply never contains the excluded photos; there's no "there's more here" tease.
 
+## Mockup coverage and simplifications
+
+[prototypes/mockup/](../../prototypes/mockup/README.md) is a clickable illustration of
+every flow above (all 12 [TAXONOMY.md](TAXONOMY.md) categories, bounding-box tagging
+with the person/local-vs-linked badge, the invite CTA, the blur-preview review, and
+manual bounding-box tagging) against 10 seed photos, plus entity-owned relationship
+chaining 2 hops deep. Two deliberate simplifications versus this spec, called out in a
+comment at the top of `script.js`: a relationship tag there carries two explicit
+reference rows (subject + object) rather than [SCHEMA.md](SCHEMA.md)'s single
+"tag being qualified" reference — allowed by SCHEMA.md's own "a tag can have more than
+one reference row" rule, not a deviation from it; and the mockup's search graph walks
+`entities`, not raw tag IDs, per [TAXONOMY.md](TAXONOMY.md)'s statement that the
+entity is what search should match against.
+
 ## Status
 
 Vision-level design, 2026-07-27. Not scheduled — see [TODO.md](TODO.md) and

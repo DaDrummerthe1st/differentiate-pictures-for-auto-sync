@@ -64,6 +64,19 @@ class FindBrokenLinksTests(unittest.TestCase):
             broken = checks.find_broken_links(root)
             self.assertEqual(broken, [])
 
+    def test_ignores_a_link_pattern_inside_an_inline_code_span(self):
+        # a doc illustrating markdown-link syntax as text, e.g. "use
+        # `[X](path)` as the convention", isn't a real link to resolve.
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _init_git_repo(root)
+            (root / "a.md").write_text(
+                "Use `[X](path)` as the convention."
+            )
+            _git_add(root, "a.md")
+            broken = checks.find_broken_links(root)
+            self.assertEqual(broken, [])
+
     def test_ignores_untracked_md_files(self):
         # matches doc_metrics' own git-ls-files scoping — an untracked
         # scratch file with a broken link shouldn't fail the check.

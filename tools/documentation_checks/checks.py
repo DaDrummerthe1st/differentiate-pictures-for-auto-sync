@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 _LINK_RE = re.compile(r"\[([^\]]*)\]\(([^)]+)\)")
+_INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
 
 
 @dataclass(frozen=True)
@@ -36,6 +37,10 @@ def find_broken_links(root: Path) -> list[BrokenLink]:
     broken: list[BrokenLink] = []
     for md in _tracked_md_files(root):
         text = md.read_text(encoding="utf-8", errors="replace")
+        # markdown-link syntax written as illustrative text inside an inline
+        # code span (e.g. "use `[X](path)` as the convention") isn't a real
+        # link to resolve — blank it out before scanning, preserving offsets.
+        text = _INLINE_CODE_RE.sub(lambda m: "`" * len(m.group()), text)
         for _label, target in _LINK_RE.findall(text):
             if target.startswith(("http://", "https://", "mailto:")):
                 continue
