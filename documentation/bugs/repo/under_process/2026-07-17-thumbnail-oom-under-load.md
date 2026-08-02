@@ -1,6 +1,6 @@
 # Thumbnails fail under concurrent load
 
-Status: **mitigated, not fully fixed**. The crash is gone (mem_limit + semaphore + `Image.draft()`, all deployed and confirmed stable — see "Fixes applied" below). Confirmed 2026-07-17 (post-fix): each thumbnail now takes a *consistent* amount of time to appear, showing up exactly when it scrolls into focus (lazy-loading, pre-existing, doing its job) - this is normal on-demand generation latency working as designed, not a growing backlog or degradation over a session. Remaining issue is latency/UX (a visible wait per never-before-viewed thumbnail), not reliability. Short version lives in [../TODO.md](../TODO.md); this file is the full chronological trail — update it as more is learned, don't just overwrite conclusions.
+Status: **mitigated, not fully fixed**. The crash is gone (mem_limit + semaphore + `Image.draft()`, all deployed and confirmed stable — see "Fixes applied" below). Confirmed 2026-07-17 (post-fix): each thumbnail now takes a *consistent* amount of time to appear, showing up exactly when it scrolls into focus (lazy-loading, pre-existing, doing its job) - this is normal on-demand generation latency working as designed, not a growing backlog or degradation over a session. Remaining issue is latency/UX (a visible wait per never-before-viewed thumbnail), not reliability. Short version lives in [../TODO.md](../TODO.md); full chronological trail — don't overwrite conclusions.
 
 ## Symptom
 

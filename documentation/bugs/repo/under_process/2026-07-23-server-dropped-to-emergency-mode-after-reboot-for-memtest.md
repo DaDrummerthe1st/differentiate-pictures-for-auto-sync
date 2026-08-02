@@ -1,6 +1,6 @@
 # Server dropped to emergency mode after reboot for memtest
 
-Status: **mostly resolved** - `tank` is `ONLINE`/healthy, the production site is confirmed reachable, both physical root causes (loose dock cable, BIOS boot-priority conflict) are fixed. Still open: the Memtest86+ pass (deferred, Joakim off-site for ~1 week), the memtest-gate-vs-auto-restart gap, and the linked [smartmontools/udisks2 item](2026-07-23-smartmontools-and-udisks2-services-failed-to-start.md). Not moved to `fixed/` until those close. Keep this file as the full chronological trail as more is learned - don't overwrite conclusions.
+Status: **mostly resolved** - `tank` is `ONLINE`/healthy, the production site is confirmed reachable, both physical root causes (loose dock cable, BIOS boot-priority conflict) are fixed. Still open: the Memtest86+ pass (deferred, Joakim off-site for ~1 week), the memtest-gate-vs-auto-restart gap, and the linked [smartmontools/udisks2 item](2026-07-23-smartmontools-and-udisks2-services-failed-to-start.md). Not moved to `fixed/` until those close. Full chronological trail — don't overwrite conclusions.
 
 ## Symptom
 

@@ -1,6 +1,6 @@
 # Picture click failed to show after less than 5 minutes, other albums thumbnails fine
 
-Status: **investigating, not fixed**. Keep this file as the full chronological trail as more is learned - don't overwrite conclusions.
+Status: **investigating, not fixed**. Full chronological trail — don't overwrite conclusions.
 
 ## Symptom
 

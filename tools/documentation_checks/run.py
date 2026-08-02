@@ -33,7 +33,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # This is a judgment call a script can't make on its own; keep it reviewable
 # here rather than baked into checks.py's logic.
 EXEMPT_FROM_TODO = frozenset({
-    "policies",       # pure reference (POLICY.md), no README.md anyway
+    "policies",       # pure reference (POLICY.md/WORKFLOW.md), no backlog of its own
 })
 
 # Code directories that may carry a stub README.md pointing into

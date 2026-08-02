@@ -1,6 +1,6 @@
 # photos.reuterborg.se unreachable
 
-Status: **solved 2026-07-18**. Keep this file as the full chronological trail as more is learned - don't overwrite conclusions.
+Status: **solved 2026-07-18**. Full chronological trail — don't overwrite conclusions.
 
 ## Symptom
 

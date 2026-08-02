@@ -1,6 +1,6 @@
 # Lightbox shows previous photo when clicking a not-yet-loaded thumbnail
 
-Status: **investigating, not fixed**. Keep this file as the full chronological trail as more is learned - don't overwrite conclusions.
+Status: **investigating, not fixed**. Full chronological trail — don't overwrite conclusions.
 
 ## Symptom
 

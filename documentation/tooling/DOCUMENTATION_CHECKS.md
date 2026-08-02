@@ -2,7 +2,7 @@
 
 **Purpose:** the mechanical subset of [CLEANING.md](CLEANING.md)'s audit methodology, as a real script instead of being rewritten ad hoc every time a cleaning pass runs. Built 2026-07-19, after the second cleaning pass that day paid to regenerate a dead-link-sweep script from scratch twice in one session — the same "structured tool instead of ad hoc commands" reasoning that already justified [DOC_METRICS.md](DOC_METRICS.md)/[COMMIT_COST.md](COMMIT_COST.md) existing.
 
-**What it does NOT replace**: CLEANING.md's own methodology has five steps; only step 3 (dead-link sweep) and part of step 4 (structural convention compliance) are mechanical enough to script. Reading every doc in full, cross-checking claims against the actual code, and judging what's redundant all still need a real read — by a person or an AI session — not a script. Run this first to clear the mechanical ground, then still do the real pass.
+**What it does NOT replace**: CLEANING.md's own methodology has nine steps; only step 3 (dead-link sweep) and part of step 7 (structural convention compliance) are mechanical enough to script. Reading every doc in full, cross-checking claims against the actual code, and judging what's redundant all still need a real read — by a person or an AI session — not a script. Run this first to clear the mechanical ground, then still do the real pass.
 
 ## Checks
 
