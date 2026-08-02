@@ -13,7 +13,7 @@ Current state, decisions, and priority order for login/session security across b
 
 ## Decision: no third-party/social OAuth (2026-07-23)
 
-**Google OAuth (or any third-party/social sign-in) is explicitly out of scope**, not merely deferred — decided 2026-07-16, recorded in `../photo-server/TODO.md`'s Phase 1 note. It calls out to a cloud identity provider, which conflicts with [POLICY.md](POLICY.md)'s closed-by-default rule ("no photo or user data ever leaves the server... no cloud APIs"; the sole existing exception is Let's Encrypt certificate issuance). This isn't a priority call to revisit later — it's excluded by an existing hard constraint. Continue with the already-built preset-account + password (argon2id) + JWT flow.
+**Google OAuth (or any third-party/social sign-in) is explicitly out of scope**, not merely deferred — decided 2026-07-16, recorded in `../photo-server/TODO.md`'s Phase 1 note. It calls out to a cloud identity provider, which conflicts with [POLICY.md](POLICY.md)'s closed-by-default rule. This isn't a priority call to revisit later — it's excluded by an existing hard constraint. Continue with the already-built preset-account + password (argon2id) + JWT flow.
 
 This also answers why local dev never needed anything resembling OAuth-grade infrastructure: the local stack ([../gui/README.md](../gui/README.md)) intentionally uses the *same* preset-account/password + JWT flow as production, just with fixed non-secret dev credentials — there's no separate "local needs to be secure for OAuth" concern, because OAuth was never the direction.
 
