@@ -13,19 +13,9 @@
 
 **Before Phase 1 starts**: confirm whether Joakim's existing login implementation (from another project) replaces the spec below or is adapted into it. Phase 1 as written is a fallback spec, not a locked-in design.
 
-## Branch relationship — resolved 2026-07-21, diverged and re-merged 2026-07-23
+## Branch relationship — merged and reconciled twice, as of 2026-07-23
 
-**Merged.** `phase-1-login` folded into `master` first (clean fast-forward, zero conflicts, as expected below), then `master` was merged into `mamma-photo-viewer` via `git merge --allow-unrelated-histories`, resolving 33 real file conflicts (more than the 24 found 2026-07-17, since both branches kept moving in the meantime) — `master` was then fast-forwarded to the resulting merge commit, so all three branches' history survives, unsquashed, in one surviving `master`. `app/` stayed the live photo-viewer (the actively-deployed product); `master`'s original file-differentiation tool moved to [prototypes/differentiate_pictures/](../../prototypes/differentiate_pictures/) rather than being deleted or overwritten (Joakim's call — it's prototype/reference material for this folder's own future analysis backend, not obsolete). See CHANGELOG_ARCHIVE.md for the full resolution log.
-
-**Not a one-time event — it happened again.** After 2026-07-21, `master` and `mamma-photo-viewer` kept receiving independent commits (a server-hardware incident and jQuery/Bootstrap vendoring on `master`; the local dev stack and auth hardening on `mamma-photo-viewer`) and diverged a second time — 12 commits unique to one side, 26 to the other, by 2026-07-23. Re-merged the same way: `master` into `mamma-photo-viewer` first (conflicts in `CHANGELOG_ARCHIVE.md`, `documentation/gui/README.md`, and the two append-only `tools/*/*.jsonl` logs — see `documentation/bugs/claude-bugs/under_process/2026-07-23-changelog-header-paragraph-silently-displaced-by-a-naive-top-insert.md` for a related structural bug found and fixed in the process), then `master` fast-forwarded to the result. Take "resolved" above as "reconciled as of that date," not "permanently converged" — nothing prevents a third divergence if work continues on both branches independently.
-
-History, for context on how the branches got here in the first place:
-
-- `master` — this repo's original mainline, predating this folder's work entirely.
-- `phase-1-login` — `master` + 24 commits building the full auth backend (`accounts.py`, `audit.py`, `auth_routes.py`, `cookies.py`, `rate_limit.py`, `security.py`, `tokens.py`, this file's Phase 0/1). Normal history: `master` was a real ancestor (0 commits in `master` were missing from `phase-1-login`).
-- `mamma-photo-viewer` — the GUI photo-viewer app (`app/`), built as a **quick, deliberately disposable copy of another repo**, committed as a fresh **orphan branch** (root commit "Initial empty commit", 2026-07-16) with **no shared git history with `master`** (`git merge-base mamma-photo-viewer master` returned nothing pre-merge). Despite that, its `server/app/` tree already contained the exact same 7 auth files as `phase-1-login` — byte-identical, confirmed via diff 2026-07-17 — because the branch was seeded from a `phase-1-login` snapshot rather than from `master`.
-
-**2026-07-17 decision, superseded by the merge above**: under a hard deadline that day, the call was to not merge yet and instead port the P0 *wiring* (`app/auth.py`, the login page, Caddy config) directly onto `mamma-photo-viewer` with no git merge involved. Kept here for history; no longer the current state.
+`phase-1-login`, `master`, and `mamma-photo-viewer` (the latter a disposable orphan branch with no shared git history) have been merged back into one surviving `master` twice — first 2026-07-21 (33 file conflicts resolved), then again 2026-07-23 after a second independent divergence (12 vs. 26 commits). `app/` stayed the live photo-viewer; `master`'s original file-differentiation tool moved to [prototypes/differentiate_pictures/](../../prototypes/differentiate_pictures/) rather than being deleted. Treat this as "reconciled as of 2026-07-23," not "permanently converged" — nothing prevents a third divergence if work continues on both branches independently. Full conflict-by-conflict resolution log: `CHANGELOG_ARCHIVE.md`.
 
 ## Phase 0 — Minimal scaffold (only what auth needs, nothing more)
 

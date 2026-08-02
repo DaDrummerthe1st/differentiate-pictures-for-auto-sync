@@ -24,7 +24,7 @@ docker compose exec auth python -m scripts.create_account --email elisabeth.reut
 ```
 Accounts persist in the `postgres_data` named volume across `docker compose down`/`up` (only `docker compose down -v` would wipe them).
 
-**Tests**: `.venv-test/bin/python -m pytest app/tests/ -q` (53 tests as of this writing — tree scanning, thumbnails, path-traversal guards, session auth gating, the file-type summary's content-sniffing and its interaction with /api/tree, voiceover upload/list/playback). These run in-process (FastAPI `TestClient`) and don't exercise the browser/DOM at all.
+**Tests**: `.venv-test/bin/python -m pytest app/tests/ -q` (58 tests as of this writing — tree scanning, thumbnails, path-traversal guards, session auth gating, the file-type summary's content-sniffing and its interaction with /api/tree, voiceover upload/list/playback). These run in-process (FastAPI `TestClient`) and don't exercise the browser/DOM at all.
 
 Real browser behavior (album switching, anything DOM/JS-driven) is covered separately by a Selenium suite, since this app has no build step or JS test runner of its own:
 ```
