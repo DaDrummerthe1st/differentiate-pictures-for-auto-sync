@@ -55,6 +55,19 @@ Plain-language definitions of every technical/business term this project's desig
 - **Bounding box**: the pixel-coordinate rectangle marking where a detected person/object sits within a photo.
 - **Relationship tag**: a tag that links two other tags together (e.g. "my father," pointing at his own person-entity) rather than describing the photo directly.
 
+## Curation and machine perception
+
+- **Embedding / vector**: a fixed-length list of numbers (e.g. 512 of them) a model computes from a photo or a piece of text that captures its "meaning" — two photos that look/feel similar end up with two number-lists that are mathematically close together, even if their pixels or filenames share nothing.
+- **Vector database**: a database built to quickly answer "which stored embeddings are closest to this one?" — this project's planned choice is **pgvector**, so embeddings live in the same Postgres instance as everything else rather than a separate system.
+- **pgvector**: the PostgreSQL extension VISION.md already names for storing/searching embeddings — open-source, no extra service to run, fits this project's existing "one Postgres instance" pattern (see SCHEMA.md's "relational, not graph DB" decision).
+- **Nearest-neighbor search / cosine similarity**: given one embedding, finding the others mathematically closest to it — the actual "find more photos like this one" operation. Cosine similarity measures the angle between two vectors; a smaller angle means more alike.
+- **CLIP-style / joint image-text embedding**: a model trained so a photo and a sentence describing it land near the same point in embedding space. This is what makes "show me pictures of my countryside" work as a live search over un-tagged photos — the query text and every photo get embedded into the same space, and the closest photos win — rather than needing every photo hand-tagged "countryside" first.
+- **Detector**: one narrow, single-purpose lightweight model that looks at a photo and outputs one specific structured fact (a bounding box, a blur score, a scene label). This project runs several in series per photo instead of one large do-everything model, per POLICY.md's resource-efficiency constraint.
+- **The Curator** (proposed name, see [curation/README.md](curation/README.md)): the orchestration layer above the detectors and the embedding index — aggregates what the detectors found, tracks why a suggestion was made, and is what actually talks to the user and incorporates her corrections. Not one neural network; a reasoning/bookkeeping layer, optionally backed by a small local LLM for free-form conversation only.
+- **Grounding**: keeping any natural-language explanation tied to facts a separate, verifiable system actually computed (here: the detectors + embedding index), instead of letting a language model invent plausible-sounding claims about a photo. The standard mitigation for hallucination in a system whose credibility depends on being right about what's actually in a picture.
+- **RAG (retrieval-augmented generation)**: the general pattern behind grounding above — a language model's answer is generated from real, retrieved facts (a database query result) rather than from the model's own memory alone.
+- **Relevance feedback / active learning**: a system that improves its own future suggestions using a user's corrections on past ones, rather than a fixed one-time classification — e.g. "keep this specific blurry photo" should narrow what counts as delete-worthy for photos like it, not just except that one photo.
+
 ## Legal / business
 
 - **Skatteverket**: Sweden's tax agency — the actual applicable authority for any future marketplace/income feature, not the US IRS citations an earlier research pass mistakenly used.

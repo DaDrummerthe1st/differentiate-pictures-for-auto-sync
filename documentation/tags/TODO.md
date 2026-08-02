@@ -19,7 +19,8 @@ Phase 5 for the one piece (origin/`kind='album'`) already partially built.
 - **Nudity/sensitive-content auto-detection** for the privacy category
   (TAXONOMY.md's "automatically tagged private" case): on-device inference, DPFAS
   phase — ties to [../VISION.md](../VISION.md) Pillar 2's face/object recognition
-  work, not started. Until this exists, the privacy category's specific semantic
+  work, not started; catalogued as its own row in
+  [../curation/DETECTORS.md](../curation/DETECTORS.md)'s privacy/safety section. Until this exists, the privacy category's specific semantic
   tags (`nudes`, a children's-photo tag) are manually applied, not automatic.
 - **Reconciling `kind` (`album`/`content`) against the new `category` column**
   (SCHEMA.md's `tags` table): whether `kind` collapses into a derived property (any

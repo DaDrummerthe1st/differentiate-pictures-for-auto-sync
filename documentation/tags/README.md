@@ -17,6 +17,10 @@ across whichever topic happened to need a tag first.
 | [UX_FLOWS.md](UX_FLOWS.md) | Interaction-level detail: bounding-box tagging, the invite CTA, the blur-preview sharing review. |
 | [TODO.md](TODO.md) | Open, not-designed-now items — a user bio for tag suggestions, contacts import, nudity auto-detection, entity dedup, and more. |
 
+How automated tags actually get proposed (detector models, the embedding index, the explanation/
+correction layer) lives in [../curation/README.md](../curation/README.md), not here — this folder
+owns what a tag *means*, curation/ owns how one gets suggested automatically.
+
 Visual mockup: [prototypes/mockup/](../../prototypes/mockup/README.md), same
 in-memory-fake-database convention as
 [upload-and-share-mockup/](../../prototypes/upload-and-share-mockup/README.md) —

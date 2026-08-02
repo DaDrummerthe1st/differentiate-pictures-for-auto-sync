@@ -7,6 +7,7 @@ Project documentation, organized by topic. Structure/maintenance rules: [CLAUDE.
 | [policies/](policies/README.md) | Hard, project-wide constraints, and cross-cutting topics like authentication |
 | [security/](security/README.md) | Cross-cutting: ongoing threat/concern tracking, open security questions — not the hard rules themselves (those stay in policies/) |
 | [tags/](tags/README.md) | Cross-cutting: the tag taxonomy — categories, schema, sharing/privacy model — referenced by every topic below, not owned by one |
+| [curation/](curation/README.md) | Cross-cutting: how automated tags get proposed (detectors, embeddings, the Curator) and what the system does with them — VISION.md Pillar 2's automated-analysis/curation legs |
 | [photo-server/](photo-server/README.md) | Current work: multi-user web server — browse, search, tag, download |
 | [upload-and-share/](upload-and-share/README.md) | Design work: per-user upload, ownership/sharing terms, event/party mode (`upload-and-share` branch) |
 | [gui/](gui/README.md) | The photo-server GUI's first working version (`mamma-photo-viewer` branch) |
