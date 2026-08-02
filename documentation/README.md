@@ -19,3 +19,16 @@ Project documentation, organized by topic. Structure/maintenance rules: [CLAUDE.
 | [tooling/](tooling/README.md) | Project-wide dev utilities (`tools/`) — not topic-specific |
 
 [GLOSSARY.md](GLOSSARY.md) — plain-language definitions of every technical/business term this project's docs use. Built 2026-07-29; append to it (per [CLAUDE.md](../CLAUDE.md)'s non-negotiable rule) rather than re-explaining a term inline in a design doc.
+
+## Layout conventions
+
+- Every subfolder (root included) has its own `README.md`: what the folder is for, plus an index of its children only if that adds something a reader wouldn't already get from each child's own opening line.
+- [policies/POLICY.md](policies/POLICY.md) (not `README.md` — a deliberate naming exception so "hard rules live here" is unmistakable) holds genuinely project-wide hard constraints; nothing project-wide gets duplicated outside it.
+- **Topic folders** (a subject with its own ongoing open work) get a mandatory `TODO.md` — open/deferred items, or "nothing planned right now" if empty; never delete it for being empty, the point is proving absence was checked. Pure reference folders (like `policies/`) don't need one.
+- Root `README.md` is the public-facing GitHub landing page (short pitch + pointer here); [CLAUDE.md](../CLAUDE.md) is the working agreement for whoever — human or AI — is doing the work.
+- **No hard-wrapping prose to a fixed column width** — one paragraph/list-item/blockquote per line, let the viewer soft-wrap. **Why:** measured against the real corpus 2026-07-19 — hard-wrap cost more characters than it saved; full measurement in `CHANGELOG_ARCHIVE.md`'s 2026-07-19T04:39:12+00:00 entry.
+- **All documentation lives under `documentation/`** — code directories (`server/`, `tools/*/`) get at most a one-line stub `README.md` pointing here, never real content. Decided 2026-07-16 after `server/README.md` and two `tools/*/README.md`s drifted into real content — moved and replaced with stubs.
+
+## Keeping docs current
+
+When a change affects schema, API surface, or architecture, update the relevant doc in the same pass — don't let docs drift from what the code does. (Known existing drift: see [documentation/picture-handling/TODO.md](picture-handling/TODO.md) for the MySQL-vs-PostgreSQL mismatch.)

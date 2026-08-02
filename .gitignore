@@ -1,7 +1,7 @@
 /venv/
 /server/.venv/
 /.idea/
-app/local_mysql.py
+prototypes/differentiate_pictures/app/local_mysql.py
 /resources/potential_first_check_py_files
 resources/darknet
 /.claude/settings.local.json
@@ -11,3 +11,4 @@ __pycache__/
 .venv-test/
 /server/.env
 /.env
+/resources/test_pictures/
