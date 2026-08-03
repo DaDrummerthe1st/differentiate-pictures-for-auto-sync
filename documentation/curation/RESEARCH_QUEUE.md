@@ -29,11 +29,11 @@ this file is purely the menu.
 - **Image captioning**; **EXIF-derived human-friendly time labels** (no model needed, cheap); confirm
   weather-at-capture is excluded rather than researched (closed-by-default conflict, likely moot).
 - **"Best shot"/attractiveness scoring** (DETECTORS.md area A) — ethically flagged, needs a conscious
-  read before it's a plain model pick, same treatment as age/gender.
+  read before it's a plain model pick, same treatment as age/gender. Confirmed 2026-08-03: this menu
+  itself is where Joakim wants ideas like this noted ("the approvement-bank") — already correctly
+  placed, nothing further needed to file it right.
 - **HW-central-record consolidation** — queued behind the `workstation` repo's own concurrent session;
   see TODO.md. Not pickable until that repo is free.
-- **Full raw research-report storage** — open question, not yet decided: start saving full research
-  passes as dated artifact files, or accept DETECTORS.md's distillation as sufficient? See TODO.md.
 
 ## Status
 

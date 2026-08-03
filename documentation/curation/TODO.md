@@ -86,20 +86,18 @@ already-flagged-but-not-done "may belong outside this folder" note in
 [../photo-server/DEFERRED.md](../photo-server/DEFERRED.md), just resolved to an external repo instead
 of an internal move.
 
-## Where research actually lives — a real gap, not just a confirmation
+## Where research actually lives — resolved 2026-08-03
 
-Raised 2026-08-03: `~/.claude/research_log.jsonl` (global, cross-project, hook-enforced) is real and
-verified — 122+ entries from this repo alone — but it only logs **queries, domains, and a short note
-per lookup**, not the full synthesized report a research pass produces. This session's background
-agent's full multi-page report (all candidate models per category, not just the ones picked, full
-source list) currently exists only in this session's chat history and a temp output file under `/tmp`
-that isn't durable — **not** in this repo. [DETECTORS.md](DETECTORS.md) intentionally holds only the
-*distilled* picks + reasoning (per this project's lean-and-compact doc philosophy), not a verbatim
-copy of the full report. Net effect: alternatives that were considered and rejected, and the full
-source-link list, have no permanent home right now. Open question for Joakim, not resolved here:
-accept that as fine (rejected options don't need preserving in full), or start saving full raw
-research-pass reports as dated artifact files (mirroring `changelog/`'s one-file-per-entry pattern)
-alongside the distilled doc.
+`~/.claude/research_log.jsonl` (global, cross-project, hook-enforced) logs **queries, domains, and a
+short note per lookup** (122+ entries from this repo alone, verified) — it was never meant to hold the
+full synthesized report a research pass produces. That gap is now closed properly: full raw
+research-pass reports (every candidate considered, not just the picks, full source list) live in a
+**new, separate, cross-project repo**, `/home/joakim/code/resources/research-findings` — not in this
+repo, and not only in chat history/temp scratch files as before. This session's own background
+agent's full vision-model survey is saved there as its first entry
+(`entries/2026-08-02-lightweight-self-hostable-vision-model-survey.md`), cross-referencing back to
+[DETECTORS.md](DETECTORS.md), which keeps only the distilled picks + reasoning, per this project's
+lean-and-compact doc philosophy — the two intentionally don't duplicate each other's content.
 
 ## Object-detection timing benchmark (real numbers, not the research pass's estimates)
 
@@ -107,7 +105,7 @@ Raised 2026-08-03. DETECTORS.md's picks came with latency figures measured on ne
 the i5-650 (or the VPS above, hardware still unconfirmed) — real, not guessed, numbers about actual
 per-photo time need a real run once a model is integrated, not an estimate. **What this session did
 find, real and sourced** (from this session's own logged research, see
-[../../GLOSSARY.md](../../GLOSSARY.md) — no Raspberry Pi 3-specific benchmark exists publicly for any
+[../GLOSSARY.md](../GLOSSARY.md) — no Raspberry Pi 3-specific benchmark exists publicly for any
 model surveyed, only Pi 4/5 data): YOLOv5n ≈ 4-5 FPS on a Raspberry Pi 4 even quantized; YOLOv8n ≈ 12
 FPS on a Pi 5 via the ncnn runtime specifically (the fastest runtime found for ARM), dropping to ≈ 2.6
 FPS under thermal throttling. These are Pi-class numbers, not i5-650 numbers, and "per photo" scales
