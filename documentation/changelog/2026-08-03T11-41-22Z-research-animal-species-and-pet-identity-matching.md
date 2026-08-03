@@ -1,0 +1,5 @@
+# Research animal species detection and pet identity matching (DETECTORS.md area C)
+
+Picked from RESEARCH_QUEUE.md's menu this session. Coarse animal presence/species is free — the already-picked object detector's COCO classes already cover it. Fine-grained species has an optional pick (Google SpeciesNet, Apache-2.0, but heavier than every other detector picked so far). Pet identity matching ("same dog" example) has no confident pick under the MIT/Apache-2.0 bar: the two real candidates were excluded (AGPL + non-commercial license, and MIT code with no shipped weights) — only a caveated fallback (reuse the existing CLIP embedding on a cropped animal region) is recommended, flagged as weaker than a dedicated re-id model. Full survey saved to the `research-findings` repo (`2026-08-03-animal-species-and-pet-identity-matching-survey.md`); DETECTORS.md and RESEARCH_QUEUE.md updated with the distilled picks; "animal re-identification" added to GLOSSARY.md.
+
+- **Doc size**: +~3,900 chars (net, across DETECTORS.md, RESEARCH_QUEUE.md, GLOSSARY.md).

@@ -40,8 +40,36 @@ written up here once done).
 
 | Area | What it detects | Why it matters | Status |
 | --- | --- | --- | --- |
-| Animal detection/species | Presence + rough species (dog, cat, bird...) | Feeds the animal entity category, [../tags/TAXONOMY.md](../tags/TAXONOMY.md) | queued |
-| Pet identity matching | Which specific pet (same idea as face recognition, animal-flavoured) | The literal "same dog" example | queued |
+| Animal detection/species | Presence + rough species (dog, cat, bird...) | Feeds the animal entity category, [../tags/TAXONOMY.md](../tags/TAXONOMY.md) | researched |
+| Pet identity matching | Which specific pet (same idea as face recognition, animal-flavoured) | The literal "same dog" example | researched — no confident pick, see below |
+
+**Picks (researched 2026-08-03)**: **animal presence/coarse species** — no new model needed: area
+D's already-picked NanoDet-Plus (Apache-2.0) is trained on COCO's 80 classes, which already
+includes 10 animal categories (bird, cat, dog, horse, sheep, cow, elephant, bear, zebra, giraffe) —
+zero added cost, same detector pass that finds every other object. **Fine-grained species**
+(2000+ taxa, e.g. actual species/breed beyond COCO's coarse buckets) — **Google SpeciesNet
+(Apache-2.0)** is the pick if that finer granularity is ever wanted: EfficientNetV2-M backbone
+(~55M params, ~200MB fp32), JSON output with species-level label + confidence + taxonomic rollup
+when confidence is low, CPU-runnable (no GPU required, just slower) — the heaviest single model
+considered across any DETECTORS.md category so far (no ONNX export shipped either, would need a
+standard torch→onnx conversion), so treat as an optional add-on once coarse COCO-level species
+buckets prove insufficient, not a pipeline default. **Pet identity matching has no turnkey pick**:
+the two leading open animal re-identification options were both excluded — MegaDescriptor/WildFusion
+(the [WildlifeDatasets](https://github.com/WildlifeDatasets/wildlife-datasets) toolkit) on three
+independent grounds (repo AGPL-3.0, the model weights themselves CC-BY-NC-4.0 non-commercial, and
+228.8M params/swin-large too heavy regardless of licensing); DogFaceNet is MIT-licensed but ships
+no pretrained weights at all, so using it would mean training from scratch. **Pragmatic fallback,
+not a confident pick**: reuse the already-loaded OpenCLIP ViT-B/32 embedding (MIT, area H) on the
+cropped animal-detection bounding box — the same crop-then-embed pattern
+[ARCHITECTURE.md](ARCHITECTURE.md) already uses for face recognition, zero new model to load. Real
+caveat, not hidden: recent research (CLIP-AFIR, CARE) treats raw off-the-shelf CLIP embeddings as
+explicitly under-adapted to fine-grained instance-level re-identification without few-shot
+fine-tuning — expect this fallback to work less reliably than face recognition's dedicated
+MobileFaceNet embedding, and revisit if a genuinely permissively-licensed, lightweight, pretrained
+animal re-id model appears later (an active research area — CARE, CLIP-AFIR, and NeurIPS's "Toward
+Re-Identifying Any Animal" are all 2023-2026 work). Full survey, every candidate considered, and
+the full source list: `2026-08-03-animal-species-and-pet-identity-matching-survey.md` in the
+`research-findings` repo.
 
 ## D. Objects and places
 
@@ -152,6 +180,9 @@ future obligation, not a low risk — every pick above now reflects that (NanoDe
 OpenCLIP ViT-B/32), with the previously-flagged AGPL/restrictive options explicitly excluded rather
 than offered as accuracy/latency-driven alternatives. A fresh, independent license-verification pass
 over all of these is still queued (this session's own claims shouldn't be trusted without a
-re-check) — see [RESEARCH_QUEUE.md](RESEARCH_QUEUE.md). See [TODO.md](TODO.md) for the still-queued
-areas (animals, landmarks, OCR, age/gender, group/co-presence, EXIF-derived time labels, image
-captioning, usage signals, actions/pose).
+re-check) — see [RESEARCH_QUEUE.md](RESEARCH_QUEUE.md). **Animals (area C) researched 2026-08-03** —
+coarse species reuses the existing object detector at zero cost, fine-grained species has a pick
+(SpeciesNet) but is an optional add-on, and pet identity matching has no confident pick, only a
+caveated fallback — see area C above and the full survey in the `research-findings` repo. See
+[TODO.md](TODO.md) for the still-queued areas (landmarks, OCR, age/gender, group/co-presence,
+EXIF-derived time labels, image captioning, usage signals, actions/pose).

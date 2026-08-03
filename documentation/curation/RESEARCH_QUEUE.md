@@ -18,8 +18,12 @@ this file is purely the menu.
 - **License re-verification pass** over every pick already in DETECTORS.md (object detection, face
   detection/recognition/emotion, NSFW, CLIP embedding, local LLM) — a fresh, independent check against
   the resolved MIT/Apache-2.0-only bar, not a re-trust of this session's own claims.
-- **Animal detection/species + pet identity matching** (DETECTORS.md area C) — same crop-then-embed
-  pattern as face recognition, per ARCHITECTURE.md's two-embedding-spaces note.
+- **Animal detection/species + pet identity matching** (DETECTORS.md area C) — done 2026-08-03: coarse
+  species is free (reuses the existing object detector's COCO classes), fine-grained species has an
+  optional pick (SpeciesNet), pet identity matching has no confident pick under the MIT/Apache-2.0
+  bar — only a caveated CLIP-embedding fallback, flagged as worth revisiting if a real permissively-
+  licensed animal re-id model appears. See DETECTORS.md area C and the research-findings repo's
+  2026-08-03 entry for the full survey. Remaining: nothing blocking, this item is closed.
 - **Human action/pose recognition** (DETECTORS.md area J) — new, not started at all.
 - **Object-detection timing benchmark** — real numbers on the i5-650 or this VPS, not the research
   pass's estimates from faster reference hardware; see TODO.md's benchmarking note.

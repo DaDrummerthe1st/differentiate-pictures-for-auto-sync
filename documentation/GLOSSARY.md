@@ -70,6 +70,7 @@ Plain-language definitions of every technical/business term this project's desig
 - **ONNX Runtime**: one shared inference engine that can run many different models' exported files, regardless of which framework (PyTorch, TensorFlow, etc.) originally trained them, as long as they're exported to the standard `.onnx` format. Using it means installing/maintaining one runtime for every detector instead of one per model's original framework.
 - **OpenCV / OpenCV Zoo**: OpenCV is a mature, CPU-friendly computer-vision library (already a dependency of this project's existing prototype); "OpenCV Zoo" is OpenCV's own curated collection of small pretrained models (like the YuNet face detector) distributed for direct use with it, each with its own stated license.
 - **RQ (Redis Queue)**: a lightweight Python job-queue library built directly on Redis — lets background work (like a detector pass) be queued and processed by a separate worker process, without adding a heavier task-queue system (like Celery) on top of infrastructure this project doesn't otherwise need.
+- **Animal re-identification (re-id)**: telling *which specific individual animal* a photo shows (this specific dog, not just "a dog") — the animal-flavoured version of face recognition. Researched 2026-08-03 ([DETECTORS.md](curation/DETECTORS.md) area C): no pretrained model was found under this project's MIT/Apache-2.0 license bar, only a caveated fallback (reusing the CLIP embedding on a cropped animal region, expected to be weaker than a purpose-built re-id model).
 
 ## Legal / business
 
