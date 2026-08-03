@@ -12,6 +12,15 @@ if ! python3 -m pytest app/tests -q; then
   exit 1
 fi
 
+# Mechanizes the manual secrets-in-diff scan an AI session used to run by
+# hand before every commit (documentation/tooling/TODO.md, raised 2026-07-28)
+# — same self-enforcing rationale as the app/tests gate above.
+echo "[pre-commit] running secrets-in-diff scan..."
+if ! python3 tools/secrets_scan/run.py; then
+  echo "[pre-commit] secrets scan failed — commit blocked. Remove the secret/file, or if it's a known-safe fixture, adjust tools/secrets_scan/scan.py (see CLAUDE.md's --no-verify guidance if this is a false positive you must bypass)." >&2
+  exit 1
+fi
+
 # server/tests is container-based and slower, and the rule allows skipping it
 # on a doc-only commit already run clean this session — that judgement call
 # isn't mechanically checkable here, so this only reminds, never blocks.
