@@ -14,6 +14,17 @@ from pathlib import Path
 _LINK_RE = re.compile(r"\[([^\]]*)\]\(([^)]+)\)")
 _INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
 
+# This repo's docs describe the stub-README convention with the literal
+# phrase "See [X](path)." - sometimes inside backticks (already excluded
+# above), sometimes just inside plain double quotes (not excluded by that
+# regex). "X"/"path" is never a real link's label/target - no file in this
+# repo is ever literally named "path" with no extension - so excluding
+# exactly this pair is narrow and safe, unlike a general "anything inside
+# quotes" exclusion, which could hide a genuinely broken link quoted for an
+# unrelated reason. See documentation/bugs/repo/under_process/2026-08-03-
+# dead-relative-link-in-immutable-changelog-entry-path-unresolved.md.
+_ILLUSTRATIVE_EXAMPLE_LABEL_AND_TARGET = ("X", "path")
+
 
 @dataclass(frozen=True)
 class BrokenLink:
@@ -41,11 +52,13 @@ def find_broken_links(root: Path) -> list[BrokenLink]:
         # code span (e.g. "use `[X](path)` as the convention") isn't a real
         # link to resolve — blank it out before scanning, preserving offsets.
         text = _INLINE_CODE_RE.sub(lambda m: "`" * len(m.group()), text)
-        for _label, target in _LINK_RE.findall(text):
+        for label, target in _LINK_RE.findall(text):
             if target.startswith(("http://", "https://", "mailto:")):
                 continue
             path_part = target.split("#", 1)[0]
             if not path_part:
+                continue
+            if (label, path_part) == _ILLUSTRATIVE_EXAMPLE_LABEL_AND_TARGET:
                 continue
             resolved = (md.parent / path_part).resolve()
             if not resolved.exists():

@@ -77,6 +77,40 @@ class FindBrokenLinksTests(unittest.TestCase):
             broken = checks.find_broken_links(root)
             self.assertEqual(broken, [])
 
+    def test_ignores_the_x_path_illustrative_idiom_even_outside_backticks(self):
+        # Regression test for documentation/bugs/repo/under_process/
+        # 2026-08-03-dead-relative-link-in-immutable-changelog-entry-path-
+        # unresolved.md: this repo's docs describe the stub-README
+        # convention with the literal phrase 'See [X](path).' - sometimes
+        # wrapped in plain double quotes, not backticks, so the existing
+        # inline-code exclusion alone doesn't catch it. "X"/"path" is never
+        # a real link's label/target (no file is ever literally named
+        # "path" with no extension), so this exact pair is a safe, narrow
+        # exclusion rather than a general "anything in quotes" one, which
+        # could hide a genuinely broken link quoted for another reason.
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _init_git_repo(root)
+            (root / "a.md").write_text(
+                'Already used a bare "See [X](path)." stub.'
+            )
+            _git_add(root, "a.md")
+            broken = checks.find_broken_links(root)
+            self.assertEqual(broken, [])
+
+    def test_still_flags_a_broken_link_merely_labeled_x(self):
+        # The exclusion above must be narrow: a link that happens to be
+        # labeled "X" but points somewhere else entirely is a real link
+        # and a real gap if that target is missing.
+        with TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            _init_git_repo(root)
+            (root / "a.md").write_text("See [X](missing.md) for detail.")
+            _git_add(root, "a.md")
+            broken = checks.find_broken_links(root)
+            self.assertEqual(len(broken), 1)
+            self.assertEqual(broken[0].target, "missing.md")
+
     def test_ignores_untracked_md_files(self):
         # matches doc_metrics' own git-ls-files scoping — an untracked
         # scratch file with a broken link shouldn't fail the check.
