@@ -193,6 +193,56 @@ is what would make a future custom model *feasible* rather than starting from ze
 mind as a reason to get the correction-logging shape right now, even though no training work is
 planned yet.
 
+**Per-household few-shot identity classifier — resolves pet identity matching's "no confident pick"
+gap (raised 2026-08-03)**: [DETECTORS.md](DETECTORS.md) area C found no pretrained animal
+re-identification model that's both permissively licensed and actually good at telling individual
+animals apart (raw foundational embeddings like CLIP are documented in the literature as poorly
+adapted to fine-grained instance-level identity without fine-tuning). Rather than waiting for one,
+**each household trains its own tiny classifier**, using only its own labels, on top of the
+embedding it already computes for free — the CLIP crop-embedding for animals, the MobileFaceNet
+embedding for people (area B). No new model to source or license: the cheap baseline from the very
+first label onward is nearest-neighbor against confirmed reference embeddings per entity (the same
+mechanism already planned for face-recognition's `entities` matching); once enough labeled examples
+accumulate per identity, a trained linear-probe classifier (e.g. logistic regression) on the same
+frozen embeddings is a natural, still-CPU-cheap upgrade for cleaner boundaries between visually
+similar individuals — seconds of CPU time to fit, not a training job. **Confirmed with Joakim
+2026-08-03: this generalizes to both people and animals**, not just pets — for people it's additive
+to the existing generic-embedding design (which already works reasonably without per-household
+training), for animals it's the actual fix for the "no confident pick" gap.
+
+*Bootstrap/cold-start mechanism*: a **gamified labeling session** — short, bounded ("five minutes to
+spare"), the user fed one already-detected-but-unidentified crop at a time from photos or sampled
+video-clip frames, asked to confirm/correct/name it — is the active mechanism that solves this
+file's own cold-start problem (below) rather than waiting passively for browsing/deletion behavior
+to accumulate signal. Suggestions are expected to be poor at first and improve as labels accumulate,
+same arc as any few-shot classifier. UX-flow-level detail: [../tags/UX_FLOWS.md](../tags/UX_FLOWS.md)'s
+new "Gamified identity-labeling session" section.
+
+*Cross-household reuse ("user1 has photos of user2's dog/spouse") is two separate problems, not one*,
+raised and partly resolved 2026-08-03:
+- **Consent/trust** — sharing another household's trained classifier or reference embeddings across
+  a household boundary touches someone's biometric-adjacent data (see [../GLOSSARY.md](../GLOSSARY.md)'s
+  "biometric data" flag on the age/gender item), so it needs the same conscious opt-in treatment, not
+  a default. **Resolved as policy 2026-08-03**: each household/training decides, per entity, what (if
+  anything) to share and with whom — an explicit opt-in.
+- **Mechanism** — actually transferring/merging a classifier, reference embeddings, or labels across
+  two independent servers is a distributed-sync problem this file has already punted once (see the
+  pgvector-at-scale note above): genuinely blocked on whatever cross-server sync protocol
+  [../distributed-sync/TODO.md](../distributed-sync/TODO.md)'s V2/V3 work eventually builds, not
+  something to design here. The consent policy above stands regardless of when the mechanism exists.
+
+**Mislabeling / false-identification risk on people — flagged, not resolved (raised 2026-08-03)**:
+because every name-tag is a private, human-asserted claim rather than a verified fact (per this
+file's own "never applies a suggestion silently" principle, the AI itself never asserts an identity —
+only a human does, by confirming or typing one), nothing currently stops a user from mislabeling a
+face — by mistake, or in bad faith — with a real named person's identity. The concrete risk raised:
+if such a private label is ever exported, shared, or screenshotted, it could be presented as though
+it were a verified identification (e.g. wrongly placing a real named person at a real event — a bank
+robbery, a war zone — she was never actually at). This is a liability/privacy question distinct from
+detector accuracy, and distinct from — but same-shaped as — the existing age/gender and OCR-in-frame
+privacy flags in [DETECTORS.md](DETECTORS.md). **Not designed here**: left as an open item for a
+future privacy-focused session, same treatment as those other flags, rather than resolved today.
+
 ## Should the system wait and learn from deletions before doing anything else?
 
 No. Two reasons: **cold-start** (deletion behavior only teaches the system about photos already

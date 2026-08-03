@@ -84,6 +84,32 @@ This is a visual confirmation step, **owner-side only** — confirmed with Joaki
 for photos she wasn't given access to. A recipient's view of an already-shared tag
 simply never contains the excluded photos; there's no "there's more here" tease.
 
+## Gamified identity-labeling session — active learning for pet/person identity
+
+Raised 2026-08-03, alongside [../curation/ARCHITECTURE.md](../curation/ARCHITECTURE.md)'s
+per-household few-shot identity classifier design (that file's own "no confident pick" gap for pet
+identity matching, resolved by training a tiny per-household classifier on the user's own labels
+instead of waiting for a pretrained one). Vision-level, same bar as the rest of this file — not
+build-ready:
+
+- A dedicated entry point, distinct from ordinary browsing — the user opens a short, bounded session
+  ("five minutes to spare") rather than facing an open-ended queue of everything unlabeled.
+- Each round feeds **one** already-detected-but-unidentified crop at a time — a bounding box from a
+  photo, or a sampled frame from a video clip ([../picture-handling/README.md](../picture-handling/README.md)'s
+  existing note that this project also indexes movie clips, not just stills) — and asks the same
+  contextual question this file's bounding-box-tagging section already defines ("Who is this?" /
+  name + type for an animal).
+- **Cold start vs. warm start**: before any labels exist for a household, a round is a blank
+  "who/what is this?" prompt (pure cold-start). Once enough labels accumulate per identity, a round
+  instead shows the classifier's own guess for confirmation/correction ("Is this Fido?") — expected
+  to be poor early on and improve as more sessions run, same arc as any few-shot classifier.
+  Consistent with this file's existing rule that a detector/classifier suggestion is never applied
+  silently — a round is always a confirm-or-correct step, never an auto-accept.
+- Session boundary (fixed item count vs. a time-box vs. something else), and the actual gamification
+  mechanic (streaks, a completion reward, some other engagement device) are **not decided** — flagged
+  as open UX detail for whichever future session actually specs this flow to build-ready, not resolved
+  here.
+
 ## Mockup coverage and simplifications
 
 [prototypes/mockup/](../../prototypes/mockup/README.md) is a clickable illustration of
@@ -100,5 +126,5 @@ entity is what search should match against.
 
 ## Status
 
-Vision-level design, 2026-07-27. Not scheduled — see [TODO.md](TODO.md) and
-[../photo-server/TODO.md](../photo-server/TODO.md).
+Vision-level design, 2026-07-27; gamified identity-labeling session added 2026-08-03. Not
+scheduled — see [TODO.md](TODO.md) and [../photo-server/TODO.md](../photo-server/TODO.md).

@@ -41,7 +41,7 @@ written up here once done).
 | Area | What it detects | Why it matters | Status |
 | --- | --- | --- | --- |
 | Animal detection/species | Presence + rough species (dog, cat, bird...) | Feeds the animal entity category, [../tags/TAXONOMY.md](../tags/TAXONOMY.md) | researched |
-| Pet identity matching | Which specific pet (same idea as face recognition, animal-flavoured) | The literal "same dog" example | researched — no confident pick, see below |
+| Pet identity matching | Which specific pet (same idea as face recognition, animal-flavoured) | The literal "same dog" example | researched — no pretrained model fits, resolved instead via a per-household trained classifier, see below |
 
 **Picks (researched 2026-08-03)**: **animal presence/coarse species** — no new model needed: area
 D's already-picked NanoDet-Plus (Apache-2.0) is trained on COCO's 80 classes, which already
@@ -70,6 +70,15 @@ animal re-id model appears later (an active research area — CARE, CLIP-AFIR, a
 Re-Identifying Any Animal" are all 2023-2026 work). Full survey, every candidate considered, and
 the full source list: `2026-08-03-animal-species-and-pet-identity-matching-survey.md` in the
 `research-findings` repo.
+
+**Actual resolution, same day**: rather than accepting the caveated raw-CLIP fallback above as the
+answer, Joakim proposed each household train its own tiny classifier on the labels it provides
+("Fido, Pluto, Snappy the bird") instead of relying on any pretrained re-id model — a design that
+sidesteps this section's whole "no confident pick" problem, since it needs no new model at all (just
+a small classifier trained on top of the embedding already loaded). Full mechanism, the gamified
+labeling-session UX that bootstraps it, cross-household reuse, and a flagged mislabeling/liability
+risk on people: [ARCHITECTURE.md](ARCHITECTURE.md)'s "Per-household few-shot identity classifier"
+section — not duplicated here.
 
 ## D. Objects and places
 

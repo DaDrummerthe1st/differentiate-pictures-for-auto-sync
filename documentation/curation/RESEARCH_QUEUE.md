@@ -20,10 +20,17 @@ this file is purely the menu.
   the resolved MIT/Apache-2.0-only bar, not a re-trust of this session's own claims.
 - **Animal detection/species + pet identity matching** (DETECTORS.md area C) — done 2026-08-03: coarse
   species is free (reuses the existing object detector's COCO classes), fine-grained species has an
-  optional pick (SpeciesNet), pet identity matching has no confident pick under the MIT/Apache-2.0
-  bar — only a caveated CLIP-embedding fallback, flagged as worth revisiting if a real permissively-
-  licensed animal re-id model appears. See DETECTORS.md area C and the research-findings repo's
-  2026-08-03 entry for the full survey. Remaining: nothing blocking, this item is closed.
+  optional pick (SpeciesNet). Pet identity matching has no pretrained model under the MIT/Apache-2.0
+  bar, resolved instead by a per-household few-shot classifier trained on the user's own labels
+  (generalizes to people too) — see ARCHITECTURE.md's "Per-household few-shot identity classifier"
+  section and the research-findings repo's 2026-08-03 entry for the full survey behind the "no
+  pretrained pick" finding. Remaining: nothing blocking, this item is closed.
+- **Mislabeling/false-identification privacy risk on people** — flagged 2026-08-03, alongside the
+  per-household identity classifier above: nothing stops a user mislabeling a face with a real
+  person's name, and such a private label could be exported/shared and presented as though it were a
+  verified identification (e.g. wrongly placing someone at a real event). Same treatment as the
+  existing age/gender and OCR-in-frame privacy flags — needs a conscious read before a safeguard is
+  designed, not a plain model/UX pick. See ARCHITECTURE.md's flagged note.
 - **Human action/pose recognition** (DETECTORS.md area J) — new, not started at all.
 - **Object-detection timing benchmark** — real numbers on the i5-650 or this VPS, not the research
   pass's estimates from faster reference hardware; see TODO.md's benchmarking note.
