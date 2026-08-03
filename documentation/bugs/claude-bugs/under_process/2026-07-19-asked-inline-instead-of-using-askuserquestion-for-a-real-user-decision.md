@@ -2,7 +2,7 @@
 
 See [README.md](../README.md) for what belongs here.
 
-Status: **recurring, not structurally fixed** — 3 occurrences now, the last two both on 2026-08-02, minutes apart, in the same session. Reopened per the bug-recurrence rule (a recurring lapse reopens its original file instead of getting a new one each time).
+Status: **recurring, not structurally fixed** — 4 occurrences now, most recently 2026-08-03, a different session from the first three. Reopened per the bug-recurrence rule (a recurring lapse reopens its original file instead of getting a new one each time).
 
 ## Recurrence #1 (2026-07-19)
 
@@ -49,3 +49,17 @@ Not the same shape as Recurrences #1-2 this time — the "small offer tacked ont
 ### What changed
 
 Still no mechanical check — this recurrence is itself the proof that in-context awareness of the rule (having just edited this exact file) is not sufficient to prevent the lapse. Left open. A real fix needs to be structural, not a stronger reminder: e.g. a check run over the drafted reply before sending (comparable to `.githooks/pre-commit` for `app/tests`), not something dependent on the session "remembering" to apply a rule it can already recite.
+
+## Recurrence #4 (2026-08-03, a different session from #1-3)
+
+### What happened
+
+While answering a large batch of Joakim's follow-up feedback in the `curation` branch work, this session ended a reply with two genuinely Joakim's-to-make decisions as plain running text instead of `AskUserQuestion`: (1) "Do you want that acceptable... or should full raw research-pass reports start getting saved as dated artifact files?" (whether to start preserving full research reports) and (2) "It's a real question which goes first — that build plan, or the VPS audit above — your call." Joakim caught it immediately in his next message: "You had questions now that you did not put into AskUserQuestion!"
+
+### Why it happened
+
+Same shape as all three prior recurrences: both questions were appended as trailing sentences at the end of a long, mostly-informational reply, which made them read as natural continuations of the explanation rather than register as standalone user-owned forks needing the tool. This session had used `AskUserQuestion` correctly three times earlier in the same conversation (commit permission, branch creation, license bar/cloud-GPU) — direct, in-session evidence that recent correct use doesn't prevent a later lapse once a question gets folded into a long explanatory reply instead of standing alone.
+
+### What changed
+
+Still no mechanical check exists, four occurrences in. This recurrence adds a specific, actionable pattern to watch for, not just a restated reminder: **the lapse consistently happens when a decision-question is appended to the tail end of a long reply already full of other content**, not when a reply is short or the question stands alone. A behavioral mitigation worth trying going forward: treat "does this reply's last paragraph contain a question only Joakim can answer" as its own explicit check *before* sending, separate from drafting the rest of the reply — but per Recurrence #3's own finding, in-context awareness alone has already failed to prevent this three times, so this is logged as another data point toward a structural fix, not claimed as a solution.

@@ -257,11 +257,11 @@ Distinct from — and narrower than — [../VISION.md](../VISION.md)'s own rollo
 doesn't restate. Confirmed with Joakim 2026-08-02:
 
 - **V1 (now)**: a central server — either the existing home box
-  ([../photo-server/HARDWARE.md](../photo-server/HARDWARE.md)) or a VPS, undecided, no VPS specs
-  documented anywhere in this repo yet so no real comparison exists yet either — flagged in
-  [TODO.md](TODO.md), not resolved here. Doesn't block detector/model choice: both candidate hosts
-  are far more capable than the eventual Pi-3 floor below, so [DETECTORS.md](DETECTORS.md)'s picks
-  work for either; only the deployment target changes.
+  ([../photo-server/HARDWARE.md](../photo-server/HARDWARE.md)) or a VPS, still undecided, but both are
+  now specced ([TODO.md](TODO.md)'s VPS section: Contabo Cloud VPS 10, 4 vCPU AMD EPYC, 7.8GB RAM,
+  hosted at Lauterbourg, France — EU, verified). Doesn't block detector/model choice: both candidate
+  hosts are far more capable than the eventual Pi-3 floor below, so [DETECTORS.md](DETECTORS.md)'s
+  picks work for either; only the deployment target changes.
 - **Next**: a PWA doing inference client-side, in each user's own phone or stationary computer's
   browser — not a native app. Needs browser-runnable model formats (ONNX Runtime Web,
   WebGPU/WebNN, or transformers.js-compatible) — a narrower set than a native app could load.

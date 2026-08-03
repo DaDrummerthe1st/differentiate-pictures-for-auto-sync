@@ -29,30 +29,33 @@ naming. This is strong evidence the VPS is physically in Germany, but RIPE regis
 own control panel (chosen at signup, e.g. "Contabo Germany") is the authoritative source and should
 be checked directly, not assumed from this alone.
 
-**Not yet done — needs Joakim to run these on the VPS itself** (per
-[../policies/POLICY.md](../policies/POLICY.md)'s deployment/system-access rule — an AI session drafts,
-never runs, remote/system-level commands):
+**Done 2026-08-03** — Joakim ran the command block and the Contabo control panel directly. Results,
+recorded here provisionally (real central home is the `workstation` repo, still queued behind its own
+concurrent session — see "Central hardware record" below):
 
-```
-# Confirm Contabo's own stated datacenter/region for this VPS
-# (authoritative source — check the Contabo customer control panel directly, this isn't a command)
+| Component | Spec |
+| --- | --- |
+| Product | Contabo Cloud VPS 10 SSD |
+| CPU | AMD EPYC (virtualized), 4 vCPUs, 1 socket, 4 cores/socket, 1 thread/core |
+| RAM | 7.8Gi total, ~5.7Gi available at idle |
+| Storage | 150G disk (`sda`), 149G partition at `/`, 20G used, 125G free |
+| OS | Ubuntu 24.04.4 LTS (Noble Numbat) |
+| Public IP | 161.97.174.16 (confirmed via `ifconfig.me`, matches — no NAT/proxy surprise) |
+| Timezone | Europe/Berlin (CEST, +0200), NTP-synchronized |
+| **Datacenter (Contabo control panel, authoritative)** | **"Hub Europe"** |
 
-# Basic hardware facts, matching HARDWARE.md's format for the home box
-nproc --all
-free -h
-lscpu | grep -E "Model name|Socket|Core|Thread"
-lsblk
-df -h
-ip addr show
-cat /etc/os-release
+**EU data-residency: verified with a real source, not the RIPE inference alone.** Web-search-confirmed
+(2026-08-03): Contabo's "Hub Europe" is a physical datacenter in **Lauterbourg, France** (French-German
+border, near Strasbourg) — corrects, not just confirms, last session's RIPE-based inference (which
+only showed the *registrant's* address, Contabo GmbH in Munich, Germany — a different thing from the
+physical rack's location). Either way the requirement holds: **France, EU**, not outside Europe.
+Sources: [Contabo Hub Europe datacenter — datacentermap.com](https://www.datacentermap.com/france/strasbourg/contabo-hub-europe-datacenter/), [Welcome to Hub Europe — Contabo Blog](https://contabo.com/blog/welcome-to-hub-europe-new-data-center-for-all-your-cloud-needs/).
 
-# Confirm no unexpected egress/hosting surprises
-curl -s https://ifconfig.me  # should print 161.97.174.16 back
-timedatectl  # confirm system timezone, sanity-check against expected region
-```
-
-Once run, results should be centrally recorded — see this file's "Central hardware record" item below
-for where.
+**Comparison note vs. the home box** ([../photo-server/HARDWARE.md](../photo-server/HARDWARE.md)):
+more vCPUs (4 vs. the i5-650's 2 cores/4 threads) on modern EPYC silicon, likely faster per-core
+despite being virtualized, but less RAM (7.8GB vs. 16GB) and no ZFS pool/`/tank` — this VPS is compute,
+not the photo storage. Real home-server-vs-VPS comparison for where V1's worker process runs is still
+open, now with real numbers instead of "no specs at all."
 
 ## License-strictness decision — resolved 2026-08-03
 
