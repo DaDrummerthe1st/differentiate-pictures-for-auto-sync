@@ -62,6 +62,13 @@ Plain-language definitions of every technical/business term this project's desig
 - **ROI** (as used in this project's storage-incentive brainstorm): "return on investment" — here, whether the durability benefit of contributing spare storage to the network outweighs the simpler cost of just keeping photos on your own phone/NAS.
 - **Payment facilitation**: the legal/regulatory burden of handling money transfers between two other parties (e.g. a marketplace paying sellers out) — normally requires a money-transmission license. **Stripe Connect** is the standard industry pattern for outsourcing this, because it absorbs that licensing burden rather than a project having to become a licensed money transmitter itself.
 
+## Tooling
+
+- **JUnit XML**: a standardized machine-readable test-report format (originally from the Java testing tool JUnit, now a de facto standard other languages' test runners emit too) — a `<testsuite>` element carries how many tests ran, passed, failed, errored, or were skipped, plus total duration, as XML attributes rather than parsed-from-terminal-text. `pytest` can emit it natively via `--junitxml=path`, no extra plugin needed. Used by `tools/test_results/` (see [TEST_RESULTS.md](tooling/TEST_RESULTS.md)) instead of re-parsing pytest's `-q` summary line, whose exact wording isn't a stable contract to parse against.
+- **pytest marker**: a `@pytest.mark.name` tag on a test function, letting a run selectively include/exclude tests by tag (`-m "not docker"` runs everything except tests marked `docker`). This project's `server/tests` suite uses a `docker` marker on its one slow, real-`docker build` test so the fast default run skips it.
+- **git hook / `core.hooksPath`**: a script git runs automatically at a specific point (e.g. `pre-commit`, just before a commit is created) — can block the commit entirely by exiting non-zero. Git only looks in `.git/hooks/` (not repo-tracked) unless `core.hooksPath` is pointed elsewhere; this project's tracked hook lives at `.githooks/pre-commit` and needs that one-time `git config core.hooksPath .githooks` per clone to actually run.
+- **Append-only ledger (jsonl)**: one JSON object per line, in a file that's only ever added to, never rewritten — `doc_metrics`, `commit_cost`, and `test_results` (see [TEST_RESULTS.md](tooling/TEST_RESULTS.md)) all use this shape so a past row's meaning never silently changes underneath later analysis.
+
 ## Status
 
 Created 2026-07-29. Living document — append new terms here as they come up in conversation, per `CLAUDE.md`'s non-negotiable rule, rather than letting an explanation exist only in chat.

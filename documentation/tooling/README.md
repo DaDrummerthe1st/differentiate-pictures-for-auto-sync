@@ -9,6 +9,9 @@ Documentation for project-wide utilities under `tools/` — not tied to any sing
 | [CLEANING.md](CLEANING.md) | Full, on-demand documentation audit — goals and methodology, not a per-session check |
 | [DOCUMENTATION_CHECKS.md](DOCUMENTATION_CHECKS.md) | `tools/documentation_checks/` — the mechanical subset of a CLEANING.md pass (dead links, topic-folder `TODO.md` presence), scripted so it isn't rewritten ad hoc each time |
 | [REDUNDANCY_SCAN.md](REDUNDANCY_SCAN.md) | `tools/redundancy_scan/` — surfaces markdown phrases repeated verbatim across files, candidates for a CLEANING.md pass's cross-reference/compaction step |
+| [SECRETS_SCAN.md](SECRETS_SCAN.md) | `tools/secrets_scan/` — grep-based secrets-in-diff scan, wired into `.githooks/pre-commit` |
+| [TEST_RESULTS.md](TEST_RESULTS.md) | `tools/test_results/` — append-only ledger of pytest pass/fail/skip counts and duration per run, same shape as `doc_metrics`/`commit_cost` |
+| [WRAPUP_CHECKLIST.md](WRAPUP_CHECKLIST.md) | `tools/wrapup_checklist/` — runs the mechanical subset of the session wrap-up checklist below as code instead of relying on memory |
 
 ## Session wrap-up checklist
 
@@ -20,11 +23,12 @@ Each check has a trigger condition. Most only apply when something specific happ
 | --- | --- | --- |
 | `app/tests` (fast, in-process) | before every commit, docs-only or not | local, mechanically enforced by `.githooks/pre-commit` — see below |
 | `server/tests` (container-based) | every commit touching `server/`/`app/` code; for a doc-only commit, only if it hasn't already run clean this session against the same code | local |
-| Secrets-in-diff scan | before every commit | global |
+| Secrets-in-diff scan | before every commit | local, mechanically enforced by `.githooks/pre-commit` via `tools/secrets_scan/` (see [SECRETS_SCAN.md](SECRETS_SCAN.md)) — see below |
+| `test_results` logging | after each `app/tests`/`server/tests` run, if tracking that run's trend is useful | local, see [TEST_RESULTS.md](TEST_RESULTS.md) |
 | `doc_metrics` logging | every commit touching a `*.md` file | local |
 | `commit_cost` logging | every commit | local |
 | Changelog entry | every meaningful change | local |
-| `commit_cost` coverage check (`tools/commit_cost/check_coverage.sh`) | every session close | local |
+| `commit_cost`/`doc_metrics` coverage check | every session close | local, mechanized by `tools/wrapup_checklist/run.py` (see [WRAPUP_CHECKLIST.md](WRAPUP_CHECKLIST.md)) — covers what `tools/commit_cost/check_coverage.sh` used to check alone, plus `doc_metrics`, pre-commit-hook installation, and delegates to `documentation_checks` for the dead-link sweep below |
 | Lockfile/manifest consistency | only if a manifest file changed this session | global |
 | Docker hygiene (dangling/abandoned images) | only if `docker build`/`compose build` ran this session | global |
 | Cross-reference link check | only if a "see X" doc link was touched this session | global |
@@ -35,7 +39,7 @@ Each check has a trigger condition. Most only apply when something specific happ
 | Forward-effectiveness note (one concrete note on what would make the next session cheaper) | every session close | global |
 | Systematic security-discovery pass (`pip-audit`, OWASP ZAP scan — see [PHOTO_SERVER's TODO.md](../photo-server/TODO.md)) | not diff-triggered — audits the live deployed surface, not a change; needs a real recurring schedule once built, not a per-session check | local, not built yet |
 
-## Pre-commit hook (`app/tests`, mechanically enforced)
+## Pre-commit hook (`app/tests` + secrets scan, mechanically enforced)
 
 Added 2026-07-27 after an AI session committed twice in a row without running
 `app/tests` first, despite the rule above already saying to
@@ -46,6 +50,11 @@ on failure; it only reminds (doesn't block) about `server/tests` when a commit
 touches `server/`/`app/`, since that suite is container-based, slower, and the
 rule's "skip if already run clean this session" judgement call isn't
 mechanically checkable.
+
+The same hook then runs `tools/secrets_scan/run.py` (added 2026-08-03, per
+[TODO.md](TODO.md)'s 2026-07-28 item) and blocks the commit on any finding —
+see [SECRETS_SCAN.md](SECRETS_SCAN.md) for what it checks and why a
+generic "password=" heuristic was deliberately left out.
 
 **Not active by default** — git doesn't read hooks from a repo-tracked
 directory on its own. One-time setup, per clone:
