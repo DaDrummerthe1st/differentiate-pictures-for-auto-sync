@@ -37,18 +37,25 @@ python3 tools/doc_metrics/log.py                         # after each commit tou
 python3 tools/doc_metrics/log.py --task "photo-server 0.3"  # ...tagged with the task it served
 python3 tools/doc_metrics/report.py                       # see the trend
 python3 tools/doc_metrics/report.py --by-task             # see cost grouped by task
-tools/doc_metrics/check_coverage.sh                       # flag commits with no logged row
+python3 tools/wrapup_checklist/run.py --coverage-only     # flag commits with no logged row
 ```
 
 ## Coverage check
 
 Added 2026-08-03, after a 220-commit silent logging gap was discovered (see
 [documentation/bugs/claude-bugs/fixed/2026-07-17-missed-commit-cost-logging-for-3-commits.md](../bugs/claude-bugs/fixed/2026-07-17-missed-commit-cost-logging-for-3-commits.md)'s
-"Recurrence #1" section) — the 2026-07-17 fix built a coverage check for `commit_cost` only, and
+"Recurrence #1" section) — the original fix built a coverage check for `commit_cost` only, and
 `doc_metrics` had no equivalent, so the same "logging step quietly drops out of the loop" lapse kept
-recurring here specifically, undetected, for about three weeks of commits. `check_coverage.sh`
-cross-checks `git log` against `metrics.jsonl` and lists any commit missing a row — except a commit
-with zero tracked `*.md` files in its tree (this repo's earliest commits, before any documentation
-existed), which is a real, expected absence, not a gap. Run it as part of session wrap-up, same as
-`commit_cost`'s own coverage check. If it reports commits missing, `log.py --backfill` catches them
-up (safe to rerun — dedupes by commit hash, per the methodology section above).
+recurring here specifically, undetected, for about three weeks of commits.
+
+Originally a standalone `check_coverage.sh` shell script (grepping `metrics.jsonl` raw, once per
+commit). Retired 2026-08-03 in favor of `tools/wrapup_checklist/`'s shared, tested implementation
+(see [WRAPUP_CHECKLIST.md](WRAPUP_CHECKLIST.md)) — one `git log` call plus one parsed pass over the
+jsonl, not a per-commit shell-out, and the same code now serves `commit_cost` too instead of two
+hand-copied scripts. `--coverage-only` lists any `*.md`-touching commit missing a `metrics.jsonl`
+row — except a commit with zero tracked `*.md` files in its tree (this repo's earliest commits,
+before any documentation existed), which is a real, expected absence, not a gap. It also runs
+automatically, blocking, in `.githooks/pre-commit` — see README.md's wrap-up table — so a gap is
+caught at the very next commit, not only when a session remembers to run the full checklist. If it
+reports commits missing, `log.py --backfill` catches them up (safe to rerun — dedupes by commit
+hash, per the methodology section above).

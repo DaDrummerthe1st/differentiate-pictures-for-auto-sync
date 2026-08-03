@@ -39,7 +39,15 @@ python3 -m unittest tools.commit_cost.test_metrics -v   # tests
 python3 tools/commit_cost/log.py                         # scan, write new commits found
 python3 tools/commit_cost/report.py                       # per-commit trend
 python3 tools/commit_cost/report.py --by-session          # summed per session
-tools/commit_cost/check_coverage.sh                       # flag commits with no logged cost row
+python3 tools/wrapup_checklist/run.py --coverage-only     # flag commits with no logged cost row
 ```
 
-`check_coverage.sh` cross-checks `git log` against `commit_costs.jsonl` and lists any commit with no logged row at all (as opposed to a real, correctly-logged `0` for a human-authored commit — see above). Run it as part of session wrap-up. Its one expected "missing" entry is always the commit just made in the current session (not logged yet because logging happens after committing) — not a real gap.
+Originally a standalone `check_coverage.sh` shell script; retired 2026-08-03 in favor of
+`tools/wrapup_checklist/`'s shared, tested implementation (see [WRAPUP_CHECKLIST.md](WRAPUP_CHECKLIST.md)),
+which runs the same coverage logic for `doc_metrics` too instead of two hand-copied scripts.
+`--coverage-only` cross-checks `git log` against `commit_costs.jsonl` and lists any commit with no
+logged row at all (as opposed to a real, correctly-logged `0` for a human-authored commit — see
+above). Run it as part of session wrap-up (full `run.py`, which excludes the current in-progress
+HEAD) or let it run automatically, blocking, in `.githooks/pre-commit` (`--coverage-only`, which
+doesn't need that exclusion — see README.md's wrap-up table) — that catches a gap at the very next
+commit instead of only when a session remembers to run the full checklist.

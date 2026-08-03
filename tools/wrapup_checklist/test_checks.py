@@ -2,6 +2,7 @@
 python3 -m unittest tools.wrapup_checklist.test_checks -v
 (stdlib unittest only, matching tools/doc_metrics/test_metrics.py's convention.)
 """
+import json
 import unittest
 
 from tools.wrapup_checklist import checks
@@ -49,6 +50,41 @@ class MdTouchingCommitsTests(unittest.TestCase):
     def test_empty_when_no_commit_touches_markdown(self):
         result = checks.md_touching_commits({"aaa": ["app/main.py"]})
         self.assertEqual(result, [])
+
+
+class LoggedKeysTests(unittest.TestCase):
+    """Replaces the ad-hoc JSON parsing that used to live inline in run.py's
+    _logged_hashes() - moved here so the "does this survive a ledger schema
+    change" behavior is pinned down by a test, not incidental.
+    """
+
+    def test_returns_the_key_value_from_each_well_formed_line(self):
+        lines = [
+            json.dumps({"commit_hash": "aaa", "cost_usd": 0.1}),
+            json.dumps({"commit_hash": "bbb", "cost_usd": 0.2}),
+        ]
+        self.assertEqual(checks.logged_keys(lines), {"aaa", "bbb"})
+
+    def test_skips_blank_lines(self):
+        lines = [json.dumps({"commit_hash": "aaa"}), "", "   "]
+        self.assertEqual(checks.logged_keys(lines), {"aaa"})
+
+    def test_supports_a_different_key_for_doc_metrics_style_rows(self):
+        lines = [json.dumps({"commit_hash": "aaa", "file_path": "README.md"})]
+        self.assertEqual(checks.logged_keys(lines, key="commit_hash"), {"aaa"})
+
+    def test_a_row_missing_the_expected_key_raises_loudly(self):
+        # A renamed/reshaped ledger column must fail loudly, never be
+        # silently treated as "commit not logged" - that would report a
+        # false coverage gap instead of surfacing the real schema change.
+        lines = [json.dumps({"commit_sha": "aaa"})]  # key renamed
+        with self.assertRaises(KeyError):
+            checks.logged_keys(lines)
+
+    def test_a_malformed_json_line_raises_loudly(self):
+        lines = ["{not valid json"]
+        with self.assertRaises(json.JSONDecodeError):
+            checks.logged_keys(lines)
 
 
 if __name__ == "__main__":

@@ -27,3 +27,15 @@ fi
 if git diff --cached --name-only | grep -qE '^(server|app)/'; then
   echo "[pre-commit] reminder: this commit touches server/ or app/ — run server/tests too if it hasn't already run clean this session against this code (see CLAUDE.md)." >&2
 fi
+
+# Catches a commit_cost/doc_metrics logging gap at the very next commit
+# attempt instead of relying on a session remembering to run the wrap-up
+# checklist (see documentation/tooling/WRAPUP_CHECKLIST.md's "Scaling"
+# section — replaces the retired per-ledger check_coverage.sh scripts).
+# Runs before this commit exists, so git log here still ends at the
+# *previous* commit, which should already be logged.
+echo "[pre-commit] running commit_cost/doc_metrics coverage check..."
+if ! python3 tools/wrapup_checklist/run.py --coverage-only; then
+  echo "[pre-commit] coverage gap found — commit blocked. Run tools/commit_cost/log.py and/or tools/doc_metrics/log.py to catch up, then retry." >&2
+  exit 1
+fi

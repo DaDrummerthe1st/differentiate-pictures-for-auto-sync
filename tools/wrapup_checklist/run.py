@@ -4,7 +4,13 @@ every time. See ../../documentation/tooling/WRAPUP_CHECKLIST.md for exactly
 which rows this covers and which it can't.
 
 Usage:
-  python3 tools/wrapup_checklist/run.py
+  python3 tools/wrapup_checklist/run.py                 # full checklist
+  python3 tools/wrapup_checklist/run.py --coverage-only  # commit_cost +
+                                                          # doc_metrics
+                                                          # coverage only -
+                                                          # what .githooks/
+                                                          # pre-commit runs
+                                                          # on every commit
 
 Exit code 1 if a mechanical check found something outstanding; 0 otherwise.
 The judgment-call reminders never affect the exit code - a script can raise
@@ -12,13 +18,12 @@ them, but only a person (or an AI session) can actually resolve them.
 """
 from __future__ import annotations
 
-import json
 import subprocess
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from checks import hooks_path_configured, md_touching_commits, missing_logged_commits  # noqa: E402
+from checks import hooks_path_configured, logged_keys, md_touching_commits, missing_logged_commits  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DOC_METRICS_JSONL = REPO_ROOT / "tools" / "doc_metrics" / "metrics.jsonl"
@@ -68,16 +73,14 @@ def _changed_files_by_commit() -> dict[str, list[str]]:
     return result
 
 
-def _logged_hashes(jsonl_path: Path, key: str = "commit_hash") -> set[str]:
+def _logged_keys_from_file(jsonl_path: Path, key: str = "commit_hash") -> set[str]:
+    """I/O wrapper around checks.logged_keys() - reads the file, delegates
+    the actual (loud-on-schema-change) parsing to the pure, tested function.
+    """
     if not jsonl_path.exists():
         return set()
-    hashes = set()
     with jsonl_path.open(encoding="utf-8") as fh:
-        for line in fh:
-            line = line.strip()
-            if line:
-                hashes.add(json.loads(line)[key])
-    return hashes
+        return logged_keys(fh, key=key)
 
 
 def _hooks_path() -> str | None:
@@ -88,39 +91,60 @@ def _hooks_path() -> str | None:
     return value or None
 
 
-def main() -> int:
+def check_coverage(*, exclude_current_head: bool) -> bool:
+    """The commit_cost + doc_metrics ledger coverage checks - the sole
+    surviving implementation of what used to be two separate, hand-copied
+    check_coverage.sh shell scripts (see COMMIT_COST.md / DOC_METRICS.md).
+    Shared between full-checklist mode (session close, run *after* the
+    current commit exists - so HEAD itself is expected to be unlogged, one
+    commit behind, and excluded from the count) and `--coverage-only` mode
+    (the pre-commit hook, run *before* the commit-to-be exists at all, so
+    every commit currently in `git log` should already be logged - no
+    exclusion needed there).
+    """
     ok = True
 
     all_hashes = _all_commit_hashes()
     changed_by_commit = _changed_files_by_commit()
+    current_head = all_hashes[0] if (all_hashes and exclude_current_head) else None
 
-    print("MECHANICAL CHECKS")
-    print("-----------------")
-
-    missing_cost = missing_logged_commits(all_hashes, _logged_hashes(COMMIT_COST_JSONL))
-    # The current HEAD commit is always "missing" mid-session - commit_cost
-    # logging happens *after* committing, one commit behind (see
-    # COMMIT_COST.md) - so it's excluded here, same as check_coverage.sh's
-    # own documented one-expected-exception.
-    missing_cost = [h for h in missing_cost if h != all_hashes[0]] if all_hashes else missing_cost
+    missing_cost = missing_logged_commits(all_hashes, _logged_keys_from_file(COMMIT_COST_JSONL))
+    missing_cost = [h for h in missing_cost if h != current_head]
     if missing_cost:
         ok = False
         print(f"[MISSING] commit_cost: {len(missing_cost)} commit(s) with no logged row (run tools/commit_cost/log.py):")
         for h in missing_cost:
             print(f"  {h}")
     else:
-        print("[OK] commit_cost: every commit (except the current HEAD, not yet logged) has a row.")
+        suffix = " (except the current HEAD, not yet logged)" if exclude_current_head else ""
+        print(f"[OK] commit_cost: every commit{suffix} has a row.")
 
     md_commits = md_touching_commits(changed_by_commit)
-    missing_docs = missing_logged_commits(md_commits, _logged_hashes(DOC_METRICS_JSONL))
-    missing_docs = [h for h in missing_docs if not all_hashes or h != all_hashes[0]]
+    missing_docs = missing_logged_commits(md_commits, _logged_keys_from_file(DOC_METRICS_JSONL))
+    missing_docs = [h for h in missing_docs if h != current_head]
     if missing_docs:
         ok = False
         print(f"[MISSING] doc_metrics: {len(missing_docs)} *.md-touching commit(s) with no logged row (run tools/doc_metrics/log.py):")
         for h in missing_docs:
             print(f"  {h}")
     else:
-        print("[OK] doc_metrics: every *.md-touching commit (except the current HEAD) has a row.")
+        suffix = " (except the current HEAD)" if exclude_current_head else ""
+        print(f"[OK] doc_metrics: every *.md-touching commit{suffix} has a row.")
+
+    return ok
+
+
+def main(argv: list[str] | None = None) -> int:
+    argv = sys.argv[1:] if argv is None else argv
+    coverage_only = "--coverage-only" in argv
+
+    print("MECHANICAL CHECKS")
+    print("-----------------")
+
+    ok = check_coverage(exclude_current_head=not coverage_only)
+
+    if coverage_only:
+        return 0 if ok else 1
 
     if hooks_path_configured(_hooks_path()):
         print("[OK] pre-commit hooks: core.hooksPath is set to .githooks (app/tests + secrets scan enforced).")

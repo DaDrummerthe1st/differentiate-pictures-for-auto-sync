@@ -28,7 +28,7 @@ Each check has a trigger condition. Most only apply when something specific happ
 | `doc_metrics` logging | every commit touching a `*.md` file | local |
 | `commit_cost` logging | every commit | local |
 | Changelog entry | every meaningful change | local |
-| `commit_cost`/`doc_metrics` coverage check | every session close | local, mechanized by `tools/wrapup_checklist/run.py` (see [WRAPUP_CHECKLIST.md](WRAPUP_CHECKLIST.md)) — covers what `tools/commit_cost/check_coverage.sh` used to check alone, plus `doc_metrics`, pre-commit-hook installation, and delegates to `documentation_checks` for the dead-link sweep below |
+| `commit_cost`/`doc_metrics` coverage check | before every commit | local, mechanically enforced by `.githooks/pre-commit` via `tools/wrapup_checklist/run.py --coverage-only` — see below. Full `run.py` (session close) additionally checks pre-commit-hook installation and delegates to `documentation_checks` for the dead-link sweep; see [WRAPUP_CHECKLIST.md](WRAPUP_CHECKLIST.md) |
 | Lockfile/manifest consistency | only if a manifest file changed this session | global |
 | Docker hygiene (dangling/abandoned images) | only if `docker build`/`compose build` ran this session | global |
 | Cross-reference link check | only if a "see X" doc link was touched this session | global |
@@ -39,7 +39,7 @@ Each check has a trigger condition. Most only apply when something specific happ
 | Forward-effectiveness note (one concrete note on what would make the next session cheaper) | every session close | global |
 | Systematic security-discovery pass (`pip-audit`, OWASP ZAP scan — see [PHOTO_SERVER's TODO.md](../photo-server/TODO.md)) | not diff-triggered — audits the live deployed surface, not a change; needs a real recurring schedule once built, not a per-session check | local, not built yet |
 
-## Pre-commit hook (`app/tests` + secrets scan, mechanically enforced)
+## Pre-commit hook (`app/tests` + secrets scan + ledger coverage, mechanically enforced)
 
 Added 2026-07-27 after an AI session committed twice in a row without running
 `app/tests` first, despite the rule above already saying to
@@ -55,6 +55,14 @@ The same hook then runs `tools/secrets_scan/run.py` (added 2026-08-03, per
 [TODO.md](TODO.md)'s 2026-07-28 item) and blocks the commit on any finding —
 see [SECRETS_SCAN.md](SECRETS_SCAN.md) for what it checks and why a
 generic "password=" heuristic was deliberately left out.
+
+Finally the hook runs `tools/wrapup_checklist/run.py --coverage-only` and
+blocks the commit if either `commit_cost` or `doc_metrics` has a commit
+missing a logged row — retiring the two standalone `check_coverage.sh`
+scripts that used to only run when a session remembered to at wrap-up (see
+[WRAPUP_CHECKLIST.md](WRAPUP_CHECKLIST.md)'s "Scaling" and "Enforcement"
+sections for why this closes that gap and how it stays fast as the repo
+grows).
 
 **Not active by default** — git doesn't read hooks from a repo-tracked
 directory on its own. One-time setup, per clone:
