@@ -10,7 +10,8 @@ tag gets proposed automatically, and what happens next.
 | --- | --- |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | The three-layer model: detectors, the embedding/index store, the Curator orchestrator. Start here. |
 | [DETECTORS.md](DETECTORS.md) | Catalog of detection/analysis areas to investigate (blur, faces, animals, places, feelings, burst-duplicates, and more) — breadth-first, one area researched at a time in future sessions, not a locked model matrix. |
-| [TODO.md](TODO.md) | Open items, first TDD-able test steps. |
+| [RESEARCH_QUEUE.md](RESEARCH_QUEUE.md) | **Start here for "what's next"** — a one-item-at-a-time pointer, so a session doesn't have to hold the whole catalog/TODO at once. |
+| [TODO.md](TODO.md) | Open items, first TDD-able test steps — the durable why/detail behind each queue item. |
 
 ## Why this exists, why now
 

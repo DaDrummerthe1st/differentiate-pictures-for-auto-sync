@@ -51,7 +51,12 @@ written up here once done).
 | Landmark/place recognition | A *specific* named place, not just a kind of place | [../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s "specific" place sub-case | queued |
 | Text/OCR in-frame | Signs, documents, whiteboards accidentally captured | Real privacy angle — a photographed ID card or letter is sensitive content hiding inside an otherwise ordinary photo | queued, privacy-flagged |
 
-**Picks (researched 2026-08-02)**: **object detection** — NanoDet-Plus (Apache-2.0, sub-2MB weights, the smallest footprint surveyed) as the default; YOLO26n is a real alternative with materially better accuracy but ships **AGPL-3.0** (a license flag, not disqualifying for a private non-distributed server, but worth a conscious call — see [ARCHITECTURE.md](ARCHITECTURE.md)'s note that the existing prototype's full YOLOv3 is the wrong weight class either way, ~236MB vs. these nano variants' single-digit MB). **Scene/venue classification** — don't add a separate model at all: reuse the CLIP-family embedding already computed for area H via zero-shot classification (cosine similarity against text prompts like "a photo of a beach") rather than a dedicated Places365 classifier — zero added footprint, and new scene categories are just new text prompts instead of retraining.
+**Picks (researched 2026-08-02, license bar tightened 2026-08-03 — see below)**: **object detection**
+— **NanoDet-Plus (Apache-2.0)** is the pick, full stop; YOLO26n is **excluded**, not just flagged —
+AGPL-3.0's network-use clause is a real obligation once this project reaches VISION.md's own V2/V3
+multi-household/commercialize phases, not a low risk specific to today's private single-household
+use (see [ARCHITECTURE.md](ARCHITECTURE.md)'s existing prototype note: full YOLOv3 is the wrong
+weight class either way, ~236MB vs. NanoDet-Plus's single-digit MB). **Scene/venue classification** — don't add a separate model at all: reuse the CLIP-family embedding already computed for area H via zero-shot classification (cosine similarity against text prompts like "a photo of a beach") rather than a dedicated Places365 classifier — zero added footprint, and new scene categories are just new text prompts instead of retraining.
 
 ## E. Cross-photo / batch-relational (not a single-photo detector)
 
@@ -70,7 +75,12 @@ written up here once done).
 | Nudity/NSFW detection | Explicit content | Already an open item, [../tags/TODO.md](../tags/TODO.md) — forces the privacy category's automatic-private behaviour | researched |
 | CSAM perceptual-hash matching | Known illegal content | Already the stated moderation mechanism, [../policies/POLICY.md](../policies/POLICY.md) — a blocklist match, not a learned classifier | queued (mechanism already decided, not a research item so much as an implementation one) |
 
-**Pick (researched 2026-08-02)**: NudeNet v3 — described in current sources as the only viable fully open-source, CPU-capable nudity detector, with body-part-level output (18 classes, e.g. `FEMALE_GENITALIA_EXPOSED`, each with a box and score) rather than a single coarse score. License flag: **AGPL-3.0** — low practical risk for a private, non-distributed self-hosted tool, but the same conscious-call note as area D's YOLO26n applies. A simpler binary-score fallback (Open-NSFW2, permissive BSD-lineage license, no body-part granularity) exists if AGPL is a hard blocker.
+**Pick (researched 2026-08-02, license bar tightened 2026-08-03)**: **Open-NSFW2 is the pick**
+(permissive BSD-lineage license), not NudeNet v3 — NudeNet is **excluded**: AGPL-3.0, same reasoning
+as area D's YOLO26n exclusion above. Real trade-off named, not hidden: Open-NSFW2 only returns a
+single coarse NSFW probability, not NudeNet's 18-class body-part-level output — less granular, but
+still sufficient to gate the privacy category's automatic-private behavior (a binary "flag for
+review" is all that decision needs).
 
 ## G. Metadata-derived (non-visual, still automatic)
 
@@ -87,14 +97,33 @@ written up here once done).
 | CLIP-style joint image-text embedding | A vector letting text queries match photos directly | The literal "show me my countryside" example; the backbone of [ARCHITECTURE.md](ARCHITECTURE.md)'s index layer | researched |
 | Image captioning | A free-text description per photo | Could feed full-text search as a fallback/complement to embeddings; heavier than a pure embedding model | queued |
 
-**Pick (researched 2026-08-02)**: **MobileCLIP2-S0** (Apple) is the most edge-optimized option found — an 11.4M-param image encoder purpose-built for 3-15ms edge latency, smallest of every CLIP variant surveyed — but ships under Apple's own **Sample Code License**, a non-standard, restrictive license, not Apache/MIT. If a genuinely permissive license is a hard requirement, **OpenCLIP ViT-B/32** (MIT, 512-d embedding, the most mature CPU/ONNX deployment path of anything surveyed) is the safer default, or **SigLIP** (Apache-2.0, Google) as a competitive, fully-open middle ground. This license choice is a real open decision, not resolved here — flagged in [TODO.md](TODO.md).
+**Pick (researched 2026-08-02, license bar tightened 2026-08-03)**: **OpenCLIP ViT-B/32 (MIT) is the
+pick** — MobileCLIP2-S0 is **excluded**: not AGPL, but Apple's own Sample Code License is a
+non-standard, restrictive license, the same category of problem as a copyleft license for a project
+that wants unrestricted commercial use. OpenCLIP ViT-B/32 also happens to have the most mature CPU/
+ONNX deployment path of anything surveyed, so nothing is given up by excluding MobileCLIP2 beyond its
+edge-latency advantage (3-15ms vs. OpenCLIP's larger footprint) — acceptable given V1 targets a server,
+not an edge device yet. SigLIP (Apache-2.0) remains a fully-open second option if OpenCLIP's accuracy
+disappoints in practice.
 
 ## I. Behavioral / usage signals (not a detector — derived from user actions)
 
 | Area | What it detects | Why it matters | Status |
 | --- | --- | --- | --- |
-| Download/view/share frequency | How much a photo/entity actually gets used | [ARCHITECTURE.md](ARCHITECTURE.md)'s usage-intent score; fields already reserved, [../tags/SCHEMA.md](../tags/SCHEMA.md) | queued |
+| Share/folderization/repeat-view/search-engagement frequency | How much a photo/entity actually gets used | [ARCHITECTURE.md](ARCHITECTURE.md)'s usage-intent score, re-weighted 2026-08-03 — these outrank downloads; fields to add, not yet in [../tags/SCHEMA.md](../tags/SCHEMA.md) | queued |
+| Download frequency | Same idea, lower-value signal | Fields already reserved ([../tags/SCHEMA.md](../tags/SCHEMA.md)) but demoted per ARCHITECTURE.md's 2026-08-03 note — kept as one input, not the leading one | queued |
 | Explicit corrections (kept/excluded/confirmed) | User overrides of an automated suggestion | Same score, higher-confidence input | queued |
+| Undo events | A suggestion the user reversed | Ambiguous signal (mistake vs. genuine uncertainty) — see [ARCHITECTURE.md](ARCHITECTURE.md)'s Curator section, not resolved | queued |
+
+## J. Actions — what people are doing
+
+Raised 2026-08-03: distinct from area B's *who* and the existing activity/occasion tag category's
+*occasion* (skiing, a birthday party — an event-level label) — this is per-person action/pose within
+a single photo (waving, hugging, jumping, sitting), a finer grain than either. Not researched.
+
+| Area | What it detects | Why it matters | Status |
+| --- | --- | --- | --- |
+| Human action/pose recognition | What a specific person is doing in-frame | New dimension Joakim asked to add; distinct from occasion-level activity tags already in [../tags/TAXONOMY.md](../tags/TAXONOMY.md) | queued |
 
 ## Also flagged, not a detection area
 
@@ -114,8 +143,12 @@ small tightly-related cluster, like blur+exposure+noise), not the whole table at
 session's "researched" rows (blur/exposure/monochrome, face detection/recognition/emotion, object
 detection, scene classification, NSFW, CLIP embeddings, perceptual hashing, the local-LLM aside) are
 a one-time head start from a background pass launched before the scope narrowed to cataloging, not
-the intended future cadence. Every pick above still needs an actual license decision where flagged
-(AGPL vs. permissive alternatives for object detection and NSFW; Apple's restrictive license vs. MIT/
-Apache-2.0 for the CLIP embedding) before real integration — a research pick, not a final choice. See
-[TODO.md](TODO.md) for the actual next step and the still-queued areas (animals, landmarks, OCR,
-age/gender, group/co-presence, EXIF-derived time labels, image captioning, usage signals).
+the intended future cadence. **License bar resolved 2026-08-03**: MIT/Apache-2.0 only, given
+VISION.md's own V2/V3 multi-household/commercialize plan makes AGPL's network-use clause a real
+future obligation, not a low risk — every pick above now reflects that (NanoDet-Plus, Open-NSFW2,
+OpenCLIP ViT-B/32), with the previously-flagged AGPL/restrictive options explicitly excluded rather
+than offered as accuracy/latency-driven alternatives. A fresh, independent license-verification pass
+over all of these is still queued (this session's own claims shouldn't be trusted without a
+re-check) — see [RESEARCH_QUEUE.md](RESEARCH_QUEUE.md). See [TODO.md](TODO.md) for the still-queued
+areas (animals, landmarks, OCR, age/gender, group/co-presence, EXIF-derived time labels, image
+captioning, usage signals, actions/pose).

@@ -76,6 +76,21 @@ The orchestration layer that actually talks to the user — proposed name, echoe
   curation suggestions rather than introducing a new rule.
 - Incorporates corrections: an excluded photo's embedding becomes a new nearest-neighbor query
   against the index, surfacing related photos for review — again a database query, not generation.
+- **Undo is mandatory, not a nice-to-have, and is itself a signal** (raised 2026-08-03): any
+  suggestion the Curator acts on needs a full undo path, because a mis-tap on a real device is
+  certain to happen and a wrongly-applied high-confidence correction is worse than a wrongly-applied
+  low-confidence one (it propagates further via the nearest-neighbor re-search above). Beyond safety,
+  undo is itself a usage-intent input, distinct from an explicit correction: it can mean either "I
+  made a mistake" (noise, should barely move any score) or "I'm not actually sure" (a real, if weak,
+  low-confidence signal) — which of the two it is isn't automatically knowable from the undo event
+  alone. Not designed further here; flagged as a real open UX question, not resolved.
+
+**Is the Curator a real thing "from the start," or an MVC View?** Neither, precisely — nothing here
+is built yet (see Status below: theory only). And when it is built, it isn't a View: the View is
+the actual GUI the user sees; the Curator is closer to a Controller/service layer that reads the
+Model (the index) and decides what the View should show and why — the View then renders whatever
+the Curator hands it. Worth naming plainly since "View" would be a real misdescription once code
+exists.
 
 **A real LLM is optional, later, and layered on top — not required for the worked example below.**
 If one is ever added (for genuinely free-form conversation beyond what templates cover), it must be
@@ -126,6 +141,49 @@ This is [../photo-server/DEFERRED.md](../photo-server/DEFERRED.md)'s "usage-base
 item, given a real shape — not a new idea, a follow-through on one already flagged as
 "needs `audit_log` and album-tag history to accumulate first."
 
+**Multiple ways a user signals importance, and a re-weighting of which usage signals actually matter
+(raised 2026-08-03)**: at least two distinct input types feed this score, not one — **deliberate**
+(e.g. a user tags a photo densely enough that it's implicitly excluded from any delete-candidate
+cluster — "if I've tagged this photo this much, it matters") and **incidental/behind-the-scenes**
+(e.g. a user consistently keeps only one photo out of every near-duplicate burst at a given
+timestamp — area E's burst-clustering feeds this directly: which *one* of the cluster survives a
+user's own past behavior is itself a training signal for which one to suggest keeping next time).
+Separately, a correction to this file's own [DEFERRED.md](../photo-server/DEFERRED.md)-inherited
+field list: **`downloaded_at`/`download_count` are comparatively low-value signals** — a download is
+a one-off, arguably obsolete once in-app viewing/sharing exists. **Sharing a photo, adding it to an
+album/tag ("folderization"), being viewed repeatedly, and appearing as a hit against a past search
+are all stronger signals of importance than a download**, and should weight higher. A photo that
+keeps surfacing as a *search result* the user then acts on (opens, shares, tags) should score higher
+still — search-hit-then-engaged is a compound signal, not just a raw hit count. None of this is
+implemented; it corrects the signal list above, not `../tags/SCHEMA.md`'s already-reserved columns
+(those stay as one input among several, just a weaker one than originally implied).
+
+**Every automated suggestion needs a visible confidence estimate**, not just a yes/no proposal — the
+"relation-estimate-score" concept from the countryside-search example generalizes to every Curator
+suggestion, not only similarity search: a delete-candidate cluster, a "possibly the same dog" batch,
+and a tag suggestion should all surface how confident the underlying detector/index evidence is, so
+the user can calibrate trust per-suggestion rather than treat every proposal as equally certain.
+
+**Two different embedding spaces, not one (raised 2026-08-03)**: the CLIP-style whole-photo embedding
+above is tuned for *scene/vibe* similarity — background and composition are part of what it matches
+on, which is exactly right for "find more countryside photos" but weaker for "find this specific dog
+regardless of background," since a whole-photo vector for a dog on a beach and the same dog in a
+kitchen may sit far apart. **Identity matching (a specific person, pet, or object regardless of
+surroundings) needs a second, separate embedding computed from a *cropped* detector region**, the
+same principle [DETECTORS.md](DETECTORS.md) area B's face-recognition pick already uses (detect the
+face, crop it, embed *that* crop) — animal/object identity matching (area C) would need the same
+crop-then-embed treatment, not a reuse of the whole-photo CLIP vector, once that area is researched.
+
+**This design also lays real groundwork for training a custom model later, not just for using
+off-the-shelf ones (raised 2026-08-03)**: every explicit correction the Curator collects (kept/
+excluded, confirmed/rejected identity matches) is a labeled example — exactly what a custom model
+would need to train on. Training one from scratch today would be a disproportionate undertaking (see
+[DETECTORS.md](DETECTORS.md)'s series-vs-shared-backbone note on why no off-the-shelf multi-task net
+fits this project's exact mix), but the correction/feedback loop this architecture already designs
+is what would make a future custom model *feasible* rather than starting from zero — worth keeping in
+mind as a reason to get the correction-logging shape right now, even though no training work is
+planned yet.
+
 ## Should the system wait and learn from deletions before doing anything else?
 
 No. Two reasons: **cold-start** (deletion behavior only teaches the system about photos already
@@ -166,6 +224,23 @@ Standard for this class of workload, no exotic mechanism needed:
    runs full YOLOv3 (~236MB) via OpenCV's DNN module — not the lightweight bar this design is
    setting; a replacement pick belongs in [DETECTORS.md](DETECTORS.md)'s object-detection row once
    that area is actually researched.
+
+**Considered and rejected: pay-as-you-go cloud GPU for the detector stage** (raised 2026-08-03,
+resolved same day). This would mean photo bytes leaving the server for third-party inference — a
+direct conflict with [../policies/POLICY.md](../policies/POLICY.md)'s closed-by-default rule ("no
+photo or user data ever leaves the server the user controls. No cloud APIs."), not just a
+resource-efficiency tradeoff. **Confirmed with Joakim: the rule stands** — detectors stay self-hosted,
+CPU-only, regardless of the convenience/speed a cloud GPU service would offer.
+
+## Upload flow should reflect this design (flagged, not designed here)
+
+Raised 2026-08-03: this session's category model (what a detector/the Curator can infer
+automatically) should inform what the upload flow prompts a user for at upload time — e.g. album/
+folder/occasion, mirroring the origin category ([../tags/TAXONOMY.md](../tags/TAXONOMY.md)). Belongs
+in [../upload-and-share/UPLOAD.md](../upload-and-share/UPLOAD.md) (already designed, not yet built —
+see [../photo-server/DEFERRED.md](../photo-server/DEFERRED.md)'s "Upload function" entry), not here —
+flagged as a cross-reference for whichever session actually specs the upload UI, not solved in this
+design pass.
 
 ## Rollout phases this targets
 
