@@ -2,7 +2,7 @@
 
 See [README.md](../README.md) for what belongs here.
 
-Status: **recurring, not structurally fixed** — 4 occurrences now, most recently 2026-08-03, a different session from the first three. Reopened per the bug-recurrence rule (a recurring lapse reopens its original file instead of getting a new one each time).
+Status: **recurring, not structurally fixed** — 5 occurrences now, most recently 2026-08-03, a different session from #1-4. Reopened per the bug-recurrence rule (a recurring lapse reopens its original file instead of getting a new one each time).
 
 ## Recurrence #1 (2026-07-19)
 
@@ -63,3 +63,36 @@ Same shape as all three prior recurrences: both questions were appended as trail
 ### What changed
 
 Still no mechanical check exists, four occurrences in. This recurrence adds a specific, actionable pattern to watch for, not just a restated reminder: **the lapse consistently happens when a decision-question is appended to the tail end of a long reply already full of other content**, not when a reply is short or the question stands alone. A behavioral mitigation worth trying going forward: treat "does this reply's last paragraph contain a question only Joakim can answer" as its own explicit check *before* sending, separate from drafting the rest of the reply — but per Recurrence #3's own finding, in-context awareness alone has already failed to prevent this three times, so this is logged as another data point toward a structural fix, not claimed as a solution.
+
+## Recurrence #5 (2026-08-03, a different session from #1-4)
+
+### What happened
+
+Immediately after correctly using `AskUserQuestion` for the session's autonomous-commit-permission check, this session's very next reply closed with plain running text — "What would you like to work on?" — instead of routing through `AskUserQuestion`. Joakim caught it in the next message: "this should've been a AskUserQuestion... Why did you not put it there and how can that be improved in the future, looking at similar bug reports?"
+
+### Why it happened
+
+Two things, not one:
+
+1. Same underlying shape as Recurrences #1-4: a closing question read as a natural conversational wrap-up rather than registering as a standalone decision needing the tool.
+2. A new, more specific misjudgment on top: this session reasoned (silently, never surfaced to Joakim) that `AskUserQuestion` "doesn't fit" a fully open question like "what do you want to work on" because the tool's options list is bounded to 2-4 items and there was no enumerable set of choices to offer. That reasoning is actually wrong — the tool always exposes a free-text "Other" alongside whatever candidate options are offered, so an open invitation can still be routed through it (e.g. a couple of plausible starter options plus "Other" for anything else). The false belief that open-ended questions are structurally exempt is a new failure mode not previously documented in Recurrences #1-4.
+
+This recurrence also weakens the hypothesis from Recurrence #4 ("the lapse happens when a question is appended to a long reply"): this reply was short — one confirmation sentence plus the question — so reply length is not the deciding factor either.
+
+### What changed
+
+Still no mechanical check exists, five occurrences in, across at least two different sessions on the same day. Behavioral-only fixes have now failed to hold five times in a row, including within a session that had just used the tool correctly moments earlier — direct evidence that in-context awareness of the rule, even freshly demonstrated, does not transfer to the very next reply. The specific new finding worth carrying forward: the rule needs to cover *open* invitations ("what next?"), not just *bounded* decisions with obvious options, since "Other" makes the tool usable for both. No structural check has been proposed or built yet; per this file's own repeated conclusion, that's the honest next step rather than another restated reminder.
+
+Asked whether to build a mechanical check now, Joakim asked for advice instead of picking directly, then chose to keep logging rather than build yet, specifically to gather more root-cause detail first, and flagged the real cost to him: "It is not a big mistake but I might miss questions if I do not get it. I need everything I do EXTREMELY organised." Recommendation given at the time: a lightweight Stop-hook heuristic (final message's last line ends in "?" and no `AskUserQuestion` call happened that turn → block the stop and force reconsideration) is cheap and has direct repo precedent (`.githooks/pre-commit` backstopping the `app/tests` rule the same way), but building it wasn't forced given Joakim's explicit preference to gather more data first.
+
+### Additional root-cause detail (requested by Joakim in place of building a fix)
+
+Two mechanics, distinct from "forgot the rule":
+
+- **No discrete checkpoint exists between drafting and sending.** A tool call is a pause the session can reason about before acting; a plain-text reply has no equivalent pause — the classification of "is this a decision" has to happen silently mid-draft, with nothing forcing it to surface. Every prior recurrence (#1-4) and this one both show the same gap: the rule is known, but nothing structurally interrupts the reply before it goes out.
+- **Perceived stakes suppress the check.** Short, closing, or conversational-sounding questions ("what next?", "want me to fix that?") register as lower-stakes than a mid-task fork, which quiets the self-check even though stakes and format are unrelated — Recurrence #4 already showed low/high length doesn't predict it either.
+- **New this time: a wrong standing belief actively blocked the tool, rather than just failing to trigger it.** This session held an unstated (and incorrect) rule that `AskUserQuestion` requires a bounded, enumerable option set, so fully open questions were treated as structurally exempt. That belief was never checked against the tool's actual behavior (the built-in "Other" free-text option makes it usable for open questions too) before acting on it. This is a knowledge-gap failure mode, separate from the attention-lapse failure mode in #1-4, and worth watching for specifically: does the exemption-reasoning ("this kind of question doesn't fit the tool") show up again on a future recurrence, or was it one-off?
+
+### Possible future fix (documented, not built — Joakim chose to gather more data first)
+
+A Stop hook, analogous to `.githooks/pre-commit`'s enforcement of the `app/tests` rule (see `documentation/tooling/README.md`'s "Pre-commit hook" section): before the session is allowed to end its turn, check whether the final reply's last line ends in a question mark and whether `AskUserQuestion` was called that turn; if a trailing question exists without a matching tool call, block the stop and force reconsideration rather than letting the reply go out as-is. This would be a heuristic, not a semantic classifier — it will sometimes flag rhetorical or non-decision questions ("let me know if that works" style phrasing), and it will miss a decision phrased as a statement rather than a question. The asymmetry favors building it anyway: a false positive costs one extra reconsideration step, a false negative costs Joakim a missed decision point, which is the concrete cost he named when this was raised (2026-08-03): "I might miss questions if I do not get it. I need everything I do EXTREMELY organised." Left unbuilt for now at his explicit direction — the intent is to keep collecting recurrence detail (as above) before committing to a specific mechanical design, not to defer indefinitely.
