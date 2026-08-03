@@ -61,6 +61,15 @@ photo. This is what turns isolated per-photo facts into *relatable* facts:
 See [../GLOSSARY.md](../GLOSSARY.md)'s "Curation and machine perception" section for the plain-language
 definitions of embedding/vector database/nearest-neighbor/CLIP, written out in full there.
 
+**Search/storage at distributed scale is Pillar 1's problem, not this file's, confirmed 2026-08-03**:
+this design's pgvector index assumes one Postgres instance (today's single server/VPS, per
+[../VISION.md](../VISION.md)'s "single VPS is the sole source of truth for all current work"
+constraint). Once Pillar 1's DFS spreads photo bytes (and their embeddings) across many independent
+nodes, nearest-neighbor search across a sharded, distributed vector index is a genuinely harder
+problem than anything designed here — correctly out of scope for curation/, tracked instead as
+[../distributed-sync/TODO.md](../distributed-sync/TODO.md)'s existing open "where does metadata live
+once bytes are distributed" question, which embeddings are just another instance of.
+
 ### 3. The Curator
 
 The orchestration layer that actually talks to the user — proposed name, echoes VISION.md's own

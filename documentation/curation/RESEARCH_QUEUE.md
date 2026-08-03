@@ -12,6 +12,15 @@ decisions made; this file is purely the queue order.
 service. See [TODO.md](TODO.md)'s VPS section for what's already confirmed (RIPE registration →
 Germany) vs. what still needs Joakim to run the copyable commands there himself and report back.
 
+## Also a real candidate for "next", not yet ordered against the above
+
+**A build plan** — raised 2026-08-03: nothing in curation/ is a numbered, TDD-able roadmap yet, only
+theory/catalog. [../photo-server/TODO.md](../photo-server/TODO.md)'s phased format (one numbered step
+per session, a failing test then minimal code, a Security line, human checkpoints) is the precedent to
+follow once detector picks are stable enough to build against — needs its own session, deliberately
+not drafted inline here to avoid repeating this session's own "too big at once" mistake. Joakim should
+say whether this or the VPS item goes first.
+
 ## Then, roughly in this order (re-order freely, this isn't a commitment)
 
 1. License re-verification pass over every pick already in DETECTORS.md (object detection, face

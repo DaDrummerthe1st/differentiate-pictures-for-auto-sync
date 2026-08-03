@@ -83,6 +83,21 @@ already-flagged-but-not-done "may belong outside this folder" note in
 [../photo-server/DEFERRED.md](../photo-server/DEFERRED.md), just resolved to an external repo instead
 of an internal move.
 
+## Where research actually lives — a real gap, not just a confirmation
+
+Raised 2026-08-03: `~/.claude/research_log.jsonl` (global, cross-project, hook-enforced) is real and
+verified — 122+ entries from this repo alone — but it only logs **queries, domains, and a short note
+per lookup**, not the full synthesized report a research pass produces. This session's background
+agent's full multi-page report (all candidate models per category, not just the ones picked, full
+source list) currently exists only in this session's chat history and a temp output file under `/tmp`
+that isn't durable — **not** in this repo. [DETECTORS.md](DETECTORS.md) intentionally holds only the
+*distilled* picks + reasoning (per this project's lean-and-compact doc philosophy), not a verbatim
+copy of the full report. Net effect: alternatives that were considered and rejected, and the full
+source-link list, have no permanent home right now. Open question for Joakim, not resolved here:
+accept that as fine (rejected options don't need preserving in full), or start saving full raw
+research-pass reports as dated artifact files (mirroring `changelog/`'s one-file-per-entry pattern)
+alongside the distilled doc.
+
 ## Object-detection timing benchmark (real numbers, not the research pass's estimates)
 
 Raised 2026-08-03. DETECTORS.md's picks came with latency figures measured on newer/faster CPUs than
