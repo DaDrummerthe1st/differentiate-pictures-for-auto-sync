@@ -47,5 +47,54 @@ class GitCallCountTests(unittest.TestCase):
         self.assertEqual(len(changed), 5000)
 
 
+class CheckCoverageCurrentHeadExclusionTests(unittest.TestCase):
+    """Regression guard for the bug found live 2026-08-04: after
+    .githooks/post-commit started deferring commit_cost's newest-commit
+    row (see COMMIT_COST.md), --coverage-only mode (exclude_current_head=
+    False, what pre-commit runs) briefly still flagged that expected gap
+    as MISSING - which then blocked the hook's own next auto-commit
+    attempt for doc_metrics, every single time. commit_cost's newest hash
+    must be excluded in *both* modes now; doc_metrics only in
+    exclude_current_head=True mode (session close), since it has no such
+    structural lag - post-commit logs it immediately and correctly.
+    """
+
+    def _run_with(self, *, exclude_current_head, commit_cost_logged, doc_metrics_logged, md_touching=True):
+        with patch.object(run, "_all_commit_hashes", return_value=["newest", "older"]), \
+             patch.object(run, "_changed_files_by_commit", return_value={
+                 "newest": (["README.md"] if md_touching else ["app/main.py"]), "older": ["README.md"],
+             }), \
+             patch.object(run, "_logged_keys_from_file", side_effect=lambda path, key="commit_hash": (
+                 commit_cost_logged if path == run.COMMIT_COST_JSONL else doc_metrics_logged
+             )):
+            return run.check_coverage(exclude_current_head=exclude_current_head)
+
+    def test_coverage_only_mode_does_not_flag_commit_costs_expected_newest_gap(self):
+        ok = self._run_with(
+            exclude_current_head=False, commit_cost_logged={"older"}, doc_metrics_logged={"newest", "older"},
+        )
+        self.assertTrue(ok)
+
+    def test_coverage_only_mode_still_flags_a_real_older_commit_cost_gap(self):
+        ok = self._run_with(
+            exclude_current_head=False, commit_cost_logged=set(), doc_metrics_logged={"newest", "older"},
+        )
+        self.assertFalse(ok)
+
+    def test_coverage_only_mode_still_requires_doc_metrics_current(self):
+        # doc_metrics has no structural lag - unlike commit_cost, its
+        # newest commit must already be logged in --coverage-only mode.
+        ok = self._run_with(
+            exclude_current_head=False, commit_cost_logged={"older"}, doc_metrics_logged={"older"},
+        )
+        self.assertFalse(ok)
+
+    def test_full_mode_excludes_newest_commit_for_both_ledgers(self):
+        ok = self._run_with(
+            exclude_current_head=True, commit_cost_logged={"older"}, doc_metrics_logged={"older"},
+        )
+        self.assertTrue(ok)
+
+
 if __name__ == "__main__":
     unittest.main()

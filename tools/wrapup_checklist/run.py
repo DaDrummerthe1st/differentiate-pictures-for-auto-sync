@@ -95,33 +95,44 @@ def check_coverage(*, exclude_current_head: bool) -> bool:
     """The commit_cost + doc_metrics ledger coverage checks - the sole
     surviving implementation of what used to be two separate, hand-copied
     check_coverage.sh shell scripts (see COMMIT_COST.md / DOC_METRICS.md).
-    Shared between full-checklist mode (session close, run *after* the
-    current commit exists - so HEAD itself is expected to be unlogged, one
-    commit behind, and excluded from the count) and `--coverage-only` mode
-    (the pre-commit hook, run *before* the commit-to-be exists at all, so
-    every commit currently in `git log` should already be logged - no
-    exclusion needed there).
+
+    commit_cost's newest commit is *always* excluded, regardless of
+    `exclude_current_head`: .githooks/post-commit always logs it with
+    --exclude-current-head (its transcript boundary doesn't exist yet at
+    hook-run time - see the 2026-08-04 bug report), so a permanent,
+    expected one-commit gap there isn't a real lapse to flag, in either
+    session-close mode or the pre-commit gate - flagging it would block
+    the hook's own next auto-commit attempt for no real gap.
+
+    doc_metrics has no such structural lag (post-commit logs it
+    immediately and correctly, no transcript dependency) - its exclusion
+    stays tied to `exclude_current_head`: full-checklist mode (session
+    close, run *after* the current commit exists, before that commit's
+    own post-commit run has necessarily happened yet) excludes it;
+    `--coverage-only` mode (the pre-commit hook, run *before* the
+    commit-to-be exists at all) does not - every already-existing commit
+    should already be logged by then.
     """
     ok = True
 
     all_hashes = _all_commit_hashes()
     changed_by_commit = _changed_files_by_commit()
-    current_head = all_hashes[0] if (all_hashes and exclude_current_head) else None
+    newest = all_hashes[0] if all_hashes else None
+    doc_metrics_exclude = newest if exclude_current_head else None
 
     missing_cost = missing_logged_commits(all_hashes, _logged_keys_from_file(COMMIT_COST_JSONL))
-    missing_cost = [h for h in missing_cost if h != current_head]
+    missing_cost = [h for h in missing_cost if h != newest]
     if missing_cost:
         ok = False
         print(f"[MISSING] commit_cost: {len(missing_cost)} commit(s) with no logged row (run tools/commit_cost/log.py):")
         for h in missing_cost:
             print(f"  {h}")
     else:
-        suffix = " (except the current HEAD, not yet logged)" if exclude_current_head else ""
-        print(f"[OK] commit_cost: every commit{suffix} has a row.")
+        print("[OK] commit_cost: every commit (except the current HEAD, not yet logged - see COMMIT_COST.md) has a row.")
 
     md_commits = md_touching_commits(changed_by_commit)
     missing_docs = missing_logged_commits(md_commits, _logged_keys_from_file(DOC_METRICS_JSONL))
-    missing_docs = [h for h in missing_docs if h != current_head]
+    missing_docs = [h for h in missing_docs if h != doc_metrics_exclude]
     if missing_docs:
         ok = False
         print(f"[MISSING] doc_metrics: {len(missing_docs)} *.md-touching commit(s) with no logged row (run tools/doc_metrics/log.py):")
