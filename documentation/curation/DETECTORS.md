@@ -87,7 +87,7 @@ section — not duplicated here.
 | General object detection | Recurring things — a motorcycle, a boat, furniture | Feeds the objects entity category | researched |
 | Scene/venue classification | Beach, mountains, indoor/outdoor, ski resort | The literal "my countryside" example; also feeds the places category | researched |
 | Landmark/place recognition | A *specific* named place, not just a kind of place | [../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s "specific" place sub-case | queued |
-| Text/OCR in-frame | Signs, documents, whiteboards accidentally captured | Real privacy angle — a photographed ID card or letter is sensitive content hiding inside an otherwise ordinary photo | queued, privacy-flagged |
+| Text/OCR in-frame | Signs, documents, whiteboards accidentally captured | Real privacy angle — a photographed ID card or letter is sensitive content hiding inside an otherwise ordinary photo | queued, privacy-flagged — mechanism sketched 2026-08-04, no model pick yet |
 
 **Picks (researched 2026-08-02, license bar tightened 2026-08-03 — see below)**: **object detection**
 — **NanoDet-Plus (Apache-2.0)** is the pick, full stop; YOLO26n is **excluded**, not just flagged —
@@ -146,6 +146,25 @@ edge-latency advantage (3-15ms vs. OpenCLIP's larger footprint) — acceptable g
 not an edge device yet. SigLIP (Apache-2.0) remains a fully-open second option if OpenCLIP's accuracy
 disappoints in practice.
 
+**OCR-in-frame → privacy tag, mechanism sketched (not a model pick), raised 2026-08-04**: the shape
+Joakim asked for — extracted text ending up as a per-photo tag a sharing decision can act on, not just
+a detection sitting unused. Reuses every mechanism [../tags/](../tags/README.md) already designed,
+adding only the OCR detector itself and a text-pattern step: (1) an OCR detector outputs
+`{text, bounding_box, confidence}` per detected text region, same output shape as every other
+detector here; (2) a lightweight **pattern-match** heuristic (regexes — Swedish personnummer format,
+email, phone number, street-address-like strings; no cloud PII-detection API, consistent with
+[../policies/POLICY.md](../policies/POLICY.md)'s closed-by-default rule) flags candidate regions, not a
+model — cheap and explainable, same bar as area A's blur/exposure picks; (3) a flagged region surfaces
+Joakim's own proposed confirm prompt — *"Is this information so vital that you wouldn't want anybody
+else to know about it? Then let's blur it"* — never auto-applied, per this project's standing
+motivated-tagging principle ([README.md](README.md)); (4) confirming creates an ordinary
+**privacy**-category tag ([../tags/TAXONOMY.md](../tags/TAXONOMY.md)) scoped to that bounding box,
+which forces `visibility=private` and flows straight into the already-designed blur-preview sharing
+review ([../tags/UX_FLOWS.md](../tags/UX_FLOWS.md)) — no new sharing mechanism needed. **Not resolved**:
+which OCR model/engine (a real pick needs its own research pass, same bar as every other area — MIT/
+Apache-2.0, CPU-only, self-hosted), and the "privacy read" [RESEARCH_QUEUE.md](RESEARCH_QUEUE.md)
+already flags as needed before this becomes a model pick.
+
 ## I. Behavioral / usage signals (not a detector — derived from user actions)
 
 | Area | What it detects | Why it matters | Status |
@@ -174,6 +193,7 @@ a single photo (waving, hugging, jumping, sitting), a finer grain than either. N
   weak. Llama 3.2 1B and Gemma 3 1B were also surveyed but both carry custom, non-OSI-approved
   licenses (Meta's Community License, Google's Gemma license) — Qwen/Phi avoid that ambiguity.
 - **Video handling** — this project also indexes movie clips ([../picture-handling/README.md](../picture-handling/README.md)), not just stills. Every visual area above needs a "what do we do for video" answer eventually (frame sampling, at minimum) — not researched at all yet, flagged so its absence is a decision.
+- **Reverse OCR search — "feed me text you want protected, I'll flag/blur every photo containing it," raised 2026-08-04**: the inverse of the OCR-in-frame idea above — instead of the system surfacing text it found, the user supplies text she cares about (an address, an ID number, a name) and the system matches it against already-extracted OCR text across her whole library. **Correction to Joakim's own framing when he raised this**: this does *not* need an LLM/conversational service at all, despite reading like one — once OCR text is extracted and stored per photo (same index layer as every other detector output, [ARCHITECTURE.md](ARCHITECTURE.md)), matching a user-supplied string list against it is a plain exact/fuzzy-string database query, the same shape as the Curator's existing no-generation worked examples ([ARCHITECTURE.md](ARCHITECTURE.md)). Genuinely speculative — no functionality behind it today, blocked on the OCR detector above existing first; flagged as an idea, not queued as a build item.
 
 ## Status
 
@@ -194,4 +214,6 @@ coarse species reuses the existing object detector at zero cost, fine-grained sp
 (SpeciesNet) but is an optional add-on, and pet identity matching has no confident pick, only a
 caveated fallback — see area C above and the full survey in the `research-findings` repo. See
 [TODO.md](TODO.md) for the still-queued areas (landmarks, OCR, age/gender, group/co-presence,
-EXIF-derived time labels, image captioning, usage signals, actions/pose).
+EXIF-derived time labels, image captioning, usage signals, actions/pose). **2026-08-04**: OCR-in-frame
+got a UX mechanism sketch (still no model pick) and a speculative reverse-search idea was added under
+"Also flagged" — see area D above.

@@ -105,6 +105,23 @@ Two independent mechanisms, not one:
   detection is on-device, DPFAS-phase work — not designed here, see
   [TODO.md](TODO.md).
 
+## Full provenance/usage disclosure per tag — raised 2026-08-04
+
+Extends the Curator's existing "never applies a suggestion silently, always explains why, grounded in
+real computed facts" principle ([../curation/ARCHITECTURE.md](../curation/ARCHITECTURE.md)) from
+*curation suggestions* to *every tag, however it was created*: tapping any tag should show what
+produced it (a specific detector + model version, or "typed by you"), its confidence score if
+detector-sourced, exactly who can currently see it (derived from tag visibility + the photo's
+ownership tier, [../upload-and-share/OWNERSHIP.md](../upload-and-share/OWNERSHIP.md)), and exactly
+what it feeds into (the search/embedding index; nothing else, per
+[../policies/POLICY.md](../policies/POLICY.md)'s closed-by-default rule — no cloud API, no telemetry,
+no third party, ever). The goal, stated plainly by Joakim: a user should be able to verify this for
+herself down to the point of satisfying even an unreasonably distrustful reader, not be asked to take
+"we don't misuse it" on faith. Not designed further here (no UI, no schema) — a principle to build
+toward once tag-detail views exist, related to but distinct from threat #4's still-open third-party
+tagging-consent gap ([../security/THREATS.md](../security/THREATS.md)), which is about a *tagged
+person's* recourse rather than the *tagging user's* own visibility into her own data.
+
 ## Every tag is a shareable album — with a visual pre-share review
 
 Any tag, of any category, can be shared as an album, not just origin/event tags —
@@ -123,4 +140,5 @@ to; excluded photos are simply absent from her view. Full interaction detail:
 
 Designed 2026-07-27, taxonomy only — no schema migration, no endpoints. Supersedes
 [../photo-server/DATA_DICTIONARY.md](../photo-server/DATA_DICTIONARY.md)'s old
-"Future tag schema" and "Tag dimensions" sections outright.
+"Future tag schema" and "Tag dimensions" sections outright. Provenance/usage-disclosure principle
+added 2026-08-04.

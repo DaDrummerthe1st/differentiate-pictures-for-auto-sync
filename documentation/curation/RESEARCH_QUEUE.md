@@ -45,6 +45,16 @@ this file is purely the menu.
   placed, nothing further needed to file it right.
 - **HW-central-record consolidation** — queued behind the `workstation` repo's own concurrent session;
   see TODO.md. Not pickable until that repo is free.
+- **Bring-your-own identity model, compared against the per-household classifier** — raised 2026-08-04
+  (Joakim asked about contributing his own pretrained person/animal-detection model). Not designed:
+  what a fair comparison against the existing per-household few-shot classifier
+  ([ARCHITECTURE.md](ARCHITECTURE.md)) would even measure, whether it replaces or just supplements the
+  built-in pipeline, and the accept-format constraint already flagged as a real risk
+  ([../security/THREATS.md](../security/THREATS.md) #12 — ONNX/safetensors only, never raw pickle/
+  `.pt`, since a model file is executable-code-adjacent, not inert data like a photo).
+- **OCR-in-frame — real model pick**, now that the UX mechanism is sketched ([DETECTORS.md](DETECTORS.md)
+  area D, 2026-08-04): still needs its own research pass (candidate OCR engines, MIT/Apache-2.0 bar,
+  CPU-only) and the privacy read this menu already flags as a prerequisite.
 
 ## Status
 
