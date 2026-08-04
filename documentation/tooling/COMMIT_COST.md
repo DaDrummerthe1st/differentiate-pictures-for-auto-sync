@@ -50,4 +50,6 @@ logged row at all (as opposed to a real, correctly-logged `0` for a human-author
 above). Run it as part of session wrap-up (full `run.py`, which excludes the current in-progress
 HEAD) or let it run automatically, blocking, in `.githooks/pre-commit` (`--coverage-only`, which
 doesn't need that exclusion — see README.md's wrap-up table) — that catches a gap at the very next
-commit instead of only when a session remembers to run the full checklist.
+commit instead of only when a session remembers to run the full checklist. As of 2026-08-04,
+`.githooks/post-commit` runs `log.py` itself right after every commit, so in normal use this gate
+should rarely find anything to catch at all — see README.md's "Post-commit hook" section.

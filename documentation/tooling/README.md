@@ -25,8 +25,8 @@ Each check has a trigger condition. Most only apply when something specific happ
 | `server/tests` (container-based) | every commit touching `server/`/`app/` code; for a doc-only commit, only if it hasn't already run clean this session against the same code | local |
 | Secrets-in-diff scan | before every commit | local, mechanically enforced by `.githooks/pre-commit` via `tools/secrets_scan/` (see [SECRETS_SCAN.md](SECRETS_SCAN.md)) — see below |
 | `test_results` logging | after each `app/tests`/`server/tests` run, if tracking that run's trend is useful | local, see [TEST_RESULTS.md](TEST_RESULTS.md) |
-| `doc_metrics` logging | every commit touching a `*.md` file | local |
-| `commit_cost` logging | every commit | local |
+| `doc_metrics` logging | every commit touching a `*.md` file | local, mechanically enforced by `.githooks/post-commit` — see below |
+| `commit_cost` logging | every commit | local, mechanically enforced by `.githooks/post-commit` — see below |
 | Changelog entry | every meaningful change | local |
 | `commit_cost`/`doc_metrics` coverage check | before every commit | local, mechanically enforced by `.githooks/pre-commit` via `tools/wrapup_checklist/run.py --coverage-only` — see below. Full `run.py` (session close) additionally checks pre-commit-hook installation and delegates to `documentation_checks` for the dead-link sweep; see [WRAPUP_CHECKLIST.md](WRAPUP_CHECKLIST.md) |
 | Lockfile/manifest consistency | only if a manifest file changed this session | global |
@@ -76,3 +76,36 @@ something an AI session runs on your behalf (see CLAUDE.md's git safety
 protocol) — hand it over once per clone.
 
 **Persistent nudge, not a one-time flag**: once a session shows drift (a second, unrelated concern enters the conversation) or has clearly run long, say so plainly in every subsequent message until the session actually ends — starting as soon as the signal appears, not at a context-limit warning. This is a nudge Joakim decides whether to act on, not a hard stop. Decided 2026-07-19 after wrap-up itself had grown open-ended enough that ending a session took about as long as the work that preceded it (see [documentation/bugs/claude-bugs/under_process/2026-07-18-session-wrap-up-itself-grows-unpredictably-long.md](../bugs/claude-bugs/under_process/2026-07-18-session-wrap-up-itself-grows-unpredictably-long.md)).
+
+## Post-commit hook (`doc_metrics`/`commit_cost` logging + push, mechanically enforced)
+
+Added 2026-08-04, after `.githooks/pre-commit`'s coverage gate (above) had to
+bounce three separate commits in one session because logging kept happening
+*after* the fact, one commit late, instead of right away — the gate worked
+(nothing shipped unlogged), but every bounce cost a round trip. `.githooks/
+post-commit` now runs `tools/doc_metrics/log.py` and `tools/commit_cost/log.py`
+right after every commit, and if either produced a new row, auto-commits the
+ledger update with the usual `"Log doc metrics and commit cost for the
+previous commit"` message — never mixed into the commit that triggered it,
+always its own separate commit.
+
+A commit can't carry a ledger row about its own not-yet-computed hash — the
+hash is computed *from* the tree, so the tree can't already contain it (see
+[DOC_METRICS.md](DOC_METRICS.md)'s "One-commit lag" section) — so the
+auto-log commit this hook creates is itself always exactly one commit behind,
+by construction, not a bug. The hook recognizes its own commit message and
+skips straight past the logging step on that recursive run, so this converges
+in exactly one extra commit, never loops.
+
+The hook then pushes the current branch — `git push -u origin <branch>` if
+it isn't tracking a remote yet (a brand-new branch's first commit), plain
+`git push` otherwise. This runs unconditionally, after every commit, not just
+the auto-log one: per Joakim (2026-08-04), commit authorization already
+covers pushing and publishing a branch — there is no scenario where he'd
+authorize writing local history but not syncing it to the remote he already
+granted access to, so this isn't a separate judgment call to make each time.
+
+Tested end-to-end in an isolated temp repo (`.githooks/test_post_commit.sh`)
+against a local bare "origin" and stub logging scripts — confirms exactly one
+auto-log commit per real commit (no recursion), and that both the first
+(branch-publishing) push and subsequent pushes actually land on the remote.

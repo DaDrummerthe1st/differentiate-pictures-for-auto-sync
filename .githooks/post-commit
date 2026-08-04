@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Mechanizes "log doc_metrics/commit_cost for the commit just made, then
+# push" — the pattern this repo's history otherwise depends on an AI
+# session remembering to do by hand every time (see
+# documentation/tooling/README.md). .githooks/pre-commit's coverage gate
+# already blocks the *next* commit if this was ever skipped; this closes
+# the gap at the source instead of waiting for that bounce.
+#
+# Not activated by default — same one-time `git config core.hooksPath
+# .githooks` setup as pre-commit.
+set -uo pipefail
+cd "$(git rev-parse --show-toplevel)"
+
+LOG_COMMIT_MSG="Log doc metrics and commit cost for the previous commit"
+DOC_METRICS_JSONL="tools/doc_metrics/metrics.jsonl"
+COMMIT_COST_JSONL="tools/commit_cost/commit_costs.jsonl"
+
+# A commit can never carry a ledger row about its own not-yet-computed
+# hash (the hash is computed *from* the tree, so the tree can't already
+# contain it) — see documentation/tooling/DOC_METRICS.md's "One-commit
+# lag" section. So the logging commit this hook creates below is itself
+# always exactly one commit behind; skip re-logging when HEAD already
+# *is* that logging commit, or this would recurse into itself forever.
+if [ "$(git log -1 --format=%s)" != "$LOG_COMMIT_MSG" ]; then
+  echo "[post-commit] logging doc_metrics/commit_cost for this commit..."
+  log_failed=0
+  python3 tools/doc_metrics/log.py || log_failed=1
+  python3 tools/commit_cost/log.py || log_failed=1
+
+  if [ "$log_failed" -eq 1 ]; then
+    echo "[post-commit] WARNING: doc_metrics/commit_cost logging failed — .githooks/pre-commit's coverage gate will catch the gap on the next commit attempt." >&2
+  elif ! git diff --quiet -- "$DOC_METRICS_JSONL" "$COMMIT_COST_JSONL"; then
+    git add "$DOC_METRICS_JSONL" "$COMMIT_COST_JSONL"
+    # Recursively re-triggers this same hook — HEAD's message will match
+    # LOG_COMMIT_MSG on that run, so it skips straight to the push below.
+    if ! git commit -m "$LOG_COMMIT_MSG"; then
+      echo "[post-commit] WARNING: auto-commit of ledger updates failed — commit them manually." >&2
+    fi
+  fi
+fi
+
+if ! git symbolic-ref -q HEAD >/dev/null; then
+  echo "[post-commit] detached HEAD — skipping push." >&2
+  exit 0
+fi
+
+BRANCH=$(git rev-parse --abbrev-ref HEAD)
+echo "[post-commit] pushing $BRANCH..."
+if git rev-parse --abbrev-ref --symbolic-full-name '@{u}' >/dev/null 2>&1; then
+  git push origin "$BRANCH" || echo "[post-commit] WARNING: push failed — push manually." >&2
+else
+  git push -u origin "$BRANCH" || echo "[post-commit] WARNING: push failed — push manually." >&2
+fi
+
+exit 0

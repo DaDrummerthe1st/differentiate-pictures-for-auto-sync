@@ -26,7 +26,7 @@ Moved here from `tools/doc_metrics/README.md`, per [CLAUDE.md](../../CLAUDE.md)'
 
 ## One-commit lag (expected, not a bug)
 
-`log.py` records the *current* HEAD, so it can only be run after a commit exists — a commit's own snapshot always lands in the jsonl update that gets committed next, one commit behind. This project never amends commits (see CLAUDE.md), so there's no way to close that gap; it's a permanent, harmless one-line-per-commit lag, not something to chase.
+`log.py` records the *current* HEAD, so it can only be run after a commit exists — a commit's own snapshot always lands in the jsonl update that gets committed next, one commit behind. This isn't a workaround that could be fixed with more effort: a commit's hash is computed *from* its tree, so that tree can never already contain a row referencing the not-yet-computed hash of the commit it's part of — the same reason a file can't contain its own checksum computed in advance. This project never amends commits (see CLAUDE.md) either, so there's no way to close the gap after the fact. It's a permanent, structural one-line-per-commit lag, not something to chase — as of 2026-08-04, `.githooks/post-commit` closes it automatically anyway, one commit later, without needing a session to remember (see [README.md](README.md)'s "Post-commit hook" section).
 
 ## Running it
 
