@@ -37,7 +37,9 @@ cat > tools/doc_metrics/log.py <<'EOF'
 open("tools/doc_metrics/metrics.jsonl", "a").write("row\n")
 EOF
 cat > tools/commit_cost/log.py <<'EOF'
+import sys
 open("tools/commit_cost/commit_costs.jsonl", "a").write("row\n")
+open("commit_cost_argv.log", "a").write(" ".join(sys.argv[1:]) + "\n")
 EOF
 : > tools/doc_metrics/metrics.jsonl
 : > tools/commit_cost/commit_costs.jsonl
@@ -88,5 +90,12 @@ doc_rows=$(wc -l < tools/doc_metrics/metrics.jsonl | tr -d ' ')
 remote_head=$(git ls-remote "$BARE" "refs/heads/$BRANCH" | cut -f1)
 local_head=$(git rev-parse HEAD)
 [ "$remote_head" = "$local_head" ] || fail "expected origin's $BRANCH to match local HEAD after second auto-push, got remote=$remote_head local=$local_head"
+
+# Regression guard for the false-zero bug found 2026-08-04: the hook must
+# always pass --exclude-current-head, since the triggering commit's own
+# git-commit tool_result isn't in the live transcript yet at hook time.
+argv_lines=$(wc -l < commit_cost_argv.log | tr -d ' ')
+[ "$argv_lines" -eq 2 ] || fail "expected commit_cost/log.py invoked exactly twice, got $argv_lines"
+grep -qv -- '--exclude-current-head' commit_cost_argv.log && fail "commit_cost/log.py invoked without --exclude-current-head"
 
 echo "All tests passed."

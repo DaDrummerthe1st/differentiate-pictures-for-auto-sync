@@ -4,6 +4,8 @@ See ../../documentation/tooling/COMMIT_COST.md for methodology.
 Usage:
   python3 tools/commit_cost/log.py                       # scan, write new commits found
   python3 tools/commit_cost/log.py --transcripts-dir DIR  # override transcript directory
+  python3 tools/commit_cost/log.py --exclude-current-head # skip HEAD even if unlogged - see
+                                                           # metrics.candidates_for_logging()
 """
 from __future__ import annotations
 
@@ -18,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from metrics import (  # noqa: E402
     CommitCost,
     ModelPricing,
+    candidates_for_logging,
     compute_cost,
     group_events_by_commit,
     iter_transcript_rows,
@@ -101,19 +104,18 @@ def collect_commit_costs(transcripts_dir: Path) -> dict[str, CommitCost]:
     return found
 
 
-def log_new_commits(transcripts_dir: Path) -> None:
+def log_new_commits(transcripts_dir: Path, *, exclude_current_head: bool = False) -> None:
     already_logged = _already_logged_hashes()
     found_by_short_hash = collect_commit_costs(transcripts_dir)
     all_hashes = _all_commit_hashes()
+    candidates = candidates_for_logging(all_hashes, already_logged, exclude_head=exclude_current_head)
 
     recorded_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     new_rows = []
     llm_assisted = 0
     human_only = 0
 
-    for full_hash in all_hashes:
-        if full_hash in already_logged:
-            continue
+    for full_hash in candidates:
         commit = None
         for candidate_short, candidate in found_by_short_hash.items():
             if full_hash.startswith(candidate_short):
@@ -179,9 +181,10 @@ def log_new_commits(transcripts_dir: Path) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--transcripts-dir", type=Path, default=None)
+    parser.add_argument("--exclude-current-head", action="store_true")
     args = parser.parse_args()
     transcripts_dir = args.transcripts_dir or default_transcripts_dir(REPO_ROOT)
-    log_new_commits(transcripts_dir)
+    log_new_commits(transcripts_dir, exclude_current_head=args.exclude_current_head)
 
 
 if __name__ == "__main__":

@@ -126,10 +126,17 @@ def find_commit_boundaries(rows: list[dict]) -> list[CommitBoundary]:
                 text = _tool_result_text(later_content, tool_use_id)
                 if text is None:
                     continue
-                match = _COMMIT_HASH_RE.search(text)
-                if match:
+                # Last match, not first: .githooks/post-commit can run a
+                # nested `git commit` from *inside* this same Bash call
+                # (auto-logging the previous commit) - git only prints the
+                # *outer*, directly-invoked commit's own "[branch hash]"
+                # line after all of its hooks (including that nested
+                # commit) finish, so the nested commit's line always
+                # appears earlier in the text, the outer one always last.
+                matches = list(_COMMIT_HASH_RE.finditer(text))
+                if matches:
                     boundaries.append(CommitBoundary(
-                        row_index=row_index, short_hash=match.group(1), session_id=row.get("sessionId"),
+                        row_index=row_index, short_hash=matches[-1].group(1), session_id=row.get("sessionId"),
                     ))
                 break
     return boundaries
@@ -172,6 +179,24 @@ def compute_cost(usage: UsageTotals, model: str, pricing: dict[str, ModelPricing
         + usage.cache_creation_1h_tokens * price.input_per_mtok * 2.0
         + usage.cache_read_tokens * price.input_per_mtok * 0.1
     ) / 1_000_000
+
+
+def candidates_for_logging(all_hashes: list[str], already_logged: set[str], *, exclude_head: bool) -> list[str]:
+    """Which of git log's commit hashes (newest first) log_new_commits
+    should attempt to resolve this run. `exclude_head=True` drops the
+    single newest hash even if unlogged - used when log.py runs from
+    inside the same Bash tool call that just created it (.githooks/
+    post-commit): that commit's own git-commit tool_result hasn't been
+    appended to the live transcript yet, so resolving it now would
+    misread "no session found yet" as "genuinely human" and log a false,
+    permanent 0 (see documentation/tooling/COMMIT_COST.md). Only ever
+    drops the literal newest hash, never an older unlogged one that
+    happens to sort first among candidates.
+    """
+    candidates = [h for h in all_hashes if h not in already_logged]
+    if exclude_head and all_hashes and candidates and candidates[0] == all_hashes[0]:
+        candidates = candidates[1:]
+    return candidates
 
 
 def iter_transcript_rows(path: Path):

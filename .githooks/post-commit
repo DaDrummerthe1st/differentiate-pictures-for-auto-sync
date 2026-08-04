@@ -25,7 +25,13 @@ if [ "$(git log -1 --format=%s)" != "$LOG_COMMIT_MSG" ]; then
   echo "[post-commit] logging doc_metrics/commit_cost for this commit..."
   log_failed=0
   python3 tools/doc_metrics/log.py || log_failed=1
-  python3 tools/commit_cost/log.py || log_failed=1
+  # --exclude-current-head: this commit's own git-commit tool_result hasn't
+  # been written to the live transcript yet (we're still inside that same
+  # Bash tool call) - resolving it now would misread "no session found
+  # yet" as "genuinely human" and log a false, permanent 0. Deferred to
+  # the *next* commit's hook run, by which point the transcript boundary
+  # exists - see documentation/tooling/COMMIT_COST.md.
+  python3 tools/commit_cost/log.py --exclude-current-head || log_failed=1
 
   if [ "$log_failed" -eq 1 ]; then
     echo "[post-commit] WARNING: doc_metrics/commit_cost logging failed — .githooks/pre-commit's coverage gate will catch the gap on the next commit attempt." >&2

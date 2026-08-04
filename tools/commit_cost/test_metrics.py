@@ -123,6 +123,32 @@ class FindCommitBoundariesTests(unittest.TestCase):
             ],
         )
 
+    def test_a_hook_triggered_nested_commit_does_not_shadow_the_outer_one(self):
+        # .githooks/post-commit runs `git commit` again from *inside* the
+        # Bash tool call that made the outer commit - git only prints the
+        # outer commit's own "[branch hash]" confirmation line after all of
+        # its hooks (including that nested commit) finish, so the nested
+        # commit's line appears FIRST in the combined tool_result text, the
+        # outer/real one LAST. Taking the first match (as a naive .search()
+        # would) misattributes this turn's entire real usage to the free,
+        # auto-generated nested commit instead of the real one that
+        # produced it - found for real 2026-08-04 (18f8b64 vs. 31122a9).
+        rows = [
+            _assistant_row("a1", [_bash_tool_use("tu1", "git commit -m outer")], usage=_usage(input_tokens=42)),
+            _tool_result_row(
+                "tu1",
+                "[pre-commit] ok\n[post-commit] logging...\n"
+                "[master aaa1111] Log doc metrics and commit cost for the previous commit\n"
+                "[post-commit] pushing...\n"
+                "[master bbb2222] outer commit message\n 1 file changed",
+            ),
+        ]
+        boundaries = metrics.find_commit_boundaries(rows)
+        self.assertEqual(
+            boundaries,
+            [metrics.CommitBoundary(row_index=0, short_hash="bbb2222", session_id="sess-1")],
+        )
+
     def test_two_commit_tool_uses_in_same_turn_both_recorded_at_that_row(self):
         rows = [
             _assistant_row(
@@ -237,6 +263,38 @@ class CostTests(unittest.TestCase):
         totals = metrics.UsageTotals(1, 1, 0, 0, 0)
         with self.assertRaises(KeyError):
             metrics.compute_cost(totals, "claude-nonexistent", pricing={})
+
+
+class CandidatesForLoggingTests(unittest.TestCase):
+    def test_without_exclude_head_includes_every_unlogged_hash(self):
+        result = metrics.candidates_for_logging(
+            all_hashes=["ccc", "bbb", "aaa"], already_logged={"aaa"}, exclude_head=False,
+        )
+        self.assertEqual(result, ["ccc", "bbb"])
+
+    def test_exclude_head_drops_the_newest_hash_even_if_unlogged(self):
+        # .githooks/post-commit's use case: HEAD is the commit that just
+        # triggered this very hook run, from inside the same Bash tool
+        # call - its git-commit tool_result hasn't been written to the
+        # live transcript yet, so resolving it now would misread "no
+        # session found (yet)" as "genuinely human" and log a false,
+        # permanent 0 (see documentation/tooling/COMMIT_COST.md).
+        result = metrics.candidates_for_logging(
+            all_hashes=["ccc", "bbb", "aaa"], already_logged={"aaa"}, exclude_head=True,
+        )
+        self.assertEqual(result, ["bbb"])
+
+    def test_exclude_head_is_a_no_op_when_head_is_already_logged(self):
+        # Only ever drop the literal newest hash - never an older unlogged
+        # one that happens to be first in the *candidate* list.
+        result = metrics.candidates_for_logging(
+            all_hashes=["ccc", "bbb", "aaa"], already_logged={"ccc"}, exclude_head=True,
+        )
+        self.assertEqual(result, ["bbb", "aaa"])
+
+    def test_exclude_head_on_empty_history_does_not_crash(self):
+        result = metrics.candidates_for_logging(all_hashes=[], already_logged=set(), exclude_head=True)
+        self.assertEqual(result, [])
 
 
 class IterTranscriptRowsTests(unittest.TestCase):
