@@ -167,6 +167,23 @@ still — search-hit-then-engaged is a compound signal, not just a raw hit count
 implemented; it corrects the signal list above, not `../tags/SCHEMA.md`'s already-reserved columns
 (those stay as one input among several, just a weaker one than originally implied).
 
+**Privacy-decision preference aggregate — raised 2026-08-05**: Joakim's own proposed shape,
+`"email": "blurred-public:93%-contacts:45%-closeFriends:3%"` — a per-(PII-category × audience-scope)
+rolling percentage of how often the user has chosen to blur that category of detected content when
+sharing to that scope, computed from the OCR-privacy-tag confirm/blur history
+([../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s privacy section). Same shape as the usage-intent score
+above, not a new kind of thing: a recomputed signal derived from corrections, never a stable tag,
+used only to **pre-fill** the next confirm-or-blur prompt with a suggested default ("you've blurred
+emails shared publicly 93% of the time — blur this one too?") — never an auto-decision, same
+motivated-tagging principle as everywhere else in this design. **Real dependency, not yet designed**:
+this assumes named audience scopes ("public," "contacts," "close friends") as a first-class concept,
+which doesn't exist yet — today's sharing model is per-recipient (a specific person or a specific
+tag/album share, [../upload-and-share/SHARING.md](../upload-and-share/SHARING.md)) plus a coarse
+private/shareable tag visibility, with no audience-*circle*/group primitive in between. Building the
+aggregate for real needs that primitive first (or needs to be redefined against whatever recipient
+groupings do exist, e.g. per-share-event rather than per-named-circle) — flagged as an open
+prerequisite, not assumed into existence here.
+
 **Every automated suggestion needs a visible confidence estimate**, not just a yes/no proposal — the
 "relation-estimate-score" concept from the countryside-search example generalizes to every Curator
 suggestion, not only similarity search: a delete-candidate cluster, a "possibly the same dog" batch,
@@ -230,6 +247,45 @@ raised and partly resolved 2026-08-03:
   pgvector-at-scale note above): genuinely blocked on whatever cross-server sync protocol
   [../distributed-sync/TODO.md](../distributed-sync/TODO.md)'s V2/V3 work eventually builds, not
   something to design here. The consent policy above stands regardless of when the mechanism exists.
+
+**How cross-household linking could actually work — real answer, raised 2026-08-05** (Joakim's
+example: household A tags a real person "Jocke," household B independently tags the same real person
+"Joakim," both want the two connected). Two structurally different cases, needing two different
+mechanisms — conflating them would be a mistake:
+
+- **The subject has, or can get, her own account — the solvable case, no new mechanism needed.**
+  [../tags/SCHEMA.md](../tags/SCHEMA.md)'s existing `linked_account_user_id` is exactly the join point:
+  household A's "Jocke" entity and household B's "Joakim" entity can each independently link to *the
+  same* real account, via the *already-designed* email-bound invite flow
+  ([../security/THREATS.md](../security/THREATS.md) #11), run twice — once per household. **This
+  sidesteps the whole cross-network embedding-comparison problem entirely**: neither household's
+  private face index, reference embeddings, or raw photos ever have to leave its own server, because
+  the *linking* is done by the real person herself confirming "yes, that's me" through an authenticated
+  invite, not by any automated cross-household face comparison. This is the resolved, buildable answer
+  for people, and requires nothing beyond what's already designed. One real limit, not solved by this:
+  [../distributed-sync/METADATA.md](../distributed-sync/METADATA.md)'s "raw tag data stays
+  owner-controlled" rule means this linking doesn't, by itself, let either household see the other's
+  private tags of her — it only gives the subject herself a common identity to potentially aggregate
+  her own data across, which is a separate, not-yet-designed feature.
+- **The subject has no account and never will (an animal, or a person who stays local-only) — the
+  genuinely hard case, still open.** There's no authenticated party who can confirm "yes, same
+  individual" the way a registered person can for herself, so any connection would have to come from
+  directly comparing the two households' private data — exactly what's already ruled out (EDPB Opinion
+  11/2024, [../security/TODO.md](../security/TODO.md) item 6: never let a decrypted/usable embedding
+  leave its subject's own device or reach a shared index). **Real cryptography exists for this
+  class of problem** — Private Set Intersection (PSI) / Privacy-Preserving Record Linkage (PPRL,
+  see [../GLOSSARY.md](../GLOSSARY.md)) lets two parties learn only which records match, without
+  revealing anything about non-matching ones — but researched 2026-08-05: classic PSI targets
+  discrete/exact-match fields (e.g. hashed emails), not fuzzy nearest-neighbor similarity over
+  continuous face/animal embeddings, which is what identity matching actually needs — and, same
+  caveat already logged for homomorphic encryption/secure multiparty computation
+  ([../security/TODO.md](../security/TODO.md) item 6), no source found proves it runs on this
+  project's Pi-class target hardware. **Left genuinely open**: for an animal or a local-only person,
+  connecting two households' independent labels isn't solvable today without either violating the
+  no-shared-embeddings rule or waiting on research that isn't deployment-ready — consistent with, not
+  a new gap beyond, this section's existing "mechanism blocked on distributed-sync V2/V3" framing.
+  Who would even hold consent authority for a dog (neither tagging household unilaterally, presumably
+  whichever household actually owns/owned the animal) is itself unresolved, flagged not answered.
 
 **Mislabeling / false-identification risk on people — flagged, not resolved (raised 2026-08-03)**:
 because every name-tag is a private, human-asserted claim rather than a verified fact (per this

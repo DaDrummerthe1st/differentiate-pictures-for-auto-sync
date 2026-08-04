@@ -99,11 +99,8 @@ Two independent mechanisms, not one:
   carries a two-value visibility: `private` (default — only the tagging user) or
   `shareable`. A photo shared `free` can still carry a `private` tag that keeps it
   out of a shared album view built from that tag.
-- The **privacy category** additionally holds specific semantic values (`nudes`, a
-  children's-photo tag) that force a tag's visibility to `private` — the mechanism
-  behind "a picture of her genitals is automatically kept private." Automating that
-  detection is on-device, DPFAS-phase work — not designed here, see
-  [TODO.md](TODO.md).
+- The **privacy category** additionally holds specific semantic values (`nudes`, a children's-photo tag) that force a tag's visibility to `private` — the mechanism behind "a picture of her genitals is automatically kept private." Automating that detection is on-device, DPFAS-phase work — not designed here, see [TODO.md](TODO.md).
+- **Custom privacy categories — raised 2026-08-05** (Joakim's example: an inventor whose blueprint photos should default to blurred for everyone except a couple of named exceptions). No new detection model or access-control primitive needed — two existing mechanisms already cover this fully. **Detection**: a custom category is a user-typed free-text description ("an engineering blueprint or technical drawing"), embedded once and compared via the same **zero-shot** similarity check [../curation/DETECTORS.md](../curation/DETECTORS.md) area D's scene-classification pick already uses (CLIP embedding, cosine similarity against a text prompt) — every photo already has this embedding computed for search, so a new custom category costs one text embedding, not a new model or a training pass. A match above threshold surfaces the usual confirm-never-silent prompt, same as any other detector output. **Exceptions**: confirming applies an ordinary `category='privacy'` tag with the user's own label ("Blueprints"), which forces `visibility=private` exactly like the built-in semantic values above — and a `private` tag is still, like any tag, shareable as an album to specifically named people ([../upload-and-share/SHARING.md](../upload-and-share/SHARING.md)) — so "blurred for everyone except two people" is just the owner sharing that one custom-category tag with those two, the same flow as sharing any other tag. No new "allow-list on a private tag" mechanism needed; the existing share-to-specific-people path already is one. Not designed further here: the actual UI for defining a custom category (typing a name + description), and the background job that checks every photo's embedding against every user's custom-category prompts.
 
 ## Full provenance/usage disclosure per tag — raised 2026-08-04
 

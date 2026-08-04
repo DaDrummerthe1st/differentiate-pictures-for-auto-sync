@@ -32,6 +32,22 @@ Phase 5 for the one piece (origin/`kind='album'`) already partially built.
   tagged once via autocomplete and once as a fresh entity by mistake). Matters
   directly for the "search all photos of my dog" use case this taxonomy exists to
   serve — an unmerged duplicate silently splits that search in two. Not designed.
+  **Trigger mechanism sketched 2026-08-05** (Joakim's own example: he types "Joakim"
+  once, "Jocke" another time, for the same person): **name-string similarity alone
+  won't catch this** — "Jocke" and "Joakim" share no useful substring, and nicknames
+  are culturally arbitrary, not a string-distance problem. The reliable trigger is
+  **embedding similarity**: if a newly-confirmed entity's reference embedding lands
+  very close, in embedding space, to an existing entity's reference embedding
+  (same underlying face/animal, regardless of what name was typed), surface a "these
+  might be the same — merge?" prompt — never auto-merge, same motivated-tagging
+  principle as everything else. Reuses the nearest-neighbor mechanism already
+  designed for identity matching itself
+  ([../curation/ARCHITECTURE.md](../curation/ARCHITECTURE.md)), just run against
+  the user's own other entities instead of against unlabeled crops. Still not
+  designed: the actual merge operation (repointing every `tag_references` row from
+  the losing entity to the winning one), and what happens if the two entities
+  already disagree on an attribute (e.g. different breed guesses for the same
+  animal).
 - **Search ranking/depth tuning** for the relationship-graph walk (TAXONOMY.md's
   "Search walks the relationship graph" section): the 2-hop default is a starting
   guess, not tested against a real tag graph. Revisit once there's one to test
