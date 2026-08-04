@@ -175,14 +175,14 @@ sharing to that scope, computed from the OCR-privacy-tag confirm/blur history
 above, not a new kind of thing: a recomputed signal derived from corrections, never a stable tag,
 used only to **pre-fill** the next confirm-or-blur prompt with a suggested default ("you've blurred
 emails shared publicly 93% of the time — blur this one too?") — never an auto-decision, same
-motivated-tagging principle as everywhere else in this design. **Real dependency, not yet designed**:
+motivated-tagging principle as everywhere else in this design. **Real dependency, partly resolved 2026-08-05**:
 this assumes named audience scopes ("public," "contacts," "close friends") as a first-class concept,
-which doesn't exist yet — today's sharing model is per-recipient (a specific person or a specific
-tag/album share, [../upload-and-share/SHARING.md](../upload-and-share/SHARING.md)) plus a coarse
-private/shareable tag visibility, with no audience-*circle*/group primitive in between. Building the
-aggregate for real needs that primitive first (or needs to be redefined against whatever recipient
-groupings do exist, e.g. per-share-event rather than per-named-circle) — flagged as an open
-prerequisite, not assumed into existence here.
+which didn't exist as of the previous session. [../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s new
+"Audience circles" section now designs exactly that primitive — a circle is a tag (reusing
+`tag_references`, same mechanism as everything else in this taxonomy), with a one-member circle as
+the unremarkable base case, not a special one. Still open: whether a "public" tier is a real built-in
+circle or a separate concept, and the schema note that a circle tag needs `tags.photo_id` relaxed to
+nullable — both flagged in that section, not resolved here either.
 
 **Every automated suggestion needs a visible confidence estimate**, not just a yes/no proposal — the
 "relation-estimate-score" concept from the countryside-search example generalizes to every Curator

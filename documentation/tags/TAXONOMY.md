@@ -119,6 +119,44 @@ toward once tag-detail views exist, related to but distinct from threat #4's sti
 tagging-consent gap ([../security/THREATS.md](../security/THREATS.md)), which is about a *tagged
 person's* recourse rather than the *tagging user's* own visibility into her own data.
 
+## Audience circles — reusable named sharing groups, raised 2026-08-05
+
+Joakim's own question, resolving [../curation/ARCHITECTURE.md](../curation/ARCHITECTURE.md)'s flagged
+"named audience scope doesn't exist yet" gap: **can a group be a tag too, and can a group be one
+person?** Yes to both, and it costs almost no new schema — it reuses the exact `tags` +
+`tag_references` mechanism this taxonomy already leans on everywhere else, the same way
+relationships/story/co-presence all share one chaining mechanism instead of each getting a bespoke
+table.
+
+- A **circle** is a tag: a name ("Close Friends"), owned by the tagging user, with one
+  `reference_kind='entity'` row per member (same shape the co-presence category already uses for
+  "these people were together") — except a circle **isn't about any one photo**, it's a standing,
+  reusable list. **One real schema question this surfaces**: `tags.photo_id` is `NOT NULL` today
+  (part of the live `unique(photo_id, user_id, tag)` constraint, [SCHEMA.md](SCHEMA.md)) — a circle
+  tag needs that relaxed, a genuine small change, not a free reuse. The story/narrative category
+  ("the story is itself a tag," [SCHEMA.md](SCHEMA.md)) already implicitly raises the same question
+  for a tag that isn't fundamentally "about" one photo either — worth resolving both at once rather
+  than twice.
+- **A circle with one member is just that — no special case anywhere.** Sharing "to a circle" always
+  means expand its member references into the existing per-recipient share mechanics
+  ([../upload-and-share/SHARING.md](../upload-and-share/SHARING.md)) and fan out — one member or ten
+  goes through the identical path. This doesn't have to replace today's direct single-recipient share
+  (typing one username/email stays the fast path for a one-off) — a circle is the *reusable, named*
+  version of the same underlying mechanism, an addition, not a replacement.
+- A member reference resolves exactly like any other people-reference already does: a linked-account
+  entity shares directly, a local-only entity falls through to the existing pending-share/email-invite
+  flow ([SCHEMA.md](SCHEMA.md)'s `reference_kind='email'`) — no new resolution logic.
+- **Naming collision to resolve, not silently picked here**: the existing "Co-presence/group" category
+  (this file, "the same shape reused" table above) already uses the word "group" for a different thing
+  — *who's depicted together in a photo* (content), not *who you share things with* (an audience list).
+  Calling both "group" would be confusing in code and UI alike; "circle" (used above) is a candidate
+  term to keep them apart, not a final decision.
+
+Not designed further here: the actual UI for creating/editing a circle, and whether
+[curation/ARCHITECTURE.md](../curation/ARCHITECTURE.md)'s privacy-preference aggregate's "public" tier
+(everyone, not a specific named circle) is itself just a special built-in circle or a separate concept
+— flagged, not resolved.
+
 ## Every tag is a shareable album — with a visual pre-share review
 
 Any tag, of any category, can be shared as an album, not just origin/event tags —

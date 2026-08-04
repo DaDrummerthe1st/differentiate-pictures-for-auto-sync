@@ -81,6 +81,26 @@ Owner shares to new@email.com
      "view without an account" link
 ```
 
+## 4. Sharing to a saved circle — raised 2026-08-05
+
+```
+┌──────────────────────┐
+│ Share with:           │
+│ ( ) DPFAS username    │
+│ ( ) Email address     │
+│ ( ) Saved circle   ▾  │  <- new: pick a circle tag
+│ [__________________]  │
+│ Strict / Free   [ ]   │
+│         [ Send ]      │
+└──────────────────────┘
+```
+
+Not a new grant mechanism — picking a circle ([../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s "Audience
+circles") just expands its member references and fans out through entry point 2's existing
+username/email resolution, one `photo_owners`/`pending_shares` row per member, same as if each had
+been typed individually. A circle with one member behaves identically to typing that one
+username/email directly — no special case. Not designed further here: the circle-picker UI itself.
+
 ## Sharing a tag/album vs. a single picture
 
 Both are shareable through all three mechanisms above. **Any tag, of any category,
