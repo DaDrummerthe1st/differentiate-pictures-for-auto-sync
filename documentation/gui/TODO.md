@@ -4,7 +4,7 @@
 
 Current state, architecture (why `app/` verifies `server/`'s tokens rather than implementing its own auth), remaining hardening priority, and the OAuth-exclusion decision all moved to [../policies/AUTHENTICATION.md](../policies/AUTHENTICATION.md) 2026-07-23 — project-wide topic (applies to `server/`'s auth backend too, not just this app), single source of truth there, not restated here.
 
-**Branch state, resolved**: `phase-1-login` and `master` were merged into `mamma-photo-viewer` on 2026-07-21 (history preserved, `--allow-unrelated-histories`, 33 conflicts resolved — see CHANGELOG_ARCHIVE.md's 2026-07-21 entry). No open branch-reunification question remains — this is now the normal, ongoing "catch this branch up with `master`" relationship, per [CLAUDE.md](../../CLAUDE.md)'s merge procedure, not a special unresolved merge.
+**Branch state, resolved**: `phase-1-login` and `master` were merged into `mamma-photo-viewer` on 2026-07-21 (history preserved, `--allow-unrelated-histories`, 33 conflicts resolved — see CHANGELOG_ARCHIVE.md's 2026-07-21 entry). **Fully closed 2026-08-05**: `mamma-photo-viewer`, `mamma-photo-viewer-folder-ux`, and `phase-1-login` were confirmed as pure ancestors of `master` (nothing left to merge), run through the merge routine as a formality, and deleted (local + remote) — `master` is now the only branch, so there's no more "catch this branch up" relationship to track.
 
 ## Voiceover feature
 

@@ -9,8 +9,8 @@ Project documentation, organized by topic. Structure/maintenance rules: [CLAUDE.
 | [tags/](tags/README.md) | Cross-cutting: the tag taxonomy — categories, schema, sharing/privacy model — referenced by every topic below, not owned by one |
 | [curation/](curation/README.md) | Cross-cutting: how automated tags get proposed (detectors, embeddings, the Curator) and what the system does with them — VISION.md Pillar 2's automated-analysis/curation legs |
 | [photo-server/](photo-server/README.md) | Current work: multi-user web server — browse, search, tag, download |
-| [upload-and-share/](upload-and-share/README.md) | Design work: per-user upload, ownership/sharing terms, event/party mode (`upload-and-share` branch) |
-| [gui/](gui/README.md) | The photo-server GUI's first working version (`mamma-photo-viewer` branch) |
+| [upload-and-share/](upload-and-share/README.md) | Design work: per-user upload, ownership/sharing terms, event/party mode |
+| [gui/](gui/README.md) | The photo-server GUI's first working version (code name `mamma-photo-viewer`) |
 | [picture-handling/](picture-handling/README.md) | Superseded single-machine sorting tool — resolved, moved to photo-server/ |
 | [distributed-sync/](distributed-sync/README.md) | Future work: multi-device sync, distributed storage/compute |
 | [income/](income/README.md) | Business/monetization ideas — rollout phases, revenue ideas, not committed design |
