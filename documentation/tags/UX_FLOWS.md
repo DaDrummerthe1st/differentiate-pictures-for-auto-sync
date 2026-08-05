@@ -86,7 +86,7 @@ simply never contains the excluded photos; there's no "there's more here" tease.
 
 ## Gamified identity-labeling session — active learning for pet/person identity
 
-Raised 2026-08-03, alongside [../curation/ARCHITECTURE.md](../curation/ARCHITECTURE.md)'s
+Raised 2026-08-03, alongside [../curation/IDENTITY_MATCHING.md](../curation/IDENTITY_MATCHING.md)'s
 per-household few-shot identity classifier design (that file's own "no confident pick" gap for pet
 identity matching, resolved by training a tiny per-household classifier on the user's own labels
 instead of waiting for a pretrained one). Vision-level, same bar as the rest of this file — not

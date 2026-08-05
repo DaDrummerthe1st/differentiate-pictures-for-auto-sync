@@ -22,7 +22,7 @@ this file is purely the menu.
   species is free (reuses the existing object detector's COCO classes), fine-grained species has an
   optional pick (SpeciesNet). Pet identity matching has no pretrained model under the MIT/Apache-2.0
   bar, resolved instead by a per-household few-shot classifier trained on the user's own labels
-  (generalizes to people too) — see ARCHITECTURE.md's "Per-household few-shot identity classifier"
+  (generalizes to people too) — see IDENTITY_MATCHING.md's "Per-household few-shot identity classifier"
   section and the research-findings repo's 2026-08-03 entry for the full survey behind the "no
   pretrained pick" finding. Remaining: nothing blocking, this item is closed.
 - **Mislabeling/false-identification privacy risk on people** — flagged 2026-08-03, alongside the
@@ -30,7 +30,7 @@ this file is purely the menu.
   person's name, and such a private label could be exported/shared and presented as though it were a
   verified identification (e.g. wrongly placing someone at a real event). Same treatment as the
   existing age/gender and OCR-in-frame privacy flags — needs a conscious read before a safeguard is
-  designed, not a plain model/UX pick. See ARCHITECTURE.md's flagged note.
+  designed, not a plain model/UX pick. See IDENTITY_MATCHING.md's flagged note.
 - **Human action/pose recognition** (DETECTORS.md area J) — new, not started at all.
 - **Object-detection timing benchmark** — real numbers on the i5-650 or this VPS, not the research
   pass's estimates from faster reference hardware; see TODO.md's benchmarking note.
@@ -48,7 +48,7 @@ this file is purely the menu.
 - **Bring-your-own identity model, compared against the per-household classifier** — raised 2026-08-04
   (Joakim asked about contributing his own pretrained person/animal-detection model). Not designed:
   what a fair comparison against the existing per-household few-shot classifier
-  ([ARCHITECTURE.md](ARCHITECTURE.md)) would even measure, whether it replaces or just supplements the
+  ([IDENTITY_MATCHING.md](IDENTITY_MATCHING.md)) would even measure, whether it replaces or just supplements the
   built-in pipeline, and the accept-format constraint already flagged as a real risk
   ([../security/THREATS.md](../security/THREATS.md) #12 — ONNX/safetensors only, never raw pickle/
   `.pt`, since a model file is executable-code-adjacent, not inert data like a photo).

@@ -42,7 +42,7 @@ Phase 5 for the one piece (origin/`kind='album'`) already partially built.
   might be the same — merge?" prompt — never auto-merge, same motivated-tagging
   principle as everything else. Reuses the nearest-neighbor mechanism already
   designed for identity matching itself
-  ([../curation/ARCHITECTURE.md](../curation/ARCHITECTURE.md)), just run against
+  ([../curation/IDENTITY_MATCHING.md](../curation/IDENTITY_MATCHING.md)), just run against
   the user's own other entities instead of against unlabeled crops. Still not
   designed: the actual merge operation (repointing every `tag_references` row from
   the losing entity to the winning one), and what happens if the two entities

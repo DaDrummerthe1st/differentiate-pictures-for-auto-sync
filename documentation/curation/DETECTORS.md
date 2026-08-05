@@ -61,7 +61,7 @@ independent grounds (repo AGPL-3.0, the model weights themselves CC-BY-NC-4.0 no
 no pretrained weights at all, so using it would mean training from scratch. **Pragmatic fallback,
 not a confident pick**: reuse the already-loaded OpenCLIP ViT-B/32 embedding (MIT, area H) on the
 cropped animal-detection bounding box — the same crop-then-embed pattern
-[ARCHITECTURE.md](ARCHITECTURE.md) already uses for face recognition, zero new model to load. Real
+[IDENTITY_MATCHING.md](IDENTITY_MATCHING.md) already uses for face recognition, zero new model to load. Real
 caveat, not hidden: recent research (CLIP-AFIR, CARE) treats raw off-the-shelf CLIP embeddings as
 explicitly under-adapted to fine-grained instance-level re-identification without few-shot
 fine-tuning — expect this fallback to work less reliably than face recognition's dedicated
@@ -77,7 +77,7 @@ answer, Joakim proposed each household train its own tiny classifier on the labe
 sidesteps this section's whole "no confident pick" problem, since it needs no new model at all (just
 a small classifier trained on top of the embedding already loaded). Full mechanism, the gamified
 labeling-session UX that bootstraps it, cross-household reuse, and a flagged mislabeling/liability
-risk on people: [ARCHITECTURE.md](ARCHITECTURE.md)'s "Per-household few-shot identity classifier"
+risk on people: [IDENTITY_MATCHING.md](IDENTITY_MATCHING.md)'s "Per-household few-shot identity classifier"
 section — not duplicated here.
 
 ## D. Objects and places
@@ -170,8 +170,8 @@ already flags as needed before this becomes a model pick.
 
 | Area | What it detects | Why it matters | Status |
 | --- | --- | --- | --- |
-| Share/folderization/repeat-view/search-engagement frequency | How much a photo/entity actually gets used | [ARCHITECTURE.md](ARCHITECTURE.md)'s usage-intent score, re-weighted 2026-08-03 — these outrank downloads; fields to add, not yet in [../tags/SCHEMA.md](../tags/SCHEMA.md) | queued |
-| Download frequency | Same idea, lower-value signal | Fields already reserved ([../tags/SCHEMA.md](../tags/SCHEMA.md)) but demoted per ARCHITECTURE.md's 2026-08-03 note — kept as one input, not the leading one | queued |
+| Share/folderization/repeat-view/search-engagement frequency | How much a photo/entity actually gets used | [IDENTITY_MATCHING.md](IDENTITY_MATCHING.md)'s usage-intent score, re-weighted 2026-08-03 — these outrank downloads; fields to add, not yet in [../tags/SCHEMA.md](../tags/SCHEMA.md) | queued |
+| Download frequency | Same idea, lower-value signal | Fields already reserved ([../tags/SCHEMA.md](../tags/SCHEMA.md)) but demoted per IDENTITY_MATCHING.md's 2026-08-03 note — kept as one input, not the leading one | queued |
 | Explicit corrections (kept/excluded/confirmed) | User overrides of an automated suggestion | Same score, higher-confidence input | queued |
 | Undo events | A suggestion the user reversed | Ambiguous signal (mistake vs. genuine uncertainty) — see [ARCHITECTURE.md](ARCHITECTURE.md)'s Curator section, not resolved | queued |
 

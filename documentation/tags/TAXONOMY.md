@@ -137,8 +137,8 @@ person's* recourse rather than the *tagging user's* own visibility into her own 
 
 ## Audience circles — a reusable sharing list, not a tag category
 
-Joakim's own question, resolving [../curation/ARCHITECTURE.md](../curation/ARCHITECTURE.md)'s flagged
-"named audience scope doesn't exist yet" gap: **can a group be a tag too, and can a group be one
+Joakim's own question, resolving [../curation/IDENTITY_MATCHING.md](../curation/IDENTITY_MATCHING.md)'s
+flagged "named audience scope doesn't exist yet" gap: **can a group be a tag too, and can a group be one
 person?** Second answer: yes, cleanly. First answer, **corrected same session**: not quite — a first
 pass modeled a circle as a tag, which broke the enum-boundedness principle above (it would have been
 an unenumerated 13th category) and doesn't fit what a tag is *for* here — a circle isn't something the
@@ -168,9 +168,9 @@ per-photo thing.
   about this session's design touches it.
 
 Not designed further here: the actual UI for creating/editing a circle, and whether
-[curation/ARCHITECTURE.md](../curation/ARCHITECTURE.md)'s privacy-preference aggregate's "public" tier
-(everyone, not a specific named circle) is itself just a special built-in circle or a separate concept
-— flagged, not resolved.
+[curation/IDENTITY_MATCHING.md](../curation/IDENTITY_MATCHING.md)'s privacy-preference aggregate's
+"public" tier (everyone, not a specific named circle) is itself just a special built-in circle or a
+separate concept — flagged, not resolved.
 
 ## Every tag is a shareable album — with a visual pre-share review
 

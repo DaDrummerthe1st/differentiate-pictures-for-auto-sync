@@ -2,6 +2,23 @@
 
 Project-wide, like [policies/POLICY.md](policies/POLICY.md), but for direction rather than hard rules. Captures the shape Joakim sees this system maturing into over a long period, so a future session inherits it instead of losing it. **None of this is committed design or scheduled work** — only what's in a topic folder's `TODO.md` is actually being built. This file exists so later phases build toward the right shape, not to expand any current phase's scope.
 
+## Core differentiator — raised 2026-08-05
+
+Not the picture-handling itself — search, tagging, sharing are what every photo app does. What
+sets this system apart is **complete, granular user control over what's shared and with whom**,
+extending eventually to **what metadata even reaches a central point at all**, once each user has
+her own physical space (Pillar 1) rather than a household sharing one server. Joakim's own framing,
+worth keeping verbatim: the goal is a world where **"your privacy depends on the strength of your
+password," not "your privacy is what we'll tell it to be"** — contrasting a self-hosted, user-held-key
+model against a third-party platform (his example: Google/OAuth) that can unilaterally redefine what
+"private" means. This isn't a new design decision so much as the thesis several already-made ones
+serve: [policies/AUTHENTICATION.md](policies/AUTHENTICATION.md)'s no-third-party-OAuth rule,
+[policies/POLICY.md](policies/POLICY.md)'s closed-by-default posture, and
+[security/TODO.md](security/TODO.md)'s EDPB-Opinion-11/2024 finding that only subject-held-key storage
+is GDPR-compatible — all mechanisms that put the key, and therefore the privacy, in the user's own
+hands rather than an operator's. Every granular tag-visibility/sharing/circle mechanism designed in
+[tags/](tags/README.md) is this principle applied at the data-model level, not a separate feature set.
+
 ## Current build vs. this vision
 
 [photo-server/](photo-server/README.md) — the deliverable for a specific Sunday memorial, see its README — is a deliberately narrow, **closed** slice of Pillar 2 only: two known accounts, no data leaves the server, no network sharing. None of the other three pillars are in scope for that build.
@@ -47,4 +64,4 @@ As much of this as possible runs distributed across users' own NAS hardware rath
 
 ## Status
 
-All four pillars are open, none committed, none scheduled. Pillar 1's timeline is the "full roadmap addendum... still pending from Joakim" open question already tracked in [distributed-sync/TODO.md](distributed-sync/TODO.md). Pillars 2–4 don't have TODOs yet because nothing is being built against them. **Exception, 2026-07-26**: Pillars 1 and 3 got a real design pass — see [upload-and-share/](upload-and-share/README.md) (per-user ownership, strict/free sharing terms, event/party mode). Still not scheduled work (no TODO.md steps yet) — a design pass, not a committed build.
+All four pillars are open, none committed, none scheduled. Pillar 1's timeline is the "full roadmap addendum... still pending from Joakim" open question already tracked in [distributed-sync/TODO.md](distributed-sync/TODO.md). Pillars 2–4 don't have TODOs yet because nothing is being built against them. **Exception, 2026-07-26**: Pillars 1 and 3 got a real design pass — see [upload-and-share/](upload-and-share/README.md) (per-user ownership, strict/free sharing terms, event/party mode). Still not scheduled work (no TODO.md steps yet) — a design pass, not a committed build. **2026-08-05**: added the "Core differentiator" section above — a positioning statement, not a scope change.

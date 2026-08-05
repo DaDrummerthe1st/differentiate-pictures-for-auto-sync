@@ -9,6 +9,7 @@ tag gets proposed automatically, and what happens next.
 | File | What's there |
 | --- | --- |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | The three-layer model: detectors, the embedding/index store, the Curator orchestrator. Start here. |
+| [IDENTITY_MATCHING.md](IDENTITY_MATCHING.md) | Usage-intent scoring and identity matching — the per-household few-shot classifier, cross-household linking, mislabeling risk. Split out of ARCHITECTURE.md 2026-08-05 once it grew too large to read as one file. |
 | [DETECTORS.md](DETECTORS.md) | Catalog of detection/analysis areas to investigate (blur, faces, animals, places, feelings, burst-duplicates, and more) — breadth-first, one area researched at a time in future sessions, not a locked model matrix. |
 | [RESEARCH_QUEUE.md](RESEARCH_QUEUE.md) | **Start here for "what's next"** — a one-item-at-a-time pointer, so a session doesn't have to hold the whole catalog/TODO at once. |
 | [TODO.md](TODO.md) | Open items, first TDD-able test steps — the durable why/detail behind each queue item. |
