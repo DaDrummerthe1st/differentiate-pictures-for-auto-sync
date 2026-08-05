@@ -45,4 +45,9 @@ reasoning/explanation step, not a single "AI" doing everything at once.
 ## Status
 
 Design-only, opened 2026-08-02. No schema migration, no endpoints, no model actually integrated yet.
-See [TODO.md](TODO.md) for the first real test step.
+See [TODO.md](TODO.md) for the first real test step. **2026-08-05**: ARCHITECTURE.md split (it had grown
+to ~30K characters) — usage-intent scoring and identity matching moved to the new
+[IDENTITY_MATCHING.md](IDENTITY_MATCHING.md). Forward-effectiveness win: a session that only needs the
+identity-matching/scoring design no longer reads the full pipeline/Curator explanation to get there,
+and vice versa — same reasoning as [tags/README.md](../tags/README.md)'s own split, applied here once
+this folder hit the same size problem.
