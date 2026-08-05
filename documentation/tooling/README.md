@@ -64,6 +64,14 @@ scripts that used to only run when a session remembered to at wrap-up (see
 sections for why this closes that gap and how it stays fast as the repo
 grows).
 
+**If this gate blocks a commit that already has files staged** (as opposed to the fully-automatic
+post-commit catch-up below, which always runs against a clean-except-ledger index by construction):
+run `git status --short` before staging and committing the ledger catch-up file, and confirm nothing
+else is staged. If something else is staged, `git restore --staged <path>` it first, do the catch-up
+commit alone, then re-stage and commit the real change separately. Skipping this check lets an
+already-staged real change silently ride along into the catch-up commit, mislabeling it — see
+[documentation/bugs/claude-bugs/](../bugs/claude-bugs/README.md) for the incident that found this.
+
 **Not active by default** — git doesn't read hooks from a repo-tracked
 directory on its own. One-time setup, per clone:
 
