@@ -19,6 +19,8 @@ is GDPR-compatible — all mechanisms that put the key, and therefore the privac
 hands rather than an operator's. Every granular tag-visibility/sharing/circle mechanism designed in
 [tags/](tags/README.md) is this principle applied at the data-model level, not a separate feature set.
 
+**The system should help the user in any way it can, raised 2026-08-05** — not just via structured tagging/sharing controls above, but a genuine, standing channel for whatever a user wants to say that doesn't fit a tag: a bug, a wish, a question. First concrete mechanism: a free-text feedback channel, security considerations included from the start rather than bolted on — design sketch in [photo-server/DEFERRED.md](photo-server/DEFERRED.md), threat analysis in [security/THREATS.md](security/THREATS.md) #13.
+
 ## Current build vs. this vision
 
 [photo-server/](photo-server/README.md) — the deliverable for a specific Sunday memorial, see its README — is a deliberately narrow, **closed** slice of Pillar 2 only: two known accounts, no data leaves the server, no network sharing. None of the other three pillars are in scope for that build.
@@ -64,4 +66,4 @@ As much of this as possible runs distributed across users' own NAS hardware rath
 
 ## Status
 
-All four pillars are open, none committed, none scheduled. Pillar 1's timeline is the "full roadmap addendum... still pending from Joakim" open question already tracked in [distributed-sync/TODO.md](distributed-sync/TODO.md). Pillars 2–4 don't have TODOs yet because nothing is being built against them. **Exception, 2026-07-26**: Pillars 1 and 3 got a real design pass — see [upload-and-share/](upload-and-share/README.md) (per-user ownership, strict/free sharing terms, event/party mode). Still not scheduled work (no TODO.md steps yet) — a design pass, not a committed build. **2026-08-05**: added the "Core differentiator" section above — a positioning statement, not a scope change.
+All four pillars are open, none committed, none scheduled. Pillar 1's timeline is the "full roadmap addendum... still pending from Joakim" open question already tracked in [distributed-sync/TODO.md](distributed-sync/TODO.md). Pillars 2–4 don't have TODOs yet because nothing is being built against them. **Exception, 2026-07-26**: Pillars 1 and 3 got a real design pass — see [upload-and-share/](upload-and-share/README.md) (per-user ownership, strict/free sharing terms, event/party mode). Still not scheduled work (no TODO.md steps yet) — a design pass, not a committed build. **2026-08-05**: added the "Core differentiator" section and the "system should help the user" principle above — positioning statements, not scope changes.
