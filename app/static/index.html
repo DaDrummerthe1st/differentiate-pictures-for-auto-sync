@@ -35,9 +35,41 @@
 <div id="lightbox" class="hidden">
   <button id="lbClose" class="lb-btn lb-close">&#10005;</button>
   <button id="lbPrev" class="lb-btn lb-prev">&#10094;</button>
-  <img id="lbImg" src="">
+  <div id="lbImageWrap">
+    <img id="lbImg" src="" draggable="false">
+    <div id="lbBoxes"></div>
+    <div id="lbDrawingBox" class="hidden"></div>
+  </div>
   <button id="lbNext" class="lb-btn lb-next">&#10095;</button>
+  <div id="lbTagChips"></div>
   <button id="lbDownload" class="lb-btn lb-download">Ladda ner</button>
+  <button id="lbAddTagBtn" class="lb-btn lb-add-tag">&#127991;&#65039; Tagga</button>
+</div>
+
+<div id="tagForm" class="hidden">
+  <div id="tagFormBox">
+    <h2 id="tagFormTitle">Ny tagg</h2>
+    <p id="tagFormHint" class="tag-form-hint hidden">
+      Dra en ruta över en person, ett djur eller ett föremål på bilden för att koppla taggen dit -
+      annars gäller taggen hela bilden.
+    </p>
+    <label for="tagCategorySelect">Kategori</label>
+    <select id="tagCategorySelect">
+      <option value="people">Person</option>
+      <option value="places">Plats</option>
+      <option value="objects">Föremål</option>
+      <option value="animals">Djur</option>
+      <option value="generic">Övrigt</option>
+    </select>
+    <label for="tagValueInput">Namn/beskrivning</label>
+    <input type="text" id="tagValueInput" list="tagValueSuggestions" autocomplete="off">
+    <datalist id="tagValueSuggestions"></datalist>
+    <div id="tagFormButtons">
+      <button id="tagFormSave" class="big-btn">Spara</button>
+      <button id="tagFormDelete" class="big-btn danger hidden">Ta bort</button>
+      <button id="tagFormCancel" class="big-btn secondary">Avbryt</button>
+    </div>
+  </div>
 </div>
 
 <div id="recordingBanner" class="hidden">

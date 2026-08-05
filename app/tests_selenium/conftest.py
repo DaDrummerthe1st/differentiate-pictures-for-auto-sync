@@ -76,6 +76,18 @@ def app_server():
             urllib.request.urlopen(base_url + "/", timeout=1)
             up = True
             break
+        except urllib.error.HTTPError:
+            # A real HTTP response (even a non-2xx one) proves uvicorn is up
+            # and answering - that's all this probe needs. Since
+            # 992ef140 (2026-07-23) GET / redirects an unauthenticated
+            # request (this probe carries no cookie) to /login, which this
+            # app doesn't itself serve (that's server/'s separate auth
+            # backend) and so 404s - HTTPError is a URLError subclass, so
+            # without this more-specific except first, that 404 fell into
+            # the "keep retrying" branch below and spun until the 15s
+            # deadline on every run, not just this one.
+            up = True
+            break
         except (urllib.error.URLError, ConnectionError):
             if proc.poll() is not None:
                 break

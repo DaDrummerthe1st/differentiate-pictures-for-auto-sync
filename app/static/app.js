@@ -772,14 +772,18 @@ function openLightbox(idx) {
   document.getElementById("lbImg").src = `/original?p=${encodeURIComponent(allImages[idx])}`;
   lb.classList.remove("hidden");
   logEvent("image_view", allImages[idx]);
+  loadTagsForCurrentPhoto();
 }
 function closeLightbox() {
   document.getElementById("lightbox").classList.add("hidden");
+  closeTagForm();
 }
 function lightboxStep(delta) {
   currentLightboxIndex = (currentLightboxIndex + delta + allImages.length) % allImages.length;
   document.getElementById("lbImg").src = `/original?p=${encodeURIComponent(allImages[currentLightboxIndex])}`;
   logEvent("image_view", allImages[currentLightboxIndex]);
+  closeTagForm();
+  loadTagsForCurrentPhoto();
 }
 
 document.getElementById("lbClose").addEventListener("click", closeLightbox);
@@ -798,6 +802,13 @@ document.getElementById("lbDownload").addEventListener("click", async (e) => {
   setTimeout(() => (btn.textContent = original), 1200);
 });
 document.addEventListener("keydown", (e) => {
+  if (!document.getElementById("tagForm").classList.contains("hidden")) {
+    // A form field may have focus (typing a tag's value) - only Escape is
+    // ours to handle here; everything else (arrow keys moving the text
+    // cursor, etc.) must not also step the lightbox underneath.
+    if (e.key === "Escape") closeTagForm();
+    return;
+  }
   if (document.getElementById("lightbox").classList.contains("hidden")) return;
   if (e.key === "Escape") closeLightbox();
   else if (e.altKey && e.key === "ArrowLeft") {
@@ -805,6 +816,211 @@ document.addEventListener("keydown", (e) => {
     closeLightbox();
   } else if (e.key === "ArrowLeft") lightboxStep(-1);
   else if (e.key === "ArrowRight") lightboxStep(1);
+});
+
+// ---- Tags: automatic (future), user-changeable, and user-set (manual
+// bounding box or whole-photo) - see documentation/tags/TAXONOMY.md for the
+// full category model this is a narrowed, build-ready slice of. ----
+
+const TAG_CATEGORY_LABELS = {
+  people: "Person",
+  places: "Plats",
+  objects: "Föremål",
+  animals: "Djur",
+  generic: "Övrigt",
+};
+
+let currentPhotoTags = [];
+let tagFormMode = null; // "create" | "edit"
+let tagFormEditingId = null;
+let tagFormPendingBox = null; // {x,y,w,h} fractions, or null for a whole-photo tag
+
+function clamp01(n) {
+  return Math.max(0, Math.min(1, n));
+}
+
+async function loadTagsForCurrentPhoto() {
+  const path = allImages[currentLightboxIndex];
+  const res = await authFetch(`/api/tags?p=${encodeURIComponent(path)}`);
+  currentPhotoTags = res.ok ? await res.json() : [];
+  renderTagOverlay();
+}
+
+function renderTagOverlay() {
+  const boxesWrap = document.getElementById("lbBoxes");
+  const chipsWrap = document.getElementById("lbTagChips");
+  boxesWrap.innerHTML = "";
+  chipsWrap.innerHTML = "";
+  for (const tag of currentPhotoTags) {
+    if (tag.bbox) {
+      const box = document.createElement("div");
+      box.className = "tag-box" + (tag.source === "auto" ? " tag-box-auto" : "");
+      box.style.left = tag.bbox.x * 100 + "%";
+      box.style.top = tag.bbox.y * 100 + "%";
+      box.style.width = tag.bbox.w * 100 + "%";
+      box.style.height = tag.bbox.h * 100 + "%";
+      const label = document.createElement("span");
+      label.className = "tag-box-label";
+      label.textContent = tag.value;
+      box.appendChild(label);
+      box.addEventListener("mousedown", (e) => e.stopPropagation());
+      box.addEventListener("click", () => openTagForm({ mode: "edit", tag }));
+      boxesWrap.appendChild(box);
+    } else {
+      const chip = document.createElement("button");
+      chip.type = "button";
+      chip.className = "tag-chip" + (tag.source === "auto" ? " tag-chip-auto" : "");
+      chip.textContent = `${TAG_CATEGORY_LABELS[tag.category] || tag.category}: ${tag.value}`;
+      chip.addEventListener("click", () => openTagForm({ mode: "edit", tag }));
+      chipsWrap.appendChild(chip);
+    }
+  }
+}
+
+async function loadTagValueSuggestions(category) {
+  const res = await authFetch(`/api/tags/values?category=${encodeURIComponent(category)}`);
+  const values = res.ok ? await res.json() : [];
+  const list = document.getElementById("tagValueSuggestions");
+  list.innerHTML = "";
+  for (const v of values) {
+    const opt = document.createElement("option");
+    opt.value = v;
+    list.appendChild(opt);
+  }
+}
+
+function openTagForm({ mode, tag = null, pendingBox = null }) {
+  tagFormMode = mode;
+  tagFormEditingId = tag ? tag.id : null;
+  tagFormPendingBox = tag ? tag.bbox : pendingBox;
+  document.getElementById("tagFormTitle").textContent = mode === "edit" ? "Redigera tagg" : "Ny tagg";
+  document.getElementById("tagFormHint").classList.toggle("hidden", mode === "edit");
+  const categorySelect = document.getElementById("tagCategorySelect");
+  categorySelect.value = tag ? tag.category : "people";
+  document.getElementById("tagValueInput").value = tag ? tag.value : "";
+  document.getElementById("tagFormDelete").classList.toggle("hidden", mode !== "edit");
+  loadTagValueSuggestions(categorySelect.value);
+  document.getElementById("tagForm").classList.remove("hidden");
+  document.getElementById("tagValueInput").focus();
+}
+
+function closeTagForm() {
+  document.getElementById("tagForm").classList.add("hidden");
+  clearDrawingBox();
+  tagFormMode = null;
+  tagFormEditingId = null;
+  tagFormPendingBox = null;
+}
+
+document.getElementById("lbAddTagBtn").addEventListener("click", () => {
+  openTagForm({ mode: "create", pendingBox: null });
+});
+document.getElementById("tagCategorySelect").addEventListener("change", (e) => {
+  loadTagValueSuggestions(e.target.value);
+});
+document.getElementById("tagFormCancel").addEventListener("click", closeTagForm);
+document.getElementById("tagFormSave").addEventListener("click", async () => {
+  const category = document.getElementById("tagCategorySelect").value;
+  const value = document.getElementById("tagValueInput").value.trim();
+  if (!value) return;
+  const body = { category, value };
+  if (tagFormPendingBox) {
+    body.bbox_x = tagFormPendingBox.x;
+    body.bbox_y = tagFormPendingBox.y;
+    body.bbox_w = tagFormPendingBox.w;
+    body.bbox_h = tagFormPendingBox.h;
+  }
+  let res;
+  if (tagFormMode === "edit") {
+    res = await authFetch(`/api/tags/${tagFormEditingId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  } else {
+    body.photo_path = allImages[currentLightboxIndex];
+    res = await authFetch("/api/tags", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  }
+  if (!res.ok) return;
+  logEvent("tag_saved", `${category}:${value}`);
+  closeTagForm();
+  await loadTagsForCurrentPhoto();
+});
+document.getElementById("tagFormDelete").addEventListener("click", async () => {
+  if (!tagFormEditingId) return;
+  const res = await authFetch(`/api/tags/${tagFormEditingId}`, { method: "DELETE" });
+  if (!res.ok) return;
+  logEvent("tag_deleted", String(tagFormEditingId));
+  closeTagForm();
+  await loadTagsForCurrentPhoto();
+});
+
+// ---- Manual bounding-box drawing directly on the lightbox image ----
+
+let tagDrawStart = null;
+
+function clearDrawingBox() {
+  const el = document.getElementById("lbDrawingBox");
+  el.classList.add("hidden");
+  el.style.width = "0";
+  el.style.height = "0";
+  tagDrawStart = null;
+}
+
+const lbImageWrap = document.getElementById("lbImageWrap");
+lbImageWrap.addEventListener("mousedown", (e) => {
+  const rect = lbImageWrap.getBoundingClientRect();
+  tagDrawStart = {
+    x: clamp01((e.clientX - rect.left) / rect.width),
+    y: clamp01((e.clientY - rect.top) / rect.height),
+  };
+});
+lbImageWrap.addEventListener("mousemove", (e) => {
+  if (!tagDrawStart) return;
+  const rect = lbImageWrap.getBoundingClientRect();
+  const x = clamp01((e.clientX - rect.left) / rect.width);
+  const y = clamp01((e.clientY - rect.top) / rect.height);
+  const left = Math.min(tagDrawStart.x, x);
+  const top = Math.min(tagDrawStart.y, y);
+  const w = Math.abs(x - tagDrawStart.x);
+  const h = Math.abs(y - tagDrawStart.y);
+  const box = document.getElementById("lbDrawingBox");
+  box.style.left = left * 100 + "%";
+  box.style.top = top * 100 + "%";
+  box.style.width = w * 100 + "%";
+  box.style.height = h * 100 + "%";
+  box.classList.remove("hidden");
+});
+lbImageWrap.addEventListener("mouseup", (e) => {
+  if (!tagDrawStart) return;
+  const rect = lbImageWrap.getBoundingClientRect();
+  const x = clamp01((e.clientX - rect.left) / rect.width);
+  const y = clamp01((e.clientY - rect.top) / rect.height);
+  const left = Math.min(tagDrawStart.x, x);
+  const top = Math.min(tagDrawStart.y, y);
+  const w = Math.abs(x - tagDrawStart.x);
+  const h = Math.abs(y - tagDrawStart.y);
+  tagDrawStart = null;
+  // Ignore accidental clicks/tiny drags rather than opening the form for a
+  // sliver nobody meant to draw.
+  const MIN_FRACTION = 0.02;
+  if (w < MIN_FRACTION || h < MIN_FRACTION) {
+    clearDrawingBox();
+    return;
+  }
+  openTagForm({ mode: "create", pendingBox: { x: left, y: top, w, h } });
+});
+// A drag that ends outside #lbImageWrap (past the image edge, over the
+// backdrop or a button) never fires that element's own mouseup - cancel
+// the in-progress draw instead of leaving it stuck armed for next time.
+document.addEventListener("mouseup", (e) => {
+  if (!tagDrawStart) return;
+  if (e.target.closest && e.target.closest("#lbImageWrap")) return;
+  clearDrawingBox();
 });
 
 async function loadTree() {

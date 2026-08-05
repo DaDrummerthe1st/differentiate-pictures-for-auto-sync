@@ -39,3 +39,9 @@ Opened 2026-07-27 (branch `tags`), consolidating tag-related content that was
 previously scattered across `photo-server/DATA_DICTIONARY.md` and several
 `upload-and-share/` files. Design only — no schema migration, no endpoints. See
 each file's own Status line for specifics.
+
+**2026-08-05**: a narrowed, build-ready slice of this design (people/places/objects/animals + a
+free-text catch-all, no entities/relationships/sharing) is now actually built, in `app/`'s own
+lightweight SQLite table rather than this file's Postgres design — see
+[SCHEMA.md](SCHEMA.md)'s "Now" section and [../gui/README.md](../gui/README.md)'s Tags feature entry.
+This folder's own design docs are otherwise unchanged by that build.

@@ -44,6 +44,32 @@ Idea floated by Joakim 2026-07-17, not decided or started: today's `_log_event()
 - **Fixed: thumbnails silently breaking on token expiry, without ever needing a reload.** The already-known bug (`../bugs/repo/fixed/2026-07-18-thumbnail-img-tags-have-no-silent-refresh-on-expired-access-token-SOLVED.md`) went from "a mechanism that exists" to confirmed-live during this session - Joakim hit it in normal browsing, no server restart involved. "Just reload" turned out not to be a real workaround either (the File System Access folder permission doesn't reliably survive a reload, bouncing back to the folder-picker screen, plus losing scroll position). Fixed with the standard "silent refresh" pattern (confirmed against external sources, not guessed - see the 2026-07-19 CHANGELOG entry for the citations): `app.js` now runs a proactive timer (`silentRefresh()`, every 4 minutes, safely under the 5-minute access-token expiry) calling `/refresh` in the background the entire time the gallery is open, so the session cookie - which plain `<img src>` thumbnail/lightbox loads rely on entirely, since they can't go through `authFetch`'s reactive retry - never actually goes stale during normal use. `?test_refresh_ms` overrides the interval so the new Selenium test doesn't wait out the real 4 minutes.
 - **Follow-up, same day**: Joakim flagged that the fix above has a real side effect - it keeps a session alive forever as long as a tab stays open, even genuinely unattended, with no idle timeout at all. Fixed: `app.js` now tracks real user activity (`mousemove`/`keydown`/`click`/ `scroll`/`touchstart`), and `silentRefresh()` skips the proactive `/refresh` call once 30 minutes have passed with none. This doesn't force an abrupt logout - it just stops artificially extending the session past what the existing 5-minute access-token / 12-hour refresh-token lifetimes already impose, restoring the bound that existed before today's silent-refresh fix. `?test_idle_ms` overrides the threshold for the new Selenium test.
 
+## 2026-08-05 session: tags GUI foundation, ahead of next session's automatic tagging
+
+Built a narrowed, build-ready slice of [../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s design directly
+into this app — see [README.md](README.md)'s Tags feature entry and
+[../tags/SCHEMA.md](../tags/SCHEMA.md)'s "Now" section for the full technical shape (own SQLite table,
+keyed by photo path since there's no Postgres photo catalog yet; 5 categories, not 12; no
+entities/relationships). In the lightbox: whole-photo tags via a new "Tagga" button, manual
+bounding-box tags by dragging directly on the image, edit/delete any existing tag by clicking its chip
+or box, value autocomplete against the user's own past tags per category. `app/tests/test_tags.py` (30
+tests) + `app/tests_selenium/test_tag_ui.py` (5 tests) cover it.
+
+**For next session, building automatic tagging**: every tag row already carries a `source` column
+(`manual` | `auto`) and the display/edit UI already renders `auto`-sourced tags distinctly (subtler,
+dashed border/outline, per [UX_FLOWS.md](../tags/UX_FLOWS.md)'s "subtle, concealable" rule) - nothing
+produces `source='auto'` rows yet, since no detector exists. A detector pass should be able to `INSERT`
+directly into `app/`'s existing `tags` table (`source='auto'`, its own `bbox_x/y/w/h` if it found a
+region) and have it show up in the lightbox with zero GUI changes needed - confirm that assumption
+holds before building the detector rather than after.
+
+Also found and fixed, unrelated to the tags work itself but blocking it:
+[../bugs/repo/fixed/2026-08-05-selenium-test-harness-readiness-probe-never-succeeds-since-the-app-shell-auth-gate-SOLVED.md](../bugs/repo/fixed/2026-08-05-selenium-test-harness-readiness-probe-never-succeeds-since-the-app-shell-auth-gate-SOLVED.md)
+— the entire Selenium suite had been silently broken since the 2026-07-23 auth-gate commit; nobody had
+re-run it for real since. Worth running `scripts/test_selenium.sh up && .venv-test/bin/python -m
+pytest app/tests_selenium -q` at least once per session that touches `app/static/` or auth gating, not
+just assuming it still passes.
+
 ## Other open items (carried over, not yet done)
 
 - Recheck for anything else possibly missing from the branch-mixup incident referenced above.

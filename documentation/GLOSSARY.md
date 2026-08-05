@@ -83,7 +83,7 @@ Plain-language definitions of every technical/business term this project's desig
 ## Tags and entities
 
 - **Entity**: one reusable record for a recurring person/object/animal/place (e.g. "Dad," "my dog Bella") that many individual photo tags can point to, so searching "every photo of my dog" is one search instead of many separately-worded tags.
-- **Bounding box**: the pixel-coordinate rectangle marking where a detected person/object sits within a photo.
+- **Bounding box**: the rectangle marking where a tagged person/object/animal sits within a photo. **Built 2026-08-05** ([gui/README.md](gui/README.md)'s tags feature): stored as normalized 0..1 fractions of the image's own width/height, not raw pixel coordinates, so the same box renders in the right place at any display size (a thumbnail, the full lightbox, a different screen) without needing to know which size it was originally drawn against.
 - **Relationship tag**: a tag that links two other tags together (e.g. "my father," pointing at his own person-entity) rather than describing the photo directly.
 
 ## Curation and machine perception

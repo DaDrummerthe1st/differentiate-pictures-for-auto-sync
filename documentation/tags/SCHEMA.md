@@ -121,8 +121,31 @@ verification/endorsement" section for what it's for and why.
 
 `unique(tag_id, endorsing_user_id)`.
 
+## Now (app/'s lightweight build, 2026-08-05) — a deliberate narrower stand-in, not this schema
+
+The Postgres `tags`/`entities`/`tag_references` design above still isn't built - it depends on the
+Phase 2/3 photo catalog (`photos` table + `/tank/` ingestion) that also isn't built yet
+([../photo-server/TODO.md](../photo-server/TODO.md)). What actually exists now, in `app/main.py`
+(the live, filesystem-based photo-viewer, not `server/`), is a separate, much smaller `tags` table in
+that app's own SQLite analytics DB: `id, user_id, photo_path, category, value, bbox_x/y/w/h, source,
+created_at, updated_at`. Keyed by `photo_path` (relative to `PHOTOS_ROOT`) instead of a `photos.id`
+foreign key, since there's no photo-catalog row to point at. `category` is narrowed to 5 values -
+`people`/`places`/`objects`/`animals`/`generic` - out of the 12 in [TAXONOMY.md](TAXONOMY.md); no
+`entities` table (value-autocomplete via `GET /api/tags/values`'s frequency-ranked distinct-values
+query is a cheap stand-in, not real entity dedup); no `tag_references` (a bounding box is stored
+directly as 4 nullable REAL columns on the tag row itself, normalized 0..1 fractions of the image's own
+width/height, not pixel coordinates). `source` (`manual` today, `auto` reserved) is this table's one
+concession to the future - the automatic-tagging work planned for the next session writes into this
+same table/column rather than needing a schema change. See
+[../gui/README.md](../gui/README.md)'s Tags feature entry and `app/tests/test_tags.py` for the built
+behavior. **Migrating this into the real design above is real, deferred work**, not assumed automatic -
+whenever Phase 2/3 ingestion lands, `photo_path` needs reconciling against whatever `photos.id` keying
+scheme that ends up using.
+
 ## Status
 
 Designed 2026-07-27. No migration, no endpoints. First real implementation decision
 this needs before any TDD step: reconciling `kind` against the new `category`
-column — see [TODO.md](TODO.md). `entities.entity_type='circle'` added 2026-08-05.
+column — see [TODO.md](TODO.md). `entities.entity_type='circle'` added 2026-08-05. **A narrower,
+build-ready slice actually built 2026-08-05** in `app/` (see "Now" section above) - this file's own
+`tags`/`entities`/`tag_references` design is still design-only, unaffected.

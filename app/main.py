@@ -79,6 +79,38 @@ db.execute(
     )
     """
 )
+# One tag = one fact about one photo, for one user. Keyed by photo_path
+# (not a photo_id foreign key) because this app has no photo-catalog
+# database at all - it reads /photos straight off disk. See
+# documentation/tags/SCHEMA.md for the eventual Postgres entities/
+# tag_references design this is a deliberately lighter-weight stand-in
+# for, once Phase 2/3 ingestion exists.
+# bbox_x/y/w/h are all NULL together (a whole-photo tag) or all set
+# together (a region tag) - normalized 0..1 fractions of the image's
+# own width/height, so they render correctly at any display size.
+# source distinguishes 'manual' (built here) from 'auto' (future
+# detector-written rows - not produced by anything yet, but the column
+# exists now so next session's auto-tagging can write into this same
+# table without a schema change).
+db.execute(
+    """
+    CREATE TABLE IF NOT EXISTS tags (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        photo_path TEXT NOT NULL,
+        category TEXT NOT NULL,
+        value TEXT NOT NULL,
+        bbox_x REAL,
+        bbox_y REAL,
+        bbox_w REAL,
+        bbox_h REAL,
+        source TEXT NOT NULL DEFAULT 'manual',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+    )
+    """
+)
+db.execute("CREATE INDEX IF NOT EXISTS idx_tags_photo_path ON tags(photo_path)")
 db.commit()
 
 
@@ -135,6 +167,135 @@ def resolve_relpath(relpath: str) -> Path:
     if not candidate.is_file():
         raise HTTPException(status_code=404, detail="not found")
     return candidate
+
+
+# The four entity-bearing categories (documentation/tags/TAXONOMY.md) plus
+# one free-text catch-all - a deliberately narrowed slice of the full
+# 12-category taxonomy for this first build pass. The other 8 (quality,
+# privacy, relationships, activity/occasion, story/narrative,
+# temporal/seasonal, co-presence/group, origin - the last already built
+# separately as kind='album') are out of scope here, not forgotten.
+TAG_CATEGORIES = {"people", "places", "objects", "animals", "generic"}
+
+
+class TagCreate(BaseModel):
+    photo_path: str
+    category: str
+    value: str
+    bbox_x: float | None = None
+    bbox_y: float | None = None
+    bbox_w: float | None = None
+    bbox_h: float | None = None
+
+
+class TagUpdate(BaseModel):
+    category: str
+    value: str
+    bbox_x: float | None = None
+    bbox_y: float | None = None
+    bbox_w: float | None = None
+    bbox_h: float | None = None
+
+
+def _validate_tag_fields(category: str, value: str, bbox_x, bbox_y, bbox_w, bbox_h) -> str:
+    if category not in TAG_CATEGORIES:
+        raise HTTPException(status_code=400, detail="unknown category")
+    value = value.strip()
+    if not value:
+        raise HTTPException(status_code=400, detail="value must not be blank")
+    bbox_fields = (bbox_x, bbox_y, bbox_w, bbox_h)
+    if any(f is not None for f in bbox_fields) and any(f is None for f in bbox_fields):
+        raise HTTPException(status_code=400, detail="bounding box requires x, y, w, and h together")
+    if all(f is not None for f in bbox_fields):
+        if not (0 <= bbox_x <= 1 and 0 <= bbox_y <= 1):
+            raise HTTPException(status_code=400, detail="bounding box x/y must be within 0..1")
+        if bbox_w <= 0 or bbox_h <= 0:
+            raise HTTPException(status_code=400, detail="bounding box w/h must be positive")
+        if bbox_x + bbox_w > 1 or bbox_y + bbox_h > 1:
+            raise HTTPException(status_code=400, detail="bounding box must stay within the image")
+    return value
+
+
+def _tag_row_to_dict(row) -> dict:
+    (tag_id, category, value, bbox_x, bbox_y, bbox_w, bbox_h, source, created_at, updated_at) = row
+    bbox = None
+    if bbox_x is not None:
+        bbox = {"x": bbox_x, "y": bbox_y, "w": bbox_w, "h": bbox_h}
+    return {
+        "id": tag_id,
+        "category": category,
+        "value": value,
+        "bbox": bbox,
+        "source": source,
+        "created_at": created_at,
+        "updated_at": updated_at,
+    }
+
+
+_TAG_SELECT_COLUMNS = "id, category, value, bbox_x, bbox_y, bbox_w, bbox_h, source, created_at, updated_at"
+
+
+@app.get("/api/tags")
+def list_tags(p: str = Query(...), user_id: int = Depends(require_session)):
+    resolve_relpath(p)
+    rows = db.execute(
+        f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE photo_path = ? AND user_id = ? ORDER BY id",
+        (p, user_id),
+    ).fetchall()
+    return [_tag_row_to_dict(row) for row in rows]
+
+
+@app.get("/api/tags/values")
+def tag_value_suggestions(category: str = Query(...), user_id: int = Depends(require_session)):
+    if category not in TAG_CATEGORIES:
+        raise HTTPException(status_code=400, detail="unknown category")
+    rows = db.execute(
+        "SELECT value, COUNT(*) AS c FROM tags WHERE user_id = ? AND category = ? "
+        "GROUP BY value ORDER BY c DESC, value COLLATE NOCASE",
+        (user_id, category),
+    ).fetchall()
+    return [row[0] for row in rows]
+
+
+@app.post("/api/tags", status_code=201)
+def create_tag(tag: TagCreate, user_id: int = Depends(require_session)):
+    resolve_relpath(tag.photo_path)
+    value = _validate_tag_fields(tag.category, tag.value, tag.bbox_x, tag.bbox_y, tag.bbox_w, tag.bbox_h)
+    now = datetime.now(timezone.utc).isoformat()
+    cur = db.execute(
+        "INSERT INTO tags (user_id, photo_path, category, value, bbox_x, bbox_y, bbox_w, bbox_h, "
+        "source, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?)",
+        (user_id, tag.photo_path, tag.category, value, tag.bbox_x, tag.bbox_y, tag.bbox_w, tag.bbox_h, now, now),
+    )
+    db.commit()
+    row = db.execute(f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE id = ?", (cur.lastrowid,)).fetchone()
+    return _tag_row_to_dict(row)
+
+
+@app.patch("/api/tags/{tag_id}")
+def update_tag(tag_id: int, tag: TagUpdate, user_id: int = Depends(require_session)):
+    value = _validate_tag_fields(tag.category, tag.value, tag.bbox_x, tag.bbox_y, tag.bbox_w, tag.bbox_h)
+    existing = db.execute("SELECT id FROM tags WHERE id = ? AND user_id = ?", (tag_id, user_id)).fetchone()
+    if not existing:
+        raise HTTPException(status_code=404, detail="not found")
+    now = datetime.now(timezone.utc).isoformat()
+    db.execute(
+        "UPDATE tags SET category = ?, value = ?, bbox_x = ?, bbox_y = ?, bbox_w = ?, bbox_h = ?, "
+        "updated_at = ? WHERE id = ?",
+        (tag.category, value, tag.bbox_x, tag.bbox_y, tag.bbox_w, tag.bbox_h, now, tag_id),
+    )
+    db.commit()
+    row = db.execute(f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE id = ?", (tag_id,)).fetchone()
+    return _tag_row_to_dict(row)
+
+
+@app.delete("/api/tags/{tag_id}", status_code=204)
+def delete_tag(tag_id: int, user_id: int = Depends(require_session)):
+    cur = db.execute("DELETE FROM tags WHERE id = ? AND user_id = ?", (tag_id, user_id))
+    db.commit()
+    if cur.rowcount == 0:
+        raise HTTPException(status_code=404, detail="not found")
+    return Response(status_code=204)
 
 
 @app.get("/api/tree")
