@@ -15,6 +15,13 @@ catalog and this file's own open-items list are too much to hold at once — see
 that. Each area-session should produce: concrete model options (open-weight, self-hostable, CPU-only
 — see [ARCHITECTURE.md](ARCHITECTURE.md)'s inherited constraints), a resource-cost estimate, an
 output shape, and a pick — written into that row of DETECTORS.md, status flipped to `researched`.
+**Explicit exception, 2026-08-05**: Joakim asked to research and document everything that comfortably
+fits in one session (not exceeding token budget) rather than one area at a time — four areas closed
+in that single session (group/co-presence, age/gender, OCR-in-frame, human action/pose), run as
+parallel background research agents to keep the calling session's own context lean. Not a standing
+change to the one-area-per-session default above — a one-off broadening confirmed for that session,
+same "cherry-pick, no forced order" spirit as RESEARCH_QUEUE.md's own menu, just wider on that
+occasion.
 
 ## VPS — hardware audit + EU data-residency verification
 

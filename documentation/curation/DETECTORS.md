@@ -31,10 +31,14 @@ written up here once done).
 | Face detection | Where faces are (box) | Feeds bounding-box tagging, [../tags/UX_FLOWS.md](../tags/UX_FLOWS.md) | researched |
 | Face recognition/identity | Which known person (embedding match against `entities`) | The literal "same dog" example, applied to people — "all photos of Dad" | researched |
 | Facial expression/emotion | Happy, sad, neutral, etc. | Joakim's own V1 rollout note ("feelings/emotions"), [../VISION.md](../VISION.md) | researched |
-| Group/co-presence | Multiple known people together | Feeds the co-presence/group tag category, [../tags/TAXONOMY.md](../tags/TAXONOMY.md) | queued |
-| Age/gender estimation | Rough demographic guess | **Privacy read done 2026-08-05**: EDPB Guidelines 3/2019 §80-81 (purpose-based interpretation, mainstream but not unanimous — EDPB's later 05/2022 facial-recognition guidelines take a broader stance) hold that classifying age/gender *without* generating an identifying biometric template does **not** trigger GDPR Article 9 special-category status on its own — only the face *embedding* used for identification does (unchanged, [../GLOSSARY.md](../GLOSSARY.md)'s "biometric data" entry). De-risks this to a plain research pass; real remaining concern is accuracy-disparity/misgendering harm (a UX-display question — never show as an asserted fact — not a legal blocker). Full read: `2026-08-05-license-reverification-and-privacy-reads.md` in the `research-findings` repo. | queued — unblocked, ready for a plain model-pick research pass |
+| Group/co-presence | Multiple known people together | Feeds the co-presence/group tag category, [../tags/TAXONOMY.md](../tags/TAXONOMY.md) | researched — no new model, see below |
+| Age/gender estimation | Rough demographic guess | **Privacy read done 2026-08-05**: EDPB Guidelines 3/2019 §80-81 (purpose-based interpretation, mainstream but not unanimous — EDPB's later 05/2022 facial-recognition guidelines take a broader stance) hold that classifying age/gender *without* generating an identifying biometric template does **not** trigger GDPR Article 9 special-category status on its own — only the face *embedding* used for identification does (unchanged, [../GLOSSARY.md](../GLOSSARY.md)'s "biometric data" entry). De-risks this to a plain research pass; real remaining concern is accuracy-disparity/misgendering harm (a UX-display question — never show as an asserted fact — not a legal blocker). Full read: `2026-08-05-license-reverification-and-privacy-reads.md` in the `research-findings` repo. | researched |
 
 **Picks (researched 2026-08-02)**: **face detection** — YuNet (OpenCV Zoo, Apache-2.0, sub-1MB ONNX, millisecond CPU cost, ships free via OpenCV's built-in `FaceDetectorYN`, already returns 5 landmarks). **Face recognition/embedding** — MobileFaceNet's standalone MIT-licensed ONNX release (~1M params, 128-d embedding) over InsightFace's `buffalo_s` bundle, specifically to sidestep InsightFace's pretrained-weights license (code is MIT, but the weights themselves are non-commercial-research-only per their own policy — a gray area for a private but non-"research" family server, worth a conscious call rather than an assumption). **Emotion** — FER+ (`emotion-ferplus-8`, Apache-2.0, ready-made ONNX file from the ONNX Model Zoo) is the *only* genuinely turnkey pretrained option found in this category; everything else surveyed is research code needing your own training/export.
+
+**Group/co-presence pick (researched 2026-08-05)**: no new model needed, same zero-added-cost pattern as area D's scene classification and area C's coarse species reuse. [../tags/TAXONOMY.md](../tags/TAXONOMY.md) already defines co-presence/group as a category that only links existing entities via `tag_references` — no entity record of its own, no bounding box. Once face recognition (MobileFaceNet, above) resolves *who* is in a photo, co-presence is a plain query: if 2+ known people-entities are matched in the same photo, emit a co-presence tag referencing both. Logic over already-computed identity matches, not a new detector stage.
+
+**Age/gender pick (researched 2026-08-05)**: **OpenVINO Open Model Zoo's `age-gender-recognition-retail-0013`** — Apache-2.0 code *and* weights (Intel's own `model.yml` explicitly assigns Apache-2.0 + Intel copyright to this exact file, the cleanest chain-of-custody found), 2.1M params, loads via `cv2.dnn.readNet()` — the same runtime path already used for YuNet, zero new inference-engine dependency. Age is a continuous regression, gender a binary softmax. Two honest caveats, not disqualifying: (1) an unresolved 2020 community ask for a clearer blanket "pretrained models = Apache-2.0" FAQ from Intel — the per-model `model.yml` assignment found here is stronger evidence than that thread, but it shows the ambiguity was real enough for someone with legal counsel to ask; (2) the model's own README states training only covered ages 18-75 and it does **not** apply to children — treat output as unreliable for anyone visually under ~18, worth surfacing in the UX rather than hiding. Runner-up: `onnx-community/age-gender-prediction-ONNX` (ViT-Base, more honest about its own accuracy disparity on children, but its Apache-2.0 claim sits on top of UTKFace's non-commercial-research dataset license — a weaker chain-of-custody, kept as fallback only). Excluded: InsightFace's `genderage.onnx` (non-commercial weights, same problem as the face-rec bundle), `deepface`'s heads (weights inherit VGG-Face's academic license), the classic Adience Caffe models (no license file at all). Flagged, not picked: FairFace (CC BY 4.0 — commercially usable and purpose-built for fairness, but not MIT/Apache-2.0 on the letter of this project's bar; a real judgment call, not a clean exclusion). Full survey: `2026-08-05-age-gender-estimation-model-survey.md` in the `research-findings` repo.
 
 ## C. Animals
 
@@ -87,7 +91,7 @@ section — not duplicated here.
 | General object detection | Recurring things — a motorcycle, a boat, furniture | Feeds the objects entity category | researched |
 | Scene/venue classification | Beach, mountains, indoor/outdoor, ski resort | The literal "my countryside" example; also feeds the places category | researched |
 | Landmark/place recognition | A *specific* named place, not just a kind of place | [../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s "specific" place sub-case | queued |
-| Text/OCR in-frame | Signs, documents, whiteboards accidentally captured | Real privacy angle — a photographed ID card or letter is sensitive content hiding inside an otherwise ordinary photo | queued, privacy-flagged — mechanism sketched 2026-08-04, no model pick yet |
+| Text/OCR in-frame | Signs, documents, whiteboards accidentally captured | Real privacy angle — a photographed ID card or letter is sensitive content hiding inside an otherwise ordinary photo | researched — mechanism sketched 2026-08-04, model pick done 2026-08-05 |
 | Number plate / vehicle registration (ANPR) | A car's license plate, incidentally in-frame | Raised 2026-08-05: a distinct sub-case, not just another OCR string — a plate is personal data (resolves to a registered keeper via the national vehicle registry) even though it isn't GDPR "special category" biometric data. **Corrected same day, per Joakim**: no Swedish law bars a private individual from looking a plate up (the registry is deliberately open), and this project *builds a detection capability into the codebase* — it isn't the GDPR controller for what an independent self-hosting user does with her own instance on her own data, same non-liability logic as a camera manufacturer isn't the controller for what its owner photographs (this project's architecture makes that distinction real, not just asserted — each deployment is closed-by-default, single-controller, no central collection by Joakim, [../policies/POLICY.md](../policies/POLICY.md)). The DPIA-relevant point that remains is narrower and controller-side, not a legality concern: *for whichever party ends up as controller of a given instance*, GDPR's household exemption ([../GLOSSARY.md](../GLOSSARY.md)) is the first and most relevant lens, same as everywhere else in this project — plate detection for one's own private/family photos plausibly never leaves that exemption in practice. **Same tag mechanism as OCR-in-frame above, no new category**: a confirmed plate becomes an ordinary `category='privacy'` tag via the identical confirm-or-blur flow, per [../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s enum-boundedness rule — not a dedicated plate category. | queued, no legality concern — controller/exemption nuance noted for whoever operates a given instance |
 
 **Picks (researched 2026-08-02, license bar tightened 2026-08-03 — see below)**: **object detection**
@@ -96,6 +100,24 @@ AGPL-3.0's network-use clause is a real obligation once this project reaches VIS
 multi-household/commercialize phases, not a low risk specific to today's private single-household
 use (see [ARCHITECTURE.md](ARCHITECTURE.md)'s existing prototype note: full YOLOv3 is the wrong
 weight class either way, ~236MB vs. NanoDet-Plus's single-digit MB). **Scene/venue classification** — don't add a separate model at all: reuse the CLIP-family embedding already computed for area H via zero-shot classification (cosine similarity against text prompts like "a photo of a beach") rather than a dedicated Places365 classifier — zero added footprint, and new scene categories are just new text prompts instead of retraining.
+
+**OCR-in-frame pick (researched 2026-08-05)**: **RapidOCR** — Apache-2.0 code and weights (a
+community ONNX re-export of Baidu's PP-OCR weights, run through ONNX Runtime instead of the heavy
+`paddlepaddle` framework), native `{text, bounding_box, confidence}` per-region output matching this
+area's required shape exactly, strong Swedish/Nordic coverage via PP-OCRv5's Latin-language-mix
+model. Specifically **not stock PaddleOCR**: an open, live GitHub issue (`PaddleOCR#17955`) reports
+3.x CPU inference OOM-killing at ~43GB RAM on the German/Latin model — a real regression from ~1-2GB
+in 2.x, disqualifying on a 7.8GB VPS; RapidOCR uses the same underlying weights but sidesteps the
+paddlepaddle runtime that causes it. Runner-up/fallback: **Tesseract** (Apache-2.0, the cleanest
+possible license story, tiny footprint, native word-level box+confidence) — the honest cost is
+meaningfully worse accuracy on natural-scene photos (signs, whiteboards) than on scanned documents,
+exactly this feature's target case, versus PP-OCR-family models. Excluded: Surya (Apache-2.0 code,
+but OpenRAIL-M weights with a funding/revenue-scale commercial trigger — same code/weights-diverge
+trap as NudeNet/YOLO26n). Not picked but flagged for a future re-check: docTR (fastest, cleanest
+output shape, fully Apache-2.0, but its default recognition vocab is French-centric — a community
+multilingual model exists but its license and Swedish-diacritic coverage weren't independently
+verified this pass). Full survey: `2026-08-05-ocr-in-frame-engine-survey.md` in the
+`research-findings` repo.
 
 ## E. Cross-photo / batch-relational (not a single-photo detector)
 
@@ -193,11 +215,40 @@ above. Carry the retention constraint into the eventual model-pick pass. Full re
 
 Raised 2026-08-03: distinct from area B's *who* and the existing activity/occasion tag category's
 *occasion* (skiing, a birthday party — an event-level label) — this is per-person action/pose within
-a single photo (waving, hugging, jumping, sitting), a finer grain than either. Not researched.
+a single photo (waving, hugging, jumping, sitting), a finer grain than either.
 
 | Area | What it detects | Why it matters | Status |
 | --- | --- | --- | --- |
-| Human action/pose recognition | What a specific person is doing in-frame | New dimension Joakim asked to add; distinct from occasion-level activity tags already in [../tags/TAXONOMY.md](../tags/TAXONOMY.md) | queued |
+| Human action/pose recognition | What a specific person is doing in-frame | New dimension Joakim asked to add; distinct from occasion-level activity tags already in [../tags/TAXONOMY.md](../tags/TAXONOMY.md) | researched |
+
+**Pick (researched 2026-08-05)**: genuinely a two-stage problem — pose/keypoint estimation, then
+action classification over those keypoints. **Stage 1: MediaPipe Pose (BlazePose)** — Apache-2.0 code
+and weights, actively maintained by Google into 2026, first-party single-image API, Lite variant only
+3MB and runs easily on the i5-650, returns 33 3D landmarks (more signal than COCO-17 alternatives).
+Only wart: no official ONNX export, so it stays on the TFLite runtime rather than joining this
+project's other ONNX-based picks. Runner-up: **RTMPose** (OpenMMLab) — more CPU-efficient and has a
+first-class ONNX path, but an unresolved community GitHub issue (`mmpose#2106`) flags real uncertainty
+over whether its COCO-trained checkpoint weights are as unambiguously clean as its Apache-2.0 code;
+treat as a fallback only if MediaPipe's lack of ONNX becomes a real integration blocker, not a co-pick.
+Excluded: CMU OpenPose (non-commercial, $25k/yr commercial license) and Ultralytics YOLO-pose
+(AGPL-3.0, same pattern already rejected for YOLO26n).
+
+**Stage 2: no confident pretrained pick — same honest conclusion this project already reached for
+pet-identity-matching** (area C). Every pretrained action-classifier candidate found traces back to a
+dataset with either an unverifiable license (Stanford40) or a copyleft-flavored *database* license
+(ODbL) whose bearing on the *trained weights* is legally unresolved — declaring either "Apache-2.0,
+done" on a self-applied model-card tag would be forcing a pick past exactly the gap this project's
+license bar exists to catch. Also ruled out: the mainstream "action recognition" model zoo
+(MMAction2's TSN/TSM/I3D/SlowFast/PoseC3D/ST-GCN) is fundamentally video/temporal — needs a clip or
+keypoint *sequence*, not a single still, so it doesn't fit this project's single-photo pipeline at
+all, independent of licensing. **Recommended path**: skip pretrained action classification entirely —
+compute normalized joint-angle/limb-relationship features from Stage 1's keypoints (the same
+technique TensorFlow's own official pose-classification tutorial uses) and either hand-write threshold
+rules for geometrically distinguishable actions (sitting/standing/jumping are fairly separable by
+joint angles alone; hugging is cross-person, a different problem shape) or hand-label a modest set of
+example photos from this project's own corpus and train a small classifier on the keypoint features.
+Zero pretrained weights to license. Full survey:
+`2026-08-05-human-action-pose-recognition-survey.md` in the `research-findings` repo.
 
 ## Also flagged, not a detection area
 
@@ -230,9 +281,10 @@ queued for this. **Animals (area C) researched 2026-08-03** —
 coarse species reuses the existing object detector at zero cost, fine-grained species has a pick
 (SpeciesNet) but is an optional add-on, and pet identity matching has no confident pick, only a
 caveated fallback — see area C above and the full survey in the `research-findings` repo. See
-[TODO.md](TODO.md) for the still-queued areas (landmarks, OCR, age/gender, group/co-presence, image
-captioning, usage signals, actions/pose — EXIF-derived time labels dropped off this list 2026-08-05,
-resolved to a buildable design note needing no further research). **2026-08-04**: OCR-in-frame
+[TODO.md](TODO.md) for the still-queued areas (landmarks, image captioning, usage signals —
+EXIF-derived time labels dropped off this list 2026-08-05, resolved to a buildable design note
+needing no further research; OCR, age/gender, group/co-presence, and actions/pose all researched
+2026-08-05, see below). **2026-08-04**: OCR-in-frame
 got a UX mechanism sketch (still no model pick) and a speculative reverse-search idea was added under
 "Also flagged" — see area D above. **2026-08-05**: area D gained a number-plate (ANPR) row, same
 privacy-tag mechanism as OCR, no legality concern for this project's own liability (see that row for
@@ -242,3 +294,14 @@ age/gender's Article-9 flag substantially de-risked (area B), OCR's data-minimiz
 made explicit (area D), "best shot"/attractiveness's bias risk confirmed with real literature (area
 A) — and weather-at-capture closed as excluded (area G). Full writeup:
 `2026-08-05-license-reverification-and-privacy-reads.md` in the `research-findings` repo.
+**2026-08-05 (same day, third pass)**: three more model-pick surveys landed in one session, per
+Joakim's explicit go-ahead to research everything that comfortably fits rather than one area at a
+time — **group/co-presence** (area B) resolved to zero new cost (logic over the existing face-rec
+pick, TAXONOMY.md already supports it); **age/gender** (area B) picked (OpenVINO
+`age-gender-recognition-retail-0013`); **OCR-in-frame** (area D) picked (RapidOCR); **human
+action/pose** (area J) got its first research pass ever — pose stage picked (MediaPipe Pose), action
+stage has no confident pretrained pick, resolved to a keypoint-heuristic/self-trained approach
+instead, same shape of finding as area C's pet-identity conclusion. Landmark/place recognition and
+image captioning remain queued, not attempted this session. Full surveys:
+`2026-08-05-ocr-in-frame-engine-survey.md`, `2026-08-05-age-gender-estimation-model-survey.md`,
+`2026-08-05-human-action-pose-recognition-survey.md` in the `research-findings` repo.

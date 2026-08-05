@@ -35,10 +35,19 @@ this file is purely the menu.
   verified identification (e.g. wrongly placing someone at a real event). Same treatment as the
   existing age/gender and OCR-in-frame privacy flags — needs a conscious read before a safeguard is
   designed, not a plain model/UX pick. See IDENTITY_MATCHING.md's flagged note.
-- **Human action/pose recognition** (DETECTORS.md area J) — new, not started at all.
+- **Human action/pose recognition** (DETECTORS.md area J) — done 2026-08-05: pose-estimation stage
+  picked (MediaPipe Pose, Apache-2.0), action-classification stage has no confident pretrained pick
+  (every candidate's license traces back to an unverifiable or copyleft-flavored dataset license) —
+  resolved to a keypoint-heuristic/self-trained approach instead, same shape of conclusion as area C's
+  pet-identity survey. Full survey: `2026-08-05-human-action-pose-recognition-survey.md` in
+  `research-findings`. Remaining: nothing blocking, this item is closed.
 - **Object-detection timing benchmark** — real numbers on the i5-650 or this VPS, not the research
   pass's estimates from faster reference hardware; see TODO.md's benchmarking note.
-- **Group/co-presence detection**; **landmark/place recognition** — both queued, neither started.
+- **Group/co-presence detection** — done 2026-08-05: no new model needed, resolved to a query over
+  the already-picked face-recognition matches (TAXONOMY.md already defines the category as
+  entity-linking only, no bounding box). See DETECTORS.md area B. Remaining: nothing blocking, this
+  item is closed.
+- **Landmark/place recognition** — still queued, not started.
 - **Privacy reads** (not model picks) for age/gender estimation and OCR/text-in-frame — **both done
   2026-08-05**. Age/gender: EDPB Guidelines 3/2019 §80-81 hold that classification without an
   identifying template doesn't trigger GDPR Article 9 on its own — substantially de-risked, now
@@ -46,8 +55,11 @@ this file is purely the menu.
   processing before any pattern-match runs, making the already-designed pattern-match step
   load-bearing for data minimization, not just UX — carried into the OCR model-pick item below.
   Full reads: `2026-08-05-license-reverification-and-privacy-reads.md` in `research-findings`.
-  Remaining: nothing blocking either read itself, this item is closed (the model picks it unblocks
-  are separate, still-open items).
+  Remaining: nothing blocking either read itself, this item is closed. **Age/gender's unblocked
+  model pick is also now done, same day**: OpenVINO's `age-gender-recognition-retail-0013`
+  (Apache-2.0). Full survey: `2026-08-05-age-gender-estimation-model-survey.md` in
+  `research-findings`. See DETECTORS.md area B. OCR's unblocked model pick is a separate menu item,
+  below, also now closed.
 - **Image captioning** — still queued, not started.
 - **EXIF-derived human-friendly time labels** — done 2026-08-05: confirmed no model/research needed,
   a deterministic lookup (solar-position bucketing + hemisphere-aware season labels) — buildable
@@ -71,11 +83,10 @@ this file is purely the menu.
   built-in pipeline, and the accept-format constraint already flagged as a real risk
   ([../security/THREATS.md](../security/THREATS.md) #12 — ONNX/safetensors only, never raw pickle/
   `.pt`, since a model file is executable-code-adjacent, not inert data like a photo).
-- **OCR-in-frame — real model pick**, now that the UX mechanism is sketched ([DETECTORS.md](DETECTORS.md)
-  area D, 2026-08-04) and the privacy read is done (2026-08-05, above, with a concrete data-
-  minimization requirement to carry in): still needs its own research pass (candidate OCR engines,
-  MIT/Apache-2.0 bar, CPU-only) — the prerequisite this menu flagged is now satisfied, this is
-  purely a model-survey item now.
+- **OCR-in-frame — real model pick** — done 2026-08-05: **RapidOCR** (Apache-2.0, ONNX re-export of
+  PP-OCR weights) is the pick, specifically avoiding stock PaddleOCR's live ~43GB-RAM CPU-inference
+  bug. Runner-up: Tesseract. Full survey: `2026-08-05-ocr-in-frame-engine-survey.md` in
+  `research-findings`. See DETECTORS.md area D. Remaining: nothing blocking, this item is closed.
 
 ## Status
 
@@ -85,4 +96,11 @@ six items closed in one session (license re-verification pass; age/gender and OC
 "best shot" ethical read; EXIF-derived time labels; weather-at-capture exclusion) — deliberately
 scoped to verification/reads only, not a new detector-area survey, per TODO.md's "one area per
 session" cadence. Full writeup: `2026-08-05-license-reverification-and-privacy-reads.md` in the
-`research-findings` repo.
+`research-findings` repo. **2026-08-05 (same day, third pass)**: four more items closed in one
+session, per Joakim's explicit go-ahead to research everything that comfortably fits rather than one
+area at a time — group/co-presence detection (no new model), age/gender model pick, OCR-in-frame
+model pick, and human action/pose recognition (its first research pass ever, area J). Landmark/place
+recognition and image captioning remain open, not attempted this session — next candidates for a
+future pass. Full surveys: `2026-08-05-ocr-in-frame-engine-survey.md`,
+`2026-08-05-age-gender-estimation-model-survey.md`, `2026-08-05-human-action-pose-recognition-survey.md`
+in the `research-findings` repo.
