@@ -121,6 +121,21 @@ not file size in MB — a real i5-650 (or VPS) measurement is a (human checkpoin
 actually wired up, per [../policies/WORKFLOW.md](../policies/WORKFLOW.md)'s TDD/high-blast-radius
 rules — not something to estimate further from here.
 
+## ONNX Runtime telemetry — real finding, action item for whenever a model actually gets wired up
+
+Raised 2026-08-05, checking whether DETECTORS.md's picks (most run on ONNX Runtime, e.g. RapidOCR)
+are appropriate for this project's closed-by-default posture ([../policies/POLICY.md](../policies/POLICY.md)).
+Confirmed via ONNX Runtime's own privacy doc: telemetry is **on by default in official Windows
+builds**, sending trace data to Microsoft (via Windows' own TraceLogging API), subject to the OS's
+own consent/GDPR handling — **not implemented for Linux builds**. This project's actual target
+hardware (the i5-650 home box, the Contabo VPS) is Linux, so no live risk today, but this needs an
+explicit, tested "telemetry disabled" check the moment any ONNX-based model is actually integrated —
+never assumed clean by default — and stays a hard blocker if this project is ever deployed on
+Windows. MediaPipe (the human-action/pose pick, DETECTORS.md area J) was also checked: multiple
+sources confirm on-device-only inference (no frame data leaves the device), but a separate
+framework-level telemetry channel wasn't independently confirmed either way — flagged as unverified,
+not assumed clean, worth a dedicated check before this becomes a real dependency.
+
 ## First real test step, once one area is actually researched and picked
 
 Not written yet — deliberately, per this project's TDD rule (a failing test before implementation,

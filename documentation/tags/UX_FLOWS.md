@@ -105,10 +105,14 @@ build-ready:
   to be poor early on and improve as more sessions run, same arc as any few-shot classifier.
   Consistent with this file's existing rule that a detector/classifier suggestion is never applied
   silently — a round is always a confirm-or-correct step, never an auto-accept.
-- Session boundary (fixed item count vs. a time-box vs. something else), and the actual gamification
-  mechanic (streaks, a completion reward, some other engagement device) are **not decided** — flagged
-  as open UX detail for whichever future session actually specs this flow to build-ready, not resolved
-  here.
+- **Generalized and the reward mechanic decided, 2026-08-05**: this round structure isn't unique to
+  identity labeling — [../curation/GAMIFICATION.md](../curation/GAMIFICATION.md) widens it to every
+  kind of Curator finding a user can confirm/correct/decline (group/co-presence, age/gender,
+  best-shot picks, pose/action, relationship confirms), explicitly excludes privacy-category
+  confirm/blur decisions from gamification entirely, and designs the actual credit mechanic (tied to
+  training value contributed, not to "being right" — no streaks, no loss-aversion tactics) plus how a
+  session's output feeds back into model training, both per-household and a narrower system-wide
+  question. Full spec there, not repeated here.
 
 ## Mockup coverage and simplifications
 
@@ -126,5 +130,6 @@ entity is what search should match against.
 
 ## Status
 
-Vision-level design, 2026-07-27; gamified identity-labeling session added 2026-08-03. Not
+Vision-level design, 2026-07-27; gamified identity-labeling session added 2026-08-03, generalized
+into [../curation/GAMIFICATION.md](../curation/GAMIFICATION.md) 2026-08-05. Not
 scheduled — see [TODO.md](TODO.md) and [../photo-server/TODO.md](../photo-server/TODO.md).
