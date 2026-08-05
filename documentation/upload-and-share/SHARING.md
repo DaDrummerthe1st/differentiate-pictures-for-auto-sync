@@ -88,18 +88,19 @@ Owner shares to new@email.com
 │ Share with:           │
 │ ( ) DPFAS username    │
 │ ( ) Email address     │
-│ ( ) Saved circle   ▾  │  <- new: pick a circle tag
+│ ( ) Saved circle   ▾  │  <- new: pick a saved circle
 │ [__________________]  │
 │ Strict / Free   [ ]   │
 │         [ Send ]      │
 └──────────────────────┘
 ```
 
-Not a new grant mechanism — picking a circle ([../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s "Audience
-circles") just expands its member references and fans out through entry point 2's existing
-username/email resolution, one `photo_owners`/`pending_shares` row per member, same as if each had
-been typed individually. A circle with one member behaves identically to typing that one
-username/email directly — no special case. Not designed further here: the circle-picker UI itself.
+Not a new grant mechanism — picking a circle (an `entities` row, `entity_type='circle'`, see
+[../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s "Audience circles") just resolves its
+`attributes.member_entity_ids` and fans out through entry point 2's existing username/email
+resolution, one `photo_owners`/`pending_shares` row per member, same as if each had been typed
+individually. A circle with one member behaves identically to typing that one username/email
+directly — no special case. Not designed further here: the circle-picker UI itself.
 
 ## Sharing a tag/album vs. a single picture
 

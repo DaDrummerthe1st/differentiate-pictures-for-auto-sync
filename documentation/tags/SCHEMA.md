@@ -58,15 +58,20 @@ pattern" section for the reasoning.
 | Column | Meaning |
 | --- | --- |
 | id, owner_user_id, created_at | — |
-| entity_type | `person` \| `object` \| `animal` \| `place` |
-| display_name | "Dad", "my motorcycle", "Bella", "home" |
-| attributes (JSONB) | type-specific: `{species, breed}` for an animal, `{object_type}` for an object, `{place_kind: general\|specific}` for a place — empty for a person |
+| entity_type | `person` \| `object` \| `animal` \| `place` \| `circle` |
+| display_name | "Dad", "my motorcycle", "Bella", "home", "Close Friends" |
+| attributes (JSONB) | type-specific: `{species, breed}` for an animal, `{object_type}` for an object, `{place_kind: general\|specific}` for a place, `{member_entity_ids: [...]}` for a circle — empty for a person |
 | linked_account_user_id | nullable, **person only** — set once the local record is claimed by/linked to a real account |
 
 One `entities` table with a type discriminator + JSONB attributes, not four
 near-identical tables — matches this project's existing polymorphic-column
 precedent (`audit_log.details`, `tag_references.reference_value` below) rather than
-introducing a new pattern for four things that are structurally the same.
+introducing a new pattern for four things that are structurally the same. **`circle`
+added 2026-08-05** ([TAXONOMY.md](TAXONOMY.md)'s "Audience circles"), a fifth
+instance of this same shape rather than a fifth pattern: a circle is a named,
+owner-scoped record like the other four, it just isn't depicted in any photo — its
+members live in `attributes`, not `tag_references`, since a circle is never itself
+a photo-content tag (see TAXONOMY.md for why that distinction matters).
 
 ## `tag_references`
 
@@ -120,4 +125,4 @@ verification/endorsement" section for what it's for and why.
 
 Designed 2026-07-27. No migration, no endpoints. First real implementation decision
 this needs before any TDD step: reconciling `kind` against the new `category`
-column — see [TODO.md](TODO.md).
+column — see [TODO.md](TODO.md). `entities.entity_type='circle'` added 2026-08-05.

@@ -175,14 +175,13 @@ sharing to that scope, computed from the OCR-privacy-tag confirm/blur history
 above, not a new kind of thing: a recomputed signal derived from corrections, never a stable tag,
 used only to **pre-fill** the next confirm-or-blur prompt with a suggested default ("you've blurred
 emails shared publicly 93% of the time — blur this one too?") — never an auto-decision, same
-motivated-tagging principle as everywhere else in this design. **Real dependency, partly resolved 2026-08-05**:
+motivated-tagging principle as everywhere else in this design. **Real dependency, resolved 2026-08-05**:
 this assumes named audience scopes ("public," "contacts," "close friends") as a first-class concept,
 which didn't exist as of the previous session. [../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s new
-"Audience circles" section now designs exactly that primitive — a circle is a tag (reusing
-`tag_references`, same mechanism as everything else in this taxonomy), with a one-member circle as
-the unremarkable base case, not a special one. Still open: whether a "public" tier is a real built-in
-circle or a separate concept, and the schema note that a circle tag needs `tags.photo_id` relaxed to
-nullable — both flagged in that section, not resolved here either.
+"Audience circles" section now designs exactly that primitive — a circle is an `entities` row
+(`entity_type='circle'`, [../tags/SCHEMA.md](../tags/SCHEMA.md)), not a tag, with a one-member circle
+as the unremarkable base case, not a special one. Still open: whether a "public" tier is a real
+built-in circle or a separate concept — flagged in that section, not resolved here.
 
 **Every automated suggestion needs a visible confidence estimate**, not just a yes/no proposal — the
 "relation-estimate-score" concept from the countryside-search example generalizes to every Curator
@@ -384,4 +383,9 @@ doesn't restate. Confirmed with Joakim 2026-08-02:
 
 Designed 2026-08-02, theory only — no schema migration, no model actually integrated. See
 [TODO.md](TODO.md) for the first real test step and open items (VPS specs, model matrix once the
-research pass returns).
+research pass returns). **Substantial growth since, dated inline, not restated here** — if short on
+budget, jump to a heading instead of reading top to bottom: usage-intent scoring and its 2026-08-03
+re-weighting; the per-household few-shot identity classifier (2026-08-03, resolves DETECTORS.md area
+C); the privacy-preference aggregate and cross-household identity-linking answer (2026-08-05); the
+mislabeling risk flag (2026-08-03, still open). Each is self-contained under its own `##`/bold
+sub-heading.

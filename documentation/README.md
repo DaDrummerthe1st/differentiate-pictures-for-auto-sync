@@ -33,3 +33,5 @@ Project documentation, organized by topic. Structure/maintenance rules: [CLAUDE.
 ## Keeping docs current
 
 When a change affects schema, API surface, or architecture, update the relevant doc in the same pass — don't let docs drift from what the code does. (Known existing drift: see [documentation/picture-handling/TODO.md](picture-handling/TODO.md) for the MySQL-vs-PostgreSQL mismatch.)
+
+**A file's own `## Status` section is part of "the relevant doc" too**: when adding a dated inline addition to a file's body, update that file's own Status summary in the same edit, not deferred — a Status line that only reflects an early version of a since-grown file defeats its own purpose (a trustworthy summary a later session can rely on instead of re-reading the whole body). Added 2026-08-05 after exactly that drift was found in two files edited across one session — see `documentation/bugs/claude-bugs/` for the incident.

@@ -34,6 +34,22 @@ see the entity pattern below. Relationships, story/narrative, and co-presence/gr
 all reuse the same `tag_references` chaining mechanism (see SCHEMA.md) rather than
 needing their own table each.
 
+**`category` is a closed enum, deliberately — clarified 2026-08-05.** A tag exists to
+communicate one specific thing the system found or was told about a photo — its
+category is one of exactly the 12 above, never a free-form value, so a photo can
+never accumulate an unbounded pile of ad hoc tag *kinds*, only ever more instances
+of these 12 known ones. Two things this rules out, each addressed where it actually
+comes up rather than here: a **new detection area doesn't need a new category** —
+number-plate detection ([../curation/DETECTORS.md](../curation/DETECTORS.md) area D)
+and a custom user-defined category (below) both still resolve to the existing
+`privacy` category, only their free-text `tag` value differs; and **not every
+detector output becomes a tag at all** — the index layer
+([../curation/ARCHITECTURE.md](../curation/ARCHITECTURE.md)) stores every structured
+fact a detector produces for search/matching, but only a curated, confirmed-or-
+confident-enough subset ever surfaces as a user-facing tag row. This is also why a
+future Curator LLM narration and a tag are two *views* of the same underlying facts,
+not two different data models — see ARCHITECTURE.md's Curator section.
+
 ## The entity pattern (people, objects, animals, places)
 
 The same shape, reused across all four, because the same need recurs — Joakim's own
@@ -119,38 +135,37 @@ toward once tag-detail views exist, related to but distinct from threat #4's sti
 tagging-consent gap ([../security/THREATS.md](../security/THREATS.md)), which is about a *tagged
 person's* recourse rather than the *tagging user's* own visibility into her own data.
 
-## Audience circles — reusable named sharing groups, raised 2026-08-05
+## Audience circles — a reusable sharing list, not a tag category
 
 Joakim's own question, resolving [../curation/ARCHITECTURE.md](../curation/ARCHITECTURE.md)'s flagged
 "named audience scope doesn't exist yet" gap: **can a group be a tag too, and can a group be one
-person?** Yes to both, and it costs almost no new schema — it reuses the exact `tags` +
-`tag_references` mechanism this taxonomy already leans on everywhere else, the same way
-relationships/story/co-presence all share one chaining mechanism instead of each getting a bespoke
-table.
+person?** Second answer: yes, cleanly. First answer, **corrected same session**: not quite — a first
+pass modeled a circle as a tag, which broke the enum-boundedness principle above (it would have been
+an unenumerated 13th category) and doesn't fit what a tag is *for* here — a circle isn't something the
+system found out about a photo, it's a standing sharing list the user authored, unconnected to any
+photo at all. **Revised design: a circle is an `entities` row, `entity_type='circle'`**
+([SCHEMA.md](SCHEMA.md)) — the same owner-scoped-named-record shape already used for people/objects/
+animals/places, just one more instance of it rather than a fifth pattern. Its members live in
+`attributes.member_entity_ids`, not `tag_references`, so a circle can never appear in a photo's own
+tag list — it structurally can't contribute to per-photo tag clutter, because it was never a
+per-photo thing.
 
-- A **circle** is a tag: a name ("Close Friends"), owned by the tagging user, with one
-  `reference_kind='entity'` row per member (same shape the co-presence category already uses for
-  "these people were together") — except a circle **isn't about any one photo**, it's a standing,
-  reusable list. **One real schema question this surfaces**: `tags.photo_id` is `NOT NULL` today
-  (part of the live `unique(photo_id, user_id, tag)` constraint, [SCHEMA.md](SCHEMA.md)) — a circle
-  tag needs that relaxed, a genuine small change, not a free reuse. The story/narrative category
-  ("the story is itself a tag," [SCHEMA.md](SCHEMA.md)) already implicitly raises the same question
-  for a tag that isn't fundamentally "about" one photo either — worth resolving both at once rather
-  than twice.
-- **A circle with one member is just that — no special case anywhere.** Sharing "to a circle" always
-  means expand its member references into the existing per-recipient share mechanics
-  ([../upload-and-share/SHARING.md](../upload-and-share/SHARING.md)) and fan out — one member or ten
-  goes through the identical path. This doesn't have to replace today's direct single-recipient share
-  (typing one username/email stays the fast path for a one-off) — a circle is the *reusable, named*
-  version of the same underlying mechanism, an addition, not a replacement.
+- **A circle with one member is just that — no special case anywhere.** Sharing "to a circle" means
+  resolving `attributes.member_entity_ids` and fanning out through the existing per-recipient share
+  mechanics ([../upload-and-share/SHARING.md](../upload-and-share/SHARING.md)) — one member or ten
+  goes through the identical path. Doesn't replace today's direct single-recipient share (typing one
+  username/email stays the fast path for a one-off) — a circle is the *reusable, named* version of the
+  same mechanism, an addition.
 - A member reference resolves exactly like any other people-reference already does: a linked-account
   entity shares directly, a local-only entity falls through to the existing pending-share/email-invite
   flow ([SCHEMA.md](SCHEMA.md)'s `reference_kind='email'`) — no new resolution logic.
-- **Naming collision to resolve, not silently picked here**: the existing "Co-presence/group" category
-  (this file, "the same shape reused" table above) already uses the word "group" for a different thing
-  — *who's depicted together in a photo* (content), not *who you share things with* (an audience list).
-  Calling both "group" would be confusing in code and UI alike; "circle" (used above) is a candidate
-  term to keep them apart, not a final decision.
+- **The earlier naming collision with "Co-presence/group" (this file's category table above) is now
+  moot**, not just avoided by word choice: co-presence is a *tag category* (who's depicted together in
+  one photo, a content fact); a circle is an *entity type* (a sharing list, never photo content) — two
+  different namespaces, so both can safely go on using their own natural words. **Co-presence/group is
+  not obsolete and shouldn't be removed** — it answers a genuinely different question a circle can't
+  ("who's in this specific photo together" vs. "who do I usually share things with"), and nothing
+  about this session's design touches it.
 
 Not designed further here: the actual UI for creating/editing a circle, and whether
 [curation/ARCHITECTURE.md](../curation/ARCHITECTURE.md)'s privacy-preference aggregate's "public" tier
@@ -175,5 +190,7 @@ to; excluded photos are simply absent from her view. Full interaction detail:
 
 Designed 2026-07-27, taxonomy only — no schema migration, no endpoints. Supersedes
 [../photo-server/DATA_DICTIONARY.md](../photo-server/DATA_DICTIONARY.md)'s old
-"Future tag schema" and "Tag dimensions" sections outright. Provenance/usage-disclosure principle
-added 2026-08-04.
+"Future tag schema" and "Tag dimensions" sections outright. **2026-08-04**:
+provenance/usage-disclosure principle added. **2026-08-05**: category-enum-boundedness
+clarified, custom privacy categories added, audience circles designed (as an `entities`
+type, not a 13th category — see that section for the correction).
