@@ -60,6 +60,24 @@ Plain-language definitions of every technical/business term this project's desig
 - **ANPR (automatic number plate recognition)**: detecting and reading a vehicle's license plate out of an image — a specific, legally distinct sub-case of OCR-in-frame ([curation/DETECTORS.md](curation/DETECTORS.md) area D), since a plate resolves to a registered keeper via the national vehicle registry.
 - **DPIA (Data Protection Impact Assessment)**: a GDPR-required *process* (not a ban) a data *controller* must carry out before starting processing likely to pose a high risk to people's rights — e.g. combining data from multiple sources in unexpected ways, or using new identification technology. A procedural obligation on whoever controls a given deployment's data, not a statement that the underlying activity is illegal.
 - **Zero-shot classification**: sorting something into a category it was never explicitly trained on, by comparing its embedding against a category described only in a text prompt at the moment of use (e.g. "a photo of a blueprint") rather than a fixed label list baked in during training. This is what makes a genuinely **custom**, user-defined category possible with no new model or training pass — see [tags/TAXONOMY.md](tags/TAXONOMY.md)'s custom privacy categories.
+- **Purpose-based interpretation (of biometric data, GDPR)**: EDPB Guidelines 3/2019 (§80-81)'s
+  reading of Article 9 — a system that classifies a physical characteristic (e.g. estimated age or
+  gender) without generating a template used to *uniquely identify* a specific person doesn't count
+  as processing "special category" biometric data, even though a face-recognition embedding used for
+  identification does. Not unanimous (EDPB's later Guidelines 05/2022 on facial recognition takes a
+  broader stance) but the mainstream regulatory position — see
+  [curation/DETECTORS.md](curation/DETECTORS.md) area B's age/gender row.
+- **Data minimization (GDPR Article 5(1)(c))**: the principle that personal data collected/processed
+  must be limited to what's actually necessary for the stated purpose — relevant to this project's
+  OCR-in-frame detector ([curation/DETECTORS.md](curation/DETECTORS.md) area D): raw extracted text
+  should exist only long enough to run the privacy pattern-match check against it, not be retained
+  indefinitely regardless of whether anything sensitive was found.
+- **Lookism**: the standard academic/fairness term for bias that privileges certain appearances over
+  others — the specific, documented failure mode automated attractiveness-scoring models are shown in
+  peer-reviewed literature to reinforce (non-diverse training data skews toward particular
+  ethnicities/ages; models show a measurable bias toward idealized features). Relevant to this
+  project's flagged "best shot"/attractiveness-scoring idea,
+  [curation/DETECTORS.md](curation/DETECTORS.md) area A.
 - **PSI (Private Set Intersection) / PPRL (Privacy-Preserving Record Linkage)**: cryptographic techniques letting two parties learn *only* which of their records match each other, without either side revealing anything about the records that don't match. Real, peer-reviewed research; classic versions target exact-match fields (like a hashed email) rather than fuzzy similarity over continuous biometric embeddings, and — like homomorphic encryption/MPC above — not proven to run on this project's Pi-class target hardware. See [curation/IDENTITY_MATCHING.md](curation/IDENTITY_MATCHING.md)'s cross-household identity-linking discussion.
 
 ## Tags and entities

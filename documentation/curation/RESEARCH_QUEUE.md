@@ -15,9 +15,13 @@ this file is purely the menu.
   [../photo-server/TODO.md](../photo-server/TODO.md)'s phased format (one numbered step per session, a
   failing test then minimal code, a Security line, human checkpoints) is the precedent to follow once
   detector picks are stable enough to build against.
-- **License re-verification pass** over every pick already in DETECTORS.md (object detection, face
-  detection/recognition/emotion, NSFW, CLIP embedding, local LLM) — a fresh, independent check against
-  the resolved MIT/Apache-2.0-only bar, not a re-trust of this session's own claims.
+- **License re-verification pass** — done 2026-08-05: every current DETECTORS.md pick independently
+  re-checked against its own LICENSE file/model card, all confirmed; Open-NSFW2's wording tightened
+  from "BSD-lineage" to a confirmed MIT pick; one real-but-non-reversing nuance flagged on
+  MobileFaceNet's training-data lineage (same InsightFace-format training data as `buffalo_s`, though
+  Hailo's own redistribution license carries no restriction). Full table:
+  `2026-08-05-license-reverification-and-privacy-reads.md` in the `research-findings` repo. Remaining:
+  nothing blocking, this item is closed.
 - **Animal detection/species + pet identity matching** (DETECTORS.md area C) — done 2026-08-03: coarse
   species is free (reuses the existing object detector's COCO classes), fine-grained species has an
   optional pick (SpeciesNet). Pet identity matching has no pretrained model under the MIT/Apache-2.0
@@ -35,14 +39,29 @@ this file is purely the menu.
 - **Object-detection timing benchmark** — real numbers on the i5-650 or this VPS, not the research
   pass's estimates from faster reference hardware; see TODO.md's benchmarking note.
 - **Group/co-presence detection**; **landmark/place recognition** — both queued, neither started.
-- **Privacy reads** (not model picks) for age/gender estimation and OCR/text-in-frame, before either
-  becomes a research item.
-- **Image captioning**; **EXIF-derived human-friendly time labels** (no model needed, cheap); confirm
-  weather-at-capture is excluded rather than researched (closed-by-default conflict, likely moot).
-- **"Best shot"/attractiveness scoring** (DETECTORS.md area A) — ethically flagged, needs a conscious
-  read before it's a plain model pick, same treatment as age/gender. Confirmed 2026-08-03: this menu
-  itself is where Joakim wants ideas like this noted ("the approvement-bank") — already correctly
-  placed, nothing further needed to file it right.
+- **Privacy reads** (not model picks) for age/gender estimation and OCR/text-in-frame — **both done
+  2026-08-05**. Age/gender: EDPB Guidelines 3/2019 §80-81 hold that classification without an
+  identifying template doesn't trigger GDPR Article 9 on its own — substantially de-risked, now
+  unblocked for a plain model-pick pass (DETECTORS.md area B). OCR: text extraction is itself GDPR
+  processing before any pattern-match runs, making the already-designed pattern-match step
+  load-bearing for data minimization, not just UX — carried into the OCR model-pick item below.
+  Full reads: `2026-08-05-license-reverification-and-privacy-reads.md` in `research-findings`.
+  Remaining: nothing blocking either read itself, this item is closed (the model picks it unblocks
+  are separate, still-open items).
+- **Image captioning** — still queued, not started.
+- **EXIF-derived human-friendly time labels** — done 2026-08-05: confirmed no model/research needed,
+  a deterministic lookup (solar-position bucketing + hemisphere-aware season labels) — buildable
+  whenever the build-plan item is picked up. Remaining: nothing blocking, this item is closed.
+- **Weather-at-capture exclusion** — confirmed and closed 2026-08-05: no offline, self-hostable,
+  worldwide historical-weather dataset exists at a size compatible with this project's resource-tight
+  posture — excluded per closed-by-default, not just "likely." Remaining: nothing blocking, this item
+  is closed.
+- **"Best shot"/attractiveness scoring** (DETECTORS.md area A) — ethical read **done 2026-08-05**:
+  peer-reviewed literature (AAAI AIES, MDPI) confirms the bias risk is real, not hypothetical —
+  non-diverse training data skews standards, and models measurably reinforce narrow ("lookism")
+  beauty standards. Go/no-go on shipping the feature at all is still Joakim's open design call, not
+  resolved by this read. Confirmed 2026-08-03: this menu itself is where Joakim wants ideas like this
+  noted ("the approvement-bank") — already correctly placed, nothing further needed to file it right.
 - **HW-central-record consolidation** — queued behind the `workstation` repo's own concurrent session;
   see TODO.md. Not pickable until that repo is free.
 - **Bring-your-own identity model, compared against the per-household classifier** — raised 2026-08-04
@@ -53,10 +72,17 @@ this file is purely the menu.
   ([../security/THREATS.md](../security/THREATS.md) #12 — ONNX/safetensors only, never raw pickle/
   `.pt`, since a model file is executable-code-adjacent, not inert data like a photo).
 - **OCR-in-frame — real model pick**, now that the UX mechanism is sketched ([DETECTORS.md](DETECTORS.md)
-  area D, 2026-08-04): still needs its own research pass (candidate OCR engines, MIT/Apache-2.0 bar,
-  CPU-only) and the privacy read this menu already flags as a prerequisite.
+  area D, 2026-08-04) and the privacy read is done (2026-08-05, above, with a concrete data-
+  minimization requirement to carry in): still needs its own research pass (candidate OCR engines,
+  MIT/Apache-2.0 bar, CPU-only) — the prerequisite this menu flagged is now satisfied, this is
+  purely a model-survey item now.
 
 ## Status
 
 Corrected 2026-08-03 from an earlier single-"up next"-item design — Joakim explicitly didn't want a
-forced sequence. Add items as new areas come up; remove/mark done as items resolve.
+forced sequence. Add items as new areas come up; remove/mark done as items resolve. **2026-08-05**:
+six items closed in one session (license re-verification pass; age/gender and OCR privacy reads;
+"best shot" ethical read; EXIF-derived time labels; weather-at-capture exclusion) — deliberately
+scoped to verification/reads only, not a new detector-area survey, per TODO.md's "one area per
+session" cadence. Full writeup: `2026-08-05-license-reverification-and-privacy-reads.md` in the
+`research-findings` repo.

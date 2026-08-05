@@ -20,7 +20,7 @@ written up here once done).
 | Noise/grain | High-ISO grain, compression artifacts | Same bucket, another "technically bad" signal | queued |
 | Eyes-closed / blink | A face mid-blink | Classic "otherwise good photo, ruined by one detail" flag — a person-level, not whole-photo, quality signal | queued |
 | Aesthetic/composition scoring | Rule-of-thirds, framing quality | More subjective/harder; lower priority | queued (NIMA/MobileNet backbone flagged as a future option if wanted — Apache-2.0, ~4M params, &lt;200MB) |
-| "Best shot" selection among near-duplicates (e.g. picking a profile-photo candidate from a burst of selfies) | Gaze/eye-openness, attractiveness/appeal scoring | Raised 2026-08-03 — genuinely harder than pass/fail quality; some overlap with eyes-closed/blink above, but "attractiveness scoring" specifically is a real, separate research area | queued — **ethically flagged, not just technically queued**: automated attractiveness scoring risks encoding/amplifying biased beauty standards; needs the same conscious-call treatment as age/gender estimation's privacy flag above, not a plain model pick |
+| "Best shot" selection among near-duplicates (e.g. picking a profile-photo candidate from a burst of selfies) | Gaze/eye-openness, attractiveness/appeal scoring | Raised 2026-08-03 — genuinely harder than pass/fail quality; some overlap with eyes-closed/blink above, but "attractiveness scoring" specifically is a real, separate research area | queued — **ethical read done 2026-08-05, risk confirmed real not resolved**: peer-reviewed literature (AAAI AIES, MDPI) confirms facial-beauty-prediction models measurably skew toward specific ethnicities/ages from non-diverse training data and show a documented bias toward reinforcing narrow ("lookism") beauty standards — not a hypothetical concern. Go/no-go (e.g. keep gaze/eyes-open as the pick signal, drop a separate "attractiveness" axis entirely) is Joakim's design call, not settled by this read. Full read: `2026-08-05-license-reverification-and-privacy-reads.md` in the `research-findings` repo. |
 
 **Picks (researched 2026-08-02)**: no model needed for blur/exposure/monochrome — classic, near-zero-cost techniques cover all three: variance-of-Laplacian for blur (`cv2.Laplacian(...).var()`), a luminance histogram for over/under-exposure, and a near-zero saturation-channel mean for black-and-white. Negligible CPU cost, no license to track, no RAM footprint worth mentioning — the right call given the resource-efficiency constraint, not a placeholder pending a "real" model.
 
@@ -32,7 +32,7 @@ written up here once done).
 | Face recognition/identity | Which known person (embedding match against `entities`) | The literal "same dog" example, applied to people — "all photos of Dad" | researched |
 | Facial expression/emotion | Happy, sad, neutral, etc. | Joakim's own V1 rollout note ("feelings/emotions"), [../VISION.md](../VISION.md) | researched |
 | Group/co-presence | Multiple known people together | Feeds the co-presence/group tag category, [../tags/TAXONOMY.md](../tags/TAXONOMY.md) | queued |
-| Age/gender estimation | Rough demographic guess | **Flag, not just queue**: this plus a face embedding edges toward GDPR "special category" biometric data — see [../GLOSSARY.md](../GLOSSARY.md)'s "biometric data" entry. Needs a privacy read before research, not just a model pick. | queued, privacy-flagged |
+| Age/gender estimation | Rough demographic guess | **Privacy read done 2026-08-05**: EDPB Guidelines 3/2019 §80-81 (purpose-based interpretation, mainstream but not unanimous — EDPB's later 05/2022 facial-recognition guidelines take a broader stance) hold that classifying age/gender *without* generating an identifying biometric template does **not** trigger GDPR Article 9 special-category status on its own — only the face *embedding* used for identification does (unchanged, [../GLOSSARY.md](../GLOSSARY.md)'s "biometric data" entry). De-risks this to a plain research pass; real remaining concern is accuracy-disparity/misgendering harm (a UX-display question — never show as an asserted fact — not a legal blocker). Full read: `2026-08-05-license-reverification-and-privacy-reads.md` in the `research-findings` repo. | queued — unblocked, ready for a plain model-pick research pass |
 
 **Picks (researched 2026-08-02)**: **face detection** — YuNet (OpenCV Zoo, Apache-2.0, sub-1MB ONNX, millisecond CPU cost, ships free via OpenCV's built-in `FaceDetectorYN`, already returns 5 landmarks). **Face recognition/embedding** — MobileFaceNet's standalone MIT-licensed ONNX release (~1M params, 128-d embedding) over InsightFace's `buffalo_s` bundle, specifically to sidestep InsightFace's pretrained-weights license (code is MIT, but the weights themselves are non-commercial-research-only per their own policy — a gray area for a private but non-"research" family server, worth a conscious call rather than an assumption). **Emotion** — FER+ (`emotion-ferplus-8`, Apache-2.0, ready-made ONNX file from the ONNX Model Zoo) is the *only* genuinely turnkey pretrained option found in this category; everything else surveyed is research code needing your own training/export.
 
@@ -116,9 +116,12 @@ weight class either way, ~236MB vs. NanoDet-Plus's single-digit MB). **Scene/ven
 | Nudity/NSFW detection | Explicit content | Already an open item, [../tags/TODO.md](../tags/TODO.md) — forces the privacy category's automatic-private behaviour | researched |
 | CSAM perceptual-hash matching | Known illegal content | Already the stated moderation mechanism, [../policies/POLICY.md](../policies/POLICY.md) — a blocklist match, not a learned classifier | queued (mechanism already decided, not a research item so much as an implementation one) |
 
-**Pick (researched 2026-08-02, license bar tightened 2026-08-03)**: **Open-NSFW2 is the pick**
-(permissive BSD-lineage license), not NudeNet v3 — NudeNet is **excluded**: AGPL-3.0, same reasoning
-as area D's YOLO26n exclusion above. Real trade-off named, not hidden: Open-NSFW2 only returns a
+**Pick (researched 2026-08-02, license bar tightened 2026-08-03, license re-verified 2026-08-05)**:
+**Open-NSFW2 is the pick** — **MIT license**, not just "BSD-lineage" as earlier phrasing hedged: the
+actual pick is `bhky/opennsfw2` (a Keras/TF2 reimplementation), confirmed MIT directly on its own
+repo; the *original* Yahoo `yahoo/open_nsfw` Caffe model is BSD-2-Clause but isn't what this project
+actually uses. Not NudeNet v3 — NudeNet is **excluded**: AGPL-3.0 (re-confirmed 2026-08-05), same
+reasoning as area D's YOLO26n exclusion above. Real trade-off named, not hidden: Open-NSFW2 only returns a
 single coarse NSFW probability, not NudeNet's 18-class body-part-level output — less granular, but
 still sufficient to gate the privacy category's automatic-private behavior (a binary "flag for
 review" is all that decision needs).
@@ -128,8 +131,8 @@ review" is all that decision needs).
 | Area | What it detects | Why it matters | Status |
 | --- | --- | --- | --- |
 | EXIF/GPS extraction | Where/when a photo was taken | Already built ([../../prototypes/differentiate_pictures/app/gpsdata.py](../../prototypes/differentiate_pictures/app/gpsdata.py)) | done (pre-existing) |
-| Human-friendly time labels | "Golden hour," "winter," from raw EXIF timestamp | Feeds the temporal/seasonal tag category without a vision model at all — cheap, no inference needed | queued |
-| Weather at time/place | Sunny, rainy, snowy | Would need a weather API lookup by GPS+timestamp — **likely excluded**: conflicts with closed-by-default/no-cloud-APIs unless a fully offline historical-weather dataset exists; flag, don't assume. | queued, policy-flagged |
+| Human-friendly time labels | "Golden hour," "winter," from raw EXIF timestamp | Feeds the temporal/seasonal tag category without a vision model at all — cheap, no inference needed | **design note done 2026-08-05, ready to build**: no research needed, this is a deterministic lookup, not a pick — local solar time (sunrise/sunset via GPS lat/long + date, e.g. the standard NOAA solar-position algorithm) buckets "golden hour"/"blue hour"/"midday"/"night"; calendar month + hemisphere (from GPS latitude sign, correctly inverted south of the equator) buckets a season label. Only ever `queued` for lack of a session to write the bucket logic down. Buildable whenever DETECTORS.md's build-plan item is picked up. |
+| Weather at time/place | Sunny, rainy, snowy | Would need a weather API lookup by GPS+timestamp | **excluded, closed 2026-08-05**: no offline, fully self-hosted, worldwide-coverage historical-weather dataset exists at a size compatible with this project's resource-tight posture (reanalysis datasets like ERA5 are many terabytes of gridded global data, not a lightweight local lookup) — conflicts with closed-by-default/no-cloud-APIs per [../policies/POLICY.md](../policies/POLICY.md). Confirms the "likely excluded" guess rather than reversing it. |
 
 ## H. Semantic / free-text search backbone
 
@@ -145,7 +148,11 @@ that wants unrestricted commercial use. OpenCLIP ViT-B/32 also happens to have t
 ONNX deployment path of anything surveyed, so nothing is given up by excluding MobileCLIP2 beyond its
 edge-latency advantage (3-15ms vs. OpenCLIP's larger footprint) — acceptable given V1 targets a server,
 not an edge device yet. SigLIP (Apache-2.0) remains a fully-open second option if OpenCLIP's accuracy
-disappoints in practice.
+disappoints in practice. **License re-verified 2026-08-05**: every current pick above
+independently re-checked against its own LICENSE file/model card (not just this project's own prior
+claim) — all confirmed, plus Open-NSFW2's wording tightened from "BSD-lineage" to a confirmed MIT
+pick, and a real-but-non-reversing nuance flagged on MobileFaceNet's training-data lineage. Full
+table: `2026-08-05-license-reverification-and-privacy-reads.md` in the `research-findings` repo.
 
 **OCR-in-frame → privacy tag, mechanism sketched (not a model pick), raised 2026-08-04**: the shape
 Joakim asked for — extracted text ending up as a per-photo tag a sharing decision can act on, not just
@@ -163,8 +170,15 @@ motivated-tagging principle ([README.md](README.md)); (4) confirming creates an 
 which forces `visibility=private` and flows straight into the already-designed blur-preview sharing
 review ([../tags/UX_FLOWS.md](../tags/UX_FLOWS.md)) — no new sharing mechanism needed. **Not resolved**:
 which OCR model/engine (a real pick needs its own research pass, same bar as every other area — MIT/
-Apache-2.0, CPU-only, self-hosted), and the "privacy read" [RESEARCH_QUEUE.md](RESEARCH_QUEUE.md)
-already flags as needed before this becomes a model pick.
+Apache-2.0, CPU-only, self-hosted). **Privacy read done 2026-08-05**: OCR text extraction is itself
+GDPR "processing" the moment pixels become searchable characters, before any pattern-match runs —
+this makes the pattern-match step above load-bearing for data minimization (GDPR Article 5(1)(c)),
+not just a UX nicety: raw OCR text should exist only long enough to run that check against it, not be
+retained indefinitely regardless of whether it matched. A DPIA is generally warranted for this kind
+of library-wide automated processing if this project's controller obligations are ever formally
+assessed — same "DPIA-relevant, controller-side, not a legality blocker" framing as the ANPR row
+above. Carry the retention constraint into the eventual model-pick pass. Full read:
+`2026-08-05-license-reverification-and-privacy-reads.md` in the `research-findings` repo.
 
 ## I. Behavioral / usage signals (not a detector — derived from user actions)
 
@@ -208,15 +222,23 @@ the intended future cadence. **License bar resolved 2026-08-03**: MIT/Apache-2.0
 VISION.md's own V2/V3 multi-household/commercialize plan makes AGPL's network-use clause a real
 future obligation, not a low risk — every pick above now reflects that (NanoDet-Plus, Open-NSFW2,
 OpenCLIP ViT-B/32), with the previously-flagged AGPL/restrictive options explicitly excluded rather
-than offered as accuracy/latency-driven alternatives. A fresh, independent license-verification pass
-over all of these is still queued (this session's own claims shouldn't be trusted without a
-re-check) — see [RESEARCH_QUEUE.md](RESEARCH_QUEUE.md). **Animals (area C) researched 2026-08-03** —
+than offered as accuracy/latency-driven alternatives. **License re-verification pass done 2026-08-05**
+— every pick independently re-checked against its own LICENSE file/model card, all confirmed (see
+area H's inline note and the full table in `research-findings`'s
+`2026-08-05-license-reverification-and-privacy-reads.md`), closing the item RESEARCH_QUEUE.md had
+queued for this. **Animals (area C) researched 2026-08-03** —
 coarse species reuses the existing object detector at zero cost, fine-grained species has a pick
 (SpeciesNet) but is an optional add-on, and pet identity matching has no confident pick, only a
 caveated fallback — see area C above and the full survey in the `research-findings` repo. See
-[TODO.md](TODO.md) for the still-queued areas (landmarks, OCR, age/gender, group/co-presence,
-EXIF-derived time labels, image captioning, usage signals, actions/pose). **2026-08-04**: OCR-in-frame
+[TODO.md](TODO.md) for the still-queued areas (landmarks, OCR, age/gender, group/co-presence, image
+captioning, usage signals, actions/pose — EXIF-derived time labels dropped off this list 2026-08-05,
+resolved to a buildable design note needing no further research). **2026-08-04**: OCR-in-frame
 got a UX mechanism sketch (still no model pick) and a speculative reverse-search idea was added under
 "Also flagged" — see area D above. **2026-08-05**: area D gained a number-plate (ANPR) row, same
 privacy-tag mechanism as OCR, no legality concern for this project's own liability (see that row for
-the correction to an initial over-flag).
+the correction to an initial over-flag). **2026-08-05 (same day, separate pass)**: license
+re-verification done (above), plus three RESEARCH_QUEUE.md privacy/ethics reads landed —
+age/gender's Article-9 flag substantially de-risked (area B), OCR's data-minimization requirement
+made explicit (area D), "best shot"/attractiveness's bias risk confirmed with real literature (area
+A) — and weather-at-capture closed as excluded (area G). Full writeup:
+`2026-08-05-license-reverification-and-privacy-reads.md` in the `research-findings` repo.
