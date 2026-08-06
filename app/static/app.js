@@ -777,12 +777,14 @@ function openLightbox(idx) {
 function closeLightbox() {
   document.getElementById("lightbox").classList.add("hidden");
   closeTagForm();
+  disarmDrawBox();
 }
 function lightboxStep(delta) {
   currentLightboxIndex = (currentLightboxIndex + delta + allImages.length) % allImages.length;
   document.getElementById("lbImg").src = `/original?p=${encodeURIComponent(allImages[currentLightboxIndex])}`;
   logEvent("image_view", allImages[currentLightboxIndex]);
   closeTagForm();
+  disarmDrawBox();
   loadTagsForCurrentPhoto();
 }
 
@@ -809,6 +811,10 @@ document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeTagForm();
     return;
   }
+  if (drawPhase !== "idle" && e.key === "Escape") {
+    disarmDrawBox();
+    return;
+  }
   if (document.getElementById("lightbox").classList.contains("hidden")) return;
   if (e.key === "Escape") closeLightbox();
   else if (e.altKey && e.key === "ArrowLeft") {
@@ -827,7 +833,16 @@ const TAG_CATEGORY_LABELS = {
   places: "Plats",
   objects: "Föremål",
   animals: "Djur",
+  occasion: "Tillfälle",
   generic: "Övrigt",
+};
+
+// Shown under the category picker for categories where it materially
+// changes what a user should draw/type - not every category needs one.
+const TAG_CATEGORY_HINTS = {
+  people:
+    "Tips: rita helst bara runt ansiktet, med en jämn marginal - det ger både ett resultat som är " +
+    "lättare att träffa exakt och bättre indata den dag en modell ska tränas på dina rutor.",
 };
 
 let currentPhotoTags = [];
@@ -864,6 +879,7 @@ function renderTagOverlay() {
       label.textContent = tag.value;
       box.appendChild(label);
       box.addEventListener("mousedown", (e) => e.stopPropagation());
+      box.addEventListener("touchstart", (e) => e.stopPropagation());
       box.addEventListener("click", () => openTagForm({ mode: "edit", tag }));
       boxesWrap.appendChild(box);
     } else {
@@ -889,16 +905,28 @@ async function loadTagValueSuggestions(category) {
   }
 }
 
+function updateTagCategoryHint(category) {
+  const hint = document.getElementById("tagCategoryHint");
+  const text = TAG_CATEGORY_HINTS[category];
+  if (text) {
+    hint.textContent = text;
+    hint.classList.remove("hidden");
+  } else {
+    hint.classList.add("hidden");
+  }
+}
+
 function openTagForm({ mode, tag = null, pendingBox = null }) {
+  disarmDrawBox();
   tagFormMode = mode;
   tagFormEditingId = tag ? tag.id : null;
   tagFormPendingBox = tag ? tag.bbox : pendingBox;
   document.getElementById("tagFormTitle").textContent = mode === "edit" ? "Redigera tagg" : "Ny tagg";
-  document.getElementById("tagFormHint").classList.toggle("hidden", mode === "edit");
   const categorySelect = document.getElementById("tagCategorySelect");
-  categorySelect.value = tag ? tag.category : "people";
+  categorySelect.value = tag ? tag.category : pendingBox ? "people" : "places";
   document.getElementById("tagValueInput").value = tag ? tag.value : "";
   document.getElementById("tagFormDelete").classList.toggle("hidden", mode !== "edit");
+  updateTagCategoryHint(categorySelect.value);
   loadTagValueSuggestions(categorySelect.value);
   document.getElementById("tagForm").classList.remove("hidden");
   document.getElementById("tagValueInput").focus();
@@ -906,7 +934,6 @@ function openTagForm({ mode, tag = null, pendingBox = null }) {
 
 function closeTagForm() {
   document.getElementById("tagForm").classList.add("hidden");
-  clearDrawingBox();
   tagFormMode = null;
   tagFormEditingId = null;
   tagFormPendingBox = null;
@@ -917,6 +944,7 @@ document.getElementById("lbAddTagBtn").addEventListener("click", () => {
 });
 document.getElementById("tagCategorySelect").addEventListener("change", (e) => {
   loadTagValueSuggestions(e.target.value);
+  updateTagCategoryHint(e.target.value);
 });
 document.getElementById("tagFormCancel").addEventListener("click", closeTagForm);
 document.getElementById("tagFormSave").addEventListener("click", async () => {
@@ -959,69 +987,236 @@ document.getElementById("tagFormDelete").addEventListener("click", async () => {
   await loadTagsForCurrentPhoto();
 });
 
-// ---- Manual bounding-box drawing directly on the lightbox image ----
+// ---- "More actions" menu - download/select-mode moved here 2026-08-05,
+// no longer needed front-and-center now that tagging is the main workflow ----
 
-let tagDrawStart = null;
+document.getElementById("moreActionsBtn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  const menu = document.getElementById("moreActionsMenu");
+  const opening = menu.classList.contains("hidden");
+  menu.classList.toggle("hidden", !opening);
+  document.getElementById("moreActionsBtn").setAttribute("aria-expanded", String(opening));
+});
+document.addEventListener("click", (e) => {
+  const wrap = document.getElementById("moreActionsWrap");
+  if (wrap && !wrap.contains(e.target)) {
+    document.getElementById("moreActionsMenu").classList.add("hidden");
+    document.getElementById("moreActionsBtn").setAttribute("aria-expanded", "false");
+  }
+});
+document.getElementById("selectModeBtn").addEventListener("click", () => {
+  document.getElementById("moreActionsMenu").classList.add("hidden");
+});
+document.getElementById("downloadAllBtn").addEventListener("click", () => {
+  document.getElementById("moreActionsMenu").classList.add("hidden");
+});
 
-function clearDrawingBox() {
-  const el = document.getElementById("lbDrawingBox");
-  el.classList.add("hidden");
-  el.style.width = "0";
-  el.style.height = "0";
-  tagDrawStart = null;
-}
+// ---- Help / photo-info icon buttons on the lightbox ----
+
+document.getElementById("lbHelpBtn").addEventListener("click", () => {
+  document.getElementById("helpBtn").click();
+});
+document.getElementById("lbInfoBtn").addEventListener("click", () => {
+  const path = allImages[currentLightboxIndex];
+  document.getElementById("photoInfoFilename").textContent = path.split("/").pop();
+  const list = document.getElementById("photoInfoTagList");
+  list.innerHTML = "";
+  if (currentPhotoTags.length === 0) {
+    const p = document.createElement("p");
+    p.textContent = "Inga taggar än.";
+    list.appendChild(p);
+  } else {
+    for (const tag of currentPhotoTags) {
+      const row = document.createElement("p");
+      const region = tag.bbox ? " (markerat område)" : "";
+      row.textContent = `${TAG_CATEGORY_LABELS[tag.category] || tag.category}: ${tag.value}${region}`;
+      list.appendChild(row);
+    }
+  }
+  document.getElementById("photoInfoModal").classList.remove("hidden");
+});
+document.getElementById("photoInfoModalClose").addEventListener("click", () => {
+  document.getElementById("photoInfoModal").classList.add("hidden");
+});
+
+// ---- Manual bounding-box drawing: an explicit tool (armed via
+// #lbDrawBoxBtn), not an always-on drag. Two reasons: it's what Joakim
+// asked for directly (2026-08-05, "I would prefer a drag a square-tool"),
+// and an always-on drag would hijack ordinary scrolling/pinch gestures on
+// a touch device every time a finger touched the photo. After the initial
+// drag, the box stays adjustable (drag its body to move, its corners to
+// resize) before committing to the tag-details form - added same day
+// after live use found two real problems: a too-small drag silently did
+// nothing ("didn't stick", no feedback at all), and drawing an exact box
+// around a face by hand is genuinely hard on the first attempt.
+
+let drawPhase = "idle"; // "idle" | "armed" | "adjusting"
+let drawBox = null; // {x,y,w,h} fractions, while armed/adjusting
+let dragMode = null; // "new" | "move" | "resize", while a pointer is down
+let dragAnchor = null; // meaning depends on dragMode
 
 const lbImageWrap = document.getElementById("lbImageWrap");
-lbImageWrap.addEventListener("mousedown", (e) => {
-  const rect = lbImageWrap.getBoundingClientRect();
-  tagDrawStart = {
-    x: clamp01((e.clientX - rect.left) / rect.width),
-    y: clamp01((e.clientY - rect.top) / rect.height),
-  };
-});
-lbImageWrap.addEventListener("mousemove", (e) => {
-  if (!tagDrawStart) return;
-  const rect = lbImageWrap.getBoundingClientRect();
-  const x = clamp01((e.clientX - rect.left) / rect.width);
-  const y = clamp01((e.clientY - rect.top) / rect.height);
-  const left = Math.min(tagDrawStart.x, x);
-  const top = Math.min(tagDrawStart.y, y);
-  const w = Math.abs(x - tagDrawStart.x);
-  const h = Math.abs(y - tagDrawStart.y);
-  const box = document.getElementById("lbDrawingBox");
-  box.style.left = left * 100 + "%";
-  box.style.top = top * 100 + "%";
-  box.style.width = w * 100 + "%";
-  box.style.height = h * 100 + "%";
-  box.classList.remove("hidden");
-});
-lbImageWrap.addEventListener("mouseup", (e) => {
-  if (!tagDrawStart) return;
-  const rect = lbImageWrap.getBoundingClientRect();
-  const x = clamp01((e.clientX - rect.left) / rect.width);
-  const y = clamp01((e.clientY - rect.top) / rect.height);
-  const left = Math.min(tagDrawStart.x, x);
-  const top = Math.min(tagDrawStart.y, y);
-  const w = Math.abs(x - tagDrawStart.x);
-  const h = Math.abs(y - tagDrawStart.y);
-  tagDrawStart = null;
-  // Ignore accidental clicks/tiny drags rather than opening the form for a
-  // sliver nobody meant to draw.
-  const MIN_FRACTION = 0.02;
-  if (w < MIN_FRACTION || h < MIN_FRACTION) {
-    clearDrawingBox();
+const lbDrawingBoxEl = document.getElementById("lbDrawingBox");
+const lbDrawBoxBtn = document.getElementById("lbDrawBoxBtn");
+
+for (const corner of ["nw", "ne", "sw", "se"]) {
+  const handle = document.createElement("div");
+  handle.className = `lb-box-handle lb-box-handle-${corner}`;
+  handle.dataset.corner = corner;
+  lbDrawingBoxEl.appendChild(handle);
+}
+
+function renderDrawBox() {
+  if (!drawBox) {
+    lbDrawingBoxEl.classList.add("hidden");
     return;
   }
-  openTagForm({ mode: "create", pendingBox: { x: left, y: top, w, h } });
+  lbDrawingBoxEl.style.left = drawBox.x * 100 + "%";
+  lbDrawingBoxEl.style.top = drawBox.y * 100 + "%";
+  lbDrawingBoxEl.style.width = drawBox.w * 100 + "%";
+  lbDrawingBoxEl.style.height = drawBox.h * 100 + "%";
+  lbDrawingBoxEl.classList.remove("hidden");
+  lbDrawingBoxEl.classList.toggle("adjusting", drawPhase === "adjusting");
+}
+
+function setDrawPhase(phase) {
+  drawPhase = phase;
+  lbImageWrap.classList.toggle("drawing-active", phase !== "idle");
+  if (phase === "idle") {
+    lbDrawBoxBtn.textContent = "▭ Rita ruta";
+    lbDrawBoxBtn.setAttribute("aria-pressed", "false");
+    lbDrawBoxBtn.classList.remove("armed");
+  } else if (phase === "armed") {
+    lbDrawBoxBtn.textContent = "✕ Avbryt ritning";
+    lbDrawBoxBtn.setAttribute("aria-pressed", "true");
+    lbDrawBoxBtn.classList.add("armed");
+  } else {
+    lbDrawBoxBtn.textContent = "✓ Klar med ruta";
+    lbDrawBoxBtn.setAttribute("aria-pressed", "true");
+    lbDrawBoxBtn.classList.add("armed");
+  }
+}
+
+function disarmDrawBox() {
+  setDrawPhase("idle");
+  drawBox = null;
+  dragMode = null;
+  dragAnchor = null;
+  renderDrawBox();
+}
+
+lbDrawBoxBtn.addEventListener("click", () => {
+  if (drawPhase === "idle") {
+    setDrawPhase("armed");
+  } else if (drawPhase === "armed") {
+    disarmDrawBox();
+  } else {
+    const box = drawBox;
+    disarmDrawBox();
+    openTagForm({ mode: "create", pendingBox: box });
+  }
 });
-// A drag that ends outside #lbImageWrap (past the image edge, over the
-// backdrop or a button) never fires that element's own mouseup - cancel
-// the in-progress draw instead of leaving it stuck armed for next time.
-document.addEventListener("mouseup", (e) => {
-  if (!tagDrawStart) return;
-  if (e.target.closest && e.target.closest("#lbImageWrap")) return;
-  clearDrawingBox();
-});
+
+function pointFromEvent(e) {
+  const rect = lbImageWrap.getBoundingClientRect();
+  const point = e.touches && e.touches.length ? e.touches[0] : e;
+  return {
+    x: clamp01((point.clientX - rect.left) / rect.width),
+    y: clamp01((point.clientY - rect.top) / rect.height),
+  };
+}
+
+function boxFromCorners(a, b) {
+  return { x: Math.min(a.x, b.x), y: Math.min(a.y, b.y), w: Math.abs(a.x - b.x), h: Math.abs(a.y - b.y) };
+}
+
+// Judged in real screen pixels, not a fraction of the image - a
+// fraction-based cutoff (the original design) silently swallowed
+// small-but-deliberate face-sized boxes on a large photo.
+const MIN_DRAG_PX = 6;
+
+function startPointer(e) {
+  const handleEl = e.target.closest && e.target.closest(".lb-box-handle");
+  if (handleEl) {
+    dragMode = "resize";
+    dragAnchor = { corner: handleEl.dataset.corner };
+    e.preventDefault();
+    return;
+  }
+  if (drawPhase === "adjusting" && e.target.closest && e.target.closest("#lbDrawingBox")) {
+    const p = pointFromEvent(e);
+    dragMode = "move";
+    dragAnchor = { startX: p.x, startY: p.y, boxStart: { ...drawBox } };
+    e.preventDefault();
+    return;
+  }
+  if (drawPhase === "idle") return;
+  // armed (no box yet), or adjusting but clicked outside the current box:
+  // start a fresh box, discarding whatever was there before.
+  const p = pointFromEvent(e);
+  dragMode = "new";
+  dragAnchor = { start: p };
+  drawBox = { x: p.x, y: p.y, w: 0, h: 0 };
+  renderDrawBox();
+  e.preventDefault();
+}
+
+function movePointer(e) {
+  if (!dragMode) return;
+  e.preventDefault();
+  const p = pointFromEvent(e);
+  if (dragMode === "new") {
+    drawBox = boxFromCorners(dragAnchor.start, p);
+  } else if (dragMode === "move") {
+    const dx = p.x - dragAnchor.startX;
+    const dy = p.y - dragAnchor.startY;
+    const w = dragAnchor.boxStart.w;
+    const h = dragAnchor.boxStart.h;
+    drawBox = {
+      x: clamp01(Math.min(Math.max(dragAnchor.boxStart.x + dx, 0), 1 - w)),
+      y: clamp01(Math.min(Math.max(dragAnchor.boxStart.y + dy, 0), 1 - h)),
+      w,
+      h,
+    };
+  } else if (dragMode === "resize") {
+    // The corner opposite the one being dragged stays fixed in place.
+    const fixed = {
+      x: dragAnchor.corner.includes("e") ? drawBox.x : drawBox.x + drawBox.w,
+      y: dragAnchor.corner.includes("s") ? drawBox.y : drawBox.y + drawBox.h,
+    };
+    drawBox = boxFromCorners(fixed, p);
+  }
+  renderDrawBox();
+}
+
+function endPointer() {
+  if (!dragMode) return;
+  const wasNew = dragMode === "new";
+  dragMode = null;
+  dragAnchor = null;
+  if (!drawBox) return;
+  const rect = lbImageWrap.getBoundingClientRect();
+  const pxW = drawBox.w * rect.width;
+  const pxH = drawBox.h * rect.height;
+  if (wasNew && (pxW < MIN_DRAG_PX || pxH < MIN_DRAG_PX)) {
+    // Too small to have been a deliberate box - stay armed and let the
+    // user try again, rather than silently discarding the whole attempt
+    // with no feedback (the original design's actual reported failure).
+    drawBox = null;
+    renderDrawBox();
+    return;
+  }
+  setDrawPhase("adjusting");
+  renderDrawBox();
+}
+
+lbImageWrap.addEventListener("mousedown", startPointer);
+document.addEventListener("mousemove", movePointer);
+document.addEventListener("mouseup", endPointer);
+lbImageWrap.addEventListener("touchstart", startPointer, { passive: false });
+document.addEventListener("touchmove", movePointer, { passive: false });
+document.addEventListener("touchend", endPointer);
+document.addEventListener("touchcancel", endPointer);
 
 async function loadTree() {
   const res = await authFetch("/api/tree");

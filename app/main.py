@@ -170,12 +170,15 @@ def resolve_relpath(relpath: str) -> Path:
 
 
 # The four entity-bearing categories (documentation/tags/TAXONOMY.md) plus
-# one free-text catch-all - a deliberately narrowed slice of the full
-# 12-category taxonomy for this first build pass. The other 8 (quality,
-# privacy, relationships, activity/occasion, story/narrative,
+# activity/occasion and a free-text catch-all - a deliberately narrowed
+# slice of the full 12-category taxonomy for this first build pass.
+# occasion added 2026-08-05 on direct request ("tag them with peoples
+# names, places, occasions etc") - it's one of the "plain tags" (category
+# + value, no entity/bounding-box), so no new mechanism was needed. The
+# remaining 7 (quality, privacy, relationships, story/narrative,
 # temporal/seasonal, co-presence/group, origin - the last already built
-# separately as kind='album') are out of scope here, not forgotten.
-TAG_CATEGORIES = {"people", "places", "objects", "animals", "generic"}
+# separately as kind='album') are still out of scope, not forgotten.
+TAG_CATEGORIES = {"people", "places", "objects", "animals", "occasion", "generic"}
 
 
 class TagCreate(BaseModel):

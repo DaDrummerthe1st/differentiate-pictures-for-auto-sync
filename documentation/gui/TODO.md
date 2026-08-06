@@ -70,6 +70,42 @@ re-run it for real since. Worth running `scripts/test_selenium.sh up && .venv-te
 pytest app/tests_selenium -q` at least once per session that touches `app/static/` or auth gating, not
 just assuming it still passes.
 
+## Same-day follow-up: rework driven by live feedback
+
+The first version of the box tool above (an always-on drag directly on the image) shipped, then broke
+under real use within the same session — Joakim tried it live on the local dev stack and reported "no
+way to actually draw the bounding box." Root causes, both found live rather than guessed at: (1) a
+too-small drag was silently discarded (2% of image width as the cutoff, rejected without any visible
+feedback) - reported as "if the bounding box i drew was too small, it didn't 'stick'"; (2) drawing an
+exact box around a face by hand is genuinely hard on a first attempt with no way to correct it - "most
+often I draw too big a container." Also requested directly: "I would prefer a drag a square-tool"
+(an explicit tool, not an implicit always-on drag).
+
+**Rebuilt as a real interaction, not a patch**: `#lbDrawBoxBtn` ("▭ Rita ruta") arms an explicit
+draw mode (idle → armed → adjusting state machine in `app.js`); dragging with it unarmed does nothing,
+on purpose - the same design also fixes touch support for free, since an always-on drag would otherwise
+hijack scrolling/pinch gestures on a phone every time a finger touched the photo (mouse and touch event
+handlers are now genuinely parallel, not mouse-only). The minimum-drag-size check moved from a
+fraction-of-image-width cutoff to a small fixed-pixel one (6px), so a deliberately small face box on a
+large photo no longer gets swallowed. After the first drag, the box enters an "adjusting" state with
+four corner handles (drag to resize) and a draggable body (drag to move) before confirming into the
+tag-details form — directly answers the "too big a container" precision complaint. Also added, same
+pass: an `occasion` category (6th, alongside people/places/objects/animals/generic - "I would like to
+tag them with peoples names, places occasions etc"), a face-only tip shown under the category picker
+when "Person" is selected, and a "⋮ Fler alternativ" menu that moved download/select-mode out of the
+main toolbar (Joakim's own call - "no need for the download option at this stage") plus a
+`help`/`info`-icon pair on the lightbox (Material Symbols, matching Google/Apple Photos' own
+info-panel convention) - the info icon opens a plain-text photo-info modal (filename + full tag list),
+a placeholder for the fuller EXIF/date/GPS panel `../photo-server/TODO.md` Phase 4.8 still hasn't built.
+
+**Deferred, explicitly, not forgotten** (Joakim asked to wrap up rather than keep expanding scope
+live): splitting `app.js`/`style.css` into real ES modules (`<script type="module">` + `import`/
+`export` — see [GLOSSARY.md](../GLOSSARY.md)) was raised for the new tags code specifically and agreed
+in principle, but not done this pass to avoid stacking a script-loading change on top of still-being-
+written interactive logic; global tag search/browse ("the possibility to see and search for tags") was
+raised and not built. See the changelog entry for this session's second commit for the full list handed
+to the next session.
+
 ## Other open items (carried over, not yet done)
 
 - Recheck for anything else possibly missing from the branch-mixup incident referenced above.

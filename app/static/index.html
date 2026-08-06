@@ -13,13 +13,18 @@
 <div id="gallery" class="screen">
   <div id="stickyHeader">
     <div id="toolbar">
-      <button id="selectModeBtn">Markera bilder</button>
       <button id="gridSizeBtn">Stora bilder</button>
-      <button id="downloadAllBtn">Ladda ner allt media</button>
       <button id="voiceoverRecordBtn">&#127908; Spela in berättelse</button>
       <button id="voiceoverListBtn">Berättelser</button>
-      <button id="helpBtn">&#10067; Hjälp</button>
+      <button id="helpBtn"><span class="material-symbols-outlined">help</span> Hjälp</button>
       <button id="downloadFolderLabel" class="folder-label"></button>
+      <div id="moreActionsWrap">
+        <button id="moreActionsBtn" aria-haspopup="true" aria-expanded="false" title="Fler alternativ">&#8942;</button>
+        <div id="moreActionsMenu" class="hidden">
+          <button id="selectModeBtn">Markera bilder</button>
+          <button id="downloadAllBtn">Ladda ner all media</button>
+        </div>
+      </div>
     </div>
     <div id="albumNavBar">
       <nav id="albumNav"></nav>
@@ -34,6 +39,8 @@
 
 <div id="lightbox" class="hidden">
   <button id="lbClose" class="lb-btn lb-close">&#10005;</button>
+  <button id="lbHelpBtn" class="lb-btn lb-help-icon" title="Allmän hjälp"><span class="material-symbols-outlined">help</span></button>
+  <button id="lbInfoBtn" class="lb-btn lb-info-icon" title="Bildinformation"><span class="material-symbols-outlined">info</span></button>
   <button id="lbPrev" class="lb-btn lb-prev">&#10094;</button>
   <div id="lbImageWrap">
     <img id="lbImg" src="" draggable="false">
@@ -43,24 +50,32 @@
   <button id="lbNext" class="lb-btn lb-next">&#10095;</button>
   <div id="lbTagChips"></div>
   <button id="lbDownload" class="lb-btn lb-download">Ladda ner</button>
-  <button id="lbAddTagBtn" class="lb-btn lb-add-tag">&#127991;&#65039; Tagga</button>
+  <button id="lbAddTagBtn" class="lb-btn lb-add-tag"><span class="material-symbols-outlined">sell</span> Tagga</button>
+  <button id="lbDrawBoxBtn" class="lb-btn lb-draw-box" aria-pressed="false">&#9645; Rita ruta</button>
+</div>
+
+<div id="photoInfoModal" class="hidden">
+  <div id="photoInfoModalBox">
+    <button id="photoInfoModalClose" class="lb-btn lb-close">&#10005;</button>
+    <h2>Bildinformation</h2>
+    <p id="photoInfoFilename"></p>
+    <div id="photoInfoTagList"></div>
+  </div>
 </div>
 
 <div id="tagForm" class="hidden">
   <div id="tagFormBox">
     <h2 id="tagFormTitle">Ny tagg</h2>
-    <p id="tagFormHint" class="tag-form-hint hidden">
-      Dra en ruta över en person, ett djur eller ett föremål på bilden för att koppla taggen dit -
-      annars gäller taggen hela bilden.
-    </p>
     <label for="tagCategorySelect">Kategori</label>
     <select id="tagCategorySelect">
       <option value="people">Person</option>
       <option value="places">Plats</option>
       <option value="objects">Föremål</option>
       <option value="animals">Djur</option>
+      <option value="occasion">Tillfälle</option>
       <option value="generic">Övrigt</option>
     </select>
+    <p id="tagCategoryHint" class="tag-form-hint hidden"></p>
     <label for="tagValueInput">Namn/beskrivning</label>
     <input type="text" id="tagValueInput" list="tagValueSuggestions" autocomplete="off">
     <datalist id="tagValueSuggestions"></datalist>

@@ -202,6 +202,17 @@ assessed — same "DPIA-relevant, controller-side, not a legality blocker" frami
 above. Carry the retention constraint into the eventual model-pick pass. Full read:
 `2026-08-05-license-reverification-and-privacy-reads.md` in the `research-findings` repo.
 
+**Second use for the same OCR pass, raised 2026-08-05 (Joakim, spotted live in a real photo)**: many
+consumer cameras of the era this library covers burn a timestamp directly into the pixels (e.g.
+`2004/04/11 13:47:07` printed in-frame, yellow digits over the photo itself) - a positive, non-privacy
+use of the same OCR output, distinct from the pattern-match/blur flow above. This is a third source of
+date truth alongside EXIF `DateTimeOriginal` and the deliberately-excluded mtime fallback
+([../photo-server/DATA_DICTIONARY.md](../photo-server/DATA_DICTIONARY.md)) - useful specifically for
+old photos where EXIF is missing or wrong but the camera's own printed stamp is still legible. Not
+designed further here: a date-pattern regex to recognize this shape among OCR'd strings, and how a
+recognized in-frame date should reconcile against (or fill a gap left by) EXIF - queued for whoever
+picks up the OCR model itself.
+
 ## I. Behavioral / usage signals (not a detector — derived from user actions)
 
 | Area | What it detects | Why it matters | Status |

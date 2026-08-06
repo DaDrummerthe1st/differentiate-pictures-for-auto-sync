@@ -59,6 +59,14 @@ def test_create_tag_rejects_whitespace_only_value(client):
     assert res.status_code == 400
 
 
+def test_create_tag_accepts_occasion_category(client):
+    res = client.post(
+        "/api/tags", json={"photo_path": PHOTO, "category": "occasion", "value": "Midsommar"}
+    )
+    assert res.status_code == 201
+    assert res.json()["category"] == "occasion"
+
+
 def test_create_tag_rejects_unknown_category(client):
     res = client.post("/api/tags", json={"photo_path": PHOTO, "category": "spaceships", "value": "x"})
     assert res.status_code == 400
