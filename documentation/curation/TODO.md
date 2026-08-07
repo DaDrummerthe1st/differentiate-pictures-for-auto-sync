@@ -124,14 +124,15 @@ sources confirm on-device-only inference (no frame data leaves the device), but 
 framework-level telemetry channel wasn't independently confirmed either way — flagged as unverified,
 not assumed clean, worth a dedicated check before this becomes a real dependency.
 
-## Build plan — started 2026-08-07, Phase 0-1 done, Phase 2 onward is the next session's handoff
+## Build plan — started 2026-08-07, Phase 0-2 done, Phase 3 onward is the next session's handoff
 
 The first numbered, TDD-able build plan for automatic tagging (same phased/Security-line/human-
 checkpoint format as [../photo-server/TODO.md](../photo-server/TODO.md)) now exists — see the full
-plan (roster, category/value mappings, all phases) in this session's saved plan file, and
-[../tags/SCHEMA.md](../tags/SCHEMA.md)'s "Now" section for what's actually built. Session scope was
-explicitly narrowed to Phase 0-1 only ("only do phase 0 and 1 in this session... leave VERY SHORT
-notes for me to initialize phase 2 in the next session"):
+plan (roster, category/value mappings, all phases) in this session's saved plan file
+(`documentation/plans/lazy-jingling-robin.md`), and [../tags/SCHEMA.md](../tags/SCHEMA.md)'s "Now"
+section for what's actually built. Phase 0-1 were this repo's previous session ("only do phase 0 and
+1 in this session... leave VERY SHORT notes for me to initialize phase 2 in the next session");
+Phase 2 is this session's own work, same "one phase, short handoff" cadence:
 
 - **Phase 0, done**: role-based tag visibility (`member`/`admin`, `source='auto'` rows always
   shared) — JWT gained a `role` claim, `app/auth.py` gained `require_session_with_role`,
@@ -143,18 +144,43 @@ notes for me to initialize phase 2 in the next session"):
   ~34MB — real per-model usage still needs the benchmarking item below once Phase 2+ loads models).
   Build + `docker compose exec photo-viewer` reachability smoke-tested locally, then torn down
   (`docker compose down`) — nothing left running.
+- **Phase 2, done**: `detector/quality.py` — `detect_blur` (variance of Laplacian), `detect_exposure`
+  (mean luminance, returns `"overexposed"`/`"underexposed"`/`None`), `detect_monochrome` (mean HSV
+  saturation), each a pure function over a `PIL.Image`, thresholds as named, env-overridable
+  constants (`QUALITY_BLUR_VARIANCE_THRESHOLD`, `QUALITY_UNDEREXPOSED_MEAN_LUMINANCE`,
+  `QUALITY_OVEREXPOSED_MEAN_LUMINANCE`, `QUALITY_MONOCHROME_SATURATION_THRESHOLD`). Wired behind a new
+  `POST /detect` on the detector service (multipart image upload in, `{"tags": [{"category": "generic",
+  "value": ..., "bbox_x/y/w/h": null}]}` out — same field shape as `app/main.py`'s `TagCreate`, so
+  Phase 5's orchestration job can insert the response directly). TDD against synthetic PIL fixtures
+  (checkerboards, not solid colors — a flat solid-color image is degenerate for the blur metric,
+  always reading as maximally blurry, confirmed against real `detect_blur` output rather than
+  assumed; that behavior is itself asserted by a named test, not hidden). Full suite:
+  `detector/tests/test_quality.py`, `detector/tests/test_detect.py`. Real end-to-end smoke-tested
+  against the built container image (`docker compose up -d detector`, a real synthetic JPEG POSTed to
+  `/detect` from inside the container, matched unit-test predictions exactly), then torn down.
 
-**Start at Phase 2 next session**: the quality trio (blur/exposure/monochrome — no model, TDD
-against synthetic PIL images, same pattern as `app/tests/conftest.py`). Phases 3-7 after that (face
-detection/YuNet, object detection/NanoDet-Plus, the `app/auto_tag.py` orchestration job idempotent on
-`source='auto'` rows, a local smoke-test against `resources/test_pictures/` before touching the
-server, then written-not-run `docker-compose.prod.yml`/deploy commands for Joakim to run against
-`/tank`) — model picks, category/value mappings (`generic`/`people`/`objects`/`animals`), and the
-vendoring convention (fetch once, commit under `detector/models/`, license noted) are already
-decided in the saved plan, don't re-research them. Per this project's "high-blast-radius" rule
+**Start at Phase 3 next session**: face detection (YuNet). Phases 4-7 after that (object/animal
+detection/NanoDet-Plus, the `app/auto_tag.py` orchestration job idempotent on `source='auto'` rows, a
+local smoke-test against `resources/test_pictures/` before touching the server, then written-not-run
+`docker-compose.prod.yml`/deploy commands for Joakim to run against `/tank`) — model picks,
+category/value mappings (`generic`/`people`/`objects`/`animals`), and the vendoring convention (fetch
+once, commit under `detector/models/`, license noted) are already decided in the saved plan, don't
+re-research them. Per this project's "high-blast-radius" rule
 ([../policies/WORKFLOW.md](../policies/WORKFLOW.md)), nothing runs against the real `/tank` library
 until Joakim's explicit go-ahead — confirmed this session as its own written-not-run deploy step,
 after a local smoke-test on this workstation first.
+
+**Raised 2026-08-07, this session, not yet designed**: once Phase 3/4 load real models, Joakim wants
+to *see* this workstation's real load while different models tag photos (CPU/RAM per detector, not
+just the existing idle-container `mem_limit` guess) — feeds directly into the already-open
+"object-detection timing benchmark" item below, now with an explicit "show me the load" framing, not
+just a number. Separately, once Phase 6's local checkpoint passes, Joakim wants to actually deploy to
+the `.10` home server and watch it run there too, **with monitoring and thorough system-usage
+logging** — a real new requirement for Phase 7's deploy step, not previously scoped (Phase 7 as
+designed only ships a `docker-compose.prod.yml` block and copyable commands, no monitoring/logging
+stack). Neither the load-observation tooling nor the monitoring/logging shape (e.g. plain
+`docker stats`-based logging vs. a real metrics stack) is designed yet — needs a decision with Joakim
+before Phase 6/7, not guessed here.
 
 ## /tank test-data convention (noted, not a build item)
 
@@ -171,5 +197,5 @@ already does for `momfiles`.
 
 Opened 2026-08-02, alongside [README.md](README.md)/[ARCHITECTURE.md](ARCHITECTURE.md)/
 [DETECTORS.md](DETECTORS.md). **2026-08-07**: no longer just a catalog — the "Build plan" section
-above is this folder's first numbered, TDD-able roadmap, Phase 0-1 done, Phase 2 the next session's
+above is this folder's first numbered, TDD-able roadmap, Phase 0-2 done, Phase 3 the next session's
 explicit starting point.

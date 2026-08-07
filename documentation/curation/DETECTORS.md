@@ -14,9 +14,9 @@ written up here once done).
 
 | Area | What it detects | Why it matters (tied to real use cases above) | Status |
 | --- | --- | --- | --- |
-| Blur / focus | Sharp vs. blurry | The literal "these 25 are all blurry" example | researched |
-| Exposure | Over/under-exposed | Same bucket as blur for a "technically bad photo" cluster | researched |
-| Monochrome/low-colour | Black-and-white or washed-out ("pocket-shot") | Already named in [../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s quality category | researched |
+| Blur / focus | Sharp vs. blurry | The literal "these 25 are all blurry" example | built — `detector/quality.py`'s `detect_blur` |
+| Exposure | Over/under-exposed | Same bucket as blur for a "technically bad photo" cluster | built — `detector/quality.py`'s `detect_exposure` |
+| Monochrome/low-colour | Black-and-white or washed-out ("pocket-shot") | Already named in [../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s quality category | built — `detector/quality.py`'s `detect_monochrome` |
 | Noise/grain | High-ISO grain, compression artifacts | Same bucket, another "technically bad" signal | queued |
 | Eyes-closed / blink | A face mid-blink | Classic "otherwise good photo, ruined by one detail" flag — a person-level, not whole-photo, quality signal | queued |
 | Aesthetic/composition scoring | Rule-of-thirds, framing quality | More subjective/harder; lower priority | queued (NIMA/MobileNet backbone flagged as a future option if wanted — Apache-2.0, ~4M params, &lt;200MB) |
