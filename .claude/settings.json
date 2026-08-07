@@ -1,4 +1,5 @@
 {
+  "plansDirectory": "documentation/plans",
   "permissions": {
     "allow": [
       "Bash(*)",
