@@ -1,0 +1,5 @@
+# Correct false current-hardware claim; add hybrid architecture note
+
+Joakim caught yesterday's `distributed-sync/HARDWARE.md` wrongly claiming RPi3-class NAS/router hardware (v1) is currently running — nothing is deployed; the actual running system is a limited prototype on the i5-650 homeserver in `photo-server/HARDWARE.md`. Corrected the file, added explicit "check photo-server/HARDWARE.md or ask, don't infer" guardrails so a later session doesn't repeat it, filed the process lapse per this repo's claude-bugs convention, and captured Joakim's end-goal clarification that the network isn't purely peer-to-peer — a central server persists for global, non-PII metadata/predictions — folded into both HARDWARE.md and VISION.md's Pillar 1.
+
+- **Doc size**: `documentation/distributed-sync/HARDWARE.md` +2539 chars, `documentation/VISION.md` +667 chars, `documentation/distributed-sync/README.md` +219 chars, new `documentation/bugs/claude-bugs/under_process/2026-08-07-claimed-rpi3-nas-router-hardware-is-currently-running-without-verifying-against-actual-deployed-hardware.md` (2676 chars).

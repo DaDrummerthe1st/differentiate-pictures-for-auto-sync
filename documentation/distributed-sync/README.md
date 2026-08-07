@@ -16,7 +16,7 @@ Not yet a committed design — see [TODO.md](TODO.md)'s open question for what's
 
 [NETWORK_MECHANISM.md](NETWORK_MECHANISM.md) — IPFS alternatives researched 2026-07-29: Tahoe-LAFS and Garage as the two real candidates, why MinIO is now ruled out, and what's still unverified.
 
-[HARDWARE.md](HARDWARE.md) — the device this eventually ships on: v1 (RPi3-class, what's running now) vs. a speculative v2 (custom PCB, GPU-capable, hot-swappable SSD, modular incl. 5G modem), plus market precedent and the small-footprint/design-impression requirement — captured 2026-08-06.
+[HARDWARE.md](HARDWARE.md) — the device this eventually ships on, neither generation deployed yet: v1 (RPi3-class, nearer-term) vs. a speculative v2 (custom PCB, GPU-capable, hot-swappable SSD, modular incl. 5G modem), plus market precedent, the small-footprint/design-impression requirement, and the end-goal user-hardware-plus-central-server architecture — captured 2026-08-06/07. What's actually running today is the limited prototype in [../photo-server/HARDWARE.md](../photo-server/HARDWARE.md), not this.
 
 ## Relevant external tools
 
