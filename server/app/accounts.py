@@ -33,3 +33,13 @@ def get_user_by_email(conn: psycopg.Connection, email: str) -> UserRecord | None
     if row is None:
         return None
     return UserRecord(id=row[0], email=row[1], password_hash=row[2], role=row[3])
+
+
+def get_user_by_id(conn: psycopg.Connection, user_id: int) -> UserRecord | None:
+    row = conn.execute(
+        "SELECT id, email, password_hash, role FROM users WHERE id = %s",
+        (user_id,),
+    ).fetchone()
+    if row is None:
+        return None
+    return UserRecord(id=row[0], email=row[1], password_hash=row[2], role=row[3])

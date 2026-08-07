@@ -50,6 +50,23 @@ services:
       - stories:/stories
     restart: "no"
 
+  # Runs the detector models (quality/face/object-animal - see
+  # documentation/curation/TODO.md's build plan) called by photo-viewer,
+  # kept in its own container/image so opencv/onnxruntime's footprint
+  # never lands in photo-viewer's. No host port published - reachable
+  # only from other containers on this compose network, same pattern as
+  # auth/postgres/redis below. Skeleton only this session: /health only,
+  # no /detect endpoint yet.
+  detector:
+    build:
+      context: .
+      dockerfile: detector/Dockerfile
+    restart: "no"
+    # Starting conservative value, not measured yet - real per-model RAM
+    # use needs the "object-detection timing benchmark" item in
+    # documentation/curation/TODO.md once Phase 2+ actually loads models.
+    mem_limit: 768m
+
   auth:
     build: ./server
     environment:

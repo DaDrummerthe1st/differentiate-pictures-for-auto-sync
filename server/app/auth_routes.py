@@ -3,7 +3,7 @@ import psycopg
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel
 
-from app.accounts import UserRecord, get_user_by_email
+from app.accounts import UserRecord, get_user_by_email, get_user_by_id
 from app.audit import log_audit_event
 from app.cookies import ACCESS_COOKIE, REFRESH_COOKIE, clear_auth_cookies, set_auth_cookies
 from app.db import get_db
@@ -64,7 +64,7 @@ def login(
         db.commit()
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, _GENERIC_LOGIN_ERROR)
 
-    access_token = create_access_token(user.id)
+    access_token = create_access_token(user.id, user.role)
     refresh_token = create_refresh_token(user.id, redis_client=get_redis_client())
     set_auth_cookies(response, access_token, refresh_token)
 
@@ -107,6 +107,7 @@ class MessageResponse(BaseModel):
 def refresh(
     response: Response,
     refresh_token: str | None = Cookie(default=None, alias=REFRESH_COOKIE),
+    db: psycopg.Connection = Depends(get_db),
 ):
     if refresh_token is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated")
@@ -117,10 +118,18 @@ def refresh(
     except jwt.InvalidTokenError:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session")
 
+    # Re-read role from the DB rather than carrying it forward from
+    # whatever the old access token claimed - refresh is exactly the
+    # moment a role change (or account deletion) should take effect,
+    # same reasoning as the revocation-check bound noted in tokens.py.
+    user = get_user_by_id(db, user_id)
+    if user is None:
+        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session")
+
     # Rotate: the old refresh token is single-use, same as buzzkit's design.
     revoke_refresh_token(jti, redis_client=redis_client)
-    new_access_token = create_access_token(user_id)
-    new_refresh_token = create_refresh_token(user_id, redis_client=redis_client)
+    new_access_token = create_access_token(user.id, user.role)
+    new_refresh_token = create_refresh_token(user.id, redis_client=redis_client)
     set_auth_cookies(response, new_access_token, new_refresh_token)
 
     return MessageResponse(message="refreshed")

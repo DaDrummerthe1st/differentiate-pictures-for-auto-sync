@@ -39,10 +39,18 @@ def _decode(token: str) -> dict:
     return jwt.decode(token, load_auth_config()["JWT_SECRET_KEY"], algorithms=[_JWT_ALGORITHM])
 
 
-def create_access_token(user_id: int, *, now: datetime | None = None) -> str:
+def create_access_token(user_id: int, role: str, *, now: datetime | None = None) -> str:
+    # role is embedded so app/auth.py (the photo-viewer, a separate
+    # service with no users table of its own) can trust it directly from
+    # the signed token instead of needing its own DB round trip - same
+    # "stateless, bounded by the token's short TTL" tradeoff already
+    # accepted above for revocation; a role change also takes up to
+    # ACCESS_TOKEN_EXPIRE_MINUTES to propagate, refreshed for real at the
+    # next /refresh call (which re-reads the DB, see auth_routes.py).
     now = now or datetime.now(timezone.utc)
     payload = {
         "sub": str(user_id),
+        "role": role,
         "type": TokenType.ACCESS,
         "iat": now,
         "exp": now + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),

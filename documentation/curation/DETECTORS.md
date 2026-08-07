@@ -270,6 +270,22 @@ Zero pretrained weights to license. Full survey:
   weak. Llama 3.2 1B and Gemma 3 1B were also surveyed but both carry custom, non-OSI-approved
   licenses (Meta's Community License, Google's Gemma license) — Qwen/Phi avoid that ambiguity.
 - **Video handling** — this project also indexes movie clips ([../picture-handling/README.md](../picture-handling/README.md)), not just stills. Every visual area above needs a "what do we do for video" answer eventually (frame sampling, at minimum) — not researched at all yet, flagged so its absence is a decision.
+- **"App store" for detection models, raised 2026-08-07**: Joakim wants a future path for a user to
+  bring her own picture-recognition model (his own example: someone interested in flowers finds an
+  open-source flower classifier) and use it "both... very easily search for these in the app store
+  (?!) but also outside - without any security concerns or security knowledge... if the user hits a
+  security concern I want it to be explained very clear to the user." Not designed or built - this
+  session's `detector/` service (containerized, called by the main app rather than imported into it,
+  see [TODO.md](TODO.md)'s Phase 1) is a step toward the *architecture* this would need
+  (swappable/isolated model containers), but adding a marketplace UI and a bring-your-own-model
+  upload path is a distinct, unstarted feature. Same real risk already flagged, not re-derived here:
+  [../security/THREATS.md](../security/THREATS.md) #12 - a model file is a code-execution surface,
+  not inert data like a photo; any such feature must accept ONNX/safetensors only, never pickle/
+  `.pt`, and Joakim's own ask above ("explained very clear... if the user hits a security concern")
+  is itself a design requirement worth carrying forward: whatever UI eventually exists needs to
+  surface that constraint in plain language, not just enforce it silently. See also RESEARCH_QUEUE.md's
+  "Bring-your-own identity model" item, the narrower comparison-only version of this same idea raised
+  2026-08-04.
 - **Reverse OCR search — "feed me text you want protected, I'll flag/blur every photo containing it," raised 2026-08-04**: the inverse of the OCR-in-frame idea above — instead of the system surfacing text it found, the user supplies text she cares about (an address, an ID number, a name) and the system matches it against already-extracted OCR text across her whole library. **Correction to Joakim's own framing when he raised this**: this does *not* need an LLM/conversational service at all, despite reading like one — once OCR text is extracted and stored per photo (same index layer as every other detector output, [ARCHITECTURE.md](ARCHITECTURE.md)), matching a user-supplied string list against it is a plain exact/fuzzy-string database query, the same shape as the Curator's existing no-generation worked examples ([ARCHITECTURE.md](ARCHITECTURE.md)). Genuinely speculative — no functionality behind it today, blocked on the OCR detector above existing first; flagged as an idea, not queued as a build item.
 
 ## Status

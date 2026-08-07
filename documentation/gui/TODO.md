@@ -106,6 +106,36 @@ written interactive logic; global tag search/browse ("the possibility to see and
 raised and not built. See the changelog entry for this session's second commit for the full list handed
 to the next session.
 
+## 2026-08-07 session: role-based tag visibility + a detector service skeleton (Phase 0-1 of the automatic-tagging build plan)
+
+Automatic tagging itself (the actual goal named at the start of this session) was scoped down live
+to just its first two prerequisite phases — Joakim: "only do phase 0 and 1 in this session. then
+leave VERY SHORT notes for me to initialize phase 2 in the next session." Full build plan (roster,
+category mappings, all 7 phases) is in this session's plan; only the summary below is duplicated
+here.
+
+**Phase 0, done**: tags now have role-based visibility instead of strict per-`user_id` filtering.
+Raised directly ("build user groups. elisabeth = user with her own space to save in. joakim = admin
+= access everywhere... do not build for these exact users, build user groups") - `server/`'s login/
+refresh now mint a JWT carrying a `role` claim (`member`|`admin`), and `app/main.py`'s
+`GET /api/tags`/`GET /api/tags/values` use it: a member sees their own manual tags plus every
+`source='auto'` tag regardless of who wrote it; an admin sees everything. Write endpoints are
+unchanged - this is read-visibility only, not wider edit/delete rights. See
+[../tags/SCHEMA.md](../tags/SCHEMA.md)'s "Now" section for the full detail.
+
+**Phase 1, done**: a new `detector/` container (FastAPI, `GET /health` only) now runs alongside
+`photo-viewer` in `docker-compose.yml`, internal-network-only (no host port published) - the future
+home for the CV/ONNX models themselves, kept out of `photo-viewer`'s own image on purpose ("let the
+different models... be containerized and controlled by the main app"). Build + reachability
+smoke-tested locally against this workstation's own dev stack, then torn down - nothing left running.
+
+**Deferred to next session, per the saved plan's own Phase 2 handoff**: the actual quality/face/
+object detectors, the `auto_tag.py` orchestration job, a local smoke-test against
+`resources/test_pictures/` (real, disposable, already local - Joakim asked to test on this
+workstation before anything touches the server), and only then written-not-run deploy commands for
+the server's `/tank` library. Global tag search/browse and the ES-module split (both raised
+2026-08-05) remain untouched, lower priority per the original ask's own ordering.
+
 ## Other open items (carried over, not yet done)
 
 - Recheck for anything else possibly missing from the branch-mixup incident referenced above.

@@ -11,10 +11,10 @@ this file is purely the menu.
 
 - **VPS hardware audit follow-up** — done 2026-08-03 (see TODO.md's VPS section: specs recorded,
   "Hub Europe" confirmed as Lauterbourg, France). Remaining: nothing blocking, this item is closed.
-- **A build plan** — nothing in curation/ is a numbered, TDD-able roadmap yet, only theory/catalog.
-  [../photo-server/TODO.md](../photo-server/TODO.md)'s phased format (one numbered step per session, a
-  failing test then minimal code, a Security line, human checkpoints) is the precedent to follow once
-  detector picks are stable enough to build against.
+- **A build plan** — started 2026-08-07, Phase 0-1 done (role-based tag visibility, `detector/`
+  service skeleton), Phase 2 (the quality trio: blur/exposure/monochrome) is next session's starting
+  point. See [TODO.md](TODO.md)'s "Build plan" section for the handoff. Not closed — phases 2-7
+  remain.
 - **License re-verification pass** — done 2026-08-05: every current DETECTORS.md pick independently
   re-checked against its own LICENSE file/model card, all confirmed; Open-NSFW2's wording tightened
   from "BSD-lineage" to a confirmed MIT pick; one real-but-non-reversing nuance flagged on
@@ -103,4 +103,7 @@ model pick, and human action/pose recognition (its first research pass ever, are
 recognition and image captioning remain open, not attempted this session — next candidates for a
 future pass. Full surveys: `2026-08-05-ocr-in-frame-engine-survey.md`,
 `2026-08-05-age-gender-estimation-model-survey.md`, `2026-08-05-human-action-pose-recognition-survey.md`
-in the `research-findings` repo.
+in the `research-findings` repo. **2026-08-07**: the "A build plan" item above stopped being purely
+theoretical — Phase 0 (role-based tag visibility) and Phase 1 (`detector/` service skeleton) are
+built, session scope deliberately narrowed to just those two; TODO.md's "Build plan" section has the
+full handoff for Phase 2 onward.

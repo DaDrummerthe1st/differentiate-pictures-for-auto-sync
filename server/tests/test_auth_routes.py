@@ -1,14 +1,24 @@
 from unittest.mock import patch
 
+import jwt
+
 from app.accounts import create_account
+from app.config import load_auth_config
 from app.cookies import ACCESS_COOKIE, REFRESH_COOKIE
 from app.security import verify_password
 
 _GENERIC_ERROR = "Incorrect email or password"
 
 
-def _seed_user(db_connection, email="member@example.test", password="correct horse battery staple"):
-    create_account(db_connection, email=email, password=password, role="member")
+def _seed_user(
+    db_connection, email="member@example.test", password="correct horse battery staple", role="member"
+):
+    create_account(db_connection, email=email, password=password, role=role)
+
+
+def _decode_access_cookie(response) -> dict:
+    token = response.cookies[ACCESS_COOKIE]
+    return jwt.decode(token, load_auth_config()["JWT_SECRET_KEY"], algorithms=["HS256"])
 
 
 def test_login_with_correct_credentials_sets_cookies_and_returns_200(client, db_connection):
@@ -40,6 +50,20 @@ def test_login_cookies_have_expected_security_flags(client, db_connection):
         assert "httponly" in lowered
         assert "secure" in lowered
         assert "samesite=strict" in lowered
+
+
+def test_login_access_cookie_embeds_the_users_role(client, db_connection):
+    # app/auth.py (the photo-viewer) trusts this claim directly from the
+    # token rather than querying a users table it doesn't have - see
+    # documentation/tags/SCHEMA.md's role-visibility note.
+    _seed_user(db_connection, email="admin-role@example.test", role="admin")
+
+    response = client.post(
+        "/login",
+        json={"email": "admin-role@example.test", "password": "correct horse battery staple"},
+    )
+
+    assert _decode_access_cookie(response)["role"] == "admin"
 
 
 def test_login_with_wrong_password_returns_401(client, db_connection):
@@ -116,6 +140,38 @@ def test_refresh_with_valid_cookie_rotates_tokens_and_returns_200(client, db_con
 
 
 def test_refresh_without_cookie_returns_401(client):
+    response = client.post("/refresh")
+
+    assert response.status_code == 401
+
+
+def test_refresh_reissues_access_token_with_current_role_from_db(client, db_connection):
+    _seed_user(db_connection, email="refresh-role@example.test", role="admin")
+    client.post(
+        "/login",
+        json={"email": "refresh-role@example.test", "password": "correct horse battery staple"},
+    )
+
+    response = client.post("/refresh")
+
+    assert _decode_access_cookie(response)["role"] == "admin"
+
+
+def test_refresh_after_account_deleted_returns_401(client, db_connection):
+    _seed_user(db_connection, email="deleted@example.test")
+    user_id = db_connection.execute(
+        "SELECT id FROM users WHERE email = %s", ("deleted@example.test",)
+    ).fetchone()[0]
+    client.post(
+        "/login",
+        json={"email": "deleted@example.test", "password": "correct horse battery staple"},
+    )
+    # audit_log.user_id references users(id) with no cascade - clear the
+    # login_success row this test's own login just wrote, or the delete
+    # below violates the FK constraint.
+    db_connection.execute("DELETE FROM audit_log WHERE user_id = %s", (user_id,))
+    db_connection.execute("DELETE FROM users WHERE id = %s", (user_id,))
+
     response = client.post("/refresh")
 
     assert response.status_code == 401

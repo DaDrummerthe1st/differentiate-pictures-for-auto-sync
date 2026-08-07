@@ -142,10 +142,34 @@ behavior. **Migrating this into the real design above is real, deferred work**, 
 whenever Phase 2/3 ingestion lands, `photo_path` needs reconciling against whatever `photos.id` keying
 scheme that ends up using.
 
+**Role-based visibility, built 2026-08-07** (`documentation/curation/TODO.md`'s build-plan Phase 0,
+ahead of the automatic-tagging work above): `GET /api/tags`/`GET /api/tags/values` in `app/main.py`
+used to filter strictly by `user_id = <requester>`. Confirmed with Joakim that accounts should be
+treated as roles, not hardcoded identities ("elisabeth = user with her own space to save in, joakim =
+admin = access everywhere") - the JWT minted by `server/`'s login/refresh now carries a `role` claim
+(`member`|`admin`, missing/old-style tokens default to `member` - fail closed), and `app/auth.py`'s new
+`require_session_with_role` exposes it to `app/main.py` with no DB round trip. Visibility rule: a
+`member` sees their own manual tags plus every `source='auto'` row regardless of who/what wrote it (a
+detected fact isn't a personal note); an `admin` sees every tag on a photo, manual or auto, from any
+user. Write endpoints (`POST`/`PATCH`/`DELETE /api/tags`) are unchanged - admin's wider visibility is
+read-only, not silent edit/delete rights over another user's manual tag. Auto-tag rows themselves are
+still queued for the next session (`documentation/curation/TODO.md`'s Phase 2 onward) - this phase only
+makes the visibility rule correct ahead of anything actually writing `source='auto'` rows.
+
+**Detector service, skeleton only, built 2026-08-07**: a new `detector/` container (FastAPI,
+`GET /health` only so far) runs alongside `photo-viewer` in `docker-compose.yml`, internal-network-only
+(no host port published) - the plan is for it to hold the actual CV/ONNX models (blur/exposure/
+monochrome, face detection, object/animal detection) called by `photo-viewer`, keeping that heavier
+dependency footprint out of the main app's image. No `/detect` endpoint yet; see
+`documentation/curation/TODO.md`'s handoff note for the next session's Phase 2.
+
 ## Status
 
 Designed 2026-07-27. No migration, no endpoints. First real implementation decision
 this needs before any TDD step: reconciling `kind` against the new `category`
 column — see [TODO.md](TODO.md). `entities.entity_type='circle'` added 2026-08-05. **A narrower,
 build-ready slice actually built 2026-08-05** in `app/` (see "Now" section above) - this file's own
-`tags`/`entities`/`tag_references` design is still design-only, unaffected.
+`tags`/`entities`/`tag_references` design is still design-only, unaffected. **2026-08-07**: `app/`'s
+slice gained role-based tag visibility (`member`/`admin`, auto tags always shared) and a skeleton
+`detector/` service, both ahead of the automatic-tagging work itself — see "Now" section's two new
+notes above; next session picks up at `documentation/curation/TODO.md`'s Phase 2 handoff.

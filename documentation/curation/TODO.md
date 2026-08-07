@@ -167,16 +167,37 @@ sources confirm on-device-only inference (no frame data leaves the device), but 
 framework-level telemetry channel wasn't independently confirmed either way — flagged as unverified,
 not assumed clean, worth a dedicated check before this becomes a real dependency.
 
-## First real test step, once one area is actually researched and picked
+## Build plan — started 2026-08-07, Phase 0-1 done, Phase 2 onward is the next session's handoff
 
-Not written yet — deliberately, per this project's TDD rule (a failing test before implementation,
-every time) and its "high-blast-radius" rule (running anything against the real photo library needs
-Joakim's go-ahead; only `resources/testpics`/disposable fixtures without asking first,
-[../policies/WORKFLOW.md](../policies/WORKFLOW.md)). The shape once a model is picked: a failing test
-asserting the chosen detector returns the expected structured output on one fixture image, then the
-minimal wiring to pass it — same pattern as every phase in
-[../photo-server/TODO.md](../photo-server/TODO.md). Don't skip ahead to this before an area has an
-actual model pick.
+The first numbered, TDD-able build plan for automatic tagging (same phased/Security-line/human-
+checkpoint format as [../photo-server/TODO.md](../photo-server/TODO.md)) now exists — see the full
+plan (roster, category/value mappings, all phases) in this session's saved plan file, and
+[../tags/SCHEMA.md](../tags/SCHEMA.md)'s "Now" section for what's actually built. Session scope was
+explicitly narrowed to Phase 0-1 only ("only do phase 0 and 1 in this session... leave VERY SHORT
+notes for me to initialize phase 2 in the next session"):
+
+- **Phase 0, done**: role-based tag visibility (`member`/`admin`, `source='auto'` rows always
+  shared) — JWT gained a `role` claim, `app/auth.py` gained `require_session_with_role`,
+  `app/main.py`'s `GET /api/tags`/`GET /api/tags/values` apply the new visibility rule. Full test
+  coverage in `server/tests/test_tokens.py`/`test_auth_routes.py`, `app/tests/test_auth.py`/
+  `test_tags.py`.
+- **Phase 1, done**: `detector/` — a new containerized FastAPI service (skeleton only, `GET /health`),
+  wired into `docker-compose.yml` with no host port published, `mem_limit: 768m` (measured idle at
+  ~34MB — real per-model usage still needs the benchmarking item below once Phase 2+ loads models).
+  Build + `docker compose exec photo-viewer` reachability smoke-tested locally, then torn down
+  (`docker compose down`) — nothing left running.
+
+**Start at Phase 2 next session**: the quality trio (blur/exposure/monochrome — no model, TDD
+against synthetic PIL images, same pattern as `app/tests/conftest.py`). Phases 3-7 after that (face
+detection/YuNet, object detection/NanoDet-Plus, the `app/auto_tag.py` orchestration job idempotent on
+`source='auto'` rows, a local smoke-test against `resources/test_pictures/` before touching the
+server, then written-not-run `docker-compose.prod.yml`/deploy commands for Joakim to run against
+`/tank`) — model picks, category/value mappings (`generic`/`people`/`objects`/`animals`), and the
+vendoring convention (fetch once, commit under `detector/models/`, license noted) are already
+decided in the saved plan, don't re-research them. Per this project's "high-blast-radius" rule
+([../policies/WORKFLOW.md](../policies/WORKFLOW.md)), nothing runs against the real `/tank` library
+until Joakim's explicit go-ahead — confirmed this session as its own written-not-run deploy step,
+after a local smoke-test on this workstation first.
 
 ## /tank test-data convention (noted, not a build item)
 
@@ -192,5 +213,6 @@ already does for `momfiles`.
 ## Status
 
 Opened 2026-08-02, alongside [README.md](README.md)/[ARCHITECTURE.md](ARCHITECTURE.md)/
-[DETECTORS.md](DETECTORS.md). Nothing here is scheduled work yet — a catalog and an open-question
-list, not numbered build steps.
+[DETECTORS.md](DETECTORS.md). **2026-08-07**: no longer just a catalog — the "Build plan" section
+above is this folder's first numbered, TDD-able roadmap, Phase 0-1 done, Phase 2 the next session's
+explicit starting point.

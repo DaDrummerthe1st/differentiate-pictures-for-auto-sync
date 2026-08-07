@@ -14,7 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from PIL import Image, ImageDraw, ImageOps
 from pydantic import BaseModel
 
-from app.auth import has_valid_session, load_auth_config, require_session
+from app.auth import has_valid_session, load_auth_config, require_session, require_session_with_role
 
 load_auth_config()
 
@@ -239,24 +239,42 @@ _TAG_SELECT_COLUMNS = "id, category, value, bbox_x, bbox_y, bbox_w, bbox_h, sour
 
 
 @app.get("/api/tags")
-def list_tags(p: str = Query(...), user_id: int = Depends(require_session)):
+def list_tags(p: str = Query(...), session: tuple[int, str] = Depends(require_session_with_role)):
+    user_id, role = session
     resolve_relpath(p)
-    rows = db.execute(
-        f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE photo_path = ? AND user_id = ? ORDER BY id",
-        (p, user_id),
-    ).fetchall()
+    if role == "admin":
+        rows = db.execute(
+            f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE photo_path = ? ORDER BY id",
+            (p,),
+        ).fetchall()
+    else:
+        rows = db.execute(
+            f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE photo_path = ? "
+            "AND (user_id = ? OR source = 'auto') ORDER BY id",
+            (p, user_id),
+        ).fetchall()
     return [_tag_row_to_dict(row) for row in rows]
 
 
 @app.get("/api/tags/values")
-def tag_value_suggestions(category: str = Query(...), user_id: int = Depends(require_session)):
+def tag_value_suggestions(
+    category: str = Query(...), session: tuple[int, str] = Depends(require_session_with_role)
+):
+    user_id, role = session
     if category not in TAG_CATEGORIES:
         raise HTTPException(status_code=400, detail="unknown category")
-    rows = db.execute(
-        "SELECT value, COUNT(*) AS c FROM tags WHERE user_id = ? AND category = ? "
-        "GROUP BY value ORDER BY c DESC, value COLLATE NOCASE",
-        (user_id, category),
-    ).fetchall()
+    if role == "admin":
+        rows = db.execute(
+            "SELECT value, COUNT(*) AS c FROM tags WHERE category = ? "
+            "GROUP BY value ORDER BY c DESC, value COLLATE NOCASE",
+            (category,),
+        ).fetchall()
+    else:
+        rows = db.execute(
+            "SELECT value, COUNT(*) AS c FROM tags WHERE (user_id = ? OR source = 'auto') AND category = ? "
+            "GROUP BY value ORDER BY c DESC, value COLLATE NOCASE",
+            (user_id, category),
+        ).fetchall()
     return [row[0] for row in rows]
 
 

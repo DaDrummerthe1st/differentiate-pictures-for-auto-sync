@@ -23,14 +23,21 @@ def _clear_tags_table():
     yield
 
 
-def _token(sub: str = "1") -> str:
+def _token(sub: str = "1", role: str = "member") -> str:
     now = int(time.time())
-    payload = {"sub": sub, "type": "access", "iat": now, "exp": now + 900, "jti": f"jti-{sub}"}
+    payload = {
+        "sub": sub,
+        "role": role,
+        "type": "access",
+        "iat": now,
+        "exp": now + 900,
+        "jti": f"jti-{sub}-{role}",
+    }
     return jwt.encode(payload, _SECRET, algorithm="HS256")
 
 
-def _as_user(client, sub: str):
-    client.cookies.set("photo_server_access", _token(sub))
+def _as_user(client, sub: str, role: str = "member"):
+    client.cookies.set("photo_server_access", _token(sub, role))
     return client
 
 
@@ -157,6 +164,89 @@ def test_list_tags_scoped_to_owning_user_only(client):
 def test_list_tags_rejects_unknown_photo_path(client):
     res = client.get("/api/tags", params={"p": "AlbumA/nope.jpg"})
     assert res.status_code == 404
+
+
+# --- role-based visibility: auto tags are shared, admin sees everything ---
+# (documentation/tags/SCHEMA.md's role-visibility note - "elisabeth = user
+# with her own space, joakim = admin = access everywhere", built as roles,
+# not hardcoded accounts)
+
+
+def _insert_auto_tag(photo_path: str, category: str, value: str, owner_user_id: int = 999) -> None:
+    # No endpoint writes source='auto' yet (that's the detector pipeline,
+    # a later phase) - insert directly, same as a batch job would.
+    now = "2026-01-01T00:00:00+00:00"
+    _db.execute(
+        "INSERT INTO tags (user_id, photo_path, category, value, source, created_at, updated_at) "
+        "VALUES (?, ?, ?, ?, 'auto', ?, ?)",
+        (owner_user_id, photo_path, category, value, now, now),
+    )
+    _db.commit()
+
+
+def test_list_tags_hides_another_members_manual_tag(client):
+    _as_user(client, "1", role="member")
+    client.post("/api/tags", json={"photo_path": PHOTO, "category": "places", "value": "user1 tag"})
+
+    _as_user(client, "2", role="member")
+    res = client.get("/api/tags", params={"p": PHOTO})
+
+    assert res.json() == []
+
+
+def test_list_tags_shows_auto_tags_to_any_member_regardless_of_who_they_belong_to(client):
+    _insert_auto_tag(PHOTO, "people", "Person")
+
+    _as_user(client, "2", role="member")
+    res = client.get("/api/tags", params={"p": PHOTO})
+
+    assert [t["value"] for t in res.json()] == ["Person"]
+    assert res.json()[0]["source"] == "auto"
+
+
+def test_list_tags_admin_sees_another_members_manual_tag(client):
+    _as_user(client, "1", role="member")
+    client.post("/api/tags", json={"photo_path": PHOTO, "category": "places", "value": "user1 tag"})
+
+    _as_user(client, "2", role="admin")
+    res = client.get("/api/tags", params={"p": PHOTO})
+
+    assert [t["value"] for t in res.json()] == ["user1 tag"]
+
+
+def test_tag_value_suggestions_member_excludes_another_members_values_but_includes_auto(client):
+    _as_user(client, "1", role="member")
+    client.post("/api/tags", json={"photo_path": PHOTO, "category": "people", "value": "someone else's tag"})
+    _insert_auto_tag(PHOTO, "people", "Person")
+
+    _as_user(client, "2", role="member")
+    res = client.get("/api/tags/values", params={"category": "people"})
+
+    assert res.json() == ["Person"]
+
+
+def test_tag_value_suggestions_admin_includes_other_members_values(client):
+    _as_user(client, "1", role="member")
+    client.post("/api/tags", json={"photo_path": PHOTO, "category": "people", "value": "mother"})
+
+    _as_user(client, "2", role="admin")
+    res = client.get("/api/tags/values", params={"category": "people"})
+
+    assert res.json() == ["mother"]
+
+
+def test_admin_read_visibility_does_not_grant_write_rights_over_anothers_manual_tag(client):
+    _as_user(client, "1", role="member")
+    created = client.post(
+        "/api/tags", json={"photo_path": PHOTO, "category": "places", "value": "the beach"}
+    ).json()
+
+    _as_user(client, "2", role="admin")
+    patch_res = client.patch(f"/api/tags/{created['id']}", json={"category": "places", "value": "hijacked"})
+    delete_res = client.delete(f"/api/tags/{created['id']}")
+
+    assert patch_res.status_code == 404
+    assert delete_res.status_code == 404
 
 
 # --- editing ---
