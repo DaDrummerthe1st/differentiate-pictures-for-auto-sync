@@ -81,17 +81,48 @@ and openness") rather than living only in curation/ docs — a real question sin
 to hold every genuinely project-wide hard constraint in one place; not resolved here, since POLICY.md
 edits weren't explicitly authorized this turn.
 
-## Central hardware record — cross-repo, queued behind another session
+## Central hardware record — cross-repo, decided 2026-08-07, not yet executed
 
 Raised 2026-08-03: Joakim wants one central HW-info record across all machines (this project's home
 box, this VPS, anything else), and it belongs in `/home/joakim/code/resources/workstation` — a
-separate repo, not this one — where another Claude session is currently active. **Queued here, not
-attempted**, to avoid a concurrent-edit collision. Once that repo is free: home-box HARDWARE.md
-content and this VPS's audit results both migrate there, with a short pointer left in
-[../photo-server/HARDWARE.md](../photo-server/HARDWARE.md) — mirrors that file's own
-already-flagged-but-not-done "may belong outside this folder" note in
-[../photo-server/DEFERRED.md](../photo-server/DEFERRED.md), just resolved to an external repo instead
-of an internal move.
+separate repo, not this one. **Confirmed via AskUserQuestion, 2026-08-07**: `workstation` is the
+target, over creating a same-named `documentation/hardware/` folder in this repo — that repo already
+has `documentation/hardware/README.md` documenting the dev laptop (Lenovo IdeaPad Slim 3 14IAH8),
+matching this earlier-stated intent exactly. Also raised 2026-08-07: Joakim wants the whole
+hardware-doc rewrite pass to (a) delete stale/resolved narrative outright rather than describing what
+was erased, (b) move anything describing a system *shortcoming* (not a plain hardware fact) into
+[../security/THREATS.md](../security/THREATS.md), and (c) stop re-narrating incidents that already
+have their own file under `../bugs/repo/` or a `../changelog/` entry — state the current operational
+fact only, link to the incident file if the detail is ever needed, don't retell it.
+
+**Concrete plan for whichever session executes this** (nothing below has been done yet):
+
+- **In `workstation`**: move the current `documentation/hardware/README.md` (laptop) content to a new
+  `LAPTOP.md`; add `VPS.md` using the already-fully-researched specs below (Contabo Cloud VPS 10 SSD,
+  4 vCPU AMD EPYC, 7.8GB RAM, 150GB disk, Ubuntu 24.04.4, `161.97.174.16`, "Hub Europe" datacenter =
+  Lauterbourg, France, EU-resident); add `HOME_SERVER.md` migrating
+  [../photo-server/HARDWARE.md](../photo-server/HARDWARE.md)'s current content (i5-650, 16GB RAM not
+  memtested, GeForce 210, ZFS `raidz1` pool, network/access facts, BIOS boot-priority quirk, switch
+  stuck-port quirk) — trimmed to plain current facts, no "found on date X" narrative, no re-telling of
+  incidents already in this repo's `bugs/repo/` files. Rewrite `hardware/README.md` as a 3-machine
+  index. Note there were uncommitted changes from another session in `workstation` as of 2026-08-07 —
+  check `git status` there before editing, don't clobber them.
+- **In this repo**: delete `photo-server/HARDWARE.md` entirely (not a stub). Move the "DDoS risk
+  accepted, not mitigated" and "router admin UI has no valid TLS" content into
+  [../security/THREATS.md](../security/THREATS.md) as new rows (these are shortcomings, not hardware
+  facts). Inline the SSH-user fact and a trimmed one-line version of the
+  "reboot restarts the stack regardless of the memtest gate" caveat directly into
+  [../photo-server/DEPLOYMENT.md](../photo-server/DEPLOYMENT.md) (deployment-procedure content, not
+  hardware spec — no narrative, no incident retelling, `../bugs/repo/under_process/2026-07-23-server-dropped-to-emergency-mode-after-reboot-for-memtest.md`
+  already holds the full incident if it's ever needed). Update every other in-repo cross-reference to
+  `photo-server/HARDWARE.md` (grepped 2026-08-07: `VISION.md`, `GLOSSARY.md`,
+  `photo-server/{README,DEPLOYMENT,TODO,DEFERRED}.md`, `curation/{README,ARCHITECTURE}.md`,
+  `distributed-sync/{README,HARDWARE}.md`) — repoint live/forward-looking references to the new
+  `workstation` location (plain text, not a markdown link — it's a different repo); leave references
+  inside `bugs/` and `changelog/` alone, they're accurate historical narrative, not live pointers, per
+  this repo's rename/repoint convention. Close out
+  [../photo-server/DEFERRED.md](../photo-server/DEFERRED.md)'s 2026-07-17 "`HARDWARE.md` may belong at
+  `documentation/hardware/` instead" item once this lands — it called this move years... months early.
 
 ## Where research actually lives — resolved 2026-08-03
 
