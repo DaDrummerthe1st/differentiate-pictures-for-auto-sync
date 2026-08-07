@@ -158,6 +158,12 @@ Phase 2 is this session's own work, same "one phase, short handoff" cadence:
   `detector/tests/test_quality.py`, `detector/tests/test_detect.py`. Real end-to-end smoke-tested
   against the built container image (`docker compose up -d detector`, a real synthetic JPEG POSTed to
   `/detect` from inside the container, matched unit-test predictions exactly), then torn down.
+  Wrap-up sweep caught and fixed one real gap the same session: `/detect` had no upload-size cap —
+  `MAX_UPLOAD_BYTES` (25MB default, env-overridable) now rejects an oversized body in capped chunks
+  before a full read/decode is attempted, see [../security/THREATS.md](../security/THREATS.md) #16.
+  Also caught mid-sweep: `pillow` was pinned to a stale 11.3.0 in both `requirements.txt` and
+  `detector/requirements.txt` — bumped to 12.3.0 (current release, confirmed via PyPI), full suite
+  re-verified green against it before pinning.
 
 **Start at Phase 3 next session**: face detection (YuNet). Phases 4-7 after that (object/animal
 detection/NanoDet-Plus, the `app/auto_tag.py` orchestration job idempotent on `source='auto'` rows, a

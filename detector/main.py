@@ -1,4 +1,5 @@
 import io
+import os
 
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from PIL import Image, UnidentifiedImageError
@@ -11,6 +12,25 @@ from detector.quality import detect_blur, detect_exposure, detect_monochrome
 # detection (YuNet) and object/animal detection (NanoDet-Plus) are Phase
 # 3-4, still to come.
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
+
+# Resource-exhaustion guard (documentation/security/THREATS.md #16) -
+# generous headroom over real photo file sizes, overridable via env.
+MAX_UPLOAD_BYTES = int(os.environ.get("DETECT_MAX_UPLOAD_BYTES", str(25 * 1024 * 1024)))
+_UPLOAD_READ_CHUNK_BYTES = 1024 * 1024
+
+
+async def _read_capped(file: UploadFile, max_bytes: int) -> bytes:
+    chunks = []
+    total = 0
+    while True:
+        chunk = await file.read(_UPLOAD_READ_CHUNK_BYTES)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            raise HTTPException(status_code=413, detail="file too large")
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 @app.get("/health")
@@ -31,8 +51,9 @@ def _tag(category: str, value: str) -> dict:
 
 @app.post("/detect")
 async def detect(file: UploadFile = File(...)) -> dict:
+    body = await _read_capped(file, MAX_UPLOAD_BYTES)
     try:
-        image = Image.open(io.BytesIO(await file.read()))
+        image = Image.open(io.BytesIO(body))
         image.load()
     except UnidentifiedImageError as exc:
         raise HTTPException(status_code=400, detail="not a readable image") from exc

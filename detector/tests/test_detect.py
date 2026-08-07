@@ -4,7 +4,7 @@ import numpy as np
 from fastapi.testclient import TestClient
 from PIL import Image
 
-from detector.main import app
+from detector.main import MAX_UPLOAD_BYTES, app
 
 client = TestClient(app)
 
@@ -102,3 +102,14 @@ def test_detect_rejects_a_non_image_upload():
     res = client.post("/detect", files={"file": ("notes.txt", buf, "text/plain")})
 
     assert res.status_code == 400
+
+
+def test_detect_rejects_an_oversized_upload():
+    # Resource-exhaustion guard, THREATS.md #16 - checked in chunks, before
+    # a full PIL decode is ever attempted, not just an after-the-fact size
+    # check once the whole body is already buffered.
+    buf = io.BytesIO(b"x" * (MAX_UPLOAD_BYTES + 1))
+
+    res = client.post("/detect", files={"file": ("huge.jpg", buf, "image/jpeg")})
+
+    assert res.status_code == 413
