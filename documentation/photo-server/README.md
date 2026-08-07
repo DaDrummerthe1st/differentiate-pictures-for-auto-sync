@@ -6,7 +6,7 @@ The metadata-and-serving phase of the project: a small multi-user web server so 
 
 **Open, real problems** (each its own file in `../bugs/repo/under_process/`, no index kept - browse that folder directly, each file's `Status:` line says where it stands): the lightbox shows wrong/no content when clicking a not-yet-loaded thumbnail (not yet root-caused); a picture click intermittently fails to show after less than 5 minutes, other albums' thumbnails fine (investigating).
 
-**Starting a new session on this topic?** `DEPLOYMENT.md` has the current, correct deploy steps; `HARDWARE.md` documents the switch between the server and router; [POLICY.md](../policies/POLICY.md) has a hard resource-efficiency constraint and a no-system-wide-installs, containers/venvs-only constraint; `CHANGELOG_ARCHIVE.md`'s 2026-07-17 and 2026-07-18 entries have the complete blow-by-blow if you need it, but shouldn't be required reading to start working.
+**Starting a new session on this topic?** `DEPLOYMENT.md` has the current, correct deploy steps; the `hardware` repo's `server/192.168.1.10/` documents the machine itself, including the switch between the server and router; [POLICY.md](../policies/POLICY.md) has a hard resource-efficiency constraint and a no-system-wide-installs, containers/venvs-only constraint; `CHANGELOG_ARCHIVE.md`'s 2026-07-17 and 2026-07-18 entries have the complete blow-by-blow if you need it, but shouldn't be required reading to start working.
 
 Not yet done, lower priority than the open items in `../bugs/repo/under_process/`: 1.9a–c (admin password reset) and 1.11's human checkpoint. The `master`/`phase-1-login`/`mamma-photo-viewer` branch reunification is now fully closed — see TODO.md's "Branch relationship" section.
 
@@ -17,9 +17,10 @@ Not yet done, lower priority than the open items in `../bugs/repo/under_process/
 | [TODO.md](TODO.md) | The build roadmap — small, ordered, TDD-first steps. Start here for "what's next." |
 | [MOCKUP.md](MOCKUP.md) | Written spec for the first two screens (login, thumbnail grid) — no code yet |
 | [DATA_DICTIONARY.md](DATA_DICTIONARY.md) | Full schema, which columns are live now vs reserved |
-| [HARDWARE.md](HARDWARE.md) | The server this runs on |
 | [DEFERRED.md](DEFERRED.md) | What's explicitly out of scope, and why |
 | [TOOLCHAIN.md](TOOLCHAIN.md) | Local dev toolchain (uv) and testing against Postgres |
+
+The machine this runs on (`192.168.1.10`) is documented in the `hardware` repo's `server/192.168.1.10/`, not here — moved 2026-08-07, see CHANGELOG.
 
 ## Non-negotiables specific to this topic
 
@@ -27,7 +28,7 @@ Not yet done, lower priority than the open items in `../bugs/repo/under_process/
 - Two accounts only: joakim.reuterborg@gmail.com (admin), elisabeth.reuterborg@gmail.com (member) — planned to change once [../policies/AUTHENTICATION.md](../policies/AUTHENTICATION.md)'s "move off manual CLI account creation" work lands.
 - Same subdomain (`photos.reuterborg.se`) serves both the browser UI and the JSON API, split by path prefix (`/api/*`) or `Accept` header — never user-agent sniffing.
 - The root domain (`reuterborg.se`) already serves something that must keep working. Only ever touch the `photos.` subdomain, and double-check DNS changes don't affect the root (see TODO.md's HTTPS phase).
-- Docker Compose, not a native install (see [HARDWARE.md](HARDWARE.md) for why). PostgreSQL is the only database engine; no separate search or vector store (tsvector now, pgvector later, same instance).
+- Docker Compose, not a native install — this host also runs a ZFS pool other things depend on, so a native install's dependencies could collide with, or need root access shared with, whatever else runs against that pool. PostgreSQL is the only database engine; no separate search or vector store (tsvector now, pgvector later, same instance).
 - Everything here inherits [POLICY.md](../policies/POLICY.md)'s privacy rule and CLAUDE.md's high-blast-radius list (deployment, schema changes, and running against the real photo library all require Joakim's sign-off, not just this file's say-so).
 
 ## Priority order

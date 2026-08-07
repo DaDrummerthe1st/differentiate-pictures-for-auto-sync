@@ -26,7 +26,7 @@ occasion.
 ## VPS — hardware audit + EU data-residency verification
 
 Raised 2026-08-03. Joakim's VPS: `161.97.174.16`, a Contabo service, for possible V1 central hosting
-(alongside the existing home box, [../photo-server/HARDWARE.md](../photo-server/HARDWARE.md)).
+(alongside the existing home box, the `hardware` repo's `server/192.168.1.10/`).
 
 **Already confirmed this session, not guessed** — public RIPE RDAP lookup (`https://rdap.db.ripe.net/ip/161.97.174.16`),
 no VPS access needed: the IP block (`161.97.160.0/20`) is RIPE-registered to **Contabo GmbH, Munich,
@@ -36,9 +36,9 @@ naming. This is strong evidence the VPS is physically in Germany, but RIPE regis
 own control panel (chosen at signup, e.g. "Contabo Germany") is the authoritative source and should
 be checked directly, not assumed from this alone.
 
-**Done 2026-08-03** — Joakim ran the command block and the Contabo control panel directly. Results,
-recorded here provisionally (real central home is the `workstation` repo, still queued behind its own
-concurrent session — see "Central hardware record" below):
+**Done 2026-08-03** — Joakim ran the command block and the Contabo control panel directly. Results
+below; the authoritative copy now lives in the `hardware` repo's `server/161.97.174.16/` (moved
+2026-08-07), this table stays as the original research record.
 
 | Component | Spec |
 | --- | --- |
@@ -58,7 +58,7 @@ only showed the *registrant's* address, Contabo GmbH in Munich, Germany — a di
 physical rack's location). Either way the requirement holds: **France, EU**, not outside Europe.
 Sources: [Contabo Hub Europe datacenter — datacentermap.com](https://www.datacentermap.com/france/strasbourg/contabo-hub-europe-datacenter/), [Welcome to Hub Europe — Contabo Blog](https://contabo.com/blog/welcome-to-hub-europe-new-data-center-for-all-your-cloud-needs/).
 
-**Comparison note vs. the home box** ([../photo-server/HARDWARE.md](../photo-server/HARDWARE.md)):
+**Comparison note vs. the home box** (the `hardware` repo's `server/192.168.1.10/`):
 more vCPUs (4 vs. the i5-650's 2 cores/4 threads) on modern EPYC silicon, likely faster per-core
 despite being virtualized, but less RAM (7.8GB vs. 16GB) and no ZFS pool/`/tank` — this VPS is compute,
 not the photo storage. Real home-server-vs-VPS comparison for where V1's worker process runs is still
@@ -80,49 +80,6 @@ open**: whether this MIT/Apache-2.0-only bar should be written into
 and openness") rather than living only in curation/ docs — a real question since POLICY.md is meant
 to hold every genuinely project-wide hard constraint in one place; not resolved here, since POLICY.md
 edits weren't explicitly authorized this turn.
-
-## Central hardware record — cross-repo, decided 2026-08-07, not yet executed
-
-Raised 2026-08-03: Joakim wants one central HW-info record across all machines (this project's home
-box, this VPS, anything else), and it belongs in `/home/joakim/code/resources/workstation` — a
-separate repo, not this one. **Confirmed via AskUserQuestion, 2026-08-07**: `workstation` is the
-target, over creating a same-named `documentation/hardware/` folder in this repo — that repo already
-has `documentation/hardware/README.md` documenting the dev laptop (Lenovo IdeaPad Slim 3 14IAH8),
-matching this earlier-stated intent exactly. Also raised 2026-08-07: Joakim wants the whole
-hardware-doc rewrite pass to (a) delete stale/resolved narrative outright rather than describing what
-was erased, (b) move anything describing a system *shortcoming* (not a plain hardware fact) into
-[../security/THREATS.md](../security/THREATS.md), and (c) stop re-narrating incidents that already
-have their own file under `../bugs/repo/` or a `../changelog/` entry — state the current operational
-fact only, link to the incident file if the detail is ever needed, don't retell it.
-
-**Concrete plan for whichever session executes this** (nothing below has been done yet):
-
-- **In `workstation`**: move the current `documentation/hardware/README.md` (laptop) content to a new
-  `LAPTOP.md`; add `VPS.md` using the already-fully-researched specs below (Contabo Cloud VPS 10 SSD,
-  4 vCPU AMD EPYC, 7.8GB RAM, 150GB disk, Ubuntu 24.04.4, `161.97.174.16`, "Hub Europe" datacenter =
-  Lauterbourg, France, EU-resident); add `HOME_SERVER.md` migrating
-  [../photo-server/HARDWARE.md](../photo-server/HARDWARE.md)'s current content (i5-650, 16GB RAM not
-  memtested, GeForce 210, ZFS `raidz1` pool, network/access facts, BIOS boot-priority quirk, switch
-  stuck-port quirk) — trimmed to plain current facts, no "found on date X" narrative, no re-telling of
-  incidents already in this repo's `bugs/repo/` files. Rewrite `hardware/README.md` as a 3-machine
-  index. Note there were uncommitted changes from another session in `workstation` as of 2026-08-07 —
-  check `git status` there before editing, don't clobber them.
-- **In this repo**: delete `photo-server/HARDWARE.md` entirely (not a stub). Move the "DDoS risk
-  accepted, not mitigated" and "router admin UI has no valid TLS" content into
-  [../security/THREATS.md](../security/THREATS.md) as new rows (these are shortcomings, not hardware
-  facts). Inline the SSH-user fact and a trimmed one-line version of the
-  "reboot restarts the stack regardless of the memtest gate" caveat directly into
-  [../photo-server/DEPLOYMENT.md](../photo-server/DEPLOYMENT.md) (deployment-procedure content, not
-  hardware spec — no narrative, no incident retelling, `../bugs/repo/under_process/2026-07-23-server-dropped-to-emergency-mode-after-reboot-for-memtest.md`
-  already holds the full incident if it's ever needed). Update every other in-repo cross-reference to
-  `photo-server/HARDWARE.md` (grepped 2026-08-07: `VISION.md`, `GLOSSARY.md`,
-  `photo-server/{README,DEPLOYMENT,TODO,DEFERRED}.md`, `curation/{README,ARCHITECTURE}.md`,
-  `distributed-sync/{README,HARDWARE}.md`) — repoint live/forward-looking references to the new
-  `workstation` location (plain text, not a markdown link — it's a different repo); leave references
-  inside `bugs/` and `changelog/` alone, they're accurate historical narrative, not live pointers, per
-  this repo's rename/repoint convention. Close out
-  [../photo-server/DEFERRED.md](../photo-server/DEFERRED.md)'s 2026-07-17 "`HARDWARE.md` may belong at
-  `documentation/hardware/` instead" item once this lands — it called this move years... months early.
 
 ## Where research actually lives — resolved 2026-08-03
 
@@ -204,7 +161,7 @@ after a local smoke-test on this workstation first.
 Confirmed 2026-08-02: `/tank/momfiles` stays Elisabeth's home folder, unchanged. Joakim's own scope
 for testing against real (non-family-memorial) photos is the rest of `/tank`, outside `momfiles` —
 no new mount/access mechanism needed, since Joakim already has full `/tank` access via his existing
-sudo SSH account ([../photo-server/HARDWARE.md](../photo-server/HARDWARE.md)). Whatever test/prototype
+sudo SSH account (the `hardware` repo's `server/192.168.1.10/`). Whatever test/prototype
 code eventually reads real photos still needs to run **against `resources/testpics`
 or other disposable fixtures without asking first** per the high-blast-radius rule above — running
 against real `/tank` content (Joakim's own or otherwise) needs his go-ahead each time, same as it

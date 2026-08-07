@@ -1,6 +1,6 @@
 # Deployment — photo-server + photo-viewer, production stack
 
-Everything here runs on the home server (192.168.1.10, SSH user in [HARDWARE.md](HARDWARE.md); commands below assume you're already connected — Joakim usually is). Also check HARDWARE.md's currently-overridden memtest gate before running anything below. Written, not run, by the AI session per [POLICY.md](../policies/POLICY.md)'s "Deployment and system access" rule — copy/paste these yourself.
+Everything here runs on the home server (`192.168.1.10`, SSH user `joakim`, has `sudo`; commands below assume you're already connected — Joakim usually is). Hardware/OS facts for this box live in the `hardware` repo's `server/192.168.1.10/`, not here. Before any planned reboot while a memtest gate is open: `docker-compose.prod.yml`'s restart policy brings the production stack back automatically on every boot regardless of the gate's wording (it only stops a *manual* `docker compose up`) — run `docker compose -f docker-compose.prod.yml down` first if the host actually needs to stay quiet, don't rely on the gate alone. Written, not run, by the AI session per [POLICY.md](../policies/POLICY.md)'s "Deployment and system access" rule — copy/paste these yourself.
 
 ## Prerequisites (must be done first)
 
@@ -92,7 +92,7 @@ Captured 2026-07-17 from the first real P0 deploy, where several of these were w
 
 1. **Is this actually a server bug, or a stale browser cache?** Hard refresh (Ctrl+Shift+R) before chasing anything server-side — several "broken" symptoms during the first deploy turned out to be the browser caching failed responses from before auth/schema were fixed.
 2. **Did a container restart recently without you asking it to?** `docker compose -f docker-compose.prod.yml ps` — compare "Created" vs "Up" time per service; one showing a much shorter uptime than the others (when you didn't restart it deliberately) means it crashed and `restart: unless-stopped` brought it back. Note: a deliberate `up -d --build` also resets a service's log history (new container instance) - don't mistake that for a crash on its own.
-3. **Memory pressure?** `free -h` (host-level) and `docker stats --no-stream` (per-container, against each service's `mem_limit`) - this host is tight (see HARDWARE.md). Also check `dmesg 2>/dev/null | grep -i "out of memory\|oom-kill"` for a definitive OOM-kill, rather than inferring one from restarts alone.
+3. **Memory pressure?** `free -h` (host-level) and `docker stats --no-stream` (per-container, against each service's `mem_limit`) - see the `hardware` repo's `server/192.168.1.10/hardware/README.md` for this host's current RAM. Also check `dmesg 2>/dev/null | grep -i "out of memory\|oom-kill"` for a definitive OOM-kill, rather than inferring one from restarts alone.
 4. **What does the service's own log say?** Filter out routine noise (uvicorn access logs, and once internet-facing, constant opportunistic bot-scanning 404s for things like `/.env`, `/config.json` - normal, ignore): `docker compose -f docker-compose.prod.yml logs <service> 2>&1
    | grep -iE "error|traceback|exception|killed"`. Grep for the specific
    endpoint/feature too (e.g. `thumb`) - zero matches for an endpoint you know was requested means the request isn't reaching that container at all, which points you at Caddy/routing/the client instead of that service's own code.

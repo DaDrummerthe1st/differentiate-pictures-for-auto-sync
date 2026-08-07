@@ -8,7 +8,7 @@ After the P0 deploy (2026-07-17), logged in and browsing worked, but thumbnails 
 
 ## Investigation log
 
-1. **Hypothesis: RAM** (Joakim's first instinct, given HARDWARE.md's known-tight memory). Checked `docker stats --no-stream` at rest: photo-viewer using 40MiB / 256MiB (15.72%) — not under pressure *at that moment*. Didn't rule it out, just ruled out "constantly pegged" as the story.
+1. **Hypothesis: RAM** (Joakim's first instinct, given the host's known-tight memory at the time — see the `hardware` repo's `server/192.168.1.10/hardware/README.md`). Checked `docker stats --no-stream` at rest: photo-viewer using 40MiB / 256MiB (15.72%) — not under pressure *at that moment*. Didn't rule it out, just ruled out "constantly pegged" as the story.
 2. **Checked for silent restarts**: `docker compose ps` showed photo-viewer "Up 2 minutes" while every other service showed 26-43 minutes — a restart happened. Caveat found later: this session ran `docker compose up -d --build` more than once (for the `PHOTOS_HOST_PATH` fix), which recreates the container and resets its uptime/logs on its own — so a short uptime alone doesn't prove a crash. Needed the log check below to say more.
 3. **Grepped logs for the endpoint**: `docker compose logs photo-viewer 2>&1 | grep -iE "thumb|error|traceback|exception|killed"` returned **zero matches**, across all 3 "Started server process" blocks in the log (3 container starts total). No `/thumb` request had ever been logged as reaching this container.
 4. **Hard refresh test** (cheap, ruled out one whole class of cause): fixed the *first* thumbnail. Confirms the browser was at least partly showing stale cached failures from earlier attempts (before login even worked) — but didn't fix the rest, so stale cache isn't the whole story.
@@ -29,7 +29,7 @@ Concurrent thumbnail generation (each a real Pillow decode+resize+encode, CPU/me
 
 All three deployed and confirmed stable over 2+ hours with no restarts (previously restarting every few minutes under normal browsing). The combination stopped the crash entirely; it did not make on-demand generation instant - see the 2026-07-17 update above.
 
-The RAM upgrade (ordered, not installed — HARDWARE.md) was never re-tested in isolation before these code fixes went in; not needed now given the above resolved the crash, but worth noting it was never ruled in or out as a contributing factor.
+The RAM upgrade (ordered, not installed at the time — see the `hardware` repo's `server/192.168.1.10/hardware/README.md`) was never re-tested in isolation before these code fixes went in; not needed now given the above resolved the crash, but worth noting it was never ruled in or out as a contributing factor.
 
 ## Next session should start with
 

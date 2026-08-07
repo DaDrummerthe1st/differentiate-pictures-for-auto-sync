@@ -31,7 +31,7 @@ reasoning/explanation step, not a single "AI" doing everything at once.
   considered here must be open-weight and run entirely locally. Cloud vision APIs (Rekognition,
   Google Vision, Azure, Clarifai, etc.) are disqualified regardless of quality.
 - **Resource efficiency is a hard constraint** ([../policies/POLICY.md](../policies/POLICY.md)):
-  CPU-only near-term (the photo-server host, see [../photo-server/HARDWARE.md](../photo-server/HARDWARE.md)),
+  CPU-only near-term (the photo-server host, see the `hardware` repo's `server/192.168.1.10/`),
   with an eye toward the eventual Raspberry Pi 3 stress-test target
   ([../photo-server/TODO.md](../photo-server/TODO.md)'s "Raised 2026-07-29" section).
 - **On-device phone inference stays the long-term Pillar 2 architecture**

@@ -166,7 +166,7 @@ Standard for this class of workload, no exotic mechanism needed:
    [../photo-server/TODO.md](../photo-server/TODO.md) Phase 1) — a simple job queue on top of it
    (e.g. RQ) is enough; Celery/RabbitMQ would be disproportionate at this scale. Cap worker
    concurrency at 1, maybe 2 — the i5-650 target is 2 cores/4 threads total
-   ([../photo-server/HARDWARE.md](../photo-server/HARDWARE.md)), and the web-serving containers
+   (the `hardware` repo's `server/192.168.1.10/`), and the web-serving containers
    (Caddy, auth, Postgres, Redis, photo-viewer) need headroom too.
 3. **Load each model once per backlog run, not once per photo.** A persistent worker loads every
    detector at startup, then streams photos through the fixed pipeline — model-load cost paid once,
@@ -206,9 +206,9 @@ design pass.
 Distinct from — and narrower than — [../VISION.md](../VISION.md)'s own rollout section, which this
 doesn't restate. Confirmed with Joakim 2026-08-02:
 
-- **V1 (now)**: a central server — either the existing home box
-  ([../photo-server/HARDWARE.md](../photo-server/HARDWARE.md)) or a VPS, still undecided, but both are
-  now specced ([TODO.md](TODO.md)'s VPS section: Contabo Cloud VPS 10, 4 vCPU AMD EPYC, 7.8GB RAM,
+- **V1 (now)**: a central server — either the existing home box or a VPS, still undecided, but both
+  are now specced (the `hardware` repo's `server/192.168.1.10/` and `server/161.97.174.16/`: the
+  home box is an i5-650/16GB, the VPS is a Contabo Cloud VPS 10, 4 vCPU AMD EPYC, 7.8GB RAM,
   hosted at Lauterbourg, France — EU, verified). Doesn't block detector/model choice: both candidate
   hosts are far more capable than the eventual Pi-3 floor below, so [DETECTORS.md](DETECTORS.md)'s
   picks work for either; only the deployment target changes.
