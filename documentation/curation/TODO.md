@@ -170,17 +170,24 @@ re-research them. Per this project's "high-blast-radius" rule
 until Joakim's explicit go-ahead — confirmed this session as its own written-not-run deploy step,
 after a local smoke-test on this workstation first.
 
-**Raised 2026-08-07, this session, not yet designed**: once Phase 3/4 load real models, Joakim wants
-to *see* this workstation's real load while different models tag photos (CPU/RAM per detector, not
-just the existing idle-container `mem_limit` guess) — feeds directly into the already-open
-"object-detection timing benchmark" item below, now with an explicit "show me the load" framing, not
-just a number. Separately, once Phase 6's local checkpoint passes, Joakim wants to actually deploy to
+**Raised 2026-08-07, this session, two decisions now confirmed via AskUserQuestion**: once Phase 3/4
+load real models, Joakim wants to *see* this workstation's real load while different models tag
+photos (CPU/RAM per detector, not just the existing idle-container `mem_limit` guess) — feeds
+directly into the already-open "object-detection timing benchmark" item below, now with an explicit
+"show me the load" framing, not just a number. **Confirmed: session scope stays at Phase 2 this
+session** (quality trio has near-zero CPU cost, so there's nothing meaningful to watch yet) — Phase
+3/4's real ONNX models, and the load-observation work that goes with them, are next session's start,
+not this one. Separately, once Phase 6's local checkpoint passes, Joakim wants to actually deploy to
 the `.10` home server and watch it run there too, **with monitoring and thorough system-usage
 logging** — a real new requirement for Phase 7's deploy step, not previously scoped (Phase 7 as
 designed only ships a `docker-compose.prod.yml` block and copyable commands, no monitoring/logging
-stack). Neither the load-observation tooling nor the monitoring/logging shape (e.g. plain
-`docker stats`-based logging vs. a real metrics stack) is designed yet — needs a decision with Joakim
-before Phase 6/7, not guessed here.
+stack). **Confirmed: lightweight, not a full metrics stack** — periodic `docker stats` logging to a
+file (cron or a small script), no new persistent service, per this project's resource-efficiency
+constraint on the home box's modest hardware ([ARCHITECTURE.md](ARCHITECTURE.md)); Prometheus/Grafana
+explicitly rejected as too much footprint for this. Neither the load-observation
+tooling nor the `docker stats`-logging script has been written yet — a real build item for whichever
+session reaches Phase 6/7, still deployed by Joakim himself per POLICY.md's deployment rule, never
+run by an AI session directly against `.10`.
 
 ## /tank test-data convention (noted, not a build item)
 
