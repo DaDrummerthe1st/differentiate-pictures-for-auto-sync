@@ -119,8 +119,9 @@ req = urllib.request.Request('http://localhost:8500/detect', data=data,
 print(urllib.request.urlopen(req).read().decode())
 "
 
-# resource use on the real host while it ran
-docker stats --no-stream detector
+# resource use on the real host while it ran (docker stats needs the real container
+# name, not the compose service name — Compose v2 prefixes/suffixes it)
+docker stats --no-stream $(docker compose -f docker-compose.prod.yml ps -q detector)
 ```
 
 `docker compose -f docker-compose.prod.yml cp` reads directly off this host's own `/tank` (no need
@@ -128,6 +129,16 @@ to route through `photo-viewer`'s mount) — pick any real photo already there, 
 anything back or modify it. Real per-detector CPU-time breakdown, batches of ~100, and the
 admin-configurable source directory (`/tank/dpfas_media`) are the next build increment, not part of
 this smoke test — see `documentation/plans/tingly-humming-pudding.md`.
+
+**Run for real, 2026-08-08**, against `/tank/momfiles/Florida1/Florida/1/IMGP0128.JPG`: both detector
+paths confirmed working on real hardware — quality trio flagged the photo `blurry` (whole-image, no
+bbox), face detection (YuNet) found one `Person` with a real bounding box. Round trip was 1.527s, but
+that's dominated by `docker exec`/network overhead (client CPU time was ~0.16s), not a clean
+per-image inference number — still doesn't answer the real question. `docker stats` after the single
+request showed 402MiB / 768MiB (52%) resident — almost certainly the fixed cost of loading OpenCV +
+ONNX Runtime + the YuNet model, not a per-image marginal cost, but it means baseline footprint alone
+already eats over half the container's memory limit before volume is even a factor. Carry this
+forward as a real data point into the resource-benchmarking work below.
 
 ## Troubleshooting playbook
 
