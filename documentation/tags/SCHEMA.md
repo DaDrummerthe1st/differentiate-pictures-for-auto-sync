@@ -128,7 +128,8 @@ Phase 2/3 photo catalog (`photos` table + `/tank/` ingestion) that also isn't bu
 ([../photo-server/TODO.md](../photo-server/TODO.md)). What actually exists now, in `app/main.py`
 (the live, filesystem-based photo-viewer, not `server/`), is a separate, much smaller `tags` table in
 that app's own SQLite analytics DB: `id, user_id, photo_path, category, value, bbox_x/y/w/h, source,
-created_at, updated_at`. Keyed by `photo_path` (relative to `PHOTOS_ROOT`) instead of a `photos.id`
+created_at, updated_at`. Keyed by `photo_path` (relative to whichever photo source is currently
+active - see the `app_settings` paragraph below) instead of a `photos.id`
 foreign key, since there's no photo-catalog row to point at. `category` is narrowed to 5 values -
 `people`/`places`/`objects`/`animals`/`generic` - out of the 12 in [TAXONOMY.md](TAXONOMY.md); no
 `entities` table (value-autocomplete via `GET /api/tags/values`'s frequency-ranked distinct-values
@@ -141,6 +142,20 @@ same table/column rather than needing a schema change. See
 behavior. **Migrating this into the real design above is real, deferred work**, not assumed automatic -
 whenever Phase 2/3 ingestion lands, `photo_path` needs reconciling against whatever `photos.id` keying
 scheme that ends up using.
+
+**`app_settings` (admin photo-source setting, built 2026-08-08)**: a second, unrelated table in the
+same SQLite analytics DB, one singleton row (`id` fixed at 1, `CHECK (id = 1)`) —
+`active_source, updated_at`. `active_source` names a direct subdirectory of the fixed
+`PHOTOS_LIBRARY_ROOT` boundary (an env var, e.g. `/photo-library-root` in
+`docker-compose.prod.yml` — see [../plans/tingly-humming-pudding.md](../plans/tingly-humming-pudding.md)),
+default `dpfas_media`. `app/main.py`'s `get_active_photos_root()` resolves
+`PHOTOS_LIBRARY_ROOT / active_source`, re-validated as a direct child each call (same
+traversal-guard shape as `resolve_relpath`) — every endpoint that used to read the old
+module-level `PHOTOS_ROOT` constant (`resolve_relpath`, `api_tree`, `file_summary`, and by
+extension `thumb`/`original`/download) now calls this instead, so switching the active source
+changes what the whole gallery serves, not just a curation-only side path. `GET`/`PUT
+/api/settings/photos-source` gate this behind `role == "admin"` (403 for `member`) - a `member`
+account never sees or changes it.
 
 **Role-based visibility, built 2026-08-07** (`documentation/curation/TODO.md`'s build-plan Phase 0,
 ahead of the automatic-tagging work above): `GET /api/tags`/`GET /api/tags/values` in `app/main.py`

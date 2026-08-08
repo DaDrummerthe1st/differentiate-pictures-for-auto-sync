@@ -33,8 +33,25 @@ services:
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8420", "--proxy-headers", "--forwarded-allow-ips=*", "--no-server-header"]
     environment:
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?set JWT_SECRET_KEY in .env, never hardcode it}
+      # Fixed boundary directory (app/main.py's PHOTOS_LIBRARY_ROOT) -
+      # each subdirectory below is one admin-selectable photo source
+      # (GET/PUT /api/settings/photos-source), not a separate mount
+      # scheme per source. See documentation/plans/
+      # tingly-humming-pudding.md.
+      PHOTOS_LIBRARY_ROOT: /photo-library-root
     volumes:
-      - ${PHOTOS_HOST_PATH:?set PHOTOS_HOST_PATH in .env to the real photo directory on this host, e.g. /tank/mammas_bilder}:/photos:ro
+      # Elisabeth's existing library - was mounted straight at /photos
+      # before the admin source-setting existed; now one of two
+      # selectable subdirectories under PHOTOS_LIBRARY_ROOT (default
+      # active source is dpfas_media, not this one - switch back to
+      # momfiles via the admin "Installningar" panel). Still read-only,
+      # still never written to by this app.
+      - ${PHOTOS_HOST_PATH:?set PHOTOS_HOST_PATH in .env to the real photo directory on this host, e.g. /tank/mammas_bilder}:/photo-library-root/momfiles:ro
+      # New, separate, disposable directory Joakim populates by hand via
+      # SSH - starts empty. Default active photo source. Never the same
+      # path as momfiles above; see tingly-humming-pudding.md's "momfiles
+      # stays untouched" constraint.
+      - /tank/dpfas_media:/photo-library-root/dpfas_media:ro
       - thumbcache:/thumbcache
       - analytics_data:/data
       - stories:/stories
@@ -54,10 +71,12 @@ services:
   # far - documentation/curation/TODO.md's build plan) called by
   # photo-viewer over POST /detect. Deliberately standalone here: it takes
   # image bytes over HTTP, it doesn't read any mounted photo directory
-  # itself, so adding it doesn't touch photo-viewer's existing live
-  # PHOTOS_HOST_PATH/momfiles mount or require the (not yet built)
-  # admin photo-source setting - see documentation/plans/
-  # tingly-humming-pudding.md for that follow-on work. No host port
+  # itself - photo-viewer reads the active PHOTOS_LIBRARY_ROOT source
+  # above and POSTs bytes to this service, so adding it never needed its
+  # own mount. See documentation/plans/tingly-humming-pudding.md for the
+  # admin photo-source setting this pairs with (app/benchmark_detector.py
+  # drives this service directly, over /detect?include_timing=true, for
+  # real per-detector CPU-time numbers on this hardware). No host port
   # published - reachable only from other containers on this compose
   # network, same as auth/postgres/redis.
   detector:

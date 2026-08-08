@@ -8,10 +8,15 @@ import pytest
 from PIL import Image
 
 _TEST_ROOT = Path(tempfile.mkdtemp(prefix="mpv-test-"))
-PHOTOS_ROOT = _TEST_ROOT / "photos"
+PHOTOS_LIBRARY_ROOT = _TEST_ROOT / "photo-library-root"
+PHOTOS_LIBRARY_ROOT.mkdir()
+# app.main's default active_source is "dpfas_media" - put the fixture
+# tree there so every test that doesn't care about the admin
+# source-switching feature (test_settings.py) keeps working unchanged.
+PHOTOS_ROOT = PHOTOS_LIBRARY_ROOT / "dpfas_media"
 PHOTOS_ROOT.mkdir()
 
-os.environ["PHOTOS_ROOT"] = str(PHOTOS_ROOT)
+os.environ["PHOTOS_LIBRARY_ROOT"] = str(PHOTOS_LIBRARY_ROOT)
 os.environ["THUMB_CACHE_DIR"] = str(_TEST_ROOT / "thumbcache")
 os.environ["STORY_DIR"] = str(_TEST_ROOT / "stories")
 os.environ["ANALYTICS_DB_PATH"] = str(_TEST_ROOT / "data" / "analytics.db")

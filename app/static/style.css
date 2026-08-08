@@ -377,7 +377,7 @@ body.large-thumbs { --thumb-min: 260px; }
 
 /* --- tag add/edit form --- */
 
-#tagForm {
+#tagForm, #settingsModal {
   position: fixed;
   inset: 0;
   z-index: 60;
@@ -387,7 +387,7 @@ body.large-thumbs { --thumb-min: 260px; }
   justify-content: center;
   padding: 2rem;
 }
-#tagFormBox {
+#tagFormBox, #settingsModalBox {
   background: #26262c;
   border-radius: 1rem;
   padding: 2rem;
@@ -397,14 +397,15 @@ body.large-thumbs { --thumb-min: 260px; }
   flex-direction: column;
   gap: 0.5rem;
 }
-#tagFormBox h2 { margin-top: 0; }
+#tagFormBox h2, #settingsModalBox h2 { margin-top: 0; }
 .tag-form-hint {
   font-size: 0.9rem;
   opacity: 0.8;
   margin: 0 0 0.5rem;
 }
 #tagFormBox select,
-#tagFormBox input[type="text"] {
+#tagFormBox input[type="text"],
+#settingsModalBox select {
   font-size: 1.1rem;
   padding: 0.6rem 0.8rem;
   border-radius: 0.5rem;
@@ -412,7 +413,7 @@ body.large-thumbs { --thumb-min: 260px; }
   background: #1b1b1f;
   color: white;
 }
-#tagFormButtons {
+#tagFormButtons, #settingsModalButtons {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;

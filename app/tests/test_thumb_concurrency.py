@@ -11,7 +11,7 @@ from app import main as app_main
 def slow_uncached_images(tmp_path, monkeypatch):
     """Two distinct, never-before-cached picture files, plus a real
     THUMB_CACHE dir so cache_path.parent.mkdir() has somewhere to write."""
-    root = app_main.PHOTOS_ROOT / "ConcurrencyTest"
+    root = app_main.get_active_photos_root() / "ConcurrencyTest"
     root.mkdir(parents=True, exist_ok=True)
     paths = []
     for name in ("slow1.jpg", "slow2.jpg"):

@@ -1,7 +1,8 @@
 import io
 import os
+import resource
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from PIL import Image, UnidentifiedImageError
 
 from detector.faces import detect_faces
@@ -50,8 +51,18 @@ def _tag(category: str, value: str, bbox: dict | None = None) -> dict:
     }
 
 
+def _cpu_time_ms() -> float:
+    # RUSAGE_SELF, not RUSAGE_CHILDREN - this process is
+    # synchronous/single-process (no subprocess/worker fan-out), so a
+    # before/after delta cleanly attributes CPU time to whichever
+    # detect_* call ran between the two reads. See
+    # documentation/plans/tingly-humming-pudding.md Part B.
+    usage = resource.getrusage(resource.RUSAGE_SELF)
+    return (usage.ru_utime + usage.ru_stime) * 1000
+
+
 @app.post("/detect")
-async def detect(file: UploadFile = File(...)) -> dict:
+async def detect(file: UploadFile = File(...), include_timing: bool = Query(False)) -> dict:
     body = await _read_capped(file, MAX_UPLOAD_BYTES)
     try:
         image = Image.open(io.BytesIO(body))
@@ -60,13 +71,40 @@ async def detect(file: UploadFile = File(...)) -> dict:
         raise HTTPException(status_code=400, detail="not a readable image") from exc
 
     tags = []
-    if detect_blur(image):
+    cpu_time_ms = {}
+
+    start = _cpu_time_ms()
+    blurry = detect_blur(image)
+    cpu_time_ms["blur"] = _cpu_time_ms() - start
+    if blurry:
         tags.append(_tag("generic", "blurry"))
+
+    start = _cpu_time_ms()
     exposure = detect_exposure(image)
+    cpu_time_ms["exposure"] = _cpu_time_ms() - start
     if exposure is not None:
         tags.append(_tag("generic", exposure))
-    if detect_monochrome(image):
+
+    start = _cpu_time_ms()
+    monochrome = detect_monochrome(image)
+    cpu_time_ms["monochrome"] = _cpu_time_ms() - start
+    if monochrome:
         tags.append(_tag("generic", "black_and_white"))
-    for face in detect_faces(image):
+
+    start = _cpu_time_ms()
+    faces = detect_faces(image)
+    cpu_time_ms["face"] = _cpu_time_ms() - start
+    for face in faces:
         tags.append(_tag("people", "Person", face))
-    return {"tags": tags}
+
+    result = {"tags": tags}
+    if include_timing:
+        # ru_maxrss is a cumulative peak since process start (mostly
+        # YuNet's one-time model-load cost), not a per-detector or
+        # per-photo cost - report it once per request, labeled batch/
+        # request-level, not attributed to any single detector.
+        result["timings"] = {
+            "cpu_time_ms": cpu_time_ms,
+            "peak_rss_kb": resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+        }
+    return result

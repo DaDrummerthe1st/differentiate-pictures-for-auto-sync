@@ -192,10 +192,48 @@ Phase 2 is this session's own work, same "one phase, short handoff" cadence:
   `IMGP0128.JPG` fixture POSTed to `/detect` from inside the container, matched unit-test
   predictions), then torn down.
 
-**Start next session**: the admin photo-source-setting + real per-detector CPU-time benchmarking work
-in `documentation/plans/tingly-humming-pudding.md` (see "Superseded 2026-08-08" note above) — runs
-directly against `.10`/`/tank`, ahead of Phase 4. **Phase 4** (object/animal detection, NanoDet-Plus)
-follows after that. Phases 5-7 after Phase 4 (the
+- **Part A/B (admin photo-source setting + per-detector CPU-time benchmarking), built 2026-08-08**:
+  `documentation/plans/tingly-humming-pudding.md` implemented in full — `app/main.py`'s
+  `app_settings` singleton-row table, `get_active_photos_root()` (replaces the old module-level
+  `PHOTOS_ROOT` constant everywhere: `resolve_relpath`, `api_tree`, `file_summary`, and by extension
+  `thumb`/`original`/download), `GET`/`PUT /api/settings/photos-source` (admin-only, 403 for
+  `member`), and the "Installningar" panel in `app/static/app.js`/`index.html`. **Real, explicit
+  deviation from the saved plan, confirmed via AskUserQuestion this session, not a guess**: the plan's
+  Part A said momfiles stays "not mounted as an alternate source, not switchable to" — but every
+  current `PHOTOS_ROOT` use also covers the endpoints the live gallery itself depends on
+  (`api_tree`/`thumb`/`original`), so switching the *whole app* to the new, empty `dpfas_media` by
+  default with no way back would have broken Elisabeth's actual browsing the moment
+  `docker-compose.prod.yml` gets applied on `.10`. Corrected scope: `momfiles` **is** mounted under
+  `PHOTOS_LIBRARY_ROOT` (as `.../momfiles`, alongside `.../dpfas_media`) and **is** a selectable
+  `available` option — `dpfas_media` stays the default active source, but admin can switch back.
+  `detector/main.py`'s `POST /detect` gained an opt-in `include_timing` query param (default off, all
+  prior exact-equality response-shape tests in `test_detect.py` untouched) reporting
+  `resource.getrusage`-based per-detector `cpu_time_ms` (blur/exposure/monochrome/face) plus a
+  batch/request-level `peak_rss_kb` (explicitly not attributed to any one detector - see
+  `detector/main.py`'s comment on why `ru_maxrss` is cumulative, not per-call). New
+  `app/benchmark_detector.py` (pure `summarize_batch` aggregation, unit-tested; stdlib
+  `urllib.request` multipart POST glue, no new HTTP-client dependency added to `requirements.txt`)
+  walks the active source and appends one JSON-line batch summary to `/data/benchmark.log`. Full
+  local suite green (`app/tests/` 108, `detector/tests/` 18, 126 total) plus a real local
+  `docker compose up -d` smoke test on this workstation (not `.10`): logged in as the real admin
+  account, confirmed `GET`/`PUT /api/settings/photos-source` end to end, confirmed `/api/tree`
+  genuinely repoints between the empty `dpfas_media` volume and the real `momfiles` album tree on a
+  source switch, and ran `python -m app.benchmark_detector` against two real copied-in photos,
+  producing real (if not `.10`-representative) `cpu_time_ms`/`peak_rss_kb` numbers end to end before
+  tearing the stack down. **Also caught, unrelated to this build**: the locally cached
+  `differentiate-pictures-for-auto-sync-auth` image predated `server/app/tokens.py`'s role-claim
+  embedding — rebuilt during this session's smoke test; worth a quick check that `.10`'s `auth` image
+  is current too next deploy, since a stale image there would silently default every session to
+  `role="member"` (fail-closed, not a security gap, but it would make this very admin-only feature
+  unreachable). **Not done this session, Joakim's own action per POLICY.md's deployment rule**:
+  creating `/tank/dpfas_media` on `.10`, applying the `docker-compose.prod.yml` mount/env change
+  there, and running `app/benchmark_detector.py` for real against `.10`'s actual hardware.
+
+**Start next session**: Joakim applies the `docker-compose.prod.yml` change above on `.10` and runs
+`app/benchmark_detector.py` for real per-detector CPU-time numbers (see this file's Part A/B entry
+just above and `documentation/plans/tingly-humming-pudding.md`'s "Verification" section for the exact
+steps). **Phase 4** (object/animal detection, NanoDet-Plus) follows after that. Phases 5-7 after
+Phase 4 (the
 `app/auto_tag.py` orchestration job idempotent on `source='auto'` rows, a local smoke-test against
 `resources/test_pictures/` before touching the server, then written-not-run
 `docker-compose.prod.yml`/deploy commands for Joakim to run against `/tank`) — model picks,
@@ -235,9 +273,11 @@ himself via his existing sudo SSH `/tank` access, explicitly **not** `/tank/momf
 Elisabeth's, untouched, per the existing "/tank test-data convention" below). Full design (settings
 table shape, `docker-compose.prod.yml` mount, per-detector CPU-time instrumentation via stdlib
 `resource.getrusage`, the `app/benchmark_detector.py` batch tool) saved in
-`documentation/plans/tingly-humming-pudding.md` — **next session's starting point, ahead of Phase 4**
-(object/animal detection waits behind this). Deliberately not built this session (token-saving
-instruction) — the plan file is the full handoff, nothing below `## Part A` in it exists in code yet.
+`documentation/plans/tingly-humming-pudding.md`. **Built 2026-08-08** (see this file's "Part A/B"
+entry above) — momfiles ended up staying a selectable source too, a real correction to this
+paragraph's "not switchable to" framing, confirmed via AskUserQuestion once the live-gallery blast
+radius became clear. Only the actual `.10` deploy (compose/env change, real `/tank/dpfas_media`
+population, the real benchmark run) is still outstanding, ahead of Phase 4 (object/animal detection).
 
 ## /tank test-data convention (noted, not a build item)
 
@@ -255,7 +295,8 @@ already does for `momfiles`.
 Opened 2026-08-02, alongside [README.md](README.md)/[ARCHITECTURE.md](ARCHITECTURE.md)/
 [DETECTORS.md](DETECTORS.md). **2026-08-07**: no longer just a catalog — the "Build plan" section
 above is this folder's first numbered, TDD-able roadmap, Phase 0-3 done (role-aware sessions,
-detector service skeleton, quality trio, face detection/YuNet). **2026-08-08**: next session's actual
-starting point is now the admin photo-source-setting + real per-detector CPU-time benchmarking work
-against `.10`/`/tank` (`documentation/plans/tingly-humming-pudding.md`), ahead of Phase 4
+detector service skeleton, quality trio, face detection/YuNet). **2026-08-08**: the admin
+photo-source-setting + per-detector CPU-time benchmarking work
+(`documentation/plans/tingly-humming-pudding.md`) is built and locally verified — see this file's
+"Part A/B" entry above. Only the real `.10`/`/tank` deploy step remains, ahead of Phase 4
 (object/animal detection/NanoDet-Plus) — see "Superseded 2026-08-08" note above.

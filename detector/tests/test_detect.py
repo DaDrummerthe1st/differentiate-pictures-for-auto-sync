@@ -127,6 +127,34 @@ def test_detect_flags_a_face_with_a_bbox():
     assert tag["bbox_h"] > 0
 
 
+def test_detect_include_timing_reports_per_detector_cpu_time():
+    image = _checkerboard((220, 20, 20), (20, 20, 220))
+    buf = io.BytesIO()
+    image.save(buf, format="JPEG")
+    buf.seek(0)
+
+    res = client.post(
+        "/detect", params={"include_timing": "true"}, files={"file": ("test.jpg", buf, "image/jpeg")}
+    )
+
+    assert res.status_code == 200
+    data = res.json()
+    assert "timings" in data
+    cpu_time_ms = data["timings"]["cpu_time_ms"]
+    assert set(cpu_time_ms) == {"blur", "exposure", "monochrome", "face"}
+    for value in cpu_time_ms.values():
+        assert value >= 0
+    assert data["timings"]["peak_rss_kb"] > 0
+
+
+def test_detect_omits_timings_by_default():
+    image = _checkerboard((220, 20, 20), (20, 20, 220))
+
+    res = _upload(image)
+
+    assert "timings" not in res.json()
+
+
 def test_detect_rejects_an_oversized_upload():
     # Resource-exhaustion guard, THREATS.md #16 - checked in chunks, before
     # a full PIL decode is ever attempted, not just an after-the-fact size

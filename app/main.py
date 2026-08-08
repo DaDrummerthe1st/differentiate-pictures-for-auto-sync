@@ -18,7 +18,13 @@ from app.auth import has_valid_session, load_auth_config, require_session, requi
 
 load_auth_config()
 
-PHOTOS_ROOT = Path(os.environ.get("PHOTOS_ROOT", "/photos")).resolve()
+# The fixed boundary directory - individual photo sources (dpfas_media,
+# momfiles, ...) are its direct subdirectories, each its own read-only
+# bind mount in docker-compose.prod.yml. Which one is actually served is
+# the app_settings.active_source row below, not this constant - this only
+# bounds where a source is allowed to live on disk.
+PHOTOS_LIBRARY_ROOT = Path(os.environ.get("PHOTOS_LIBRARY_ROOT", "/photo-library-root")).resolve()
+DEFAULT_ACTIVE_SOURCE = "dpfas_media"
 THUMB_CACHE = Path(os.environ.get("THUMB_CACHE_DIR", "/thumbcache"))
 THUMB_CACHE.mkdir(parents=True, exist_ok=True)
 
@@ -111,6 +117,22 @@ db.execute(
     """
 )
 db.execute("CREATE INDEX IF NOT EXISTS idx_tags_photo_path ON tags(photo_path)")
+# Singleton row (id is always 1) - which PHOTOS_LIBRARY_ROOT subdirectory
+# is currently served. Admin-only (see GET/PUT /api/settings/photos-source
+# below); a member never sees or changes this.
+db.execute(
+    """
+    CREATE TABLE IF NOT EXISTS app_settings (
+        id INTEGER PRIMARY KEY CHECK (id = 1),
+        active_source TEXT NOT NULL DEFAULT 'dpfas_media',
+        updated_at TEXT NOT NULL
+    )
+    """
+)
+db.execute(
+    "INSERT OR IGNORE INTO app_settings (id, active_source, updated_at) VALUES (1, ?, ?)",
+    (DEFAULT_ACTIVE_SOURCE, datetime.now(timezone.utc).isoformat()),
+)
 db.commit()
 
 
@@ -160,9 +182,62 @@ async def log_requests(request: Request, call_next):
     return response
 
 
+def _available_photo_sources() -> list[str]:
+    if not PHOTOS_LIBRARY_ROOT.is_dir():
+        return []
+    return sorted(entry.name for entry in PHOTOS_LIBRARY_ROOT.iterdir() if entry.is_dir())
+
+
+def _get_active_source() -> str:
+    row = db.execute("SELECT active_source FROM app_settings WHERE id = 1").fetchone()
+    return row[0] if row else DEFAULT_ACTIVE_SOURCE
+
+
+def get_active_photos_root() -> Path:
+    candidate = (PHOTOS_LIBRARY_ROOT / _get_active_source()).resolve()
+    # Same traversal-guard shape as resolve_relpath below - active_source
+    # only ever reaches the DB via the PUT endpoint's `available` check,
+    # but re-validate here too rather than trusting that invariant blindly.
+    if candidate.parent != PHOTOS_LIBRARY_ROOT:
+        raise HTTPException(status_code=500, detail="invalid active photo source configuration")
+    return candidate
+
+
+class PhotosSourceUpdate(BaseModel):
+    active: str
+
+
+@app.get("/api/settings/photos-source")
+def get_photos_source(session: tuple[int, str] = Depends(require_session_with_role)):
+    _, role = session
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="admin only")
+    return {"active": _get_active_source(), "available": _available_photo_sources()}
+
+
+@app.put("/api/settings/photos-source")
+def set_photos_source(
+    update: PhotosSourceUpdate, session: tuple[int, str] = Depends(require_session_with_role)
+):
+    _, role = session
+    if role != "admin":
+        raise HTTPException(status_code=403, detail="admin only")
+    if update.active not in _available_photo_sources():
+        raise HTTPException(status_code=400, detail="unknown photo source")
+    now = datetime.now(timezone.utc).isoformat()
+    db.execute(
+        "INSERT INTO app_settings (id, active_source, updated_at) VALUES (1, ?, ?) "
+        "ON CONFLICT(id) DO UPDATE SET active_source = excluded.active_source, updated_at = excluded.updated_at",
+        (update.active, now),
+    )
+    db.commit()
+    return {"active": _get_active_source(), "available": _available_photo_sources()}
+
+
 def resolve_relpath(relpath: str) -> Path:
-    candidate = (PHOTOS_ROOT / relpath).resolve()
-    if PHOTOS_ROOT not in candidate.parents and candidate != PHOTOS_ROOT:
+    root = get_active_photos_root()
+    candidate = (root / relpath).resolve()
+    if root not in candidate.parents and candidate != root:
         raise HTTPException(status_code=400, detail="invalid path")
     if not candidate.is_file():
         raise HTTPException(status_code=404, detail="not found")
@@ -322,8 +397,9 @@ def delete_tag(tag_id: int, user_id: int = Depends(require_session)):
 @app.get("/api/tree")
 def api_tree(_: int = Depends(require_session)):
     headlines: dict[str, dict[str, list[str]]] = {}
+    root = get_active_photos_root()
 
-    for path in PHOTOS_ROOT.rglob("*"):
+    for path in root.rglob("*"):
         if not path.is_file() or path.suffix.lower() not in MEDIA_EXTS:
             continue
         expected = _EXPECTED_LABEL_FOR_EXT.get(path.suffix.lower())
@@ -335,7 +411,7 @@ def api_tree(_: int = Depends(require_session)):
                 # another - don't show it as if it were a real photo.
                 # Still visible via /api/file-summary's mismatch list.
                 continue
-        rel = path.relative_to(PHOTOS_ROOT)
+        rel = path.relative_to(root)
         parent_parts = rel.parent.parts
         if not parent_parts:
             headline, chunk = ".", "."
@@ -412,7 +488,8 @@ def file_summary(_: int = Depends(require_session)):
     total = 0
     category_counts: dict[str, int] = {}
     mismatches = []
-    for path in sorted(PHOTOS_ROOT.rglob("*")):
+    root = get_active_photos_root()
+    for path in sorted(root.rglob("*")):
         if not path.is_file():
             continue
         total += 1
@@ -426,7 +503,7 @@ def file_summary(_: int = Depends(require_session)):
         if expected and detected != expected:
             mismatches.append(
                 {
-                    "path": path.relative_to(PHOTOS_ROOT).as_posix(),
+                    "path": path.relative_to(root).as_posix(),
                     "extension": ext,
                     "detected": detected,
                 }

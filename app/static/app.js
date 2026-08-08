@@ -1011,6 +1011,47 @@ document.getElementById("downloadAllBtn").addEventListener("click", () => {
   document.getElementById("moreActionsMenu").classList.add("hidden");
 });
 
+// ---- Admin-only photo source setting - hidden entirely for a member
+// (403 on the GET below just leaves settingsBtn hidden, no error shown) ----
+
+async function initPhotosSourceSetting() {
+  const res = await authFetch("/api/settings/photos-source");
+  if (!res.ok) return;
+  document.getElementById("settingsBtn").classList.remove("hidden");
+}
+
+document.getElementById("settingsBtn").addEventListener("click", async () => {
+  document.getElementById("moreActionsMenu").classList.add("hidden");
+  const res = await authFetch("/api/settings/photos-source");
+  if (!res.ok) return;
+  const { active, available } = await res.json();
+  const select = document.getElementById("photosSourceSelect");
+  select.innerHTML = "";
+  for (const name of available) {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+  }
+  select.value = active;
+  document.getElementById("settingsModal").classList.remove("hidden");
+});
+document.getElementById("settingsModalCancel").addEventListener("click", () => {
+  document.getElementById("settingsModal").classList.add("hidden");
+});
+document.getElementById("settingsModalSave").addEventListener("click", async () => {
+  const active = document.getElementById("photosSourceSelect").value;
+  const res = await authFetch("/api/settings/photos-source", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ active }),
+  });
+  if (!res.ok) return;
+  document.getElementById("settingsModal").classList.add("hidden");
+  logEvent("photos_source_changed", active);
+  await loadTree();
+});
+
 // ---- Help / photo-info icon buttons on the lightbox ----
 
 document.getElementById("lbHelpBtn").addEventListener("click", () => {
@@ -1231,4 +1272,5 @@ document.getElementById("downloadFolderLabel").addEventListener("click", () => {
 (async function init() {
   await tryRestoreDownloadFolder();
   enterGallery();
+  initPhotosSourceSetting();
 })();

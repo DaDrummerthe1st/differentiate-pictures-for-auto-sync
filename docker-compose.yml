@@ -19,9 +19,14 @@
 #     Secure-flagged session cookie (server/app/cookies.py) still
 #     works with no self-signed-cert warning to click through.
 #
-# Photos are read read-only from the real mammas_bilder library, same
-# path as production - downloads only copy files out to the browser,
-# this app never writes back into /photos.
+# Photos are read read-only from the real mammas_bilder library, mounted
+# under PHOTOS_LIBRARY_ROOT as the "momfiles" source (same subdirectory
+# name prod uses for the equivalent /tank/momfiles mount, so the admin
+# Installningar panel behaves identically locally) - downloads only copy
+# files out to the browser, this app never writes back into it. The
+# "dpfas_media" source (the default active one) is a throwaway named
+# volume here, not a real host directory - it just needs to exist and be
+# empty, same as prod's /tank/dpfas_media before Joakim populates it.
 #
 # Usage: docker compose up -d, then open http://localhost:8420
 #        docker compose down when finished.
@@ -43,20 +48,21 @@ services:
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8420", "--no-server-header"]
     environment:
       JWT_SECRET_KEY: "local-dev-only-not-a-real-secret-32chars"
+      PHOTOS_LIBRARY_ROOT: /photo-library-root
     volumes:
-      - /home/joakim/Pictures/mammas_bilder:/photos:ro
+      - /home/joakim/Pictures/mammas_bilder:/photo-library-root/momfiles:ro
+      - dpfas_media_dev:/photo-library-root/dpfas_media
       - thumbcache:/thumbcache
       - analytics_data:/data
       - stories:/stories
     restart: "no"
 
-  # Runs the detector models (quality/face/object-animal - see
-  # documentation/curation/TODO.md's build plan) called by photo-viewer,
-  # kept in its own container/image so opencv/onnxruntime's footprint
-  # never lands in photo-viewer's. No host port published - reachable
-  # only from other containers on this compose network, same pattern as
-  # auth/postgres/redis below. Skeleton only this session: /health only,
-  # no /detect endpoint yet.
+  # Runs the detector models (quality trio + face detection/YuNet built so
+  # far - documentation/curation/TODO.md's build plan) called by
+  # photo-viewer, kept in its own container/image so opencv/onnxruntime's
+  # footprint never lands in photo-viewer's. No host port published -
+  # reachable only from other containers on this compose network, same
+  # pattern as auth/postgres/redis below.
   detector:
     build:
       context: .
@@ -102,3 +108,4 @@ volumes:
   analytics_data:
   stories:
   postgres_data:
+  dpfas_media_dev:
