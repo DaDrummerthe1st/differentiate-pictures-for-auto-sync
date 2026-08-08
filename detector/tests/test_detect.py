@@ -1,12 +1,18 @@
 import io
+import os
 
 import numpy as np
+import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
 from detector.main import MAX_UPLOAD_BYTES, app
 
 client = TestClient(app)
+
+# Real, disposable fixture (resources/test_pictures/, gitignored) - same
+# fixture used in test_faces.py's unit tests for detect_faces itself.
+_FACE_PHOTO = "resources/test_pictures/Florida1/Florida/1/IMGP0128.JPG"
 
 
 def _checkerboard(color_a: tuple, color_b: tuple, size: int = 64, square: int = 8) -> Image.Image:
@@ -102,6 +108,23 @@ def test_detect_rejects_a_non_image_upload():
     res = client.post("/detect", files={"file": ("notes.txt", buf, "text/plain")})
 
     assert res.status_code == 400
+
+
+@pytest.mark.skipif(
+    not os.path.exists(_FACE_PHOTO),
+    reason="resources/test_pictures/Florida1 fixture tree not present on this machine",
+)
+def test_detect_flags_a_face_with_a_bbox():
+    with open(_FACE_PHOTO, "rb") as f:
+        res = client.post("/detect", files={"file": ("face.jpg", f, "image/jpeg")})
+
+    assert res.status_code == 200
+    people_tags = [tag for tag in res.json()["tags"] if tag["category"] == "people"]
+    assert len(people_tags) == 1
+    tag = people_tags[0]
+    assert tag["value"] == "Person"
+    assert tag["bbox_w"] > 0
+    assert tag["bbox_h"] > 0
 
 
 def test_detect_rejects_an_oversized_upload():

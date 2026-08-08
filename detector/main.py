@@ -4,13 +4,13 @@ import os
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from PIL import Image, UnidentifiedImageError
 
+from detector.faces import detect_faces
 from detector.quality import detect_blur, detect_exposure, detect_monochrome
 
 # Runs the detector models called by the main photo-viewer app, kept in its
 # own container so opencv/onnxruntime's footprint never lands in app/'s
-# image (documentation/curation/TODO.md's build-plan Phase 1). Face
-# detection (YuNet) and object/animal detection (NanoDet-Plus) are Phase
-# 3-4, still to come.
+# image (documentation/curation/TODO.md's build-plan Phase 1). Object/animal
+# detection (NanoDet-Plus) is Phase 4, still to come.
 app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
 
 # Resource-exhaustion guard (documentation/security/THREATS.md #16) -
@@ -38,14 +38,15 @@ def health():
     return {"status": "ok"}
 
 
-def _tag(category: str, value: str) -> dict:
+def _tag(category: str, value: str, bbox: dict | None = None) -> dict:
+    bbox = bbox or {}
     return {
         "category": category,
         "value": value,
-        "bbox_x": None,
-        "bbox_y": None,
-        "bbox_w": None,
-        "bbox_h": None,
+        "bbox_x": bbox.get("bbox_x"),
+        "bbox_y": bbox.get("bbox_y"),
+        "bbox_w": bbox.get("bbox_w"),
+        "bbox_h": bbox.get("bbox_h"),
     }
 
 
@@ -66,4 +67,6 @@ async def detect(file: UploadFile = File(...)) -> dict:
         tags.append(_tag("generic", exposure))
     if detect_monochrome(image):
         tags.append(_tag("generic", "black_and_white"))
+    for face in detect_faces(image):
+        tags.append(_tag("people", "Person", face))
     return {"tags": tags}

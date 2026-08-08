@@ -156,12 +156,16 @@ read-only, not silent edit/delete rights over another user's manual tag. Auto-ta
 still queued for the next session (`documentation/curation/TODO.md`'s Phase 2 onward) - this phase only
 makes the visibility rule correct ahead of anything actually writing `source='auto'` rows.
 
-**Detector service, skeleton only, built 2026-08-07**: a new `detector/` container (FastAPI,
-`GET /health` only so far) runs alongside `photo-viewer` in `docker-compose.yml`, internal-network-only
-(no host port published) - the plan is for it to hold the actual CV/ONNX models (blur/exposure/
-monochrome, face detection, object/animal detection) called by `photo-viewer`, keeping that heavier
-dependency footprint out of the main app's image. No `/detect` endpoint yet; see
-`documentation/curation/TODO.md`'s handoff note for the next session's Phase 2.
+**Detector service, built incrementally starting 2026-08-07**: a new `detector/` container (FastAPI)
+runs alongside `photo-viewer` in `docker-compose.yml`, internal-network-only (no host port published),
+holding the CV/ONNX models called by `photo-viewer` so that heavier dependency footprint stays out of
+the main app's image. `POST /detect` (multipart image upload in, `{"tags": [...]}` out, same field
+shape as `app/main.py`'s `TagCreate` - bbox fields, when set, are normalized 0..1 fractions of the
+image's own width/height, matching `_validate_tag_fields`'s `0 <= bbox_x <= 1`/`bbox_x + bbox_w <= 1`
+checks, not pixel coordinates) now covers: the quality trio (blur/exposure/monochrome, no model,
+whole-photo tags with no bbox) and face detection (YuNet, `detector/faces.py`, `people`/`"Person"`
+tags with a bbox). Object/animal detection (NanoDet-Plus) is next -
+`documentation/curation/TODO.md`'s build-plan Phase 4.
 
 ## Status
 
@@ -170,6 +174,7 @@ this needs before any TDD step: reconciling `kind` against the new `category`
 column — see [TODO.md](TODO.md). `entities.entity_type='circle'` added 2026-08-05. **A narrower,
 build-ready slice actually built 2026-08-05** in `app/` (see "Now" section above) - this file's own
 `tags`/`entities`/`tag_references` design is still design-only, unaffected. **2026-08-07**: `app/`'s
-slice gained role-based tag visibility (`member`/`admin`, auto tags always shared) and a skeleton
-`detector/` service, both ahead of the automatic-tagging work itself — see "Now" section's two new
-notes above; next session picks up at `documentation/curation/TODO.md`'s Phase 2 handoff.
+slice gained role-based tag visibility (`member`/`admin`, auto tags always shared) and a `detector/`
+service now covering the quality trio and face detection (YuNet), ahead of the automatic-tagging
+orchestration job itself — see "Now" section's notes above; next session picks up at
+`documentation/curation/TODO.md`'s Phase 4 handoff (object/animal detection).

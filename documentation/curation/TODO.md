@@ -165,9 +165,36 @@ Phase 2 is this session's own work, same "one phase, short handoff" cadence:
   `detector/requirements.txt` — bumped to 12.3.0 (current release, confirmed via PyPI), full suite
   re-verified green against it before pinning.
 
-**Start at Phase 3 next session**: face detection (YuNet). Phases 4-7 after that (object/animal
-detection/NanoDet-Plus, the `app/auto_tag.py` orchestration job idempotent on `source='auto'` rows, a
-local smoke-test against `resources/test_pictures/` before touching the server, then written-not-run
+- **Phase 3, done 2026-08-07**: `detector/faces.py` — `detect_faces`, a pure function
+  (`PIL.Image` → list of bbox dicts), wrapping `cv2.FaceDetectorYN` over a vendored
+  `detector/models/face_detection_yunet_2023mar.onnx` (OpenCV Zoo, sub-1MB, real API confirmed
+  against the downloaded file first, not assumed — `FaceDetectorYN_create(model, config, input_size,
+  score_threshold=...)`, `.setInputSize((w, h))`, `.detect(bgr_array)` returns `(retval, faces)`
+  where `faces` is an `[N, 15]` array, columns 0-3 are the bbox in pixel coordinates). Gated by
+  `FACE_SCORE_THRESHOLD` (env-overridable, default `0.6`, applied at detector-construction time).
+  **Real gap caught during TDD, not assumed correct**: YuNet's native output is pixel coordinates,
+  but `app/main.py`'s `_validate_tag_fields` requires bbox fields as normalized `0..1` fractions of
+  the image's own width/height (`0 <= bbox_x <= 1`, `bbox_x + bbox_w <= 1`) — confirmed by reading
+  that validation, not assumed from the plan's "same field shape as `TagCreate`" note alone.
+  `detect_faces` now clamps each box to the image bounds (a detection near an edge can extend
+  slightly past it) and normalizes before returning. Wired into `POST /detect` alongside the quality
+  trio (`people`/`"Person"` tags, real bbox this time, not `None`). TDD against real fixtures from
+  `resources/test_pictures/Florida1/Florida/1/` (not synthetic — YuNet is trained on real faces):
+  `IMGP0128.JPG` (one clear face, positive) and `IMGP0150.JPG`/`IMGP0135.JPG` (no people, negative),
+  fixed paths guarded by `pytest.mark.skipif` so the suite still passes clean on a machine without
+  the gitignored fixture tree. `detector/tests/test_faces.py` (unit) and a new case in
+  `detector/tests/test_detect.py` (through the API). **Real license correction, checked not
+  assumed**: the model's own `LICENSE` file (`opencv_zoo`'s `models/face_detection_yunet/`
+  directory) is MIT (Shiqi Yu), not the repo-root Apache-2.0 the plan's summary line said — noted in
+  the new `detector/models/LICENSES.md`; still within this project's MIT/Apache-2.0-only bar either
+  way. Full suite (`detector/`, 16 tests, and `app/tests/`, 99 tests) green; real end-to-end
+  smoke-tested against the built container image (`docker compose up -d detector`, the real
+  `IMGP0128.JPG` fixture POSTed to `/detect` from inside the container, matched unit-test
+  predictions), then torn down.
+
+**Start at Phase 4 next session**: object/animal detection (NanoDet-Plus). Phases 5-7 after that (the
+`app/auto_tag.py` orchestration job idempotent on `source='auto'` rows, a local smoke-test against
+`resources/test_pictures/` before touching the server, then written-not-run
 `docker-compose.prod.yml`/deploy commands for Joakim to run against `/tank`) — model picks,
 category/value mappings (`generic`/`people`/`objects`/`animals`), and the vendoring convention (fetch
 once, commit under `detector/models/`, license noted) are already decided in the saved plan, don't
@@ -210,5 +237,6 @@ already does for `momfiles`.
 
 Opened 2026-08-02, alongside [README.md](README.md)/[ARCHITECTURE.md](ARCHITECTURE.md)/
 [DETECTORS.md](DETECTORS.md). **2026-08-07**: no longer just a catalog — the "Build plan" section
-above is this folder's first numbered, TDD-able roadmap, Phase 0-2 done, Phase 3 the next session's
-explicit starting point.
+above is this folder's first numbered, TDD-able roadmap, Phase 0-3 done (role-aware sessions,
+detector service skeleton, quality trio, face detection/YuNet), Phase 4 (object/animal
+detection/NanoDet-Plus) the next session's explicit starting point.
