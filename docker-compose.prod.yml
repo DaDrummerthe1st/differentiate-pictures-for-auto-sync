@@ -50,6 +50,23 @@ services:
     mem_limit: 512m
     restart: unless-stopped
 
+  # Runs the detector models (quality trio + face detection/YuNet built so
+  # far - documentation/curation/TODO.md's build plan) called by
+  # photo-viewer over POST /detect. Deliberately standalone here: it takes
+  # image bytes over HTTP, it doesn't read any mounted photo directory
+  # itself, so adding it doesn't touch photo-viewer's existing live
+  # PHOTOS_HOST_PATH/momfiles mount or require the (not yet built)
+  # admin photo-source setting - see documentation/plans/
+  # tingly-humming-pudding.md for that follow-on work. No host port
+  # published - reachable only from other containers on this compose
+  # network, same as auth/postgres/redis.
+  detector:
+    build:
+      context: .
+      dockerfile: detector/Dockerfile
+    mem_limit: 768m
+    restart: unless-stopped
+
   auth:
     build: ./server
     # Overrides server/Dockerfile's baked-in CMD, which deliberately

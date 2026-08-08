@@ -86,6 +86,49 @@ docker compose -f docker-compose.prod.yml down
 
 This does **not** delete the named volumes (`postgres_data`, `analytics_data`, `stories`, `thumbcache`, `caddy_data`, `caddy_config`) — account data, usage analytics, voiceover recordings, and the Let's Encrypt cert all survive a `down` + `up`. Only `docker compose -f docker-compose.prod.yml down -v` would destroy them — never run that without knowing exactly why.
 
+## Test-running the detector service (quality trio + face detection) for real
+
+Added 2026-08-08, alongside `documentation/curation/TODO.md`'s automatic-tagging build plan. The
+`detector` service (containerized OpenCV/ONNX models, `documentation/curation/TODO.md` Phase 1-3)
+now has a block in `docker-compose.prod.yml`, additive only — it doesn't touch `photo-viewer`'s
+existing live `PHOTOS_HOST_PATH`/`momfiles` mount, doesn't need the DB-backed admin photo-source
+setting (still unbuilt, see `documentation/plans/tingly-humming-pudding.md`), and doesn't publish a
+host port. It takes image bytes over a plain `POST /detect`, so it can be smoke-tested standalone
+with one manually-copied photo, entirely independent of the live gallery:
+
+```
+cd ~/differentiate-pictures-for-auto-sync
+git pull
+docker compose -f docker-compose.prod.yml up -d --build detector
+docker compose -f docker-compose.prod.yml ps detector
+
+# copy any real JPEG already on the server into the container (or scp one over first)
+docker compose -f docker-compose.prod.yml cp /tank/momfiles/<some_real_photo>.jpg detector:/tmp/test.jpg
+
+# real hardware timing, not an estimate
+time docker compose -f docker-compose.prod.yml exec detector python -c "
+import urllib.request
+with open('/tmp/test.jpg', 'rb') as f:
+    body = f.read()
+boundary = 'X-BOUNDARY'
+data = (b'--' + boundary.encode() + b'\r\n'
+        b'Content-Disposition: form-data; name=\"file\"; filename=\"test.jpg\"\r\n'
+        b'Content-Type: image/jpeg\r\n\r\n' + body + b'\r\n--' + boundary.encode() + b'--\r\n')
+req = urllib.request.Request('http://localhost:8500/detect', data=data,
+    headers={'Content-Type': f'multipart/form-data; boundary={boundary}'})
+print(urllib.request.urlopen(req).read().decode())
+"
+
+# resource use on the real host while it ran
+docker stats --no-stream detector
+```
+
+`docker compose -f docker-compose.prod.yml cp` reads directly off this host's own `/tank` (no need
+to route through `photo-viewer`'s mount) — pick any real photo already there, this doesn't write
+anything back or modify it. Real per-detector CPU-time breakdown, batches of ~100, and the
+admin-configurable source directory (`/tank/dpfas_media`) are the next build increment, not part of
+this smoke test — see `documentation/plans/tingly-humming-pudding.md`.
+
 ## Troubleshooting playbook
 
 Captured 2026-07-17 from the first real P0 deploy, where several of these were worked out live under deadline pressure — reusable steps for "something's broken," roughly in the order that's cheapest-to-check first:
