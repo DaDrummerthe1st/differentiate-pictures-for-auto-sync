@@ -126,9 +126,12 @@ docker stats --no-stream $(docker compose -f docker-compose.prod.yml ps -q detec
 
 `docker compose -f docker-compose.prod.yml cp` reads directly off this host's own `/tank` (no need
 to route through `photo-viewer`'s mount) — pick any real photo already there, this doesn't write
-anything back or modify it. Real per-detector CPU-time breakdown, batches of ~100, and the
-admin-configurable source directory (`/tank/dpfas_media`) are the next build increment, not part of
-this smoke test — see `documentation/plans/tingly-humming-pudding.md`.
+anything back or modify it. Real per-detector CPU-time breakdown (batches of ~100) and the
+admin-configurable source directory (`/tank/dpfas_media`) are now built — see
+`documentation/curation/TODO.md`'s "Part A/B" and "Upload into dpfas_media" entries and
+`documentation/plans/tingly-humming-pudding.md`. Only the actual `.10` deploy step (`git pull`,
+`docker compose -f docker-compose.prod.yml up -d --build`, `mkdir -p /tank/dpfas_media`) is still
+outstanding as of 2026-08-08.
 
 **Run for real, 2026-08-08**, against `/tank/momfiles/Florida1/Florida/1/IMGP0128.JPG`: both detector
 paths confirmed working on real hardware — quality trio flagged the photo `blurry` (whole-image, no

@@ -47,11 +47,16 @@ services:
       # momfiles via the admin "Installningar" panel). Still read-only,
       # still never written to by this app.
       - ${PHOTOS_HOST_PATH:?set PHOTOS_HOST_PATH in .env to the real photo directory on this host, e.g. /tank/mammas_bilder}:/photo-library-root/momfiles:ro
-      # New, separate, disposable directory Joakim populates by hand via
-      # SSH - starts empty. Default active photo source. Never the same
-      # path as momfiles above; see tingly-humming-pudding.md's "momfiles
-      # stays untouched" constraint.
-      - /tank/dpfas_media:/photo-library-root/dpfas_media:ro
+      # New, separate, disposable directory - starts empty, populated by
+      # any logged-in user via the app's own POST /api/upload (never by
+      # browsing/copying server-side from elsewhere in /tank - uploads
+      # come from the browser's own file picker, e.g. an sshfs-mounted
+      # /tank on the uploader's own laptop). Default active photo source.
+      # Read-write, unlike momfiles above - this is the one directory the
+      # app itself ever writes into (app/main.py's UPLOAD_SOURCE_NAME).
+      # Never the same path as momfiles; see tingly-humming-pudding.md's
+      # "momfiles stays untouched" constraint.
+      - /tank/dpfas_media:/photo-library-root/dpfas_media
       - thumbcache:/thumbcache
       - analytics_data:/data
       - stories:/stories

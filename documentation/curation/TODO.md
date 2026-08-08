@@ -229,7 +229,34 @@ Phase 2 is this session's own work, same "one phase, short handoff" cadence:
   creating `/tank/dpfas_media` on `.10`, applying the `docker-compose.prod.yml` mount/env change
   there, and running `app/benchmark_detector.py` for real against `.10`'s actual hardware.
 
-**Start next session**: Joakim applies the `docker-compose.prod.yml` change above on `.10` and runs
+- **Upload into dpfas_media, built same session (2026-08-08), after the entry above**: the original
+  plan assumed Joakim would populate `dpfas_media` by hand over SSH. Real workflow instead:
+  `sshfs`-mount `/tank` onto his own laptop, then use a real "Ladda upp bilder" button in the gallery
+  UI — a standard browser file picker (which, via the sshfs mount, can navigate into what's really
+  `/tank` on the server) uploads bytes over ordinary `multipart/form-data`, same shape as the existing
+  `/api/voiceover` upload. New `POST /api/upload` in `app/main.py`: any logged-in user (not
+  admin-gated — this is a shared scratch space every account can add to), size-capped
+  (`MAX_PHOTO_UPLOAD_BYTES`, same `_read_capped` shape as `detector/main.py`'s existing guard,
+  THREATS.md #16), picture-extension-only, content-hashed filename (SHA-256 of the bytes, never the
+  client's original filename — same "don't trust a client-supplied path component" reasoning as the
+  existing `voiceovers` table's `uuid4().hex` filenames, plus free dedup if the same photo's uploaded
+  twice), stored under `dpfas_media/<user_id>/<hash>.<ext>` (fits `api_tree`'s existing
+  group-by-top-level-folder logic for free — each uploader's own pictures become their own "album").
+  **Explicit safety guard, tested**: uploads always land in `dpfas_media` by name
+  (`UPLOAD_SOURCE_NAME`), never in `get_active_photos_root()` — if an admin has switched the served
+  source to `momfiles` at upload time, the upload still can't land there. `docker-compose.prod.yml`'s
+  `dpfas_media` mount dropped `:ro` accordingly (the one directory this app ever writes into itself);
+  `momfiles` stays read-only, untouched. Full local suite green (`app/tests/` 115, `detector/tests/`
+  18, 133 total, including the new `test_upload.py`) plus a second real local `docker compose up -d`
+  smoke test: uploaded a real JPEG over HTTP as the real admin account, confirmed it landed at
+  `dpfas_media/<user_id>/<sha256>.jpg` (not the original filename) and appeared correctly in
+  `/api/tree`, confirmed a non-picture extension is rejected (400) and an unauthenticated request is
+  rejected (401), before tearing the stack down again.
+
+**Start next session**: Joakim applies the `docker-compose.prod.yml` change above on `.10`, uploads a
+real batch into `dpfas_media` via the new "Ladda upp bilder" button (or `sshfs` isn't set up yet —
+either of the two fallbacks in this session's chat still work: temporarily switch the active source
+to `momfiles` for real existing photos, or `cp` a batch in directly over SSH), and runs
 `app/benchmark_detector.py` for real per-detector CPU-time numbers (see this file's Part A/B entry
 just above and `documentation/plans/tingly-humming-pudding.md`'s "Verification" section for the exact
 steps). **Phase 4** (object/animal detection, NanoDet-Plus) follows after that. Phases 5-7 after

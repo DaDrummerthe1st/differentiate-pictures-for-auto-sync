@@ -151,6 +151,10 @@ Plain-language definitions of every technical/business term this project's desig
 - **RSS (resident set size) / peak RSS**: how much RAM a process actually has loaded into physical memory right now (distinct from how much it's *allocated*, which can be more). "Peak RSS" is the highest that figure has been since the process started — a cumulative, whole-process number, not attributable to any single request or function call the way CPU time is. This project's detector benchmarking reports it once per batch, explicitly not broken down per-detector, because most of it is YuNet's one-time model-load cost rather than a repeating per-photo cost.
 - **multipart/form-data**: the standard HTTP encoding for a request body that includes a file upload (as opposed to plain JSON) — the body is split into named parts by a boundary marker, each part carrying its own small header (e.g. a filename, a content type). `app/benchmark_detector.py` builds this by hand with the Python standard library rather than adding a new HTTP-client dependency just for one internal benchmarking script.
 
+## Storage and file transfer
+
+- **sshfs**: mounts a remote directory (reachable over SSH) as if it were an ordinary local folder — reads/writes go over the existing SSH connection (SFTP under the hood), no separate server-side support needed beyond SSH access that's already there. Lets a local file picker (e.g. a browser's upload dialog) navigate into files that physically live on a remote machine.
+
 ## Tooling
 
 - **JUnit XML**: a standardized machine-readable test-report format (originally from the Java testing tool JUnit, now a de facto standard other languages' test runners emit too) — a `<testsuite>` element carries how many tests ran, passed, failed, errored, or were skipped, plus total duration, as XML attributes rather than parsed-from-terminal-text. `pytest` can emit it natively via `--junitxml=path`, no extra plugin needed. Used by `tools/test_results/` (see [TEST_RESULTS.md](tooling/TEST_RESULTS.md)) instead of re-parsing pytest's `-q` summary line, whose exact wording isn't a stable contract to parse against.

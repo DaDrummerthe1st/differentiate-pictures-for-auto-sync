@@ -1,3 +1,4 @@
+import hashlib
 import json
 import mimetypes
 import os
@@ -19,12 +20,26 @@ from app.auth import has_valid_session, load_auth_config, require_session, requi
 load_auth_config()
 
 # The fixed boundary directory - individual photo sources (dpfas_media,
-# momfiles, ...) are its direct subdirectories, each its own read-only
-# bind mount in docker-compose.prod.yml. Which one is actually served is
-# the app_settings.active_source row below, not this constant - this only
-# bounds where a source is allowed to live on disk.
+# momfiles, ...) are its direct subdirectories, each its own bind mount in
+# docker-compose.prod.yml (momfiles read-only; dpfas_media read-write, the
+# only one this app ever writes into itself - see UPLOAD_SOURCE_NAME
+# below). Which one is actually served is the app_settings.active_source
+# row below, not this constant - this only bounds where a source is
+# allowed to live on disk.
 PHOTOS_LIBRARY_ROOT = Path(os.environ.get("PHOTOS_LIBRARY_ROOT", "/photo-library-root")).resolve()
 DEFAULT_ACTIVE_SOURCE = "dpfas_media"
+# POST /api/upload always writes here, regardless of app_settings.active_source
+# - if an admin has switched the active (served) source to momfiles at
+# upload time, an upload must still never land there. Deliberately a
+# separate constant from DEFAULT_ACTIVE_SOURCE above even though they
+# share a value today - upload destination and "what's currently browsed"
+# are different concerns that just happen to coincide by default.
+UPLOAD_SOURCE_NAME = "dpfas_media"
+# Resource-exhaustion guard, same shape as detector/main.py's
+# MAX_UPLOAD_BYTES/_read_capped (documentation/security/THREATS.md #16) -
+# checked in chunks, before a full read is ever attempted.
+MAX_PHOTO_UPLOAD_BYTES = int(os.environ.get("MAX_PHOTO_UPLOAD_BYTES", str(25 * 1024 * 1024)))
+_UPLOAD_READ_CHUNK_BYTES = 1024 * 1024
 THUMB_CACHE = Path(os.environ.get("THUMB_CACHE_DIR", "/thumbcache"))
 THUMB_CACHE.mkdir(parents=True, exist_ok=True)
 
@@ -51,6 +66,19 @@ THUMB_SIZE = (340, 340)
 DB_PATH = Path(os.environ.get("ANALYTICS_DB_PATH", "/data/analytics.db"))
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 db = sqlite3.connect(DB_PATH, check_same_thread=False)
+# Guards every request-time use of `db` below - a single sqlite3.Connection
+# shared across FastAPI's threadpool (check_same_thread=False) isn't safe
+# under real concurrent access from multiple threads without this: caught
+# 2026-08-08 when adding a second concurrent DB read to the /thumb path
+# (get_active_photos_root(), for the admin photo-source setting) made
+# test_thumb_concurrency.py's existing two-simultaneous-requests test
+# flake with a corrupted read (a NOT NULL column read back as None) - the
+# request-logging middleware below was already touching `db` on every
+# request, unlocked, so the race was always latent, just never visibly
+# triggered by a single unlocked reader before. Only the module-load-time
+# schema setup above this line is exempt - it runs once, single-threaded,
+# before the server accepts any requests.
+_db_lock = threading.Lock()
 db.execute(
     """
     CREATE TABLE IF NOT EXISTS requests (
@@ -137,11 +165,12 @@ db.commit()
 
 
 def _log_event(event_type: str, detail: str = "", client_ip: str | None = None) -> None:
-    db.execute(
-        "INSERT INTO events (ts, event_type, detail, client_ip) VALUES (?, ?, ?, ?)",
-        (datetime.now(timezone.utc).isoformat(), event_type, detail, client_ip),
-    )
-    db.commit()
+    with _db_lock:
+        db.execute(
+            "INSERT INTO events (ts, event_type, detail, client_ip) VALUES (?, ?, ?, ?)",
+            (datetime.now(timezone.utc).isoformat(), event_type, detail, client_ip),
+        )
+        db.commit()
 
 
 @asynccontextmanager
@@ -168,17 +197,18 @@ def log_event(event: Event, request: Request):
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     response = await call_next(request)
-    db.execute(
-        "INSERT INTO requests (ts, method, path, user_agent, client_ip) VALUES (?, ?, ?, ?, ?)",
-        (
-            datetime.now(timezone.utc).isoformat(),
-            request.method,
-            request.url.path,
-            request.headers.get("user-agent"),
-            request.client.host if request.client else None,
-        ),
-    )
-    db.commit()
+    with _db_lock:
+        db.execute(
+            "INSERT INTO requests (ts, method, path, user_agent, client_ip) VALUES (?, ?, ?, ?, ?)",
+            (
+                datetime.now(timezone.utc).isoformat(),
+                request.method,
+                request.url.path,
+                request.headers.get("user-agent"),
+                request.client.host if request.client else None,
+            ),
+        )
+        db.commit()
     return response
 
 
@@ -189,7 +219,8 @@ def _available_photo_sources() -> list[str]:
 
 
 def _get_active_source() -> str:
-    row = db.execute("SELECT active_source FROM app_settings WHERE id = 1").fetchone()
+    with _db_lock:
+        row = db.execute("SELECT active_source FROM app_settings WHERE id = 1").fetchone()
     return row[0] if row else DEFAULT_ACTIVE_SOURCE
 
 
@@ -225,12 +256,13 @@ def set_photos_source(
     if update.active not in _available_photo_sources():
         raise HTTPException(status_code=400, detail="unknown photo source")
     now = datetime.now(timezone.utc).isoformat()
-    db.execute(
-        "INSERT INTO app_settings (id, active_source, updated_at) VALUES (1, ?, ?) "
-        "ON CONFLICT(id) DO UPDATE SET active_source = excluded.active_source, updated_at = excluded.updated_at",
-        (update.active, now),
-    )
-    db.commit()
+    with _db_lock:
+        db.execute(
+            "INSERT INTO app_settings (id, active_source, updated_at) VALUES (1, ?, ?) "
+            "ON CONFLICT(id) DO UPDATE SET active_source = excluded.active_source, updated_at = excluded.updated_at",
+            (update.active, now),
+        )
+        db.commit()
     return {"active": _get_active_source(), "available": _available_photo_sources()}
 
 
@@ -317,17 +349,18 @@ _TAG_SELECT_COLUMNS = "id, category, value, bbox_x, bbox_y, bbox_w, bbox_h, sour
 def list_tags(p: str = Query(...), session: tuple[int, str] = Depends(require_session_with_role)):
     user_id, role = session
     resolve_relpath(p)
-    if role == "admin":
-        rows = db.execute(
-            f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE photo_path = ? ORDER BY id",
-            (p,),
-        ).fetchall()
-    else:
-        rows = db.execute(
-            f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE photo_path = ? "
-            "AND (user_id = ? OR source = 'auto') ORDER BY id",
-            (p, user_id),
-        ).fetchall()
+    with _db_lock:
+        if role == "admin":
+            rows = db.execute(
+                f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE photo_path = ? ORDER BY id",
+                (p,),
+            ).fetchall()
+        else:
+            rows = db.execute(
+                f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE photo_path = ? "
+                "AND (user_id = ? OR source = 'auto') ORDER BY id",
+                (p, user_id),
+            ).fetchall()
     return [_tag_row_to_dict(row) for row in rows]
 
 
@@ -338,18 +371,19 @@ def tag_value_suggestions(
     user_id, role = session
     if category not in TAG_CATEGORIES:
         raise HTTPException(status_code=400, detail="unknown category")
-    if role == "admin":
-        rows = db.execute(
-            "SELECT value, COUNT(*) AS c FROM tags WHERE category = ? "
-            "GROUP BY value ORDER BY c DESC, value COLLATE NOCASE",
-            (category,),
-        ).fetchall()
-    else:
-        rows = db.execute(
-            "SELECT value, COUNT(*) AS c FROM tags WHERE (user_id = ? OR source = 'auto') AND category = ? "
-            "GROUP BY value ORDER BY c DESC, value COLLATE NOCASE",
-            (user_id, category),
-        ).fetchall()
+    with _db_lock:
+        if role == "admin":
+            rows = db.execute(
+                "SELECT value, COUNT(*) AS c FROM tags WHERE category = ? "
+                "GROUP BY value ORDER BY c DESC, value COLLATE NOCASE",
+                (category,),
+            ).fetchall()
+        else:
+            rows = db.execute(
+                "SELECT value, COUNT(*) AS c FROM tags WHERE (user_id = ? OR source = 'auto') AND category = ? "
+                "GROUP BY value ORDER BY c DESC, value COLLATE NOCASE",
+                (user_id, category),
+            ).fetchall()
     return [row[0] for row in rows]
 
 
@@ -358,37 +392,40 @@ def create_tag(tag: TagCreate, user_id: int = Depends(require_session)):
     resolve_relpath(tag.photo_path)
     value = _validate_tag_fields(tag.category, tag.value, tag.bbox_x, tag.bbox_y, tag.bbox_w, tag.bbox_h)
     now = datetime.now(timezone.utc).isoformat()
-    cur = db.execute(
-        "INSERT INTO tags (user_id, photo_path, category, value, bbox_x, bbox_y, bbox_w, bbox_h, "
-        "source, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?)",
-        (user_id, tag.photo_path, tag.category, value, tag.bbox_x, tag.bbox_y, tag.bbox_w, tag.bbox_h, now, now),
-    )
-    db.commit()
-    row = db.execute(f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE id = ?", (cur.lastrowid,)).fetchone()
+    with _db_lock:
+        cur = db.execute(
+            "INSERT INTO tags (user_id, photo_path, category, value, bbox_x, bbox_y, bbox_w, bbox_h, "
+            "source, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'manual', ?, ?)",
+            (user_id, tag.photo_path, tag.category, value, tag.bbox_x, tag.bbox_y, tag.bbox_w, tag.bbox_h, now, now),
+        )
+        db.commit()
+        row = db.execute(f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE id = ?", (cur.lastrowid,)).fetchone()
     return _tag_row_to_dict(row)
 
 
 @app.patch("/api/tags/{tag_id}")
 def update_tag(tag_id: int, tag: TagUpdate, user_id: int = Depends(require_session)):
     value = _validate_tag_fields(tag.category, tag.value, tag.bbox_x, tag.bbox_y, tag.bbox_w, tag.bbox_h)
-    existing = db.execute("SELECT id FROM tags WHERE id = ? AND user_id = ?", (tag_id, user_id)).fetchone()
-    if not existing:
-        raise HTTPException(status_code=404, detail="not found")
     now = datetime.now(timezone.utc).isoformat()
-    db.execute(
-        "UPDATE tags SET category = ?, value = ?, bbox_x = ?, bbox_y = ?, bbox_w = ?, bbox_h = ?, "
-        "updated_at = ? WHERE id = ?",
-        (tag.category, value, tag.bbox_x, tag.bbox_y, tag.bbox_w, tag.bbox_h, now, tag_id),
-    )
-    db.commit()
-    row = db.execute(f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE id = ?", (tag_id,)).fetchone()
+    with _db_lock:
+        existing = db.execute("SELECT id FROM tags WHERE id = ? AND user_id = ?", (tag_id, user_id)).fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail="not found")
+        db.execute(
+            "UPDATE tags SET category = ?, value = ?, bbox_x = ?, bbox_y = ?, bbox_w = ?, bbox_h = ?, "
+            "updated_at = ? WHERE id = ?",
+            (tag.category, value, tag.bbox_x, tag.bbox_y, tag.bbox_w, tag.bbox_h, now, tag_id),
+        )
+        db.commit()
+        row = db.execute(f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE id = ?", (tag_id,)).fetchone()
     return _tag_row_to_dict(row)
 
 
 @app.delete("/api/tags/{tag_id}", status_code=204)
 def delete_tag(tag_id: int, user_id: int = Depends(require_session)):
-    cur = db.execute("DELETE FROM tags WHERE id = ? AND user_id = ?", (tag_id, user_id))
-    db.commit()
+    with _db_lock:
+        cur = db.execute("DELETE FROM tags WHERE id = ? AND user_id = ?", (tag_id, user_id))
+        db.commit()
     if cur.rowcount == 0:
         raise HTTPException(status_code=404, detail="not found")
     return Response(status_code=204)
@@ -626,6 +663,40 @@ def original(p: str = Query(...), _: int = Depends(require_session)):
     return FileResponse(src, media_type=mime, filename=src.name)
 
 
+async def _read_capped(upload: UploadFile, max_bytes: int) -> bytes:
+    chunks = []
+    total = 0
+    while True:
+        chunk = await upload.read(_UPLOAD_READ_CHUNK_BYTES)
+        if not chunk:
+            break
+        total += len(chunk)
+        if total > max_bytes:
+            raise HTTPException(status_code=413, detail="file too large")
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
+@app.post("/api/upload", status_code=201)
+async def upload_photo(file: UploadFile = File(...), user_id: int = Depends(require_session)):
+    # Any logged-in user, not admin-gated - dpfas_media is the shared
+    # scratch space every account uploads their own pictures into, kept
+    # apart from momfiles by name alone, never by who's allowed to write.
+    ext = Path(file.filename or "").suffix.lower()
+    if ext not in PICTURE_EXTS:
+        raise HTTPException(status_code=400, detail="only picture uploads are supported")
+    body = await _read_capped(file, MAX_PHOTO_UPLOAD_BYTES)
+    # Content-hashed, not the client's original filename - never trust a
+    # client-supplied filename as a path component, and this gets free
+    # dedup if the same photo is uploaded twice by the same user.
+    digest = hashlib.sha256(body).hexdigest()
+    dest_dir = PHOTOS_LIBRARY_ROOT / UPLOAD_SOURCE_NAME / str(user_id)
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    dest_path = dest_dir / f"{digest}{ext}"
+    dest_path.write_bytes(body)
+    return {"path": dest_path.relative_to(PHOTOS_LIBRARY_ROOT / UPLOAD_SOURCE_NAME).as_posix()}
+
+
 @app.post("/api/voiceover")
 async def upload_voiceover(
     request: Request,
@@ -641,24 +712,26 @@ async def upload_voiceover(
     dest = STORY_DIR / filename
     with dest.open("wb") as f:
         f.write(await audio.read())
-    db.execute(
-        "INSERT INTO voiceovers (ts, audio_filename, events_json, client_ip) VALUES (?, ?, ?, ?)",
-        (
-            datetime.now(timezone.utc).isoformat(),
-            filename,
-            json.dumps(parsed_events),
-            request.client.host if request.client else None,
-        ),
-    )
-    db.commit()
+    with _db_lock:
+        db.execute(
+            "INSERT INTO voiceovers (ts, audio_filename, events_json, client_ip) VALUES (?, ?, ?, ?)",
+            (
+                datetime.now(timezone.utc).isoformat(),
+                filename,
+                json.dumps(parsed_events),
+                request.client.host if request.client else None,
+            ),
+        )
+        db.commit()
     return {"ok": True}
 
 
 @app.get("/api/voiceovers")
 def list_voiceovers(_: int = Depends(require_session)):
-    rows = db.execute(
-        "SELECT id, ts, audio_filename, events_json FROM voiceovers ORDER BY id DESC"
-    ).fetchall()
+    with _db_lock:
+        rows = db.execute(
+            "SELECT id, ts, audio_filename, events_json FROM voiceovers ORDER BY id DESC"
+        ).fetchall()
     result = []
     for row_id, ts, audio_filename, events_json in rows:
         try:
@@ -683,9 +756,10 @@ def list_voiceovers(_: int = Depends(require_session)):
 
 @app.get("/api/voiceover/{voiceover_id}")
 def get_voiceover(voiceover_id: int, _: int = Depends(require_session)):
-    row = db.execute(
-        "SELECT id, ts, audio_filename, events_json FROM voiceovers WHERE id = ?", (voiceover_id,)
-    ).fetchone()
+    with _db_lock:
+        row = db.execute(
+            "SELECT id, ts, audio_filename, events_json FROM voiceovers WHERE id = ?", (voiceover_id,)
+        ).fetchone()
     if not row:
         raise HTTPException(status_code=404, detail="not found")
     row_id, ts, audio_filename, events_json = row

@@ -1011,6 +1011,40 @@ document.getElementById("downloadAllBtn").addEventListener("click", () => {
   document.getElementById("moreActionsMenu").classList.add("hidden");
 });
 
+// ---- Upload own pictures into dpfas_media - any logged-in user, not
+// admin-gated. Server always writes into dpfas_media regardless of
+// whichever source is currently active/served (app/main.py's
+// UPLOAD_SOURCE_NAME), so this button stays visible/usable no matter
+// what the admin has picked in Installningar. ----
+
+document.getElementById("uploadBtn").addEventListener("click", () => {
+  document.getElementById("moreActionsMenu").classList.add("hidden");
+  document.getElementById("uploadFileInput").click();
+});
+document.getElementById("uploadFileInput").addEventListener("change", async (e) => {
+  const files = Array.from(e.target.files || []);
+  e.target.value = "";
+  if (files.length === 0) return;
+
+  const btn = document.getElementById("uploadBtn");
+  const originalLabel = btn.textContent;
+  let uploaded = 0;
+  for (const file of files) {
+    btn.textContent = `Laddar upp (${uploaded + 1}/${files.length})...`;
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      const res = await authFetch("/api/upload", { method: "POST", body: form });
+      if (res.ok) uploaded += 1;
+    } catch (err) {
+      logEvent("photo_upload_error", String(err));
+    }
+  }
+  btn.textContent = originalLabel;
+  logEvent("photos_uploaded", `${uploaded}/${files.length}`);
+  await loadTree();
+});
+
 // ---- Admin-only photo source setting - hidden entirely for a member
 // (403 on the GET below just leaves settingsBtn hidden, no error shown) ----
 

@@ -25,8 +25,9 @@
 # Installningar panel behaves identically locally) - downloads only copy
 # files out to the browser, this app never writes back into it. The
 # "dpfas_media" source (the default active one) is a throwaway named
-# volume here, not a real host directory - it just needs to exist and be
-# empty, same as prod's /tank/dpfas_media before Joakim populates it.
+# volume here, not a real host directory - starts empty, same as prod's
+# /tank/dpfas_media, and is read-write (unlike momfiles above) since
+# POST /api/upload writes into it directly - same mount shape as prod.
 #
 # Usage: docker compose up -d, then open http://localhost:8420
 #        docker compose down when finished.

@@ -1,8 +1,18 @@
 # Admin-configurable photo source + per-detector resource benchmarking
 
-**Not this session's build — corrected and saved for next session, per Joakim's explicit
-token-saving instruction (2026-08-08).** Design below is the reasoning/shape to build from; nothing
-in this file has been implemented yet.
+**Built 2026-08-08** (the next session referenced below) — Part A and Part B are both implemented,
+tested, and locally smoke-tested; see `documentation/curation/TODO.md`'s "Part A/B" entry for the
+full status and two further real corrections made during that build: `momfiles` ended up mounted and
+selectable too (not excluded, as originally written a few paragraphs down), and `dpfas_media` gets
+populated by a real `POST /api/upload` endpoint any logged-in user can drive from the gallery UI, not
+by Joakim manually copying files in over SSH as the "Verification" section below originally assumed.
+The design below is left as the original reasoning/shape, not rewritten to match what actually got
+built — read it as history, not as current instructions.
+
+**Historical note, not current status:** the paragraph below was written when this was "not this
+session's build — corrected and saved for next session, per Joakim's explicit token-saving
+instruction (2026-08-08)." That instruction and framing applied to the session that wrote this plan,
+not to the session that later built it.
 
 ## Context
 
