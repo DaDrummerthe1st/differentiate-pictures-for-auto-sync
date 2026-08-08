@@ -253,12 +253,31 @@ Phase 2 is this session's own work, same "one phase, short handoff" cadence:
   `/api/tree`, confirmed a non-picture extension is rejected (400) and an unauthenticated request is
   rejected (401), before tearing the stack down again.
 
-**Start next session**: Joakim applies the `docker-compose.prod.yml` change above on `.10`, uploads a
-real batch into `dpfas_media` via the new "Ladda upp bilder" button (or `sshfs` isn't set up yet —
-either of the two fallbacks in this session's chat still work: temporarily switch the active source
-to `momfiles` for real existing photos, or `cp` a batch in directly over SSH), and runs
-`app/benchmark_detector.py` for real per-detector CPU-time numbers (see this file's Part A/B entry
-just above and `documentation/plans/tingly-humming-pudding.md`'s "Verification" section for the exact
+**Deploy status, updated same day**: Joakim applied the `docker-compose.prod.yml` change on `.10` and
+it's live. Along the way, found `.10`'s `users` table had only Elisabeth's account (`member`) —
+Joakim's own `admin` account had apparently never been created there (he'd only ever used SSH/sudo
+directly before, never the browser login as himself) — created via
+`docker compose -f docker-compose.prod.yml exec -e CREATE_ACCOUNT_PASSWORD=... auth python -m
+scripts.create_account --email joakim.reuterborg@gmail.com --role admin`, confirmed working. **Open,
+real bug reported same day, not yet root-caused**: after logging in as admin and uploading via the
+new "Ladda upp bilder" button, the uploaded picture doesn't show up in the gallery. Leading theory,
+unconfirmed — during this session's own chat, a fallback command was given for switching
+`active_source` to `momfiles` (to get benchmark numbers against real existing photos before the
+upload feature existed); if that was run and never switched back, uploads (which always land in
+`dpfas_media` by design) simply wouldn't be visible while `momfiles` is the active/served source —
+that would be the setting working as designed, not a bug, but needs confirming, not assumed. Also
+worth checking: `POST /api/upload`'s failure path is currently silent on the frontend (`app.js` just
+counts a non-`ok` response as not-uploaded, no error shown to the user) — if the real cause turns out
+to be a server-side failure instead, there'd be no visible signal today either way. **No automated
+test currently covers "an uploaded photo becomes visible via `GET /api/tree`"** —
+`app/tests/test_upload.py` only asserts the file lands on disk at the right path, not that the tree
+endpoint reflects it; add that test as part of whatever fix this needs.
+
+**Start next session**: root-cause and fix the upload-visibility bug above (start by checking `.10`'s
+current `active_source` via `GET /api/settings/photos-source` as admin), add the missing
+tree-visibility test, then get real per-detector CPU-time numbers by running
+`app/benchmark_detector.py` against real uploaded/switched content (see this file's Part A/B entry
+above and `documentation/plans/tingly-humming-pudding.md`'s "Verification" section for the exact
 steps). **Phase 4** (object/animal detection, NanoDet-Plus) follows after that. Phases 5-7 after
 Phase 4 (the
 `app/auto_tag.py` orchestration job idempotent on `source='auto'` rows, a local smoke-test against
