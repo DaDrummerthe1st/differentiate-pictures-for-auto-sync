@@ -192,7 +192,10 @@ Phase 2 is this session's own work, same "one phase, short handoff" cadence:
   `IMGP0128.JPG` fixture POSTed to `/detect` from inside the container, matched unit-test
   predictions), then torn down.
 
-**Start at Phase 4 next session**: object/animal detection (NanoDet-Plus). Phases 5-7 after that (the
+**Start next session**: the admin photo-source-setting + real per-detector CPU-time benchmarking work
+in `documentation/plans/tingly-humming-pudding.md` (see "Superseded 2026-08-08" note above) — runs
+directly against `.10`/`/tank`, ahead of Phase 4. **Phase 4** (object/animal detection, NanoDet-Plus)
+follows after that. Phases 5-7 after Phase 4 (the
 `app/auto_tag.py` orchestration job idempotent on `source='auto'` rows, a local smoke-test against
 `resources/test_pictures/` before touching the server, then written-not-run
 `docker-compose.prod.yml`/deploy commands for Joakim to run against `/tank`) — model picks,
@@ -222,6 +225,20 @@ tooling nor the `docker stats`-logging script has been written yet — a real bu
 session reaches Phase 6/7, still deployed by Joakim himself per POLICY.md's deployment rule, never
 run by an AI session directly against `.10`.
 
+**Superseded 2026-08-08**: the "workstation load" framing above is out of date. Joakim now wants the
+load-observation work done directly against real `.10` hardware, ahead of Phase 4, not deferred to
+Phase 6/7 and not measured on the workstation at all — real per-detector CPU numbers need the real
+box, not a dev laptop. Paired with a second, related change: an admin-only (`role="admin"`),
+live/DB-backed "where to load pictures from" setting (a `member` account can't see or set it) —
+photos come from a new, dedicated, currently-empty `/tank/dpfas_media` directory Joakim will populate
+himself via his existing sudo SSH `/tank` access, explicitly **not** `/tank/momfiles` (stays
+Elisabeth's, untouched, per the existing "/tank test-data convention" below). Full design (settings
+table shape, `docker-compose.prod.yml` mount, per-detector CPU-time instrumentation via stdlib
+`resource.getrusage`, the `app/benchmark_detector.py` batch tool) saved in
+`documentation/plans/tingly-humming-pudding.md` — **next session's starting point, ahead of Phase 4**
+(object/animal detection waits behind this). Deliberately not built this session (token-saving
+instruction) — the plan file is the full handoff, nothing below `## Part A` in it exists in code yet.
+
 ## /tank test-data convention (noted, not a build item)
 
 Confirmed 2026-08-02: `/tank/momfiles` stays Elisabeth's home folder, unchanged. Joakim's own scope
@@ -238,5 +255,7 @@ already does for `momfiles`.
 Opened 2026-08-02, alongside [README.md](README.md)/[ARCHITECTURE.md](ARCHITECTURE.md)/
 [DETECTORS.md](DETECTORS.md). **2026-08-07**: no longer just a catalog — the "Build plan" section
 above is this folder's first numbered, TDD-able roadmap, Phase 0-3 done (role-aware sessions,
-detector service skeleton, quality trio, face detection/YuNet), Phase 4 (object/animal
-detection/NanoDet-Plus) the next session's explicit starting point.
+detector service skeleton, quality trio, face detection/YuNet). **2026-08-08**: next session's actual
+starting point is now the admin photo-source-setting + real per-detector CPU-time benchmarking work
+against `.10`/`/tank` (`documentation/plans/tingly-humming-pudding.md`), ahead of Phase 4
+(object/animal detection/NanoDet-Plus) — see "Superseded 2026-08-08" note above.

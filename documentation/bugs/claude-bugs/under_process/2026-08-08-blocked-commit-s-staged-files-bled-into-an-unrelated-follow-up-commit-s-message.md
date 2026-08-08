@@ -26,14 +26,24 @@ A blocked `git commit` (non-zero exit from a failing hook) does not unstage the 
 stay staged exactly as before. This session treated "the commit was blocked" as "nothing happened"
 and moved on to stage one more file for what was intended to be a small, separate follow-up commit,
 without first checking `git status`/`git diff --staged` to confirm what was actually about to be
-committed this time. The mistake was in not re-verifying staged content before a second `git commit`
-call in the same sequence, not in the tooling itself.
+committed this time. **Correction after first drafting this report**: a rule for exactly this already
+existed - `documentation/tooling/README.md`'s pre-commit hook section, added after an earlier,
+different incident: *"If this gate blocks a commit that already has files staged... run `git status
+--short` before staging and committing the ledger catch-up file, and confirm nothing else is staged.
+If something else is staged, `git restore --staged <path>` it first..."* This session simply didn't
+check that doc before retrying the commit - so the real lapse is narrower than first described: not
+"no rule existed," but "an existing, already-battle-tested rule wasn't consulted in the moment it
+applied."
 
 ## What changed
 
-No rule existed yet for "what to check before retrying a commit after a hook-blocked one." Going
-forward (own working practice, not yet promoted into a CLAUDE.md file since that requires Joakim's
-sign-off): after any blocked commit, run `git status`/`git diff --staged --stat` immediately before
-the next `git commit` call in the same sequence, rather than assuming a freshly-staged single file is
-the only thing about to be committed - the index does not reset itself just because a hook rejected
-the previous attempt.
+No CLAUDE.md/doc change made this time - the rule was already correctly written down
+(`documentation/tooling/README.md`, quoted above); the gap was following it, not documenting it.
+Second occurrence of the pre-commit-gate-plus-stale-stage-set pattern (see that same doc's note that
+this section already came from "the incident that found this"), which suggests the doc note alone
+isn't consistently surfacing in the moment - worth flagging to Joakim as a candidate for the
+pre-commit hook itself printing that exact `git status --short` reminder in its blocked-commit output,
+rather than relying on the AI session to recall the doc unprompted. Not implemented here (would need
+Joakim's sign-off on hook behavior) - flagged as the concrete next step instead of invented as done.
+This session's own remaining commits were made correctly (checked `git status --staged --stat` before
+each retry) once this was noticed.
