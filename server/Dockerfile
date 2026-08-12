@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-FROM python:3.12-slim-bookworm AS builder
+FROM python:3.14-slim-bookworm AS builder
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
@@ -15,7 +15,7 @@ COPY scripts/ /app/scripts/
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
 
-FROM python:3.12-slim-bookworm
+FROM python:3.14-slim-bookworm
 
 RUN useradd --create-home --uid 1000 appuser
 COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
