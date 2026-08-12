@@ -1,6 +1,7 @@
 from PIL import JpegImagePlugin
 
 from app import main as app_main
+from app.tests.conftest import DEFAULT_TEST_USERNAME
 
 
 def test_thumb_generation_calls_draft_before_resize(client, monkeypatch):
@@ -15,7 +16,7 @@ def test_thumb_generation_calls_draft_before_resize(client, monkeypatch):
     (which just has a no-op) - patch the concrete class actually used
     for real JPEGs, not the base class."""
     relpath = "AlbumA/1/pic1.jpg"
-    cache_path = app_main.THUMB_CACHE / (relpath + ".jpg")
+    cache_path = app_main.THUMB_CACHE / DEFAULT_TEST_USERNAME / (relpath + ".jpg")
     cache_path.unlink(missing_ok=True)  # other tests may have cached this already
 
     calls = []

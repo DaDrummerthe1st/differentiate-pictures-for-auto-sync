@@ -4,6 +4,8 @@ import time
 import jwt
 import pytest
 
+from app.tests.conftest import DEFAULT_TEST_USERNAME
+
 os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret-key-at-least-32-chars")
 
 _SECRET = os.environ["JWT_SECRET_KEY"]
@@ -21,6 +23,7 @@ def _access_token(*, exp_offset: int = 900, token_type: str = "access") -> str:
     now = int(time.time())
     payload = {
         "sub": "1",
+        "username": DEFAULT_TEST_USERNAME,
         "type": token_type,
         "iat": now,
         "exp": now + exp_offset,

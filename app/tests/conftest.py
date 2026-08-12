@@ -10,11 +10,12 @@ from PIL import Image
 _TEST_ROOT = Path(tempfile.mkdtemp(prefix="mpv-test-"))
 PHOTOS_LIBRARY_ROOT = _TEST_ROOT / "photo-library-root"
 PHOTOS_LIBRARY_ROOT.mkdir()
-# app.main's default active_source is "dpfas_media" - put the fixture
-# tree there so every test that doesn't care about the admin
-# source-switching feature (test_settings.py) keeps working unchanged.
-PHOTOS_ROOT = PHOTOS_LIBRARY_ROOT / "dpfas_media"
-PHOTOS_ROOT.mkdir()
+# The default `client` fixture's token (below) carries this username -
+# every photo endpoint scopes to dpfas_media/<username>/, so the fixture
+# tree lives there for every test that doesn't mint its own token.
+DEFAULT_TEST_USERNAME = "testuser1"
+PHOTOS_ROOT = PHOTOS_LIBRARY_ROOT / "dpfas_media" / DEFAULT_TEST_USERNAME
+PHOTOS_ROOT.mkdir(parents=True)
 
 os.environ["PHOTOS_LIBRARY_ROOT"] = str(PHOTOS_LIBRARY_ROOT)
 os.environ["THUMB_CACHE_DIR"] = str(_TEST_ROOT / "thumbcache")
@@ -52,7 +53,14 @@ from app.main import app  # noqa: E402
 
 def _valid_access_token() -> str:
     now = int(time.time())
-    payload = {"sub": "1", "type": "access", "iat": now, "exp": now + 900, "jti": "conftest-jti"}
+    payload = {
+        "sub": "1",
+        "username": DEFAULT_TEST_USERNAME,
+        "type": "access",
+        "iat": now,
+        "exp": now + 900,
+        "jti": "conftest-jti",
+    }
     return jwt.encode(payload, os.environ["JWT_SECRET_KEY"], algorithm="HS256")
 
 

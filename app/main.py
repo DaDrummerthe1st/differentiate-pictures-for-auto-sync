@@ -15,26 +15,18 @@ from fastapi.staticfiles import StaticFiles
 from PIL import Image, ImageDraw, ImageOps
 from pydantic import BaseModel
 
-from app.auth import has_valid_session, load_auth_config, require_session, require_session_with_role
+from app.auth import has_valid_session, load_auth_config, require_session, require_session_with_username
 
 load_auth_config()
 
-# The fixed boundary directory - individual photo sources (dpfas_media,
-# momfiles, ...) are its direct subdirectories, each its own bind mount in
-# docker-compose.prod.yml (momfiles read-only; dpfas_media read-write, the
-# only one this app ever writes into itself - see UPLOAD_SOURCE_NAME
-# below). Which one is actually served is the app_settings.active_source
-# row below, not this constant - this only bounds where a source is
-# allowed to live on disk.
+# The fixed boundary directory - dpfas_media (its one and only direct
+# subdirectory, see MEDIA_ROOT_NAME below) is its own bind mount in
+# docker-compose.prod.yml. Every photo endpoint (upload, tree, thumb,
+# original) scopes strictly to PHOTOS_LIBRARY_ROOT/MEDIA_ROOT_NAME/<username>/
+# - the JWT's username claim, never anything client-supplied - so one
+# account can never read or write another's folder, admin included.
 PHOTOS_LIBRARY_ROOT = Path(os.environ.get("PHOTOS_LIBRARY_ROOT", "/photo-library-root")).resolve()
-DEFAULT_ACTIVE_SOURCE = "dpfas_media"
-# POST /api/upload always writes here, regardless of app_settings.active_source
-# - if an admin has switched the active (served) source to momfiles at
-# upload time, an upload must still never land there. Deliberately a
-# separate constant from DEFAULT_ACTIVE_SOURCE above even though they
-# share a value today - upload destination and "what's currently browsed"
-# are different concerns that just happen to coincide by default.
-UPLOAD_SOURCE_NAME = "dpfas_media"
+MEDIA_ROOT_NAME = "dpfas_media"
 # Resource-exhaustion guard, same shape as detector/main.py's
 # MAX_UPLOAD_BYTES/_read_capped (documentation/security/THREATS.md #16) -
 # checked in chunks, before a full read is ever attempted.
@@ -145,22 +137,6 @@ db.execute(
     """
 )
 db.execute("CREATE INDEX IF NOT EXISTS idx_tags_photo_path ON tags(photo_path)")
-# Singleton row (id is always 1) - which PHOTOS_LIBRARY_ROOT subdirectory
-# is currently served. Admin-only (see GET/PUT /api/settings/photos-source
-# below); a member never sees or changes this.
-db.execute(
-    """
-    CREATE TABLE IF NOT EXISTS app_settings (
-        id INTEGER PRIMARY KEY CHECK (id = 1),
-        active_source TEXT NOT NULL DEFAULT 'dpfas_media',
-        updated_at TEXT NOT NULL
-    )
-    """
-)
-db.execute(
-    "INSERT OR IGNORE INTO app_settings (id, active_source, updated_at) VALUES (1, ?, ?)",
-    (DEFAULT_ACTIVE_SOURCE, datetime.now(timezone.utc).isoformat()),
-)
 db.commit()
 
 
@@ -212,62 +188,19 @@ async def log_requests(request: Request, call_next):
     return response
 
 
-def _available_photo_sources() -> list[str]:
-    if not PHOTOS_LIBRARY_ROOT.is_dir():
-        return []
-    return sorted(entry.name for entry in PHOTOS_LIBRARY_ROOT.iterdir() if entry.is_dir())
-
-
-def _get_active_source() -> str:
-    with _db_lock:
-        row = db.execute("SELECT active_source FROM app_settings WHERE id = 1").fetchone()
-    return row[0] if row else DEFAULT_ACTIVE_SOURCE
-
-
-def get_active_photos_root() -> Path:
-    candidate = (PHOTOS_LIBRARY_ROOT / _get_active_source()).resolve()
-    # Same traversal-guard shape as resolve_relpath below - active_source
-    # only ever reaches the DB via the PUT endpoint's `available` check,
-    # but re-validate here too rather than trusting that invariant blindly.
-    if candidate.parent != PHOTOS_LIBRARY_ROOT:
-        raise HTTPException(status_code=500, detail="invalid active photo source configuration")
+def get_user_photos_root(username: str) -> Path:
+    candidate = (PHOTOS_LIBRARY_ROOT / MEDIA_ROOT_NAME / username).resolve()
+    # username is always the JWT's own signed claim, never client input,
+    # but re-validate the resulting path stays a direct child of
+    # MEDIA_ROOT_NAME rather than trusting that invariant blindly - same
+    # defense-in-depth shape as resolve_relpath's own traversal guard.
+    if candidate.parent != (PHOTOS_LIBRARY_ROOT / MEDIA_ROOT_NAME):
+        raise HTTPException(status_code=400, detail="invalid session")
     return candidate
 
 
-class PhotosSourceUpdate(BaseModel):
-    active: str
-
-
-@app.get("/api/settings/photos-source")
-def get_photos_source(session: tuple[int, str] = Depends(require_session_with_role)):
-    _, role = session
-    if role != "admin":
-        raise HTTPException(status_code=403, detail="admin only")
-    return {"active": _get_active_source(), "available": _available_photo_sources()}
-
-
-@app.put("/api/settings/photos-source")
-def set_photos_source(
-    update: PhotosSourceUpdate, session: tuple[int, str] = Depends(require_session_with_role)
-):
-    _, role = session
-    if role != "admin":
-        raise HTTPException(status_code=403, detail="admin only")
-    if update.active not in _available_photo_sources():
-        raise HTTPException(status_code=400, detail="unknown photo source")
-    now = datetime.now(timezone.utc).isoformat()
-    with _db_lock:
-        db.execute(
-            "INSERT INTO app_settings (id, active_source, updated_at) VALUES (1, ?, ?) "
-            "ON CONFLICT(id) DO UPDATE SET active_source = excluded.active_source, updated_at = excluded.updated_at",
-            (update.active, now),
-        )
-        db.commit()
-    return {"active": _get_active_source(), "available": _available_photo_sources()}
-
-
-def resolve_relpath(relpath: str) -> Path:
-    root = get_active_photos_root()
+def resolve_relpath(relpath: str, username: str) -> Path:
+    root = get_user_photos_root(username)
     candidate = (root / relpath).resolve()
     if root not in candidate.parents and candidate != root:
         raise HTTPException(status_code=400, detail="invalid path")
@@ -346,50 +279,35 @@ _TAG_SELECT_COLUMNS = "id, category, value, bbox_x, bbox_y, bbox_w, bbox_h, sour
 
 
 @app.get("/api/tags")
-def list_tags(p: str = Query(...), session: tuple[int, str] = Depends(require_session_with_role)):
-    user_id, role = session
-    resolve_relpath(p)
+def list_tags(p: str = Query(...), session: tuple[int, str] = Depends(require_session_with_username)):
+    user_id, username = session
+    resolve_relpath(p, username)
     with _db_lock:
-        if role == "admin":
-            rows = db.execute(
-                f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE photo_path = ? ORDER BY id",
-                (p,),
-            ).fetchall()
-        else:
-            rows = db.execute(
-                f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE photo_path = ? "
-                "AND (user_id = ? OR source = 'auto') ORDER BY id",
-                (p, user_id),
-            ).fetchall()
+        rows = db.execute(
+            f"SELECT {_TAG_SELECT_COLUMNS} FROM tags WHERE photo_path = ? "
+            "AND (user_id = ? OR source = 'auto') ORDER BY id",
+            (p, user_id),
+        ).fetchall()
     return [_tag_row_to_dict(row) for row in rows]
 
 
 @app.get("/api/tags/values")
-def tag_value_suggestions(
-    category: str = Query(...), session: tuple[int, str] = Depends(require_session_with_role)
-):
-    user_id, role = session
+def tag_value_suggestions(category: str = Query(...), user_id: int = Depends(require_session)):
     if category not in TAG_CATEGORIES:
         raise HTTPException(status_code=400, detail="unknown category")
     with _db_lock:
-        if role == "admin":
-            rows = db.execute(
-                "SELECT value, COUNT(*) AS c FROM tags WHERE category = ? "
-                "GROUP BY value ORDER BY c DESC, value COLLATE NOCASE",
-                (category,),
-            ).fetchall()
-        else:
-            rows = db.execute(
-                "SELECT value, COUNT(*) AS c FROM tags WHERE (user_id = ? OR source = 'auto') AND category = ? "
-                "GROUP BY value ORDER BY c DESC, value COLLATE NOCASE",
-                (user_id, category),
-            ).fetchall()
+        rows = db.execute(
+            "SELECT value, COUNT(*) AS c FROM tags WHERE (user_id = ? OR source = 'auto') AND category = ? "
+            "GROUP BY value ORDER BY c DESC, value COLLATE NOCASE",
+            (user_id, category),
+        ).fetchall()
     return [row[0] for row in rows]
 
 
 @app.post("/api/tags", status_code=201)
-def create_tag(tag: TagCreate, user_id: int = Depends(require_session)):
-    resolve_relpath(tag.photo_path)
+def create_tag(tag: TagCreate, session: tuple[int, str] = Depends(require_session_with_username)):
+    user_id, username = session
+    resolve_relpath(tag.photo_path, username)
     value = _validate_tag_fields(tag.category, tag.value, tag.bbox_x, tag.bbox_y, tag.bbox_w, tag.bbox_h)
     now = datetime.now(timezone.utc).isoformat()
     with _db_lock:
@@ -432,9 +350,10 @@ def delete_tag(tag_id: int, user_id: int = Depends(require_session)):
 
 
 @app.get("/api/tree")
-def api_tree(_: int = Depends(require_session)):
+def api_tree(session: tuple[int, str] = Depends(require_session_with_username)):
+    _, username = session
     headlines: dict[str, dict[str, list[str]]] = {}
-    root = get_active_photos_root()
+    root = get_user_photos_root(username)
 
     for path in root.rglob("*"):
         if not path.is_file() or path.suffix.lower() not in MEDIA_EXTS:
@@ -521,11 +440,12 @@ _EXPECTED_LABEL_FOR_EXT = {
 
 
 @app.get("/api/file-summary")
-def file_summary(_: int = Depends(require_session)):
+def file_summary(session: tuple[int, str] = Depends(require_session_with_username)):
+    _, username = session
     total = 0
     category_counts: dict[str, int] = {}
     mismatches = []
-    root = get_active_photos_root()
+    root = get_user_photos_root(username)
     for path in sorted(root.rglob("*")):
         if not path.is_file():
             continue
@@ -625,10 +545,16 @@ def _make_placeholder_thumb(cache_path: Path, filename: str, ext: str) -> None:
 
 
 @app.get("/thumb")
-def thumb(p: str = Query(...), _: int = Depends(require_session)):
-    src = resolve_relpath(p)
+def thumb(p: str = Query(...), session: tuple[int, str] = Depends(require_session_with_username)):
+    _, username = session
+    src = resolve_relpath(p, username)
     ext = src.suffix.lower()
-    cache_path = THUMB_CACHE / (p + ".jpg")
+    # Cache key includes username, not just the relative path - two
+    # different users can have an identically-named relpath (their own
+    # "AlbumA/1/pic1.jpg"), and without this a cache hit from one user's
+    # upload would be served straight to another user's request for the
+    # same-looking path.
+    cache_path = THUMB_CACHE / username / (p + ".jpg")
     if not cache_path.exists() or cache_path.stat().st_mtime < src.stat().st_mtime:
         cache_path.parent.mkdir(parents=True, exist_ok=True)
         with _thumb_semaphore:
@@ -657,8 +583,9 @@ def thumb(p: str = Query(...), _: int = Depends(require_session)):
 
 
 @app.get("/original")
-def original(p: str = Query(...), _: int = Depends(require_session)):
-    src = resolve_relpath(p)
+def original(p: str = Query(...), session: tuple[int, str] = Depends(require_session_with_username)):
+    _, username = session
+    src = resolve_relpath(p, username)
     mime = mimetypes.guess_type(src.name)[0] or "application/octet-stream"
     return FileResponse(src, media_type=mime, filename=src.name)
 
@@ -678,10 +605,13 @@ async def _read_capped(upload: UploadFile, max_bytes: int) -> bytes:
 
 
 @app.post("/api/upload", status_code=201)
-async def upload_photo(file: UploadFile = File(...), user_id: int = Depends(require_session)):
-    # Any logged-in user, not admin-gated - dpfas_media is the shared
-    # scratch space every account uploads their own pictures into, kept
-    # apart from momfiles by name alone, never by who's allowed to write.
+async def upload_photo(
+    file: UploadFile = File(...), session: tuple[int, str] = Depends(require_session_with_username)
+):
+    # Any logged-in user, not admin-gated - every account uploads only
+    # ever into its own dpfas_media/<username>/ folder, never anyone
+    # else's, admin included.
+    _, username = session
     ext = Path(file.filename or "").suffix.lower()
     if ext not in PICTURE_EXTS:
         raise HTTPException(status_code=400, detail="only picture uploads are supported")
@@ -690,11 +620,11 @@ async def upload_photo(file: UploadFile = File(...), user_id: int = Depends(requ
     # client-supplied filename as a path component, and this gets free
     # dedup if the same photo is uploaded twice by the same user.
     digest = hashlib.sha256(body).hexdigest()
-    dest_dir = PHOTOS_LIBRARY_ROOT / UPLOAD_SOURCE_NAME / str(user_id)
+    dest_dir = get_user_photos_root(username)
     dest_dir.mkdir(parents=True, exist_ok=True)
     dest_path = dest_dir / f"{digest}{ext}"
     dest_path.write_bytes(body)
-    return {"path": dest_path.relative_to(PHOTOS_LIBRARY_ROOT / UPLOAD_SOURCE_NAME).as_posix()}
+    return {"path": dest_path.relative_to(dest_dir).as_posix()}
 
 
 @app.post("/api/voiceover")

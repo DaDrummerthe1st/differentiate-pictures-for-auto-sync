@@ -4,7 +4,7 @@ the full design/reasoning. Not run in CI, not run by any AI session:
 
     docker compose exec photo-viewer python -m app.benchmark_detector [--batch-size 100]
 
-Walks the active photo source's image files, POSTs each to the detector
+Walks every account's dpfas_media image files, POSTs each to the detector
 service's /detect?include_timing=true, and appends one JSON-line batch
 summary to BENCHMARK_LOG_PATH. Doesn't write to the tags table - pure
 measurement, no side effects beyond that log file.
@@ -20,7 +20,7 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
-from app.main import PICTURE_EXTS, get_active_photos_root
+from app.main import MEDIA_ROOT_NAME, PHOTOS_LIBRARY_ROOT, PICTURE_EXTS
 
 DETECTOR_URL = os.environ.get("DETECTOR_URL", "http://detector:8500/detect")
 # Same analytics_data volume the SQLite DB lives on - survives container
@@ -84,7 +84,11 @@ def _log_batch(summary: dict) -> None:
 
 
 def run_benchmark(batch_size: int = 100) -> None:
-    root = get_active_photos_root()
+    # A direct-filesystem CLI tool run by Joakim via docker exec, not an
+    # HTTP endpoint - walks every account's photos together, since
+    # per-user privacy scoping is an app/ (HTTP-layer) concern, not one
+    # that applies to an admin running commands inside the container.
+    root = PHOTOS_LIBRARY_ROOT / MEDIA_ROOT_NAME
     batch: list[dict] = []
     batch_start = time.monotonic()
 

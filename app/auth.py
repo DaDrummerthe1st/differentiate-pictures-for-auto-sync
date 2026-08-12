@@ -59,13 +59,17 @@ def require_session(request: Request) -> int:
     return int(payload["sub"])
 
 
-def require_session_with_role(request: Request) -> tuple[int, str]:
-    """Like require_session, but also exposes the token's role claim -
-    for routes whose visibility rule depends on admin vs. member (see
-    documentation/tags/SCHEMA.md). A token minted before the role claim
-    existed (or one that omits it) defaults to "member", never "admin" -
-    fail closed, not open."""
+def require_session_with_username(request: Request) -> tuple[int, str]:
+    """Like require_session, but also exposes the token's username claim -
+    the opaque per-user storage-path token (documentation/GLOSSARY.md)
+    every photo endpoint scopes to. Unlike role, there's no safe default
+    to fall back to here - a token missing this claim fails closed
+    (401) rather than falling back to something guessable like the
+    numeric user id."""
     payload = _decode_access_token(request)
     if payload is None:
         raise HTTPException(status_code=401, detail="Invalid or expired session")
-    return int(payload["sub"]), payload.get("role", "member")
+    username = payload.get("username")
+    if not username:
+        raise HTTPException(status_code=401, detail="Invalid or expired session")
+    return int(payload["sub"]), username
