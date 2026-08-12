@@ -154,6 +154,7 @@ Plain-language definitions of every technical/business term this project's desig
 ## Storage and file transfer
 
 - **sshfs**: mounts a remote directory (reachable over SSH) as if it were an ordinary local folder — reads/writes go over the existing SSH connection (SFTP under the hood), no separate server-side support needed beyond SSH access that's already there. Lets a local file picker (e.g. a browser's upload dialog) navigate into files that physically live on a remote machine.
+- **EXIF**: metadata a camera/phone embeds directly inside a photo's own file bytes (capture date, camera model, GPS coordinates, orientation) — distinct from this project's own `tags` table, which holds curation-specific labels (people/places/objects/occasion) this app itself creates or a user adds. This project's only current EXIF use is `ImageOps.exif_transpose` (`app/main.py`), which reads the *orientation* field to rotate a thumbnail correctly before generating it — there is no built feature that displays a photo's EXIF data back to a user anywhere in the UI today, so an empty EXIF section isn't a bug, it's an unbuilt feature.
 
 ## Tooling
 

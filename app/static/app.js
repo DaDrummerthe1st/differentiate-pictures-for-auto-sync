@@ -1043,6 +1043,16 @@ document.getElementById("uploadFileInput").addEventListener("change", async (e) 
   btn.textContent = originalLabel;
   logEvent("photos_uploaded", `${uploaded}/${files.length}`);
   await loadTree();
+  // A large batch's upload takes real time with no in-gallery feedback
+  // until this point - an explicit, impossible-to-miss confirmation
+  // (not just the transient button label) is what a 2026-08-08 report
+  // showed was actually missing: a big upload looked like "nothing
+  // happened" purely because nothing visible marked completion.
+  if (uploaded === files.length) {
+    alert(`${uploaded} bild${uploaded === 1 ? "" : "er"} uppladdade.`);
+  } else {
+    alert(`${uploaded}/${files.length} bilder uppladdade, ${files.length - uploaded} misslyckades.`);
+  }
 });
 
 // ---- Admin-only photo source setting - hidden entirely for a member

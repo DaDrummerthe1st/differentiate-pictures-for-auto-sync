@@ -106,3 +106,19 @@ def test_upload_always_lands_in_dpfas_media_even_if_a_different_source_is_active
             "ON CONFLICT(id) DO UPDATE SET active_source = excluded.active_source, updated_at = excluded.updated_at"
         )
         app_main.db.commit()
+
+
+def test_uploaded_photo_becomes_visible_via_api_tree(client):
+    # Regression test for the 2026-08-08 "uploaded picture doesn't show up
+    # in the gallery" report - root-caused to a frontend feedback gap, not
+    # a backend visibility bug, but nothing previously asserted the tree
+    # endpoint actually reflects an upload, so that class of regression
+    # could still slip through unnoticed.
+    client.cookies.set(ACCESS_COOKIE, _token(sub="7"))
+    upload_res = client.post("/api/upload", files={"file": ("holiday.jpg", _jpeg_bytes(), "image/jpeg")})
+    assert upload_res.status_code == 201
+    path = upload_res.json()["path"]
+
+    tree = client.get("/api/tree").json()
+    all_images = [img for section in tree for chunk in section["chunks"] for img in chunk["images"]]
+    assert path in all_images

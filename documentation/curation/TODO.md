@@ -258,28 +258,18 @@ it's live. Along the way, found `.10`'s `users` table had only Elisabeth's accou
 Joakim's own `admin` account had apparently never been created there (he'd only ever used SSH/sudo
 directly before, never the browser login as himself) — created via
 `docker compose -f docker-compose.prod.yml exec -e CREATE_ACCOUNT_PASSWORD=... auth python -m
-scripts.create_account --email joakim.reuterborg@gmail.com --role admin`, confirmed working. **Open,
-real bug reported same day, not yet root-caused**: after logging in as admin and uploading via the
-new "Ladda upp bilder" button, the uploaded picture doesn't show up in the gallery. Leading theory,
-unconfirmed — during this session's own chat, a fallback command was given for switching
-`active_source` to `momfiles` (to get benchmark numbers against real existing photos before the
-upload feature existed); if that was run and never switched back, uploads (which always land in
-`dpfas_media` by design) simply wouldn't be visible while `momfiles` is the active/served source —
-that would be the setting working as designed, not a bug, but needs confirming, not assumed. Also
-worth checking: `POST /api/upload`'s failure path is currently silent on the frontend (`app.js` just
-counts a non-`ok` response as not-uploaded, no error shown to the user) — if the real cause turns out
-to be a server-side failure instead, there'd be no visible signal today either way. **No automated
-test currently covers "an uploaded photo becomes visible via `GET /api/tree`"** —
-`app/tests/test_upload.py` only asserts the file lands on disk at the right path, not that the tree
-endpoint reflects it; add that test as part of whatever fix this needs.
+scripts.create_account --email joakim.reuterborg@gmail.com --role admin`, confirmed working. **Upload-
+visibility bug, root-caused and fixed 2026-08-12**: not a backend issue — `momfiles`/`dpfas_media`
+theory ruled out, `/api/upload` always worked. `app.js`'s upload handler simply gave no visible
+completion feedback, so a real (768-photo) batch upload looked like "nothing happened"; that batch
+landed at `dpfas_media/2/` (numeric `user_id`, pre-username-claim) and has since been deleted from
+`.10`. Fixed with an explicit post-batch alert; added the previously-missing
+`test_uploaded_photo_becomes_visible_via_api_tree` regression test.
 
-**Start next session**: root-cause and fix the upload-visibility bug above (start by checking `.10`'s
-current `active_source` via `GET /api/settings/photos-source` as admin), add the missing
-tree-visibility test, then get real per-detector CPU-time numbers by running
-`app/benchmark_detector.py` against real uploaded/switched content (see this file's Part A/B entry
-above and `documentation/plans/tingly-humming-pudding.md`'s "Verification" section for the exact
-steps). **Phase 4** (object/animal detection, NanoDet-Plus) follows after that. Phases 5-7 after
-Phase 4 (the
+**Superseded by `documentation/plans/deep-singing-firefly.md`**: per-user private storage (username
+claim, strict per-user scoping, source-switcher removal) is now the active plan and next session's
+starting point, ahead of the per-detector benchmarking and Phase 4 work below. Phase 4
+(object/animal detection, NanoDet-Plus) follows after that. Phases 5-7 after Phase 4 (the
 `app/auto_tag.py` orchestration job idempotent on `source='auto'` rows, a local smoke-test against
 `resources/test_pictures/` before touching the server, then written-not-run
 `docker-compose.prod.yml`/deploy commands for Joakim to run against `/tank`) — model picks,
