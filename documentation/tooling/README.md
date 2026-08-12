@@ -66,18 +66,21 @@ grows).
 
 **If this gate blocks a commit that already has files staged** (as opposed to the fully-automatic
 post-commit catch-up below, which always runs against a clean-except-ledger index by construction):
-before staging and committing the ledger catch-up file, run this exact check —
+run `tools/commit_cost/log.py` and/or `tools/doc_metrics/log.py` to catch up, then commit the
+ledger file(s) alone with one of the three recognized catch-up titles ("Log doc metrics and commit
+cost for the previous commit", "Log commit cost for the previous commit", "Log doc metrics for the
+previous commit"), then re-stage and commit the real change separately.
 
-```
-git status --short --porcelain | grep -qv 'commit_costs.jsonl\|metrics.jsonl' && echo "STOP: something else is staged, restore it first" || echo "clean, safe to commit"
-```
-
-— and don't proceed to the catch-up commit until it prints "clean, safe to commit". If it prints
-`STOP`, `git restore --staged <path>` the other file(s) first, do the catch-up commit alone, then
-re-stage and commit the real change separately. This used to be a written instruction to remember;
-it recurred once already (see [documentation/bugs/claude-bugs/](../bugs/claude-bugs/README.md)) with
-the instruction sitting right here unread-in-the-moment, so it's now a command to actually run, not
-a rule to recall.
+This used to depend on manually running a `git status`/`grep` one-liner before every catch-up
+commit - it recurred twice anyway (see
+[documentation/bugs/claude-bugs/](../bugs/claude-bugs/README.md)), the second time because the
+documented one-liner itself silently lied: this repo's `grep` (via Claude Code's own shell-function
+shim around `ugrep`) returns the wrong exit code for `-q` combined with `-v`, so
+`grep -qv 'commit_costs.jsonl\|metrics.jsonl'` reported "clean" even with unrelated files staged,
+regardless of whether it was actually run. **`.githooks/commit-msg`** now enforces this
+mechanically instead - it inspects the real staged diff against the commit message and refuses any
+of the three catch-up titles above unless the diff is *exclusively* the ledger file(s), so there's
+no longer a manual check to remember or to get wrong.
 
 **Not active by default** — git doesn't read hooks from a repo-tracked
 directory on its own. One-time setup, per clone:
