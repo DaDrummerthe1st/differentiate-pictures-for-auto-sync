@@ -66,11 +66,18 @@ grows).
 
 **If this gate blocks a commit that already has files staged** (as opposed to the fully-automatic
 post-commit catch-up below, which always runs against a clean-except-ledger index by construction):
-run `git status --short` before staging and committing the ledger catch-up file, and confirm nothing
-else is staged. If something else is staged, `git restore --staged <path>` it first, do the catch-up
-commit alone, then re-stage and commit the real change separately. Skipping this check lets an
-already-staged real change silently ride along into the catch-up commit, mislabeling it — see
-[documentation/bugs/claude-bugs/](../bugs/claude-bugs/README.md) for the incident that found this.
+before staging and committing the ledger catch-up file, run this exact check —
+
+```
+git status --short --porcelain | grep -qv 'commit_costs.jsonl\|metrics.jsonl' && echo "STOP: something else is staged, restore it first" || echo "clean, safe to commit"
+```
+
+— and don't proceed to the catch-up commit until it prints "clean, safe to commit". If it prints
+`STOP`, `git restore --staged <path>` the other file(s) first, do the catch-up commit alone, then
+re-stage and commit the real change separately. This used to be a written instruction to remember;
+it recurred once already (see [documentation/bugs/claude-bugs/](../bugs/claude-bugs/README.md)) with
+the instruction sitting right here unread-in-the-moment, so it's now a command to actually run, not
+a rule to recall.
 
 **Not active by default** — git doesn't read hooks from a repo-tracked
 directory on its own. One-time setup, per clone:
