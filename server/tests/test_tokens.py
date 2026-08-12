@@ -18,7 +18,7 @@ def _decode(token: str) -> dict:
 
 
 def test_access_token_round_trip():
-    token = create_access_token(42, "member")
+    token = create_access_token(42, "member", "member-token")
 
     assert verify_access_token(token) == 42
 
@@ -27,9 +27,18 @@ def test_access_token_embeds_role_claim():
     # app/auth.py (the photo-viewer, a separate service with no DB of its
     # own) trusts this claim directly rather than re-querying a users
     # table - see documentation/tags/SCHEMA.md's role-visibility note.
-    token = create_access_token(42, "admin")
+    token = create_access_token(42, "admin", "admin-token")
 
     assert _decode(token)["role"] == "admin"
+
+
+def test_access_token_embeds_username_claim():
+    # app/auth.py scopes every photo endpoint to dpfas_media/<username>/
+    # (documentation/plans/deep-singing-firefly.md) - trusted directly from
+    # the signed token, same reasoning as the role claim above.
+    token = create_access_token(42, "member", "opaque-user-token")
+
+    assert _decode(token)["username"] == "opaque-user-token"
 
 
 def test_refresh_token_round_trip(redis_client):
@@ -49,7 +58,7 @@ def test_access_token_wrong_type_is_rejected(redis_client):
 
 
 def test_refresh_token_wrong_type_is_rejected():
-    access_token = create_access_token(42, "member")
+    access_token = create_access_token(42, "member", "member-token")
 
     with pytest.raises(jwt.InvalidTokenError):
         verify_refresh_token(access_token, redis_client=None)
@@ -57,7 +66,7 @@ def test_refresh_token_wrong_type_is_rejected():
 
 def test_access_token_expires_after_its_ttl():
     now = datetime.now(timezone.utc) - timedelta(minutes=16)
-    token = create_access_token(42, "member", now=now)
+    token = create_access_token(42, "member", "member-token", now=now)
 
     with pytest.raises(jwt.ExpiredSignatureError):
         verify_access_token(token)

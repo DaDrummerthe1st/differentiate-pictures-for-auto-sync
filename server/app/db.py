@@ -43,12 +43,22 @@ def ensure_schema(conn: psycopg.Connection) -> None:
         CREATE TABLE IF NOT EXISTS users (
             id BIGSERIAL PRIMARY KEY,
             email TEXT NOT NULL UNIQUE,
+            username TEXT NOT NULL UNIQUE,
             password_hash TEXT NOT NULL,
             role TEXT NOT NULL,
             created_at TIMESTAMPTZ NOT NULL DEFAULT now()
         )
         """
     )
+    # Added for per-user storage-path scoping (dpfas_media/<username>/, see
+    # documentation/plans/deep-singing-firefly.md) - an opaque random token,
+    # not a real name (documentation/GLOSSARY.md's "Opaque token" entry).
+    # ALTER ... IF NOT EXISTS is a no-op against the CREATE TABLE above on a
+    # fresh install; it's the real migration path for prod's already-existing
+    # table. NOT NULL only succeeds there against zero rows, which is
+    # intentional - prod's 2 accounts get cleared and recreated via
+    # create_account.py (which generates this value) rather than backfilled.
+    conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT UNIQUE NOT NULL")
     # Pulled forward from Phase 2's schema - TODO.md 1.7 needs it already.
     # user_id is nullable: a failed login by an unknown email has no user
     # to attach the row to.

@@ -37,6 +37,7 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     email: str
     role: str
+    username: str
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -64,14 +65,14 @@ def login(
         db.commit()
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, _GENERIC_LOGIN_ERROR)
 
-    access_token = create_access_token(user.id, user.role)
+    access_token = create_access_token(user.id, user.role, user.username)
     refresh_token = create_refresh_token(user.id, redis_client=get_redis_client())
     set_auth_cookies(response, access_token, refresh_token)
 
     log_audit_event(db, action="login_success", user_id=user.id)
     db.commit()
 
-    return LoginResponse(email=user.email, role=user.role)
+    return LoginResponse(email=user.email, role=user.role, username=user.username)
 
 
 def get_current_user(
@@ -86,17 +87,17 @@ def get_current_user(
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session")
 
     user = db.execute(
-        "SELECT id, email, password_hash, role FROM users WHERE id = %s",
+        "SELECT id, email, username, password_hash, role FROM users WHERE id = %s",
         (user_id,),
     ).fetchone()
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session")
-    return UserRecord(id=user[0], email=user[1], password_hash=user[2], role=user[3])
+    return UserRecord(id=user[0], email=user[1], username=user[2], password_hash=user[3], role=user[4])
 
 
 @router.get("/whoami", response_model=LoginResponse)
 def whoami(user: UserRecord = Depends(get_current_user)) -> LoginResponse:
-    return LoginResponse(email=user.email, role=user.role)
+    return LoginResponse(email=user.email, role=user.role, username=user.username)
 
 
 class MessageResponse(BaseModel):
@@ -128,7 +129,7 @@ def refresh(
 
     # Rotate: the old refresh token is single-use, same as buzzkit's design.
     revoke_refresh_token(jti, redis_client=redis_client)
-    new_access_token = create_access_token(user.id, user.role)
+    new_access_token = create_access_token(user.id, user.role, user.username)
     new_refresh_token = create_refresh_token(user.id, redis_client=redis_client)
     set_auth_cookies(response, new_access_token, new_refresh_token)
 

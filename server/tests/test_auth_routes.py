@@ -13,7 +13,8 @@ _GENERIC_ERROR = "Incorrect email or password"
 def _seed_user(
     db_connection, email="member@example.test", password="correct horse battery staple", role="member"
 ):
-    create_account(db_connection, email=email, password=password, role=role)
+    _, username = create_account(db_connection, email=email, password=password, role=role)
+    return username
 
 
 def _decode_access_cookie(response) -> dict:
@@ -22,7 +23,7 @@ def _decode_access_cookie(response) -> dict:
 
 
 def test_login_with_correct_credentials_sets_cookies_and_returns_200(client, db_connection):
-    _seed_user(db_connection)
+    username = _seed_user(db_connection)
 
     response = client.post(
         "/login",
@@ -30,7 +31,7 @@ def test_login_with_correct_credentials_sets_cookies_and_returns_200(client, db_
     )
 
     assert response.status_code == 200
-    assert response.json() == {"email": "member@example.test", "role": "member"}
+    assert response.json() == {"email": "member@example.test", "role": "member", "username": username}
     assert ACCESS_COOKIE in response.cookies
     assert REFRESH_COOKIE in response.cookies
 
@@ -64,6 +65,20 @@ def test_login_access_cookie_embeds_the_users_role(client, db_connection):
     )
 
     assert _decode_access_cookie(response)["role"] == "admin"
+
+
+def test_login_access_cookie_embeds_the_users_username(client, db_connection):
+    # app/auth.py scopes every photo endpoint to dpfas_media/<username>/
+    # (documentation/plans/deep-singing-firefly.md) - trusted directly
+    # from the token, same reasoning as the role claim above.
+    username = _seed_user(db_connection, email="username-claim@example.test")
+
+    response = client.post(
+        "/login",
+        json={"email": "username-claim@example.test", "password": "correct horse battery staple"},
+    )
+
+    assert _decode_access_cookie(response)["username"] == username
 
 
 def test_login_with_wrong_password_returns_401(client, db_connection):
@@ -155,6 +170,18 @@ def test_refresh_reissues_access_token_with_current_role_from_db(client, db_conn
     response = client.post("/refresh")
 
     assert _decode_access_cookie(response)["role"] == "admin"
+
+
+def test_refresh_reissues_access_token_with_the_users_username(client, db_connection):
+    username = _seed_user(db_connection, email="refresh-username@example.test")
+    client.post(
+        "/login",
+        json={"email": "refresh-username@example.test", "password": "correct horse battery staple"},
+    )
+
+    response = client.post("/refresh")
+
+    assert _decode_access_cookie(response)["username"] == username
 
 
 def test_refresh_after_account_deleted_returns_401(client, db_connection):

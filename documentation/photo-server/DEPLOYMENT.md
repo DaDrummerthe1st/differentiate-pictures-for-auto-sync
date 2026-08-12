@@ -48,17 +48,31 @@ docker compose -f docker-compose.prod.yml logs -f caddy
 
 ## 4. Database schema
 
-Nothing to do here — `app/main.py`'s FastAPI `lifespan` handler calls `ensure_schema()` against the real database automatically on every `auth` container startup (idempotent `CREATE TABLE IF NOT EXISTS`, safe on every restart). Fixed 2026-07-18, see [documentation/bugs/repo/fixed/2026-07-17-postgres-schema-never-initialized-in-production-SOLVED.md](../bugs/repo/fixed/2026-07-17-postgres-schema-never-initialized-in-production-SOLVED.md).
+`app/main.py`'s FastAPI `lifespan` handler calls `ensure_schema()` against the real database automatically on every `auth` container startup (idempotent `CREATE TABLE IF NOT EXISTS`, safe on every restart). Fixed 2026-07-18, see [documentation/bugs/repo/fixed/2026-07-17-postgres-schema-never-initialized-in-production-SOLVED.md](../bugs/repo/fixed/2026-07-17-postgres-schema-never-initialized-in-production-SOLVED.md).
 
-## 5. Create the first member account
+**One-time exception, added 2026-08-12** for the `users.username` column ([../plans/deep-singing-firefly.md](../plans/deep-singing-firefly.md) — an opaque per-user storage-path token, [../GLOSSARY.md](../GLOSSARY.md)'s "Opaque token" entry): `ensure_schema()`'s `ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT UNIQUE NOT NULL` only succeeds against zero existing rows. Prod's `users` table already has 2 rows (Joakim/admin, Elisabeth/member) with no username — clear them first, this deploy recreates both via step 5 below:
 
 ```
+docker compose -f docker-compose.prod.yml exec postgres psql -U photo_server -d photo_server -c "DELETE FROM audit_log; DELETE FROM users;"
+```
+
+(`audit_log.user_id` references `users(id)` with no cascade, hence deleting it first.) Then bring the stack up as in step 3 — `ensure_schema()` adds the column against the now-empty table on that startup.
+
+## 5. Create both accounts
+
+```
+CREATE_ACCOUNT_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(16))')"
+docker compose -f docker-compose.prod.yml exec -e CREATE_ACCOUNT_PASSWORD="$CREATE_ACCOUNT_PASSWORD" auth python -m scripts.create_account --email joakim.reuterborg@gmail.com --role admin
+echo "Password: $CREATE_ACCOUNT_PASSWORD"
+
 CREATE_ACCOUNT_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(16))')"
 docker compose -f docker-compose.prod.yml exec -e CREATE_ACCOUNT_PASSWORD="$CREATE_ACCOUNT_PASSWORD" auth python -m scripts.create_account --email elisabeth.reuterborg@gmail.com --role member
 echo "Password: $CREATE_ACCOUNT_PASSWORD"
 ```
 
-Replace the email/role as needed. Password is read from `CREATE_ACCOUNT_PASSWORD` (generated above so it's not typed into shell history) rather than prompted, since `docker compose exec` isn't a TTY by default here — the final `echo` is the only place it's surfaced, so it can be shared with the account holder immediately and not left sitting in shell history. Fixed 2026-07-18, see [documentation/bugs/repo/fixed/2026-07-17-dockerfile-missing-scripts-directory-SOLVED.md](../bugs/repo/fixed/2026-07-17-dockerfile-missing-scripts-directory-SOLVED.md).
+Password is read from `CREATE_ACCOUNT_PASSWORD` (generated above so it's not typed into shell history) rather than prompted, since `docker compose exec` isn't a TTY by default here — the final `echo` is the only place it's surfaced, so it can be shared with the account holder immediately and not left sitting in shell history. Fixed 2026-07-18, see [documentation/bugs/repo/fixed/2026-07-17-dockerfile-missing-scripts-directory-SOLVED.md](../bugs/repo/fixed/2026-07-17-dockerfile-missing-scripts-directory-SOLVED.md).
+
+`create_account` also prints a generated `username` (the opaque storage-path token, not typed in — there's no `--username` flag). Once app/'s per-user folder scoping lands (a later increment of the same plan), that value is what each account's `dpfas_media/<username>/` folder will be named — note it down when it prints.
 
 Share the printed password with the account holder out of band (not over email/chat in plaintext, per [POLICY.md](../policies/POLICY.md)).
 

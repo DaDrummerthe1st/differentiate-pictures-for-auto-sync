@@ -8,6 +8,11 @@ Usage (from server/, so the app package resolves):
 Password is read from the CREATE_ACCOUNT_PASSWORD env var if set,
 otherwise prompted for interactively (not echoed) - never taken as a
 CLI argument, which would leak it into shell history/process listings.
+
+Username is generated automatically (an opaque random token, not a real
+name or email - see documentation/GLOSSARY.md) and printed on success;
+there is no --username flag, since a human-chosen value would defeat the
+point of it being unguessable.
 """
 
 import argparse
@@ -28,10 +33,10 @@ def main() -> int:
     password = os.environ.get("CREATE_ACCOUNT_PASSWORD") or getpass.getpass("Password: ")
 
     with get_connection() as conn:
-        user_id = create_account(conn, email=args.email, password=password, role=args.role)
+        user_id, username = create_account(conn, email=args.email, password=password, role=args.role)
         conn.commit()
 
-    print(f"Created user {user_id} ({args.email}, {args.role})")
+    print(f"Created user {user_id} ({args.email}, {args.role}), username={username}")
     return 0
 
 

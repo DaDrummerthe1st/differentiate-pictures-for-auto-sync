@@ -6,7 +6,7 @@ from app.security import verify_password
 
 
 def test_create_account_inserts_a_row(db_connection):
-    user_id = create_account(
+    user_id, username = create_account(
         db_connection,
         email="new-member@example.test",
         password="correct horse battery staple",
@@ -14,12 +14,34 @@ def test_create_account_inserts_a_row(db_connection):
     )
 
     row = db_connection.execute(
-        "SELECT id, email, password_hash, role FROM users WHERE email = %s",
+        "SELECT id, email, username, password_hash, role FROM users WHERE email = %s",
         ("new-member@example.test",),
     ).fetchone()
 
-    assert row == (user_id, "new-member@example.test", row[2], "member")
-    assert verify_password("correct horse battery staple", row[2]) is True
+    assert row == (user_id, "new-member@example.test", username, row[3], "member")
+    assert verify_password("correct horse battery staple", row[3]) is True
+
+
+def test_create_account_generates_an_opaque_username(db_connection):
+    # Random, not derived from email/role - see documentation/GLOSSARY.md's
+    # "Opaque token" entry: used for dpfas_media/<username>/ folder scoping,
+    # must not be guessable or human-chosen.
+    _, first = create_account(
+        db_connection,
+        email="opaque-one@example.test",
+        password="correct horse battery staple",
+        role="member",
+    )
+    _, second = create_account(
+        db_connection,
+        email="opaque-two@example.test",
+        password="correct horse battery staple",
+        role="member",
+    )
+
+    assert first != second
+    int(first, 16)  # raises ValueError if it isn't real hex
+    assert len(first) == 32
 
 
 def test_create_account_rejects_duplicate_email(db_connection):
