@@ -766,9 +766,25 @@ document.getElementById("voiceoverPlayerAudio").addEventListener("timeupdate", (
   dot.style.top = ev.y * 100 + "%";
 });
 
+function emptyLbImg() {
+  // Actually drop the previous photo's bytes (not just hide them with CSS)
+  // so the lightbox never has stale content to show, and the browser can
+  // release the decoded bitmap from memory immediately rather than holding
+  // it until the next photo's load overwrites it.
+  document.getElementById("lbImg").removeAttribute("src");
+}
+function showLbLoading() {
+  document.getElementById("lbSpinner").classList.remove("hidden");
+  emptyLbImg();
+}
+function hideLbLoading() {
+  document.getElementById("lbSpinner").classList.add("hidden");
+}
+
 function openLightbox(idx) {
   currentLightboxIndex = idx;
   const lb = document.getElementById("lightbox");
+  showLbLoading();
   document.getElementById("lbImg").src = `/original?p=${encodeURIComponent(allImages[idx])}`;
   lb.classList.remove("hidden");
   logEvent("image_view", allImages[idx]);
@@ -776,11 +792,13 @@ function openLightbox(idx) {
 }
 function closeLightbox() {
   document.getElementById("lightbox").classList.add("hidden");
+  emptyLbImg();
   closeTagForm();
   disarmDrawBox();
 }
 function lightboxStep(delta) {
   currentLightboxIndex = (currentLightboxIndex + delta + allImages.length) % allImages.length;
+  showLbLoading();
   document.getElementById("lbImg").src = `/original?p=${encodeURIComponent(allImages[currentLightboxIndex])}`;
   logEvent("image_view", allImages[currentLightboxIndex]);
   closeTagForm();
@@ -788,6 +806,8 @@ function lightboxStep(delta) {
   loadTagsForCurrentPhoto();
 }
 
+document.getElementById("lbImg").addEventListener("load", hideLbLoading);
+document.getElementById("lbImg").addEventListener("error", hideLbLoading);
 document.getElementById("lbClose").addEventListener("click", closeLightbox);
 document.getElementById("lbPrev").addEventListener("click", () => lightboxStep(-1));
 document.getElementById("lbNext").addEventListener("click", () => lightboxStep(1));

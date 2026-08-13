@@ -1,0 +1,5 @@
+# Stop lightbox showing stale photo while the next one loads
+
+Joakim reported the lightbox looks stuck on the previously-viewed photo after clicking a new thumbnail; investigation (`documentation/bugs/repo/under_process/2026-07-18-lightbox-shows-previous-photo-when-clicking-a-not-yet-loaded-thumbnail.md`) found no loading indicator existed at all — the browser just keeps painting whatever `lbImg` last decoded until `/original`'s full-resolution fetch finishes, which reads as "stuck" for large CD/DVD-ripped source photos. Added a spinner (`app/static/index.html`, `style.css`) and, on Joakim's push to make sure the old photo is never shown again (not just visually masked), a new `emptyLbImg()` in `app/static/app.js` that `removeAttribute("src")`s `lbImg` before every new load and on `closeLightbox()`, so the previous photo's bytes are actually dropped rather than hidden with CSS. Not yet verified against the real deployed app — bakes into `photo-viewer`'s image, needs `docker compose -f docker-compose.prod.yml up -d --build photo-viewer` on the server, per `DEPLOYMENT.md`.
+
+- **Doc size**: bug file 3,518 → 6,549 characters (+3,031).
