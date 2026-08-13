@@ -419,6 +419,15 @@ let currentLightboxIndex = -1;
 // the first one.
 let activeHeadline = localStorage.getItem("mpv_active_headline") || null;
 
+// Uploaded photos land flat in the user's own folder with no subfolder,
+// so the server (app/main.py's api_tree) groups them under the literal
+// headline "." - not a real folder name, just what's left when there's
+// no parent directory. Shown to the user as a real label instead.
+const UPLOADS_HEADLINE = ".";
+function headlineLabel(headline) {
+  return headline === UPLOADS_HEADLINE ? "Uppladdade bilder" : headline;
+}
+
 function setActiveAlbum(headline) {
   activeHeadline = headline;
   localStorage.setItem("mpv_active_headline", headline);
@@ -460,7 +469,7 @@ function renderTree(sections) {
     const pill = document.createElement("button");
     pill.className = "nav-pill" + (section.headline === activeHeadline ? " current" : "");
     pill.dataset.headline = section.headline;
-    pill.textContent = section.headline;
+    pill.textContent = headlineLabel(section.headline);
     pill.addEventListener("click", () => setActiveAlbum(section.headline));
     nav.appendChild(pill);
   }
@@ -486,7 +495,7 @@ function renderActiveAlbum() {
 
   const h = document.createElement("h2");
   h.className = "headline";
-  h.textContent = section.headline;
+  h.textContent = headlineLabel(section.headline);
   album.appendChild(h);
 
   const body = document.createElement("div");
@@ -1046,11 +1055,21 @@ document.getElementById("uploadFileInput").addEventListener("change", async (e) 
   e.target.value = "";
   if (files.length === 0) return;
 
-  const btn = document.getElementById("uploadBtn");
-  const originalLabel = btn.textContent;
+  // The upload button itself is inside #moreActionsMenu, which the click
+  // handler above already hid before the file picker even opened - a
+  // progress readout written to the button's own text would be invisible
+  // for the whole upload. Use a fixed top banner instead, same pattern as
+  // #recordingBanner, so it's visible regardless of any menu state.
+  const banner = document.getElementById("uploadBanner");
+  const bannerText = document.getElementById("uploadBannerText");
+  const bannerFill = document.getElementById("uploadProgressFill");
+  banner.classList.remove("hidden");
+  bannerFill.style.width = "0%";
+
   let uploaded = 0;
+  let processed = 0;
   for (const file of files) {
-    btn.textContent = `Laddar upp (${uploaded + 1}/${files.length})...`;
+    bannerText.textContent = `Laddar upp bilder (${processed + 1}/${files.length})...`;
     const form = new FormData();
     form.append("file", file);
     try {
@@ -1059,10 +1078,20 @@ document.getElementById("uploadFileInput").addEventListener("change", async (e) 
     } catch (err) {
       logEvent("photo_upload_error", String(err));
     }
+    processed += 1;
+    bannerFill.style.width = `${(processed / files.length) * 100}%`;
   }
-  btn.textContent = originalLabel;
+  banner.classList.add("hidden");
   logEvent("photos_uploaded", `${uploaded}/${files.length}`);
   await loadTree();
+  if (uploaded > 0) {
+    // Uploads always land in UPLOADS_HEADLINE (see its own comment) - jump
+    // there so the just-uploaded photos are actually visible without the
+    // user having to know to switch albums themselves. Without this, a
+    // successful upload while browsing any other album looked like nothing
+    // had happened at all.
+    setActiveAlbum(UPLOADS_HEADLINE);
+  }
   // A large batch's upload takes real time with no in-gallery feedback
   // until this point - an explicit, impossible-to-miss confirmation
   // (not just the transient button label) is what a 2026-08-08 report

@@ -459,6 +459,36 @@ body.large-thumbs { --thumb-min: 260px; }
   cursor: pointer;
 }
 
+#uploadBanner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: #0a84ff;
+  color: white;
+  text-align: center;
+  padding: 0.8rem 1rem;
+  font-size: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+#uploadProgressTrack {
+  width: min(24rem, 80vw);
+  height: 0.6rem;
+  background: rgba(255,255,255,0.3);
+  border-radius: 0.3rem;
+  overflow: hidden;
+}
+#uploadProgressFill {
+  height: 100%;
+  width: 0%;
+  background: white;
+  transition: width 0.2s ease;
+}
+
 #recordingBanner {
   position: fixed;
   top: 0;
