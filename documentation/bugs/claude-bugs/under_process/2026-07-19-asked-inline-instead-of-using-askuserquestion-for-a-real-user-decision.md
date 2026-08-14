@@ -2,7 +2,7 @@
 
 See [README.md](../README.md) for what belongs here.
 
-Status: **recurring, not structurally fixed** — 5 occurrences now, most recently 2026-08-03, a different session from #1-4. Reopened per the bug-recurrence rule (a recurring lapse reopens its original file instead of getting a new one each time).
+Status: **recurring, not structurally fixed** — 6 occurrences now, most recently 2026-08-14. Reopened per the bug-recurrence rule (a recurring lapse reopens its original file instead of getting a new one each time).
 
 ## Recurrence #1 (2026-07-19)
 
@@ -92,6 +92,20 @@ Two mechanics, distinct from "forgot the rule":
 - **No discrete checkpoint exists between drafting and sending.** A tool call is a pause the session can reason about before acting; a plain-text reply has no equivalent pause — the classification of "is this a decision" has to happen silently mid-draft, with nothing forcing it to surface. Every prior recurrence (#1-4) and this one both show the same gap: the rule is known, but nothing structurally interrupts the reply before it goes out.
 - **Perceived stakes suppress the check.** Short, closing, or conversational-sounding questions ("what next?", "want me to fix that?") register as lower-stakes than a mid-task fork, which quiets the self-check even though stakes and format are unrelated — Recurrence #4 already showed low/high length doesn't predict it either.
 - **New this time: a wrong standing belief actively blocked the tool, rather than just failing to trigger it.** This session held an unstated (and incorrect) rule that `AskUserQuestion` requires a bounded, enumerable option set, so fully open questions were treated as structurally exempt. That belief was never checked against the tool's actual behavior (the built-in "Other" free-text option makes it usable for open questions too) before acting on it. This is a knowledge-gap failure mode, separate from the attention-lapse failure mode in #1-4, and worth watching for specifically: does the exemption-reasoning ("this kind of question doesn't fit the tool") show up again on a future recurrence, or was it one-off?
+
+## Recurrence #6 (2026-08-14)
+
+### What happened
+
+While scoping the new invite-by-email feature (delegation rule, data model for `invites_remaining`), this session ended a reply with plain running text — "Sound right, or want to adjust the delegation rule first?" — instead of `AskUserQuestion`, despite having used the tool correctly three times already in the very same turn moments earlier (the SMTP/invite-limit/invited-role batch, then the SMTP-rollout question). Joakim caught it: "write a claude bug report and then AskUserQuestion."
+
+### Why it happened
+
+Textbook overlap of two already-documented shapes, not a new failure mode: the question was appended to the tail end of a long explanatory reply (Recurrence #4's pattern) and read as a small, natural-feeling confirmation rather than a standalone fork (Recurrence #1's pattern). Recurrence #5's core finding replicates exactly: correct tool use minutes earlier in the *same* turn did not carry forward to the very next reply. Six occurrences in, this is no longer "sometimes lapses" — it's the reliable default behavior for a trailing decision-question, with correct use being the exception that requires the question to be recognized as a fork *before* the reply is drafted, not caught while drafting its last line.
+
+### What changed
+
+Logged as data point #6 toward the still-open structural-fix question from Recurrence #5 (a Stop-hook heuristic: final reply's last line ends in "?" with no `AskUserQuestion` call that turn → block the stop). Still not built — that remains Joakim's call, per his 2026-08-03 preference to keep gathering data first — but six recurrences with a 100% failure rate on trailing questions (including immediately after correct in-turn usage, twice now) is a strong signal the behavioral-only approach has been fully falsified. Re-asked the pending delegation-rule question correctly via `AskUserQuestion` immediately after this entry, in the same reply.
 
 ### Possible future fix (documented, not built — Joakim chose to gather more data first)
 
