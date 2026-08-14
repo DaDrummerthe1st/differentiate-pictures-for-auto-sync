@@ -64,6 +64,14 @@ def ensure_schema(conn: psycopg.Connection) -> None:
     # documentation/bugs/claude-bugs/fixed/2026-08-13-recommended-raw-destructive-sql-against-production-instead-of-a-controlled-script.md
     # for why that was wrong) - backfilling in place is what actually ships.
     conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT UNIQUE NOT NULL")
+    # How many more people this account may invite (app.invites) - unlike
+    # username above, this one has a real default (0), so ADD COLUMN IF NOT
+    # EXISTS is safe against prod's existing non-empty table with no
+    # separate backfill step. 0 means "can't invite anyone"; admins bypass
+    # this check entirely (app.auth_routes), members need an admin to grant
+    # a nonzero value explicitly - see documentation/GLOSSARY.md's "Invite
+    # delegation" entry for why it's admin-granted, not inherited.
+    conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS invites_remaining INT NOT NULL DEFAULT 0")
     # Pulled forward from Phase 2's schema - TODO.md 1.7 needs it already.
     # user_id is nullable: a failed login by an unknown email has no user
     # to attach the row to.
@@ -77,6 +85,28 @@ def ensure_schema(conn: psycopg.Connection) -> None:
             filename TEXT,
             details JSONB,
             created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+        )
+        """
+    )
+    # Added 2026-08-14 for admin/delegated invite-by-email (documentation/
+    # GLOSSARY.md's "Invite delegation" entry). granted_invites is the
+    # invites_remaining the new account starts with once this invite is
+    # accepted - only nonzero when an admin set it (enforced in
+    # app.auth_routes, not here). accepted_user_id stays NULL until
+    # accepted; status moves pending -> accepted, there's no revoke/cancel
+    # state yet (not built - an expired, never-accepted row is just inert).
+    conn.execute(
+        """
+        CREATE TABLE IF NOT EXISTS invites (
+            id BIGSERIAL PRIMARY KEY,
+            token TEXT NOT NULL UNIQUE,
+            inviter_id BIGINT NOT NULL REFERENCES users(id),
+            invitee_email TEXT NOT NULL,
+            granted_invites INT NOT NULL DEFAULT 0,
+            status TEXT NOT NULL DEFAULT 'pending',
+            accepted_user_id BIGINT REFERENCES users(id),
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            expires_at TIMESTAMPTZ NOT NULL
         )
         """
     )

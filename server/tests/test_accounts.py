@@ -44,6 +44,37 @@ def test_create_account_generates_an_opaque_username(db_connection):
     assert len(first) == 32
 
 
+def test_create_account_defaults_invites_remaining_to_zero(db_connection):
+    create_account(
+        db_connection,
+        email="no-quota@example.test",
+        password="correct horse battery staple",
+        role="member",
+    )
+
+    row = db_connection.execute(
+        "SELECT invites_remaining FROM users WHERE email = %s", ("no-quota@example.test",)
+    ).fetchone()
+
+    assert row == (0,)
+
+
+def test_create_account_accepts_an_explicit_invites_remaining(db_connection):
+    create_account(
+        db_connection,
+        email="has-quota@example.test",
+        password="correct horse battery staple",
+        role="member",
+        invites_remaining=3,
+    )
+
+    row = db_connection.execute(
+        "SELECT invites_remaining FROM users WHERE email = %s", ("has-quota@example.test",)
+    ).fetchone()
+
+    assert row == (3,)
+
+
 def test_create_account_rejects_duplicate_email(db_connection):
     create_account(
         db_connection,

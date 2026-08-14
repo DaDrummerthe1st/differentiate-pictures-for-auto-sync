@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import jwt
 import psycopg
 from fastapi import APIRouter, Cookie, Depends, HTTPException, Request, Response, status
@@ -7,6 +9,7 @@ from app.accounts import UserRecord, get_user_by_email, get_user_by_id
 from app.audit import log_audit_event
 from app.cookies import ACCESS_COOKIE, REFRESH_COOKIE, clear_auth_cookies, set_auth_cookies
 from app.db import get_db
+from app.invites import accept_invite, create_invite, get_invite_by_token
 from app.rate_limit import limiter
 from app.security import hash_password, verify_password
 from app.tokens import (
@@ -86,13 +89,10 @@ def get_current_user(
     except jwt.InvalidTokenError:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session")
 
-    user = db.execute(
-        "SELECT id, email, username, password_hash, role FROM users WHERE id = %s",
-        (user_id,),
-    ).fetchone()
+    user = get_user_by_id(db, user_id)
     if user is None:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Invalid or expired session")
-    return UserRecord(id=user[0], email=user[1], username=user[2], password_hash=user[3], role=user[4])
+    return user
 
 
 @router.get("/whoami", response_model=LoginResponse)
@@ -150,3 +150,91 @@ def logout(
 
     clear_auth_cookies(response)
     return MessageResponse(message="logged out")
+
+
+class CreateInviteRequest(BaseModel):
+    email: str
+    # Only an admin caller may set this above 0 - see the role check
+    # below. A member's own invite always starts the new account at 0
+    # (no further delegation) unless an admin raises it later.
+    granted_invites: int = 0
+
+
+class InviteResponse(BaseModel):
+    token: str
+    invitee_email: str
+    granted_invites: int
+    expires_at: datetime
+
+
+@router.post("/invites", response_model=InviteResponse, status_code=status.HTTP_201_CREATED)
+def create_invite_route(
+    payload: CreateInviteRequest,
+    user: UserRecord = Depends(get_current_user),
+    db: psycopg.Connection = Depends(get_db),
+):
+    if payload.granted_invites < 0:
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "granted_invites must not be negative")
+    if get_user_by_email(db, payload.email) is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "That email already has an account")
+
+    if user.role != "admin":
+        if payload.granted_invites > 0:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Only an admin can grant invite quota")
+        # Atomic check-and-decrement (not a separate read then write) so
+        # two concurrent invite requests from the same low-quota account
+        # can't both pass a stale "remaining > 0" check.
+        decremented = db.execute(
+            "UPDATE users SET invites_remaining = invites_remaining - 1 WHERE id = %s AND invites_remaining > 0",
+            (user.id,),
+        )
+        if decremented.rowcount == 0:
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "No invites remaining")
+
+    invite = create_invite(
+        db, inviter_id=user.id, invitee_email=payload.email, granted_invites=payload.granted_invites
+    )
+    log_audit_event(db, action="invite_created", user_id=user.id, details={"invitee_email": payload.email})
+    db.commit()
+
+    return InviteResponse(
+        token=invite.token,
+        invitee_email=invite.invitee_email,
+        granted_invites=invite.granted_invites,
+        expires_at=invite.expires_at,
+    )
+
+
+class AcceptInviteRequest(BaseModel):
+    password: str
+
+
+@router.post("/invites/{token}/accept", response_model=LoginResponse, status_code=status.HTTP_201_CREATED)
+def accept_invite_route(
+    token: str,
+    payload: AcceptInviteRequest,
+    response: Response,
+    db: psycopg.Connection = Depends(get_db),
+):
+    invite = get_invite_by_token(db, token)
+    if invite is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Invite not found")
+    if invite.status != "pending":
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invite already used")
+    if invite.expires_at < datetime.now(timezone.utc):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, "Invite expired")
+    if get_user_by_email(db, invite.invitee_email) is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "That email already has an account")
+
+    user_id, username = accept_invite(db, invite=invite, password=payload.password)
+    log_audit_event(db, action="invite_accepted", user_id=user_id)
+    db.commit()
+
+    # Same as /login - accepting an invite logs the new account straight
+    # in rather than making them immediately re-enter the password they
+    # just chose.
+    access_token = create_access_token(user_id, "member", username)
+    refresh_token = create_refresh_token(user_id, redis_client=get_redis_client())
+    set_auth_cookies(response, access_token, refresh_token)
+
+    return LoginResponse(email=invite.invitee_email, role="member", username=username)

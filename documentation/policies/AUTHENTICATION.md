@@ -11,6 +11,10 @@ Current state, decisions, and priority order for login/session security across b
 - Two fixed accounts only, created via `server/scripts/create_account.py`, never a public signup endpoint.
 - Full build history/rationale: [../photo-server/TODO.md](../photo-server/TODO.md) Phase 1.
 
+## Admin/delegated invites (built 2026-08-14)
+
+Partially fulfills the "move off manual CLI account creation" plan below, via a different mechanism than what was originally sketched there (invite-based, not self-service-request-with-approval). `POST /invites` (`server/app/auth_routes.py`) lets any logged-in account create a pending invite for an email address; `POST /invites/{token}/accept` (public, token-gated) lets the invitee set a password and creates their account, auto-logged-in same as `/login`. Always creates a `member`, never `admin` — an admin account still only comes from `create_account.py`'s CLI. Delegation is capped: `users.invites_remaining` (default 0) gates whether a non-admin account can send an invite at all, and only an admin can set that column above 0 for anyone, including a newly-invited account — see [../GLOSSARY.md](../GLOSSARY.md)'s "Invite delegation" entry for the full rule and reasoning. No real email delivery yet — the invite response returns the token/link directly for the inviter to share manually; a self-hosted SMTP relay for actually sending it is the next piece, not built in this pass.
+
 ## Decision: no third-party/social OAuth (2026-07-23)
 
 **Google OAuth (or any third-party/social sign-in) is explicitly out of scope**, not merely deferred — decided 2026-07-16, recorded in `../photo-server/TODO.md`'s Phase 1 note. It calls out to a cloud identity provider, which conflicts with [POLICY.md](POLICY.md)'s closed-by-default rule. This isn't a priority call to revisit later — it's excluded by an existing hard constraint. Continue with the already-built preset-account + password (argon2id) + JWT flow.
@@ -20,6 +24,8 @@ This also answers why local dev never needed anything resembling OAuth-grade inf
 Passkeys/WebAuthn (below) are **not** the same category — no third-party relying party is involved, so they stay inside the closed-by-default posture. A self-hosted OAuth/OIDC *server* (as opposed to a third-party one) would technically also be closed-by-default-compatible, but isn't currently planned or needed at two-account family scale.
 
 ## Planned: move off manual CLI account creation (next server deployment)
+
+**Superseded in part 2026-08-14** by the admin/delegated invite system above — account creation no longer requires an admin running a CLI command by hand, though via invites rather than the self-service-request-plus-approval shape sketched below. Left as-is rather than rewritten, since it's still the accurate history of what was originally planned; re-evaluate whether steps 1-2 below are still wanted at all now that invites exist, rather than assuming they're still the direction.
 
 Raised 2026-07-23: today, every account is created manually — an admin runs `server/scripts/create_account.py` on the server itself. Joakim wants this to change on the next server deployment, in two steps:
 
