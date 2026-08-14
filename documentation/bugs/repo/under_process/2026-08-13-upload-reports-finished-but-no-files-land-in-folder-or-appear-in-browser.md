@@ -1,6 +1,6 @@
 # Upload reports finished but no files land in folder or appear in browser
 
-Status: **investigating, not fixed - no live repro yet, reported at session end**. Keep this file as the full chronological trail as more is learned - don't overwrite conclusions.
+Status: **root-caused via live repro, fix not yet deployed**. Keep this file as the full chronological trail as more is learned - don't overwrite conclusions.
 
 ## Symptom
 
@@ -18,11 +18,45 @@ Joakim, 2026-08-13, testing the just-deployed upload-progress-banner fix (see `2
 
 Files Joakim tried to upload are being rejected by `/api/upload`'s extension allowlist (`PICTURE_EXTS`, likely missing HEIC) or size cap, the request returns 400, and the *existing* failure feedback (a single dismissable `alert()`, no persistent record anywhere in the UI) is easy enough to miss that it reads as "no error at all."
 
-## Next session should start with
+## Live repro, 2026-08-13 (session 2)
 
-1. Live repro with DevTools Network tab open: pick the exact files Joakim was actually trying to upload, watch `/api/upload`'s real response status/body per file.
-2. If it's a 400 from `PICTURE_EXTS`/`MAX_PHOTO_UPLOAD_BYTES`: decide with Joakim whether to widen `PICTURE_EXTS` to match what the browsing side already accepts (at minimum `.heic`), and/or whether the failure needs a more persistent UI treatment than a one-shot `alert()` (the per-file list added in this session's uncommitted work - see below - already shows "misslyckades" per row and stays visible until the next upload, which would incidentally help here once verified and shipped).
-3. If it's a 2xx-but-nothing-written case: needs server log inspection on the real host, not just static reading.
+Joakim confirmed the source files were plain JPEG (not HEIC) - ruling out the `PICTURE_EXTS` theory in the "Leading theory" section above before it was even tested. He then reproduced live with DevTools Network tab open:
+
+- `POST /api/upload` -> **401**, response body `{"detail": "Invalid or expired session"}`.
+- Request `Content-Length` was ~1.6MB - nowhere near the 25MB `MAX_PHOTO_UPLOAD_BYTES` cap, ruling out the size-cap theory too.
+- Decoding the `photo_server_access` cookie sent with that exact request: `{"sub": "2", "role": "admin", "type": "access", "iat": ..., "exp": ..., "jti": ...}` - **no `username` claim at all** (not `null` - the key is entirely absent). `exp` was ~3.5 minutes in the future at request time, so this was not ordinary token expiry.
+
+### Root cause (confirmed by code + git history, not yet confirmed against the live container image)
+
+`app/auth.py`'s `require_session_with_username` (used by `/api/upload` and nothing else that Joakim hit in this repro) explicitly 401s with this exact message when the decoded payload has no `username` key (`app/auth.py:72-74`). A payload missing the key entirely - not `null` - is only possible if the token was minted by code *older than* commit `66f37ad` ("Add opaque username column, CLI auto-generation, and JWT claim"), which is what first added `"username": username` to `create_access_token` in `server/app/tokens.py:58`. A `NULL` username column value would still serialize as `"username": null`, not omit the key - so this isn't a data problem, it's a **stale `auth` container image**.
+
+`66f37ad` and `3fdf580` (which added `/api/upload` itself) are both already well back in this branch's history relative to `220b3f2` (the commit Joakim was testing when he first hit this bug) - so the source has had the fix in it for a while. The likely explanation: some deploy in between only rebuilt `photo-viewer` (this session's own task brief did exactly that - "static files bake into the photo-viewer image, so ... `--build photo-viewer`") without also rebuilding `auth`, even though `server/app/tokens.py` changed too. `documentation/photo-server/DEPLOYMENT.md`'s general deploy command (line 39) rebuilds every service with no filter, so this only bites when someone (reasonably) uses a narrower, service-scoped rebuild because only the photo-viewer side looked like it needed one.
+
+Every other endpoint Joakim uses day to day goes through plain `require_session` (no username needed), which is why browsing/everything-else kept working fine while uploads specifically 401ed - easy to read as "uploads are broken" rather than "the whole deploy is half-stale," which is what actually explains the silent all-files-fail pattern (this 401 happens in a FastAPI dependency, before `PICTURE_EXTS`/size checks or any file writing ever runs).
+
+### Next step (not run by this session - deployment is always Joakim's own hand, POLICY.md)
+
+Rebuild and redeploy the `auth` service specifically (or run the unfiltered `docker compose -f docker-compose.prod.yml up -d --build` from DEPLOYMENT.md, which rebuilds everything and sidesteps this whole class of skew):
+
+```
+git pull
+docker compose -f docker-compose.prod.yml up -d --build auth
+```
+
+Then retry the same upload and re-check the `/api/upload` response and the decoded access-token payload the same way, to confirm `username` is present and the upload actually lands in `dpfas_media/<username>/`.
+
+### Rebuilding auth surfaced a second, more severe issue (still 2026-08-13)
+
+Joakim ran the rebuild above. `auth` came up already primed for the real fix (it now embeds `username`), but immediately crash-looped on a *different* error: `ensure_schema()`'s `ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT UNIQUE NOT NULL` raised `psycopg.errors.NotNullViolation` - prod's `users` table already had 2 rows (Joakim/admin, Elisabeth/member) predating the column, and Postgres can't add a `NOT NULL` column with no default against non-empty rows. This took `auth` (hence login/refresh/whoami, not just uploads) fully down, confirming the "stale image" theory above was right - this migration had simply never run against prod before.
+
+This session's first proposed fix - copy `documentation/photo-server/DEPLOYMENT.md`'s already-written `DELETE FROM audit_log; DELETE FROM users;` and recreate both accounts - was wrong to hand over uncritically; see [documentation/bugs/claude-bugs/fixed/2026-08-13-recommended-raw-destructive-sql-against-production-instead-of-a-controlled-script.md](../../claude-bugs/fixed/2026-08-13-recommended-raw-destructive-sql-against-production-instead-of-a-controlled-script.md). Built instead: `server/app/db.py`'s `backfill_missing_usernames()` (assigns an opaque username to any row missing one, in place, non-destructively) plus `server/scripts/backfill_username.py`, a one-off CLI entry point that runs from the `auth` image without going through the crashing `uvicorn` startup path. `DEPLOYMENT.md` §4 now documents this as the real one-time step:
+
+```
+docker compose -f docker-compose.prod.yml run --rm auth python -m scripts.backfill_username
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Not yet run against prod - Joakim still needs to run this, then retry the upload and confirm `username` is now present in the token and the file actually lands in `dpfas_media/<username>/`.
 
 ## Uncommitted work in progress at session end, 2026-08-13
 

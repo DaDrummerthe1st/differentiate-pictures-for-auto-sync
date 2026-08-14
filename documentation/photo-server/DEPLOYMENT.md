@@ -50,13 +50,14 @@ docker compose -f docker-compose.prod.yml logs -f caddy
 
 `app/main.py`'s FastAPI `lifespan` handler calls `ensure_schema()` against the real database automatically on every `auth` container startup (idempotent `CREATE TABLE IF NOT EXISTS`, safe on every restart). Fixed 2026-07-18, see [documentation/bugs/repo/fixed/2026-07-17-postgres-schema-never-initialized-in-production-SOLVED.md](../bugs/repo/fixed/2026-07-17-postgres-schema-never-initialized-in-production-SOLVED.md).
 
-**One-time exception, added 2026-08-12** for the `users.username` column ([../plans/deep-singing-firefly.md](../plans/deep-singing-firefly.md) — an opaque per-user storage-path token, [../GLOSSARY.md](../GLOSSARY.md)'s "Opaque token" entry): `ensure_schema()`'s `ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT UNIQUE NOT NULL` only succeeds against zero existing rows. Prod's `users` table already has 2 rows (Joakim/admin, Elisabeth/member) with no username — clear them first, this deploy recreates both via step 5 below:
+**One-time exception, added 2026-08-12, fixed 2026-08-13** for the `users.username` column ([../plans/deep-singing-firefly.md](../plans/deep-singing-firefly.md) — an opaque per-user storage-path token, [../GLOSSARY.md](../GLOSSARY.md)'s "Opaque token" entry): `ensure_schema()`'s `ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT UNIQUE NOT NULL` only succeeds against zero existing rows — against prod's already-populated `users` table it raises `NotNullViolation` and crash-loops `auth` on every startup attempt. **Do not delete and recreate the accounts to work around this** (tried 2026-08-13, wrong — see [../bugs/claude-bugs/fixed/2026-08-13-recommended-raw-destructive-sql-against-production-instead-of-a-controlled-script.md](../bugs/claude-bugs/fixed/2026-08-13-recommended-raw-destructive-sql-against-production-instead-of-a-controlled-script.md)). Instead, backfill the missing usernames in place, once, before `auth`'s next startup — this runs as a one-off container from the same image, so it works even while `auth` itself is crash-looping:
 
 ```
-docker compose -f docker-compose.prod.yml exec postgres psql -U photo_server -d photo_server -c "DELETE FROM audit_log; DELETE FROM users;"
+docker compose -f docker-compose.prod.yml run --rm auth python -m scripts.backfill_username
+docker compose -f docker-compose.prod.yml up -d
 ```
 
-(`audit_log.user_id` references `users(id)` with no cascade, hence deleting it first.) Then bring the stack up as in step 3 — `ensure_schema()` adds the column against the now-empty table on that startup.
+No accounts, passwords, or audit history are touched — each row missing a `username` gets one assigned directly (same generation `create_account.py` uses), and `ensure_schema()` becomes a no-op against that column on every startup after.
 
 ## 5. Create both accounts
 

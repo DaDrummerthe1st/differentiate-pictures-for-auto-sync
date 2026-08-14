@@ -1,3 +1,4 @@
+import secrets
 from collections.abc import Iterator
 
 import psycopg
@@ -54,10 +55,14 @@ def ensure_schema(conn: psycopg.Connection) -> None:
     # documentation/plans/deep-singing-firefly.md) - an opaque random token,
     # not a real name (documentation/GLOSSARY.md's "Opaque token" entry).
     # ALTER ... IF NOT EXISTS is a no-op against the CREATE TABLE above on a
-    # fresh install; it's the real migration path for prod's already-existing
-    # table. NOT NULL only succeeds there against zero rows, which is
-    # intentional - prod's 2 accounts get cleared and recreated via
-    # create_account.py (which generates this value) rather than backfilled.
+    # fresh install; against prod's already-existing, non-empty table this
+    # raises NotNullViolation the first time (Postgres can't add a NOT NULL
+    # column with no default against existing rows) - run
+    # backfill_missing_usernames() below once, out of band, before this
+    # ever runs against such a table. Not run destructively (accounts were
+    # briefly deleted-and-recreated for this instead, 2026-08-13 - see
+    # documentation/bugs/claude-bugs/fixed/2026-08-13-recommended-raw-destructive-sql-against-production-instead-of-a-controlled-script.md
+    # for why that was wrong) - backfilling in place is what actually ships.
     conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT UNIQUE NOT NULL")
     # Pulled forward from Phase 2's schema - TODO.md 1.7 needs it already.
     # user_id is nullable: a failed login by an unknown email has no user
@@ -75,3 +80,41 @@ def ensure_schema(conn: psycopg.Connection) -> None:
         )
         """
     )
+
+
+def backfill_missing_usernames(conn: psycopg.Connection) -> list[tuple[int, str]]:
+    """One-time migration companion to ensure_schema()'s username column
+    (see the comment above it) - assigns an opaque username (same
+    generation as app.accounts.create_account) to any existing row that
+    doesn't have one yet, in place, rather than deleting and recreating
+    accounts. Safe to call whether or not the column exists yet (adds it
+    nullable first) and idempotent - a row that already has a username is
+    left untouched. Caller commits; see scripts/backfill_username.py for
+    the one-off CLI entry point run once against prod.
+
+    Returns the (user_id, new_username) pairs actually assigned, so a
+    caller can print/log exactly what changed.
+    """
+    conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT")
+    rows = conn.execute("SELECT id FROM users WHERE username IS NULL").fetchall()
+    assigned = []
+    for (user_id,) in rows:
+        # Same generation as app.accounts.create_account - 16 bytes / 32
+        # hex chars, so a backfilled account's username is indistinguishable
+        # from one create_account.py would have generated.
+        username = secrets.token_hex(16)
+        conn.execute("UPDATE users SET username = %s WHERE id = %s", (username, user_id))
+        assigned.append((user_id, username))
+    conn.execute("ALTER TABLE users ALTER COLUMN username SET NOT NULL")
+    conn.execute(
+        """
+        DO $$ BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM pg_constraint WHERE conname = 'users_username_key'
+            ) THEN
+                ALTER TABLE users ADD CONSTRAINT users_username_key UNIQUE (username);
+            END IF;
+        END $$;
+        """
+    )
+    return assigned

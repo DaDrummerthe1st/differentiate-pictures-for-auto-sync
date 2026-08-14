@@ -70,7 +70,7 @@ Claude Code's own hardcoded floors — no `.claude/settings.json` allow-list can
 ## Other standing rules
 
 - **Argue with evidence**: if a proposal has a concrete best-practice or precedent-based counter-argument, raise it and explain the trade-off before implementing as asked.
-- **Ask for constraints before high-blast-radius work**, rather than waiting for them to surface mid-task.
+- **Ask for constraints before high-blast-radius work**, rather than waiting for them to surface mid-task. This includes destructive/irreversible database commands against a production database — state the non-destructive alternative and its trade-off *before* handing over the destructive one, even if the destructive form is already written down in an existing doc; a doc having normalized a shortcut isn't itself a reason to skip re-evaluating it. See `documentation/bugs/claude-bugs/fixed/2026-08-13-recommended-raw-destructive-sql-against-production-instead-of-a-controlled-script.md`.
 - **Copyable text goes in one fenced code block** — never inline prose mixed with bold/headers.
 - **End substantive sessions with both a durable record and a chat summary.**
 - **Bug/incident files start at investigation-open, not fix-time.** Create the file immediately via `tools/create_bug_report/create_bug_report.sh` and update as findings come in. Decided 2026-07-18. Browse `documentation/bugs/repo/under_process/` directly — no index is kept (tried and removed, drifted repeatedly).
