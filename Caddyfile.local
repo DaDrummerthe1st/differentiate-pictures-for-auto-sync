@@ -4,7 +4,7 @@
 	# See docker-compose.yml's header comment for why this is safe here
 	# but never for the production Caddyfile.
 
-	@auth path /login /whoami /refresh /logout
+	@auth path /login /whoami /refresh /logout /invites /invites/* /accept-invite
 	handle @auth {
 		reverse_proxy auth:8000
 	}

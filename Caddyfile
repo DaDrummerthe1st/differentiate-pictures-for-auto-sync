@@ -6,11 +6,15 @@ photos.reuterborg.se {
 	# issuance (Let's Encrypt rate-limits this, so don't recreate it
 	# casually).
 
-	# Auth backend: the login page (GET) and its API (POST), plus the
-	# session-refresh/logout endpoints. Everything else falls through to
-	# the photo-viewer below - the two services share this one origin so
-	# the session cookie (SameSite=Strict) is valid for both.
-	@auth path /login /whoami /refresh /logout
+	# Auth backend: the login page (GET) and its API (POST), the
+	# session-refresh/logout endpoints, and invite creation/acceptance
+	# (added 2026-08-14 - /invites and /invites/{token}/accept are auth
+	# routes, server/app/auth_routes.py, not photo-viewer ones; /accept-
+	# invite is auth's own HTML page, same pattern as /login). Everything
+	# else falls through to the photo-viewer below - the two services
+	# share this one origin so the session cookie (SameSite=Strict) is
+	# valid for both.
+	@auth path /login /whoami /refresh /logout /invites /invites/* /accept-invite
 	handle @auth {
 		reverse_proxy auth:8000
 	}

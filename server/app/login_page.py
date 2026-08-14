@@ -74,3 +74,73 @@ form.addEventListener("submit", async (event) => {
 @router.get("/login", response_class=HTMLResponse)
 def login_page() -> HTMLResponse:
     return HTMLResponse(content=_LOGIN_HTML)
+
+
+# Same static-HTML-with-no-server-interpolation shape as _LOGIN_HTML above -
+# the invite token comes from the URL's own query string (?token=...) but
+# is read client-side via URLSearchParams, never reflected into the
+# response by the server itself. A server-side f-string/template
+# reflecting an attacker-controlled query param straight into HTML is a
+# reflected-XSS pattern (see documentation/GLOSSARY.md's XSS entry) - this
+# sidesteps it entirely rather than needing to get escaping right.
+_ACCEPT_INVITE_HTML = """<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accept invite</title>
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 20rem; margin: 4rem auto; padding: 0 1rem; }
+  form { display: flex; flex-direction: column; gap: 0.75rem; }
+  input { font-size: 1rem; padding: 0.5rem; }
+  button { font-size: 1rem; padding: 0.5rem; cursor: pointer; }
+  #message { min-height: 1.2rem; color: #b00020; word-break: break-word; }
+</style>
+</head>
+<body>
+<form id="acceptForm">
+  <input type="password" name="password" placeholder="Choose a password" required autocomplete="new-password">
+  <button type="submit">Accept invite</button>
+  <div id="message" role="alert"></div>
+</form>
+<script>
+const token = new URLSearchParams(window.location.search).get("token");
+const form = document.getElementById("acceptForm");
+const message = document.getElementById("message");
+if (!token) {
+  message.textContent = "This invite link is missing its token.";
+  form.querySelector("button").disabled = true;
+}
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  message.textContent = "";
+  const password = form.password.value;
+  const submitButton = form.querySelector("button");
+  submitButton.disabled = true;
+  try {
+    const res = await fetch(`/invites/${encodeURIComponent(token)}/accept`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    if (res.ok) {
+      window.location.href = "/";
+      return;
+    }
+    const body = await res.json().catch(() => ({}));
+    message.textContent = body.detail || "Couldn't accept this invite.";
+  } catch (err) {
+    message.textContent = "Couldn't accept this invite.";
+  } finally {
+    submitButton.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
+"""
+
+
+@router.get("/accept-invite", response_class=HTMLResponse)
+def accept_invite_page() -> HTMLResponse:
+    return HTMLResponse(content=_ACCEPT_INVITE_HTML)

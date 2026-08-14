@@ -113,6 +113,11 @@ services:
       SMTP_HOST: smtp
       SMTP_PORT: "25"
       SMTP_FROM: "noreply@photos.reuterborg.se"
+      # The origin embedded in every invite-accept link app/mail.py sends -
+      # not proxy-header-derived, since a link mailed out to a real
+      # recipient is too consequential to get wrong from forwarded-header
+      # inference.
+      APP_ORIGIN: "https://photos.reuterborg.se"
     depends_on:
       - postgres
       - redis

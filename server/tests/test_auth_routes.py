@@ -284,6 +284,21 @@ def test_admin_can_create_an_invite_with_granted_invites(client, db_connection):
     assert len(body["token"]) > 0
 
 
+def test_creating_an_invite_attempts_to_send_an_email_with_the_accept_link(client, db_connection, monkeypatch):
+    monkeypatch.setenv("APP_ORIGIN", "https://photos.example.test")
+    _seed_user(db_connection, email="admin-mail@example.test", role="admin")
+    _login(client, "admin-mail@example.test")
+
+    with patch("app.auth_routes.send_invite_email") as mock_send:
+        response = client.post("/invites", json={"email": "mailed-invitee@example.test"})
+
+    token = response.json()["token"]
+    mock_send.assert_called_once_with(
+        "mailed-invitee@example.test",
+        f"https://photos.example.test/accept-invite?token={token}",
+    )
+
+
 def test_admin_creating_an_invite_does_not_touch_their_own_quota(client, db_connection):
     _seed_user(db_connection, email="admin-quota@example.test", role="admin")
     _login(client, "admin-quota@example.test")

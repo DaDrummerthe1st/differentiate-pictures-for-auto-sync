@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timezone
 
 import jwt
@@ -10,6 +11,7 @@ from app.audit import log_audit_event
 from app.cookies import ACCESS_COOKIE, REFRESH_COOKIE, clear_auth_cookies, set_auth_cookies
 from app.db import get_db
 from app.invites import accept_invite, create_invite, get_invite_by_token
+from app.mail import send_invite_email
 from app.rate_limit import limiter
 from app.security import hash_password, verify_password
 from app.tokens import (
@@ -196,6 +198,14 @@ def create_invite_route(
     )
     log_audit_event(db, action="invite_created", user_id=user.id, details={"invitee_email": payload.email})
     db.commit()
+
+    # Best-effort (app.mail's own doc) - the token returned below is a
+    # complete fallback on its own, so a failed/skipped send never blocks
+    # invite creation. APP_ORIGIN has the same "optional, defaults for
+    # local/test" shape as SMTP_HOST - no local/dev/test environment sets
+    # it, and every real deploy needs it set to https://photos.reuterborg.se.
+    accept_url = f"{os.environ.get('APP_ORIGIN', 'http://localhost')}/accept-invite?token={invite.token}"
+    send_invite_email(payload.email, accept_url)
 
     return InviteResponse(
         token=invite.token,
