@@ -93,6 +93,24 @@ Share the printed password with the account holder out of band (not over email/c
   ```
   `thumbcache`, `analytics_data`, and `stories` are named Docker volumes (not anonymous), so this should always pass — a failure here means one of those volume declarations regressed, not that this is expected to be flaky.
 
+## 7. SMTP / invite email delivery (added 2026-08-14)
+
+The `smtp` service (self-hosted, `boky/postfix`, see `docker-compose.prod.yml`) is what `auth` uses to send invite emails (`server/app/mail.py`). It works with zero DNS setup, but mail sent with no DKIM/SPF/DMARC records from a residential IP is very likely to be spam-filtered or rejected outright by Gmail/Outlook — **do this before trusting that an invite email actually arrived, not after**:
+
+1. **Get this server's current public IP** (needed for the SPF record below): `curl -4 ifconfig.me`
+2. **Read out the auto-generated DKIM public key** (created on `smtp`'s first startup, persisted in the `smtp_dkim_keys` volume across restarts):
+   ```
+   docker compose -f docker-compose.prod.yml exec smtp find /etc/opendkim/keys -name '*.txt' -exec cat {} \;
+   ```
+   This prints a DNS TXT record value (selector `mail` by default) — copy it as-is into the DKIM record below.
+3. **Add these DNS records** for `photos.reuterborg.se`, at whatever registrar/DNS host manages it (same place the existing `A` record from the Prerequisites section lives):
+   - **SPF** (TXT on `photos.reuterborg.se`): `v=spf1 ip4:<the IP from step 1> ~all`
+   - **DKIM** (TXT on `mail._domainkey.photos.reuterborg.se`): the value printed in step 2
+   - **DMARC** (TXT on `_dmarc.photos.reuterborg.se`): `v=DMARC1; p=none;` — starts permissive (report-only), tighten to `p=quarantine`/`p=reject` later once delivery is confirmed working, not before
+4. **Verify delivery for real** before relying on it: send a test invite to a real Gmail address you control and check whether it lands in the inbox, not spam, and isn't bounced. A tool like [dkimvalidator.com](https://dkimvalidator.com) can confirm DKIM/SPF are actually passing if delivery looks wrong.
+
+If outbound port 25 turns out to be blocked by the ISP (common on residential connections — check this if step 4 fails with a connection-level error, not a spam-folder placement), the whole self-hosted-relay approach needs rethinking; see `documentation/GLOSSARY.md` and this session's design discussion for the alternatives considered and why a third-party email API was ruled out (`POLICY.md`'s closed-by-default rule).
+
 ## Stopping / tearing down
 
 ```

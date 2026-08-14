@@ -110,10 +110,38 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env, never hardcode it}
       REDIS_URL: redis://:${REDIS_PASSWORD:?set REDIS_PASSWORD in .env, never hardcode it}@redis:6379/0
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:?set JWT_SECRET_KEY in .env, never hardcode it}
+      SMTP_HOST: smtp
+      SMTP_PORT: "25"
+      SMTP_FROM: "noreply@photos.reuterborg.se"
     depends_on:
       - postgres
       - redis
+      - smtp
     mem_limit: 256m
+    restart: unless-stopped
+
+  # Self-hosted outbound-only relay for invite emails (app/mail.py) -
+  # decided 2026-08-14 over a third-party email API specifically because
+  # POLICY.md's closed-by-default rule forbids handing invitee email
+  # addresses to a cloud API. No inbound receiving, no host port
+  # published - auth is the only thing that ever talks to it, over the
+  # internal compose network. DKIM_AUTOGENERATE creates this container's
+  # own signing keypair on first start (persisted in smtp_dkim_keys so it
+  # survives a restart/rebuild) - see DEPLOYMENT.md's SMTP section for the
+  # one-time step to read the public half out and add it to DNS. Without
+  # DKIM+SPF+DMARC all aligned, mail from a residential IP with no sending
+  # history is likely to be spam-filtered or rejected outright by
+  # Gmail/Outlook regardless of anything this container does correctly -
+  # that risk is accepted for now (2026-08-14), verify actual delivery
+  # once DNS is in place rather than assuming it works.
+  smtp:
+    image: boky/postfix@sha256:aafc772384232497bed875e1eb66b4d3e54ba1ebc86e2e185a6dc1dbc48182ef
+    environment:
+      ALLOWED_SENDER_DOMAINS: photos.reuterborg.se
+      DKIM_AUTOGENERATE: "true"
+    volumes:
+      - smtp_dkim_keys:/etc/opendkim/keys
+    mem_limit: 128m
     restart: unless-stopped
 
   redis:
@@ -148,3 +176,4 @@ volumes:
   redis_data:
   caddy_data:
   caddy_config:
+  smtp_dkim_keys:
