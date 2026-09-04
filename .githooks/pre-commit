@@ -15,6 +15,12 @@ if ! python3 -m pytest modules/tests -q; then
   exit 1
 fi
 
+echo "[pre-commit] running contacts/tests (fast, in-process)..."
+if ! python3 -m pytest contacts/tests -q; then
+  echo "[pre-commit] contacts/tests failed — commit blocked. Fix the failure or use --no-verify (discouraged, see CLAUDE.md)." >&2
+  exit 1
+fi
+
 # Mechanizes the manual secrets-in-diff scan an AI session used to run by
 # hand before every commit (documentation/tooling/TODO.md, raised 2026-07-28)
 # — same self-enforcing rationale as the app/tests gate above.

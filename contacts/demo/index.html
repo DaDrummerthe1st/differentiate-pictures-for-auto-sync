@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Contacts import — demo</title>
+<style>
+  body { font-family: sans-serif; max-width: 700px; margin: 2rem auto; color: #222; }
+  button { padding: 0.5rem 1rem; margin-right: 0.5rem; cursor: pointer; }
+  table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+  th, td { border: 1px solid #ccc; padding: 0.4rem 0.6rem; text-align: left; }
+  #status { margin-top: 1rem; padding: 0.6rem; background: #f4f4f4; border-radius: 4px; white-space: pre-wrap; }
+  .rename { background: #fff3cd; }
+  .note { color: #555; font-size: 0.9em; }
+</style>
+</head>
+<body>
+<h1>Contacts import — desktop fallback demo</h1>
+<p class="note">
+  Local, static, no server, no network calls. "Fill with mock data" never touches a real file —
+  use it to see the flow without importing anything real. "Import CSV" reads a file you pick
+  entirely in your own browser; nothing here uploads it anywhere.
+</p>
+
+<button id="mock-btn">Fill with mock data</button>
+<button id="import-btn">Import CSV</button>
+<input type="file" id="file-input" accept=".csv" style="display:none">
+<button id="rename-btn" disabled>Simulate a rename (keeps same email)</button>
+
+<table id="contacts-table" hidden>
+  <thead><tr><th>Display name</th><th>Email(s)</th></tr></thead>
+  <tbody></tbody>
+</table>
+
+<div id="status">No contacts loaded yet.</div>
+
+<script>
+let contacts = [];       // {display_name, emails: [...]}
+let previousSnapshot = null;
+
+function setStatus(text) {
+  document.getElementById('status').textContent = text;
+}
+
+function render(renamedEmails = new Set()) {
+  const tbody = document.querySelector('#contacts-table tbody');
+  tbody.innerHTML = '';
+  for (const c of contacts) {
+    const tr = document.createElement('tr');
+    if (c.emails.some(e => renamedEmails.has(e))) tr.className = 'rename';
+    const nameTd = document.createElement('td');
+    nameTd.textContent = c.display_name;
+    const emailTd = document.createElement('td');
+    emailTd.textContent = c.emails.join(', ') || '(none)';
+    tr.append(nameTd, emailTd);
+    tbody.appendChild(tr);
+  }
+  document.getElementById('contacts-table').hidden = contacts.length === 0;
+  document.getElementById('rename-btn').disabled = contacts.length === 0;
+}
+
+function loadContacts(newContacts, sourceLabel) {
+  contacts = newContacts;
+  previousSnapshot = newContacts.map(c => ({ display_name: c.display_name, emails: [...c.emails] }));
+  render();
+  setStatus(`Loaded ${contacts.length} contact(s) from ${sourceLabel}.`);
+}
+
+document.getElementById('mock-btn').addEventListener('click', () => {
+  loadContacts([
+    { display_name: 'Alice Andersson', emails: ['alice@example.com'] },
+    { display_name: 'Bo Bengtsson', emails: ['bo.b@example.com', 'bo@work.example.com'] },
+    { display_name: 'Cecilia Carlsson', emails: [] },
+  ], 'mock data');
+});
+
+document.getElementById('import-btn').addEventListener('click', () => {
+  document.getElementById('file-input').click();
+});
+
+document.getElementById('file-input').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const text = await file.text();
+  loadContacts(parseGoogleCsv(text), `"${file.name}" (parsed locally, never uploaded)`);
+});
+
+document.getElementById('rename-btn').addEventListener('click', () => {
+  const withEmail = contacts.filter(c => c.emails.length > 0);
+  if (withEmail.length === 0) {
+    setStatus('No contact with an email to rename — a contact with no email can never be matched for rename detection.');
+    return;
+  }
+  const target = withEmail[0];
+  const oldName = target.display_name;
+  target.display_name = oldName + ' (renamed)';
+  const renames = detectRenames(previousSnapshot, contacts);
+  render(new Set(renames.map(r => r.email)));
+  setStatus(renames.map(r => `Detected rename: "${r.old_name}" -> "${r.new_name}" (matched by ${r.email})`).join('\n'));
+  previousSnapshot = contacts.map(c => ({ display_name: c.display_name, emails: [...c.emails] }));
+});
+
+// Mirrors contacts/matching.py's detect_renames — matches by email, never by name.
+function detectRenames(before, after) {
+  const beforeByEmail = new Map();
+  for (const c of before) for (const email of c.emails) beforeByEmail.set(email, c.display_name);
+  const renames = [];
+  for (const c of after) {
+    for (const email of c.emails) {
+      const oldName = beforeByEmail.get(email);
+      if (oldName !== undefined && oldName !== c.display_name) {
+        renames.push({ old_name: oldName, new_name: c.display_name, email });
+      }
+    }
+  }
+  return renames;
+}
+
+// Mirrors contacts/google_csv_import.py's parse_google_csv, simplified for this demo:
+// splits on plain commas, so a field containing a literal comma (e.g. some addresses)
+// would misparse. The Python version uses the real csv module and doesn't have this gap.
+// Fine for the mock-data path and simple test files; not the tested/production logic.
+function parseGoogleCsv(text) {
+  const rows = text.split(/\r\n|\n/).filter(r => r.length > 0);
+  if (rows.length === 0) return [];
+  const header = rows[0].split(',');
+  const firstNameIdx = header.indexOf('First Name');
+  const lastNameIdx = header.indexOf('Last Name');
+  const emailIdxs = header
+    .map((h, i) => [h, i])
+    .filter(([h]) => /^E-mail \d+ - Value$/.test(h))
+    .map(([, i]) => i);
+  return rows.slice(1).map(row => {
+    const cols = row.split(',');
+    const displayName = [cols[firstNameIdx], cols[lastNameIdx]].filter(Boolean).join(' ');
+    const emails = emailIdxs.map(i => cols[i]).filter(Boolean);
+    return { display_name: displayName, emails };
+  });
+}
+</script>
+</body>
+</html>
