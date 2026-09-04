@@ -3,14 +3,14 @@ test_* functions live here, so pytest collection is a harmless no-op).
 
 Pick a folder, run every modules/ detector (quality.check_all, objects.detect_objects)
 on each image file directly inside it, and show every photo - bounding boxes drawn
-on it - scrollable in a second window.
+on it, plus its EXIF/quality/objects findings - scrollable in a second window.
 
 Usage: python3 -m modules.test_main
 """
 import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from PIL import Image, ImageDraw, ImageTk
+from PIL import ExifTags, Image, ImageDraw, ImageOps, ImageTk
 
 from modules.objects import DetectionResult, detect_objects
 from modules.quality import QualityResult, check_all
@@ -28,10 +28,73 @@ def _image_files(folder: str) -> list[str]:
     )
 
 
+def _format_exposure_time(seconds: float) -> str:
+    return f"{seconds:.1f}s" if seconds >= 1 else f"1/{round(1 / seconds)}s"
+
+
+def _gps_to_decimal(dms: tuple, ref: str) -> float | None:
+    if not dms or not ref:
+        return None
+    degrees, minutes, seconds = dms
+    decimal = float(degrees) + float(minutes) / 60 + float(seconds) / 3600
+    return -decimal if ref in ("S", "W") else decimal
+
+
+def _exif_lines(image_path: str) -> list[str]:
+    """Every commonly-useful EXIF field this photo actually has - camera,
+    capture settings, capture date, GPS - as plain-language lines."""
+    exif = Image.open(image_path).getexif()
+    if not exif:
+        return ["(none)"]
+
+    base = {ExifTags.TAGS.get(tag_id, tag_id): value for tag_id, value in exif.items()}
+    try:
+        sub = {ExifTags.TAGS.get(tag_id, tag_id): value for tag_id, value in exif.get_ifd(ExifTags.IFD.Exif).items()}
+    except Exception:
+        sub = {}
+
+    lines = []
+    if "Make" in base or "Model" in base:
+        lines.append(f"Camera: {base.get('Make', '')} {base.get('Model', '')}".strip())
+    if "DateTimeOriginal" in sub:
+        lines.append(f"Captured: {sub['DateTimeOriginal']}")
+    settings = []
+    if "ExposureTime" in sub:
+        settings.append(_format_exposure_time(sub["ExposureTime"]))
+    if "FNumber" in sub:
+        settings.append(f"f/{sub['FNumber']}")
+    if "ISOSpeedRatings" in sub:
+        settings.append(f"ISO {sub['ISOSpeedRatings']}")
+    if "FocalLength" in sub:
+        settings.append(f"{sub['FocalLength']}mm")
+    if settings:
+        lines.append("Settings: " + "  ".join(settings))
+
+    try:
+        gps = exif.get_ifd(ExifTags.IFD.GPSInfo)
+        lat = _gps_to_decimal(gps.get(2), gps.get(1))
+        lon = _gps_to_decimal(gps.get(4), gps.get(3))
+        if lat is not None and lon is not None:
+            lines.append(f"GPS: {lat:.6f}, {lon:.6f}")
+    except Exception:
+        pass
+
+    return lines or ["(none)"]
+
+
 def _annotate(image_path: str, result: DetectionResult) -> Image.Image:
     """The photo, resized to fit the results window, with every detection's
     bounding box and label drawn on top."""
-    image = Image.open(image_path).convert("RGB")
+    # cv2.imread (modules/objects.py's detector) auto-rotates a JPEG per its
+    # EXIF orientation tag, so detect_objects()'s bboxes are in that rotated,
+    # upright coordinate space - PIL.Image.open does *not* auto-rotate, so
+    # this must match that rotation explicitly or boxes land on the wrong
+    # content entirely (found 2026-09-04: correct predictions, wrong places).
+    image = ImageOps.exif_transpose(Image.open(image_path)).convert("RGB")
+    assert (image.width, image.height) == (result.image_width, result.image_height), (
+        f"annotated image size {image.size} doesn't match detection's "
+        f"({result.image_width}, {result.image_height}) - EXIF rotation mismatch"
+    )
     scale = min(1.0, MAX_DISPLAY_WIDTH / image.width)
     if scale < 1.0:
         image = image.resize((round(image.width * scale), round(image.height * scale)))
@@ -47,16 +110,40 @@ def _annotate(image_path: str, result: DetectionResult) -> Image.Image:
     return image
 
 
-def _caption(image_path: str, quality: QualityResult, result: DetectionResult) -> str:
-    lines = [
-        f"{os.path.basename(image_path)}  ({result.image_width}x{result.image_height})",
-        f"blur {quality.blur:.0f}%  exposure {quality.exposure:+.0f}%  saturation {quality.saturation:.0f}%",
-    ]
-    if result.detections:
-        lines.append(", ".join(f"{d.class_name} ({d.confidence:.0%})" for d in result.detections))
-    else:
-        lines.append("no objects detected")
-    return "\n".join(lines)
+def _section(parent: tk.Widget, heading: str, lines: list[str]) -> None:
+    tk.Label(parent, text=heading, font=("TkDefaultFont", 9, "bold"), anchor="w").pack(fill=tk.X)
+    tk.Label(parent, text="\n".join(lines), justify=tk.LEFT, anchor="w").pack(fill=tk.X, padx=(10, 0))
+
+
+def _add_entry(parent: tk.Widget, path: str, photo_refs: list) -> None:
+    """One photo's full findings - EXIF, quality, objects, annotated image -
+    inside its own bordered box, clearly separated from the next entry."""
+    entry = tk.Frame(parent, relief=tk.GROOVE, borderwidth=2, padx=10, pady=8)
+    entry.pack(fill=tk.X, pady=(0, 14))
+
+    tk.Label(entry, text=os.path.basename(path), font=("TkDefaultFont", 11, "bold"), anchor="w").pack(fill=tk.X)
+
+    try:
+        quality = check_all(path)
+        result = detect_objects(path)
+
+        _section(entry, "EXIF", _exif_lines(path))
+        _section(
+            entry,
+            "Quality",
+            [f"blur {quality.blur:.1f}%   exposure {quality.exposure:+.1f}%   saturation {quality.saturation:.1f}%"],
+        )
+        if result.detections:
+            object_lines = [f"{d.class_name}  {d.confidence:.0%}  bbox={d.bbox}" for d in result.detections]
+        else:
+            object_lines = ["(none detected)"]
+        _section(entry, f"Objects ({result.image_width}x{result.image_height})", object_lines)
+
+        photo = ImageTk.PhotoImage(_annotate(path, result))
+        photo_refs.append(photo)
+        tk.Label(entry, image=photo).pack(pady=(8, 0))
+    except Exception as exc:  # surfaced per-image, not a crash
+        tk.Label(entry, text=f"ERROR: {exc}", fg="red", justify=tk.LEFT, anchor="w").pack(fill=tk.X)
 
 
 def _make_scrollable(parent: tk.Widget) -> tuple[tk.Canvas, tk.Frame]:
@@ -110,19 +197,7 @@ def _show_results(folder: str) -> None:
     results.photo_refs = photo_refs
 
     for path in paths:
-        frame = tk.Frame(inner, pady=10)
-        frame.pack(fill=tk.X)
-        try:
-            quality = check_all(path)
-            result = detect_objects(path)
-            photo = ImageTk.PhotoImage(_annotate(path, result))
-            photo_refs.append(photo)
-
-            tk.Label(frame, text=_caption(path, quality, result), justify=tk.LEFT, anchor="w").pack(fill=tk.X)
-            tk.Label(frame, image=photo).pack()
-        except Exception as exc:  # surfaced per-image, not a crash
-            tk.Label(frame, text=f"{os.path.basename(path)}\nERROR: {exc}", fg="red", justify=tk.LEFT, anchor="w").pack(fill=tk.X)
-
+        _add_entry(inner, path, photo_refs)
         results.update_idletasks()
         canvas.configure(scrollregion=canvas.bbox("all"))
 
