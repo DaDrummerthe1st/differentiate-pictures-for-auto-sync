@@ -3,7 +3,9 @@ test_* functions live here, so pytest collection is a harmless no-op).
 
 Pick a folder, run every modules/ detector (quality.check_all, objects.detect_objects)
 on each image file directly inside it, and show every photo - bounding boxes drawn
-on it, plus its EXIF/quality/objects findings - scrollable in a second window.
+on it, plus its EXIF/quality/objects findings - scrollable in a second window,
+paginated (IMAGES_PER_PAGE at a time) so a large folder doesn't exhaust the X
+server rendering every photo simultaneously.
 
 Usage: python3 -m modules.test_main
 """
@@ -18,6 +20,10 @@ from modules.quality import QualityResult, check_all
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 MAX_DISPLAY_WIDTH = 900
 BOX_COLOR = "red"
+IMAGES_PER_PAGE = 20  # rendering every photo in a large folder at once exhausts
+# the X server's pixmap allocation (hit 2026-09-04: BadAlloc on a 100-photo
+# folder) - a page's worth is torn down before the next is built, so memory
+# stays bounded regardless of folder size.
 
 
 def _image_files(folder: str) -> list[str]:
@@ -188,18 +194,49 @@ def _show_results(folder: str) -> None:
         messagebox.showinfo("No images", f"No image files found directly in {folder}")
         return
 
+    page_count = -(-len(paths) // IMAGES_PER_PAGE)  # ceil division
+    state = {"page": 0}
+
     results = tk.Toplevel()
     results.title(f"Findings - {folder}")
     results.geometry("960x800")
 
-    canvas, inner = _make_scrollable(results)
-    photo_refs: list[ImageTk.PhotoImage] = []  # keep every PhotoImage alive
-    results.photo_refs = photo_refs
+    nav = tk.Frame(results, pady=6)
+    nav.pack(fill=tk.X)
+    prev_button = tk.Button(nav, text="< Prev")
+    prev_button.pack(side=tk.LEFT, padx=10)
+    page_label = tk.Label(nav, text="")
+    page_label.pack(side=tk.LEFT, expand=True)
+    next_button = tk.Button(nav, text="Next >")
+    next_button.pack(side=tk.RIGHT, padx=10)
 
-    for path in paths:
-        _add_entry(inner, path, photo_refs)
-        results.update_idletasks()
-        canvas.configure(scrollregion=canvas.bbox("all"))
+    canvas, inner = _make_scrollable(results)
+
+    def _render_page() -> None:
+        for widget in inner.winfo_children():
+            widget.destroy()
+        results.photo_refs = []  # drops every PhotoImage from the previous page
+
+        page = state["page"]
+        start = page * IMAGES_PER_PAGE
+        for path in paths[start : start + IMAGES_PER_PAGE]:
+            _add_entry(inner, path, results.photo_refs)
+            results.update_idletasks()
+            canvas.configure(scrollregion=canvas.bbox("all"))
+
+        canvas.yview_moveto(0)
+        page_label.config(text=f"{start + 1}-{min(start + IMAGES_PER_PAGE, len(paths))} of {len(paths)}   (page {page + 1}/{page_count})")
+        prev_button.config(state=tk.NORMAL if page > 0 else tk.DISABLED)
+        next_button.config(state=tk.NORMAL if page < page_count - 1 else tk.DISABLED)
+
+    def _go(delta: int) -> None:
+        state["page"] += delta
+        _render_page()
+
+    prev_button.config(command=lambda: _go(-1))
+    next_button.config(command=lambda: _go(1))
+
+    _render_page()
 
 
 def _choose_folder(root: tk.Tk) -> None:
