@@ -1,0 +1,5 @@
+# Design quality-percent table shape in new data-modeling doc folder
+
+New `documentation/data-modeling/` topic folder (cross-cutting home for table/column design decisions not yet tied to a built schema, per Joakim — today's session involves several such decisions). First entry, `QUALITY_METRICS.md`: the `file_id`/`blur_percent`/`exposure_percent`/`saturation_percent`/`created_at` shape worked out in conversation for `modules/blur_check.py`'s eventual output — signed `exposure_percent` instead of two mutually-exclusive under/overexposed columns, `saturation_percent` (standard HSV term) instead of `black_and_white_percent` (which framed a creative choice as a defect). Added `Saturation`/`EV (exposure compensation)` glossary entries for the two new terms this introduced.
+
+- **Doc size**: `documentation/data-modeling/README.md` +671 chars (new), `QUALITY_METRICS.md` +2976 chars (new), `TODO.md` +339 chars (new); `documentation/README.md` +165 chars (index row); `documentation/GLOSSARY.md` +943 chars (two new terms).
