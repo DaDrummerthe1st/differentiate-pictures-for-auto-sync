@@ -16,9 +16,12 @@
 <body>
 <h1>Contacts import — desktop fallback demo</h1>
 <p class="note">
-  Local, static, no server, no network calls. "Fill with mock data" never touches a real file —
-  use it to see the flow without importing anything real. "Import CSV" reads a file you pick
-  entirely in your own browser; nothing here uploads it anywhere.
+  "Fill with mock data" is fully static and never touches a real file. "Import CSV" sends the
+  file you pick to the small local server running on your own machine (started with
+  <code>python3 -m contacts.demo.server</code>, see contacts/README.md) — that server runs the
+  same tested Python parser as the rest of this library, so there's only one parser to keep
+  correct. The file never goes further than 127.0.0.1: this Claude Code session has no access to
+  that server or anything sent to it.
 </p>
 
 <button id="mock-btn">Fill with mock data</button>
@@ -80,8 +83,20 @@ document.getElementById('import-btn').addEventListener('click', () => {
 document.getElementById('file-input').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  const text = await file.text();
-  loadContacts(parseGoogleCsv(text), `"${file.name}" (parsed locally, never uploaded)`);
+  setStatus(`Sending "${file.name}" to the local server for parsing...`);
+  let response;
+  try {
+    response = await fetch('/parse', { method: 'POST', body: file });
+  } catch (err) {
+    setStatus(`Could not reach the local server. Start it with "python3 -m contacts.demo.server" and open this page at http://127.0.0.1:8765/ instead of as a local file.`);
+    return;
+  }
+  if (!response.ok) {
+    setStatus(`Server could not parse "${file.name}": ${await response.text()}`);
+    return;
+  }
+  const parsed = await response.json();
+  loadContacts(parsed, `"${file.name}" (parsed by the local server, never uploaded anywhere else)`);
 });
 
 document.getElementById('rename-btn').addEventListener('click', () => {
@@ -113,28 +128,6 @@ function detectRenames(before, after) {
     }
   }
   return renames;
-}
-
-// Mirrors contacts/google_csv_import.py's parse_google_csv, simplified for this demo:
-// splits on plain commas, so a field containing a literal comma (e.g. some addresses)
-// would misparse. The Python version uses the real csv module and doesn't have this gap.
-// Fine for the mock-data path and simple test files; not the tested/production logic.
-function parseGoogleCsv(text) {
-  const rows = text.split(/\r\n|\n/).filter(r => r.length > 0);
-  if (rows.length === 0) return [];
-  const header = rows[0].split(',');
-  const firstNameIdx = header.indexOf('First Name');
-  const lastNameIdx = header.indexOf('Last Name');
-  const emailIdxs = header
-    .map((h, i) => [h, i])
-    .filter(([h]) => /^E-mail \d+ - Value$/.test(h))
-    .map(([, i]) => i);
-  return rows.slice(1).map(row => {
-    const cols = row.split(',');
-    const displayName = [cols[firstNameIdx], cols[lastNameIdx]].filter(Boolean).join(' ');
-    const emails = emailIdxs.map(i => cols[i]).filter(Boolean);
-    return { display_name: displayName, emails };
-  });
 }
 </script>
 </body>

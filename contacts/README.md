@@ -24,11 +24,21 @@ still undecided) is a different, not-yet-built feature.
   closest thing to a stable identifier a CSV export gives us — no true permanent ID like a vCard's
   `UID` field or the Google People API's `resourceName` (see
   [documentation/GLOSSARY.md](../documentation/GLOSSARY.md)).
+- `demo/server.py` — a local-only HTTP server (stdlib only, no framework) backing `demo/index.html`.
+  Run it yourself with `python3 -m contacts.demo.server`, then open `http://127.0.0.1:8765/`. The
+  page's "Import CSV" button posts the chosen file to this process' `/parse` endpoint, which calls
+  `parse_google_csv()` directly — one real, tested parser, not a second hand-rolled one in JS.
+  Nothing goes past 127.0.0.1, and no Claude Code session has access to this server or anything
+  sent to it.
 
 ## Status
 
 Built 2026-09-05, TDD throughout (tests against synthetic fixture data only — no real exported
-file has ever been read by this session, per Joakim's explicit privacy requirement). Not yet wired
-into any UI or into `entities`/`tag_references` — see IDENTITY_MATCHING.md's "Contacts-import
-desktop fallback" section for what's still open (live-sync provider choice, actual entity-linking
-step).
+file has ever been read by this session, per Joakim's explicit privacy requirement). The demo's
+CSV import originally duplicated `parse_google_csv()`'s logic in hand-rolled JS that split rows on
+plain commas — it would misparse any real export with a quoted field containing a comma (e.g. a
+Notes column). Fixed same day by removing the duplicate JS parser entirely and adding
+`demo/server.py`, a local-only server the demo now calls so there's a single parser to keep
+correct. Not yet wired into any UI or into `entities`/`tag_references` — see IDENTITY_MATCHING.md's
+"Contacts-import desktop fallback" section for what's still open (live-sync provider choice, actual
+entity-linking step).

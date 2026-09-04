@@ -59,6 +59,20 @@ def test_tags_source_as_google_csv():
     assert contacts[0].source == "google_csv"
 
 
+def test_notes_field_with_embedded_comma_does_not_shift_columns():
+    # Regression: a naive comma-split parser (as the demo's old JS mirror did)
+    # misaligns every column after a quoted field containing a literal comma.
+    # csv.DictReader handles RFC 4180 quoting correctly, so this must still work.
+    text = _csv_text({
+        "First Name": "Alice", "Last Name": "Andersson",
+        "Notes": "Met at conf, follow up re: Q3",
+        "E-mail 1 - Value": "alice@example.com",
+    })
+    contacts = parse_google_csv(text)
+    assert contacts[0].display_name == "Alice Andersson"
+    assert contacts[0].emails == ["alice@example.com"]
+
+
 def test_parses_multiple_rows():
     text = _csv_text(
         {"First Name": "Alice", "Last Name": "Andersson"},
