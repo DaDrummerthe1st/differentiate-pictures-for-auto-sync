@@ -28,7 +28,7 @@ def _rgb_array(image_path: str) -> np.ndarray:
     return np.array(Image.open(image_path).convert("RGB"))
 
 
-def blur_percent(image_path: str) -> float:
+def check_blur(image_path: str) -> float:
     """How blurry the image at image_path is, from 0.0 (sharp) to 100.0 (very blurry)."""
     gray = cv2.cvtColor(_rgb_array(image_path), cv2.COLOR_RGB2GRAY)
     variance = cv2.Laplacian(gray, cv2.CV_64F).var()
@@ -36,11 +36,11 @@ def blur_percent(image_path: str) -> float:
 
 
 def is_blurry(image_path: str) -> bool:
-    """True once the image is more blurry than not (blur_percent > 50)."""
-    return blur_percent(image_path) > 50.0
+    """True once the image is more blurry than not (check_blur > 50)."""
+    return check_blur(image_path) > 50.0
 
 
-def exposure_percent(image_path: str) -> float:
+def check_exposure(image_path: str) -> float:
     """Exposure balance, from -100.0 (fully black) to +100.0 (fully white), 0 = balanced.
 
     Mirrors camera exposure-compensation (EV) convention: negative is
@@ -52,7 +52,7 @@ def exposure_percent(image_path: str) -> float:
     return float(max(-100.0, min(100.0, deviation)))
 
 
-def saturation_percent(image_path: str) -> float:
+def check_saturation(image_path: str) -> float:
     """How colorful the image is, from 0.0 (grayscale) to 100.0 (fully saturated)."""
     hsv = cv2.cvtColor(_rgb_array(image_path), cv2.COLOR_RGB2HSV)
     mean_saturation = float(hsv[:, :, 1].mean())  # 0-255
@@ -61,9 +61,9 @@ def saturation_percent(image_path: str) -> float:
 
 if __name__ == "__main__":
     path = sys.argv[1] if len(sys.argv) > 1 else PLACEHOLDER_IMAGE_PATH
-    blur = blur_percent(path)
-    exposure = exposure_percent(path)
-    saturation = saturation_percent(path)
+    blur = check_blur(path)
+    exposure = check_exposure(path)
+    saturation = check_saturation(path)
     print(f"{path}:")
     print(f"  blur: {blur:.1f}% ({'blurry' if blur > 50.0 else 'sharp'})")
     print(f"  exposure: {exposure:+.1f}% ({'balanced' if abs(exposure) < 20.0 else ('overexposed' if exposure > 0 else 'underexposed')})")
