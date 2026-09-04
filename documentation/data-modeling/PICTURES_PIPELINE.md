@@ -10,7 +10,11 @@ Work tree sketched by Joakim 2026-09-04, each stage its own standalone `modules/
 3. **Prioritize** — process pictures most likely to have detectable objects first.
    Heuristic not yet decided; belongs to session 3's orchestration file, not the
    object detector itself.
-4. **`modules/objects.py`** (next session) — object detection, NanoDet-Plus.
+4. **`modules/objects.py`** (built 2026-09-04) — object detection, NanoDet-Plus. `detect_objects()`
+   returns a combined `DetectionResult` (all detections + image width/height); `has_object()` is a
+   per-class convenience wrapper. Bounding boxes are pixel coordinates, not normalized — see
+   [GLOSSARY.md](../GLOSSARY.md)'s bounding-box entry for why this deliberately diverges from the
+   archived GUI's normalized-fraction convention.
 5. **`LogScenery()`** — scene/venue classification (beach, indoor/outdoor, woods,
    parking lot...). Already researched in
    [DETECTORS.md](../curation/DETECTORS.md)'s area D ("Scene/venue classification"
@@ -45,10 +49,43 @@ Work tree sketched by Joakim 2026-09-04, each stage its own standalone `modules/
   entry) — raised and confirmed again this session since the pipeline sketch named
   YOLO specifically.
 
+## Decisions made 2026-09-04 (session 2, `modules/objects.py` build)
+
+- **Model confirmed, not just carried forward on faith**: this session's own restart
+  instructions explicitly required re-confirming NanoDet-Plus rather than assuming the prior
+  pick still applied — asked again, Joakim confirmed it.
+- **Vendored `modules/models/nanodet-plus-m_416.onnx`**: Apache-2.0, downloaded from the
+  upstream repo's own GitHub release, license checked directly against the repo's own
+  `LICENSE` file (see `modules/models/LICENSES.md`).
+- **Combined-object shape, richer than `quality.py`'s bare floats**: `detect_objects()` returns
+  one `DetectionResult` (a list of `Detection(class_name, confidence, bbox)` plus image
+  width/height) rather than one function per class. `quality.py` retrofitted the same day with
+  a `check_all()` bundling its three existing bare-float checks into one `QualityResult`, per
+  Joakim's explicit ask that every `modules/` detector expose a combined view, not just this
+  new one.
+- **Bounding boxes are pixel coordinates**, not normalized 0..1 fractions — chosen specifically
+  so a later detector can crop straight to the box (`image.crop((x1, y1, x2, y2))`) with no
+  re-multiplication step. Diverges from the archived GUI's normalized convention on purpose;
+  see [GLOSSARY.md](../GLOSSARY.md).
+- **Preprocessing gotcha found empirically**: the plain ONNX release does not bake in input
+  normalization (unlike the repo's own OpenVINO IR demo, which has it folded in via
+  model-optimizer flags) — feeding raw pixels produced confidently wrong detections (e.g.
+  "parking meter" at 100% on a bus photo). Fixed by applying the BGR mean/std from the
+  upstream training config (`modules/models/LICENSES.md` has the exact values and the
+  before/after evidence).
+- **Testing without pip/network mid-session**: turned out to be a non-issue — this repo's
+  `.venv-test` already has `onnxruntime`, `cv2`, `numpy`, `PIL`, and `tkinter` installed, and
+  outbound network access works, so real inference was tested directly (no fixture-photo or
+  model-mocking workaround needed for that part). `modules/tests/test_objects.py` still mocks
+  the ONNX forward pass for fast/deterministic pytest runs; `modules/test_main.py` (a tkinter
+  folder-picker + results window, not a pytest test) is the manual real-model verification
+  tool for local dev use.
+
 ## Status
 
-Designed 2026-09-04, in conversation. Session 2 (next) builds `modules/objects.py`.
-Session 3 builds the orchestration/prioritization file (the `pictures` table, calling
-`quality.py` + `objects.py` in priority order). `LogScenery()` and the
+Designed 2026-09-04, in conversation. **Session 2 done same day**: `modules/objects.py` built,
+tested (12 unit tests + 2 real-photo smoke tests), and `quality.py` retrofitted with
+`check_all()`. Session 3 builds the orchestration/prioritization file (the `pictures` table,
+calling `quality.py` + `objects.py` in priority order). `LogScenery()` and the
 group-same-person step are confirmed real but not yet scheduled to a session. See
 [TODO.md](TODO.md).

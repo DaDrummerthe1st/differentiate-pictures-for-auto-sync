@@ -1,7 +1,7 @@
 import numpy as np
 from PIL import Image, ImageFilter
 
-from modules.quality import check_blur, check_exposure, check_saturation, is_blurry
+from modules.quality import QualityResult, check_all, check_blur, check_exposure, check_saturation, is_blurry
 
 
 def _checkerboard(size: int = 64, square: int = 8) -> Image.Image:
@@ -95,3 +95,15 @@ def test_check_saturation_stays_within_0_to_100_bounds(tmp_path):
     _solid((220, 20, 20)).save(path)
 
     assert 0.0 <= check_saturation(str(path)) <= 100.0
+
+
+def test_check_all_bundles_every_check_for_one_image(tmp_path):
+    path = tmp_path / "vivid.png"
+    _solid((220, 20, 20)).save(path)
+
+    result = check_all(str(path))
+
+    assert isinstance(result, QualityResult)
+    assert result.blur == check_blur(str(path))
+    assert result.exposure == check_exposure(str(path))
+    assert result.saturation == check_saturation(str(path))

@@ -7,6 +7,7 @@ Usage: python3 -m modules.quality <path-to-image>
 """
 import os
 import sys
+from dataclasses import dataclass
 
 import cv2
 import numpy as np
@@ -57,6 +58,22 @@ def check_saturation(image_path: str) -> float:
     hsv = cv2.cvtColor(_rgb_array(image_path), cv2.COLOR_RGB2HSV)
     mean_saturation = float(hsv[:, :, 1].mean())  # 0-255
     return float(max(0.0, min(100.0, mean_saturation / 255 * 100)))
+
+
+@dataclass(frozen=True)
+class QualityResult:
+    blur: float
+    exposure: float
+    saturation: float
+
+
+def check_all(image_path: str) -> QualityResult:
+    """Every quality check for image_path, run once each, bundled together."""
+    return QualityResult(
+        blur=check_blur(image_path),
+        exposure=check_exposure(image_path),
+        saturation=check_saturation(image_path),
+    )
 
 
 if __name__ == "__main__":

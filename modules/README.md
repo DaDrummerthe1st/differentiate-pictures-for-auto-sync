@@ -2,4 +2,6 @@
 
 A standalone detector library — each file its own detector, growing over time. Deliberately no dependency on `detector/`, `app/`, or any other existing code in this repo, even where a detector here covers the same ground as an existing one. See [documentation/curation/DETECTORS.md](../documentation/curation/DETECTORS.md).
 
-- `quality.py` — blur, exposure, and saturation, each 0-100% (or -100 to +100 for exposure). See [documentation/data-modeling/QUALITY_METRICS.md](../documentation/data-modeling/QUALITY_METRICS.md) for the column-shape reasoning.
+- `quality.py` — blur, exposure, and saturation, each 0-100% (or -100 to +100 for exposure), plus `check_all()` bundling all three into one `QualityResult`. See [documentation/data-modeling/QUALITY_METRICS.md](../documentation/data-modeling/QUALITY_METRICS.md) for the column-shape reasoning.
+- `objects.py` — object detection via NanoDet-Plus (Apache-2.0, COCO's 80 classes). `detect_objects()` returns a `DetectionResult` (all detections + image width/height, pixel-coordinate boxes); `has_object()` is a per-class convenience wrapper. Vendored model + license note: `models/LICENSES.md`.
+- `test_main.py` — **not** a pytest test (no `test_*` functions, filename only matches the pytest pattern for a mid-session naming reason). A manual, local-only dev tool: `python3 -m modules.test_main` opens a tkinter window to pick a folder, runs every detector above on its images, and shows findings in a second window.
