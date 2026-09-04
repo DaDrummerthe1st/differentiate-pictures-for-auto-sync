@@ -60,7 +60,7 @@ pattern" section for the reasoning.
 | id, owner_user_id, created_at | — |
 | entity_type | `person` \| `object` \| `animal` \| `place` \| `circle` |
 | display_name | "Dad", "my motorcycle", "Bella", "home", "Close Friends" |
-| attributes (JSONB) | type-specific: `{species, breed}` for an animal, `{object_type}` for an object, `{place_kind: general\|specific}` for a place, `{member_entity_ids: [...]}` for a circle — empty for a person |
+| attributes (JSONB) | type-specific: `{species, breed}` for an animal, `{object_type}` for an object, `{place_kind: general\|specific}` for a place, `{member_entity_ids: [...]}` for a circle — for a person, `{disambiguation_note, reference_photo_id}` (both required at creation, see [../curation/IDENTITY_MATCHING.md](../curation/IDENTITY_MATCHING.md)'s "two Per Holmgrens" resolution) |
 | linked_account_user_id | nullable, **person only** — set once the local record is claimed by/linked to a real account |
 
 One `entities` table with a type discriminator + JSONB attributes, not four

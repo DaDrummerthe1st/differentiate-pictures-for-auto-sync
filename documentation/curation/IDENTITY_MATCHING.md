@@ -171,8 +171,89 @@ same-shaped as — the existing age/gender and OCR-in-frame privacy flags in [DE
 **Not designed here**: left as an open item for a future privacy-focused session, same treatment as
 those other flags, rather than resolved today.
 
+## "Two Per Holmgrens" — disambiguation is required at labeling time, not just on collision
+
+Resolved 2026-09-05, Joakim's own framing: a bare display name doesn't distinguish two different
+real people who happen to share one (his example: two people both named "Per Holmgren"). Considered
+against two lighter alternatives — do nothing extra by default and only prompt for disambiguation
+once a name/embedding collision is actually detected, or make a disambiguation field optional and
+never enforce it — **Joakim chose the strictest of the three**: every `person` entity gets a
+disambiguation note and a reference photo **required at creation**, before either name-collision or
+embedding-collision detection ever runs, not conditioned on one.
+
+**Why required-always beats collision-triggered**: a collision check ([../tags/TODO.md](../tags/TODO.md)'s
+entity-merge-dedup section design the embedding-similarity trigger for the *inverse* problem — one
+person, two entities) can only fire once a second entity already exists to collide against. The first
+"Per Holmgren" entity, created alone, would otherwise carry nothing but a name — exactly the state
+that makes the *second* one ambiguous the moment it's typed. Requiring the note/photo from entity
+number one closes that gap instead of leaving it open until a collision happens to occur.
+
+**Shape**: [../tags/SCHEMA.md](../tags/SCHEMA.md)'s `entities.attributes` JSONB, person type, gains
+`disambiguation_note` (free text — "cousin, met at Anna's wedding," "colleague at Ericsson") and
+`reference_photo_id` (points at one of the photos this entity is already tagged in — not a new
+upload, since a person entity is never created except by tagging her in at least one photo first).
+Both required at the same UI step that creates the entity, in whichever flow that is — the gamified
+cold-start session ([../tags/UX_FLOWS.md](../tags/UX_FLOWS.md)'s "Gamified identity-labeling session")
+and any ad hoc "tag this face" moment outside that session both create entities the same way, so both
+need the same required fields, not two divergent creation paths.
+
+**Where this surfaces**: autocomplete/search results showing two entities named "Per Holmgren" render
+the disambiguation note (and a thumbnail from `reference_photo_id`) alongside the name, so choosing
+between them is a real decision rather than a guess — same principle as [ARCHITECTURE.md](ARCHITECTURE.md)'s
+"never applies a suggestion silently," extended to disambiguation rather than to confirmation.
+
+**Not designed here**: the actual autocomplete/search UI treatment (belongs in
+[../tags/UX_FLOWS.md](../tags/UX_FLOWS.md)), and whether an existing person entity created before this
+rule (none exist today — nothing is built yet, see Status) would ever need backfilling — moot until
+real data exists.
+
+## Native app avoided as long as possible — resolved for redundancy-contribution, stated as a general stance
+
+Resolved 2026-09-05, following on from [ARCHITECTURE.md](ARCHITECTURE.md)'s PWA-vs-native capability
+check (2026-09-04): that check found manual/one-time photo picking for DFS redundancy contribution
+works fine from a PWA, and only *automatic/continuous background* contribution would force a native
+app, and only on iOS. Asked directly whether Joakim wants that automatic behavior badly enough to
+accept a native app for it — **he does not**: manual/in-app picking is accepted, and the reasoning
+goes beyond this one feature. Joakim's own framing: the whole point of self-hosting on each user's own
+NAS (or network of NASes) is that *he* controls the code running there; publishing through Google
+Play or the Apple App Store hands each platform owner standing latitude to modify or re-sign the app
+binary on its way to users, which conflicts with that control model at a deeper level than any single
+feature's UX. **So "avoid a native app for as long as possible" is a standing architectural stance,
+not just this feature's answer** — the redundancy-contribution question is the first concrete case it
+resolved, not the only one it applies to. A native app stays a last resort, considered only if some
+future capability turns out to have no PWA-reachable path at all, not reached for on convenience
+grounds.
+
+## Contacts-import desktop fallback — CardDAV confirmed real, build deferred to a guided session
+
+Raised 2026-09-04/05 alongside the desktop Contact Picker gap ([../security/THREATS.md](../security/THREATS.md)
+row 17, [../tags/TODO.md](../tags/TODO.md)'s Contacts import item): Joakim asked whether something like
+Thunderbird's contact syncing exists for this purpose. **Researched 2026-09-05 — confirmed real**:
+CardDAV (RFC 6352) is an open standard for exactly this, supported by Google Contacts, iCloud, and
+Thunderbird's native client (see [../GLOSSARY.md](../GLOSSARY.md)'s new CardDAV entry for the
+mechanism). Chosen as the target design for the desktop fallback, with an explicit requirement Joakim
+added: it must be able to **re-sync when a searched name isn't found**, not just a frozen one-time
+export — a standing (if user-triggered) connection, not a single snapshot.
+
+**Real tradeoff this reopens, not fully resolved**: CardDAV authenticates once (Google OAuth or an
+iCloud app-specific password) and then exposes the *whole* address book, a different exposure shape
+than the mobile Contact Picker API's one-contact-at-a-time disclosure that row 17 chose specifically
+to minimize bulk list access. CardDAV doesn't touch row 17's other axis (person↔photo linkage never
+reaching Google — CardDAV is read-only, contacts-in only) but does reintroduce standing bulk access
+on the list-exposure axis, on desktop only. Not yet decided: whether that tradeoff is accepted as the
+cost of desktop parity, or whether the desktop fallback should stay deliberately narrower than mobile.
+
+**Build deferred, not designed further today**: an actual CardDAV integration needs Joakim to do
+things only he can do — register an OAuth client (Google) or generate an app-specific password
+(iCloud) against his own real account — so building and demoing it is deferred to a separate,
+guided session where those account-side steps happen interactively, rather than attempted blind in
+this design pass. Flagged in [../tags/TODO.md](../tags/TODO.md) so it isn't lost.
+
 ## Status
 
 Split from [ARCHITECTURE.md](ARCHITECTURE.md) 2026-08-05 — content dates unchanged (2026-08-03
-through 2026-08-05), see each entry inline. Nothing here is built; no schema migration, no model
-integrated.
+through 2026-08-05), see each entry inline. **2026-09-05**: three design questions resolved with
+Joakim — person-entity disambiguation required at labeling time, native app avoided as a standing
+architectural stance (not just for redundancy-contribution), and CardDAV confirmed as the desktop
+contacts-fallback target design (build deferred to a guided session). Nothing here is built; no
+schema migration, no model integrated.

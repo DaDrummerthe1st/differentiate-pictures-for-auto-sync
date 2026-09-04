@@ -18,7 +18,18 @@ Phase 5 for the one piece (origin/`kind='album'`) already partially built.
   interacts with the invite CTA in [UX_FLOWS.md](UX_FLOWS.md). **Privacy constraints
   flagged 2026-09-04**: browser Contact Picker API over native `READ_CONTACTS` (no
   native app planned anyway), plus three hard rules once this is built — see
-  [../security/THREATS.md](../security/THREATS.md) row 17.
+  [../security/THREATS.md](../security/THREATS.md) row 17. **Desktop fallback
+  targeted 2026-09-05**: CardDAV (RFC 6352 — Google Contacts, iCloud, and
+  Thunderbird's native client all support it, [../GLOSSARY.md](../GLOSSARY.md))
+  chosen as the desktop-fallback mechanism, with re-sync-on-not-found required, not
+  a frozen one-time export — see
+  [../curation/IDENTITY_MATCHING.md](../curation/IDENTITY_MATCHING.md)'s "Contacts-import
+  desktop fallback" section for the real bulk-list-exposure tradeoff this reopens
+  against row 17's mobile picker reasoning. **Not yet built — next step is a
+  separate, guided session** where Joakim registers a Google OAuth client or an
+  iCloud app-specific password against his own account (steps only he can do), then
+  the real CardDAV client gets built and demoed against it. Flagged here so this
+  next step isn't lost across sessions.
 - **Nudity/sensitive-content auto-detection** for the privacy category
   (TAXONOMY.md's "automatically tagged private" case): on-device inference, DPFAS
   phase — ties to [../VISION.md](../VISION.md) Pillar 2's face/object recognition

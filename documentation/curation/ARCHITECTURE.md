@@ -233,6 +233,10 @@ doesn't restate. Confirmed with Joakim 2026-08-02:
   "open the app, pick some photos, contribute them"; only "runs automatically in the background
   on an iPhone with the app closed" would force a native-app requirement, and only on iOS —
   worth deciding which UX this feature actually needs before assuming native is required.
+  **Resolved 2026-09-05**: manual/in-app picking is accepted; automatic background contribution is
+  not pursued if it requires a native app. Joakim's reasoning generalizes beyond this one feature —
+  see [IDENTITY_MATCHING.md](IDENTITY_MATCHING.md)'s "Native app avoided as long as possible"
+  section for the standing architectural stance this resolved into.
 - **End goal (far away)**: Pi-3-class hardware as a router/NAS in every user's own home, running
   this same detection work locally — the target [../photo-server/TODO.md](../photo-server/TODO.md)'s
   "Raised 2026-07-29" stress-test item is queued against.
