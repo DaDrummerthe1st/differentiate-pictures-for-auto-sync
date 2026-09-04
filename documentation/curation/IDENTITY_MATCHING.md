@@ -235,18 +235,24 @@ mechanism). Chosen as the target design for the desktop fallback, with an explic
 added: it must be able to **re-sync when a searched name isn't found**, not just a frozen one-time
 export — a standing (if user-triggered) connection, not a single snapshot.
 
-**Real tradeoff this reopens, not fully resolved**: CardDAV authenticates once (Google OAuth or an
-iCloud app-specific password) and then exposes the *whole* address book, a different exposure shape
-than the mobile Contact Picker API's one-contact-at-a-time disclosure that row 17 chose specifically
-to minimize bulk list access. CardDAV doesn't touch row 17's other axis (person↔photo linkage never
-reaching Google — CardDAV is read-only, contacts-in only) but does reintroduce standing bulk access
-on the list-exposure axis, on desktop only. Not yet decided: whether that tradeoff is accepted as the
-cost of desktop parity, or whether the desktop fallback should stay deliberately narrower than mobile.
+**Real tradeoff this reopens, not fully resolved**: CardDAV authenticates once (an **App Password**,
+[../GLOSSARY.md](../GLOSSARY.md) — Google and iCloud both support this same non-OAuth mechanism, no
+registered OAuth client needed on either) and then exposes the *whole* address book, a different
+exposure shape than the mobile Contact Picker API's one-contact-at-a-time disclosure that row 17 chose
+specifically to minimize bulk list access. CardDAV doesn't touch row 17's other axis (person↔photo
+linkage never reaching Google — CardDAV is read-only, contacts-in only) but does reintroduce standing
+bulk access on the list-exposure axis, on desktop only. Not yet decided: whether that tradeoff is
+accepted as the cost of desktop parity, or whether the desktop fallback should stay deliberately
+narrower than mobile. **Corrected 2026-09-05**: this section originally assumed Google's CardDAV
+needed a registered/reviewed OAuth client the way "Sign in with Google" does — Joakim's own observation
+(Thunderbird never shows him an OAuth consent screen for this) prompted re-checking; confirmed Google
+explicitly keeps App Passwords open as the supported path for apps that don't implement OAuth,
+including CardDAV, so no app registration or Google review is actually needed, for either provider.
 
-**Build deferred, not designed further today**: an actual CardDAV integration needs Joakim to do
-things only he can do — register an OAuth client (Google) or generate an app-specific password
-(iCloud) against his own real account — so building and demoing it is deferred to a separate,
-guided session where those account-side steps happen interactively, rather than attempted blind in
+**Build deferred, not designed further today**: an actual CardDAV integration still needs Joakim to do
+one thing only he can do — generate an App Password from his own Google Account (requires 2-Step
+Verification enabled) or Apple ID security settings — so building and demoing it is deferred to a
+separate, guided session where that account-side step happens interactively, rather than attempted blind in
 this design pass. Flagged in [../tags/TODO.md](../tags/TODO.md) so it isn't lost.
 
 ## Status

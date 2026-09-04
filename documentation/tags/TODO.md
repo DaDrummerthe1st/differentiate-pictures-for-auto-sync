@@ -26,10 +26,12 @@ Phase 5 for the one piece (origin/`kind='album'`) already partially built.
   [../curation/IDENTITY_MATCHING.md](../curation/IDENTITY_MATCHING.md)'s "Contacts-import
   desktop fallback" section for the real bulk-list-exposure tradeoff this reopens
   against row 17's mobile picker reasoning. **Not yet built — next step is a
-  separate, guided session** where Joakim registers a Google OAuth client or an
-  iCloud app-specific password against his own account (steps only he can do), then
-  the real CardDAV client gets built and demoed against it. Flagged here so this
-  next step isn't lost across sessions.
+  separate, guided session** where Joakim generates a Google or iCloud App Password
+  ([../GLOSSARY.md](../GLOSSARY.md) — no OAuth app registration/review needed,
+  corrected 2026-09-05 after Joakim questioned an earlier draft's OAuth assumption)
+  against his own account (the one step only he can do), then the real CardDAV
+  client gets built and demoed against it. Flagged here so this next step isn't
+  lost across sessions.
 - **Nudity/sensitive-content auto-detection** for the privacy category
   (TAXONOMY.md's "automatically tagged private" case): on-device inference, DPFAS
   phase — ties to [../VISION.md](../VISION.md) Pillar 2's face/object recognition
