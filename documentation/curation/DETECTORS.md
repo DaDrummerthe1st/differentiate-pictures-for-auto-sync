@@ -14,7 +14,7 @@ written up here once done).
 
 | Area | What it detects | Why it matters (tied to real use cases above) | Status |
 | --- | --- | --- | --- |
-| Blur / focus | Sharp vs. blurry | The literal "these 25 are all blurry" example | built — `detector/quality.py`'s `detect_blur` |
+| Blur / focus | Sharp vs. blurry | The literal "these 25 are all blurry" example | built — `detector/quality.py`'s `detect_blur` (boolean). A standalone, disposable `modules/blur_check.py` prototype (not wired into `detector/`) also reports blur as a 0-100% extent, same variance-of-Laplacian technique. |
 | Exposure | Over/under-exposed | Same bucket as blur for a "technically bad photo" cluster | built — `detector/quality.py`'s `detect_exposure` |
 | Monochrome/low-colour | Black-and-white or washed-out ("pocket-shot") | Already named in [../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s quality category | built — `detector/quality.py`'s `detect_monochrome` |
 | Noise/grain | High-ISO grain, compression artifacts | Same bucket, another "technically bad" signal | queued |
