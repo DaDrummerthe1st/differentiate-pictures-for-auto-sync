@@ -1,7 +1,7 @@
 /venv/
-/server/.venv/
+/archive/server/.venv/
 /.idea/
-prototypes/differentiate_pictures/app/local_mysql.py
+archive/prototypes/differentiate_pictures/app/local_mysql.py
 /resources/potential_first_check_py_files
 resources/darknet
 /.claude/settings.local.json
@@ -9,6 +9,6 @@ tools/doc_metrics/metrics.db
 __pycache__/
 .pytest_cache/
 .venv-test/
-/server/.env
+/archive/server/.env
 /.env
 /resources/test_pictures/

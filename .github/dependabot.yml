@@ -1,26 +1,6 @@
 version: 2
 updates:
   - package-ecosystem: "pip"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "pip"
-    directory: "/detector"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "uv"
-    directory: "/server"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "docker"
-    directory: "/server"
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "docker"
-    directory: "/detector"
+    directory: "/modules"
     schedule:
       interval: "weekly"
