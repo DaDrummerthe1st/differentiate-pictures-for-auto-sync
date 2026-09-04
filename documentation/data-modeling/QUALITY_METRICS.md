@@ -1,12 +1,12 @@
 # Quality-percent table
 
-Designed, not built. Column shape for a table that would record per-photo quality
-scores as continuous percentages, keyed by `file_id` (UUID, FK to a separate files
-table) — deliberately decoupled from [tags/SCHEMA.md](../tags/SCHEMA.md)'s `tags`
-table and from `detector/quality.py`'s boolean/enum outputs. This is the design
-behind [modules/blur_check.py](../../modules/blur_check.py) (currently only
-`blur_percent` is implemented; `exposure_percent`/`saturation_percent` are designed
-here, not yet coded).
+Column shape for a table that would record per-photo quality scores as continuous
+percentages, keyed by `file_id` (UUID, FK to a separate files table) — deliberately
+decoupled from [tags/SCHEMA.md](../tags/SCHEMA.md)'s `tags` table and from
+`detector/quality.py`'s boolean/enum outputs, no shared code between the two by
+design. All three metric functions are implemented in
+[modules/quality.py](../../modules/quality.py); the table itself (this file's actual
+column list) is still design-only, no database wired up yet.
 
 | Column | Range | Low means | High means |
 | --- | --- | --- | --- |
@@ -48,5 +48,7 @@ its own domain-standard direction instead of an artificial shared one.
 
 ## Status
 
-Designed 2026-09-04, in conversation — not yet implemented beyond `blur_percent` in
-`modules/blur_check.py`. See [TODO.md](TODO.md).
+Designed 2026-09-04, in conversation. All three functions (`blur_percent`,
+`exposure_percent`, `saturation_percent`) implemented same day in
+`modules/quality.py` (renamed from `modules/blur_check.py`). The table itself —
+an actual `file_id`-keyed database — is still not built. See [TODO.md](TODO.md).
