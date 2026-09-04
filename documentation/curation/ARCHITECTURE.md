@@ -220,6 +220,19 @@ doesn't restate. Confirmed with Joakim 2026-08-02:
   phone" wording** — that file says "phone," this session's discussion made it concretely a
   browser-based PWA rather than a native mobile app; VISION.md itself isn't edited here since this
   file is the more specific, later-dated source for that detail.
+  **PWA-vs-native capability check, raised 2026-09-04 re: [../distributed-sync/](../distributed-sync/README.md)'s
+  redundancy-contribution feature (a user picking some of her own photos for her device to
+  contribute as DFS redundancy storage) — confirmed, not assumed**: one-time/manual photo
+  selection is genuinely fine from a PWA (desktop and mobile browsers can read real local
+  files via the File System Access API, or the plain `<input type="file" multiple>` picker
+  everywhere else — no native app needed for the picking itself). The real, unclosed gap is
+  **continuous/automatic** background behavior — a PWA silently noticing new photos and
+  contributing them without the user reopening the app — since iOS Safari has **no** Background
+  Sync, Periodic Background Sync, or Background Fetch support as of 2026, with no announced
+  timeline (Android/Chromium browsers do support this). So: PWA is sufficient for
+  "open the app, pick some photos, contribute them"; only "runs automatically in the background
+  on an iPhone with the app closed" would force a native-app requirement, and only on iOS —
+  worth deciding which UX this feature actually needs before assuming native is required.
 - **End goal (far away)**: Pi-3-class hardware as a router/NAS in every user's own home, running
   this same detection work locally — the target [../photo-server/TODO.md](../photo-server/TODO.md)'s
   "Raised 2026-07-29" stress-test item is queued against.
