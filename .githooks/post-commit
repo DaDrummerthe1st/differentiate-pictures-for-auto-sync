@@ -10,6 +10,7 @@
 # .githooks` setup as pre-commit.
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
+source .githooks/catch_up_titles.sh
 
 LOG_COMMIT_MSG="Log doc metrics and commit cost for the previous commit"
 DOC_METRICS_JSONL="tools/doc_metrics/metrics.jsonl"
@@ -20,8 +21,11 @@ COMMIT_COST_JSONL="tools/commit_cost/commit_costs.jsonl"
 # contain it) — see documentation/tooling/DOC_METRICS.md's "One-commit
 # lag" section. So the logging commit this hook creates below is itself
 # always exactly one commit behind; skip re-logging when HEAD already
-# *is* that logging commit, or this would recurse into itself forever.
-if [ "$(git log -1 --format=%s)" != "$LOG_COMMIT_MSG" ]; then
+# *is* a catch-up commit (this hook's own, or a manually-made one under
+# any of the three titles catch_up_titles.sh recognizes), or this would
+# either recurse into itself forever or spuriously wrap a valid manual
+# catch-up in a redundant follow-up commit.
+if ! is_catch_up_title "$(git log -1 --format=%s)"; then
   echo "[post-commit] logging doc_metrics/commit_cost for this commit..."
   log_failed=0
   python3 tools/doc_metrics/log.py || log_failed=1

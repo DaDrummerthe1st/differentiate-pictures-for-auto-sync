@@ -11,23 +11,22 @@
 # may only touch the ledger files those commits exist to update.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
+source .githooks/catch_up_titles.sh
 
 MSG_FILE="$1"
 FIRST_LINE=$(head -n1 "$MSG_FILE")
 
-case "$FIRST_LINE" in
-  "Log doc metrics and commit cost for the previous commit"|"Log commit cost for the previous commit"|"Log doc metrics for the previous commit")
-    ALLOWED_REGEX='^tools/(commit_cost/commit_costs\.jsonl|doc_metrics/metrics\.jsonl)$'
-    OFFENDERS=$(git diff --cached --name-only | grep -vE "$ALLOWED_REGEX" || true)
-    if [ -n "$OFFENDERS" ]; then
-      echo "[commit-msg] BLOCKED: this commit is titled as a doc_metrics/commit_cost catch-up commit," >&2
-      echo "but has non-ledger files staged too:" >&2
-      echo "$OFFENDERS" | sed 's/^/  /' >&2
-      echo "" >&2
-      echo "Real changes must be their own commit, separate from the ledger catch-up. Unstage the" >&2
-      echo "files above (git restore --staged <file>...), commit them separately, then retry the" >&2
-      echo "catch-up commit with only the ledger file(s) staged." >&2
-      exit 1
-    fi
-    ;;
-esac
+if is_catch_up_title "$FIRST_LINE"; then
+  ALLOWED_REGEX='^tools/(commit_cost/commit_costs\.jsonl|doc_metrics/metrics\.jsonl)$'
+  OFFENDERS=$(git diff --cached --name-only | grep -vE "$ALLOWED_REGEX" || true)
+  if [ -n "$OFFENDERS" ]; then
+    echo "[commit-msg] BLOCKED: this commit is titled as a doc_metrics/commit_cost catch-up commit," >&2
+    echo "but has non-ledger files staged too:" >&2
+    echo "$OFFENDERS" | sed 's/^/  /' >&2
+    echo "" >&2
+    echo "Real changes must be their own commit, separate from the ledger catch-up. Unstage the" >&2
+    echo "files above (git restore --staged <file>...), commit them separately, then retry the" >&2
+    echo "catch-up commit with only the ledger file(s) staged." >&2
+    exit 1
+  fi
+fi
