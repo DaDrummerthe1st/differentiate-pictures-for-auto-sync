@@ -1,11 +1,8 @@
 # test_main.py X BadAlloc rendering 100 photos at once
 
-Status: **fix applied, not yet confirmed** — per this folder's own rule (README.md: "not
-mitigated, not 'probably fine now,' genuinely confirmed resolved"), this stays in
-`under_process/` until Joakim confirms the paginated version actually stops crashing against
-his real 100-photo folder - the session that applied the fix had no display to verify the
-X-rendering path itself against, only that the logic still imports and modules/tests/ still
-pass.
+Status: **confirmed resolved 2026-09-04** — Joakim re-ran `modules/test_main.py` against the
+real 100-photo `resources/test_pictures/` folder on his own machine (with a real X display,
+which the session that applied the fix didn't have) and the `BadAlloc` crash did not recur.
 
 ## Symptom
 
@@ -57,12 +54,16 @@ real display, which this session's sandbox doesn't have - Joakim to confirm on h
 at once - see `IMAGES_PER_PAGE`'s comment there for the reasoning, and
 `modules/README.md`/`documentation/GLOSSARY.md` (BadAlloc entry) for the write-up.
 
-## Next session should start with
+## Security analysis
 
-Confirm with Joakim whether re-running `modules/test_main.py` against the real 100-photo
-`resources/test_pictures/` folder now works without crashing. If yes, run
-`tools/create_bug_report/mark_solved.sh 2026-09-04-test-main-py-x-badalloc-rendering-100-photos-at-once.md`
-to close this out (that step also requires appending the `## Security analysis` section this
-folder's README.md requires on every move to `fixed/`). If it still crashes (e.g. `IMAGES_PER_PAGE=20`
-is still too many for his X server, or the crash was something else entirely), lower
-`IMAGES_PER_PAGE` first as the cheapest next lever before re-investigating from scratch.
+The fix only changes how many `ImageTk.PhotoImage` widgets `_show_results()` builds and keeps
+alive at once (paginated to `IMAGES_PER_PAGE=20`, with old-page widgets destroyed before the
+next page renders) — it touches no data handling, no file I/O beyond what was already there
+(the same folder Joakim picks via the existing tkinter folder dialog), no network path, and no
+privilege boundary. `modules/test_main.py` is explicitly a local-only manual dev tool, never
+deployed or exposed. The attack surface is unchanged: the fix reduces memory/pixmap pressure
+on the X server, which closes the resource-exhaustion path this bug describes (a large enough
+folder could always have retriggered the same `BadAlloc` before this fix, effectively a local,
+unintentional self-inflicted DoS against the developer's own X session, not an externally
+exploitable one). No residual risk identified — `IMAGES_PER_PAGE=20` bounds memory regardless
+of folder size, so the same crash class can't recur at any folder size larger than 100.

@@ -15,7 +15,10 @@ Phase 5 for the one piece (origin/`kind='album'`) already partially built.
   permission to read the user's phone contacts to help pre-populate/match
   local-only person entities when tagging. Not designed: permission flow, whether
   imported contacts become entities automatically or only on confirmation, how this
-  interacts with the invite CTA in [UX_FLOWS.md](UX_FLOWS.md).
+  interacts with the invite CTA in [UX_FLOWS.md](UX_FLOWS.md). **Privacy constraints
+  flagged 2026-09-04**: browser Contact Picker API over native `READ_CONTACTS` (no
+  native app planned anyway), plus three hard rules once this is built — see
+  [../security/THREATS.md](../security/THREATS.md) row 17.
 - **Nudity/sensitive-content auto-detection** for the privacy category
   (TAXONOMY.md's "automatically tagged private" case): on-device inference, DPFAS
   phase — ties to [../VISION.md](../VISION.md) Pillar 2's face/object recognition

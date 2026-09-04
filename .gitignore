@@ -12,3 +12,4 @@ __pycache__/
 /archive/server/.env
 /.env
 /resources/test_pictures/
+/databases/
