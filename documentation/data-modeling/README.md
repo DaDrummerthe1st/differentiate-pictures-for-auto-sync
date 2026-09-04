@@ -4,4 +4,5 @@ Cross-cutting: table/column shapes and naming decisions worked out in conversati
 
 | File | What's there |
 | --- | --- |
-| [QUALITY_METRICS.md](QUALITY_METRICS.md) | Column shape/naming for a per-photo quality-percent table (blur/exposure/saturation) — the design behind [modules/blur_check.py](../../modules/blur_check.py) |
+| [QUALITY_METRICS.md](QUALITY_METRICS.md) | Column shape/naming for a per-photo quality-percent table (blur/exposure/saturation) — the design behind [modules/quality.py](../../modules/quality.py) |
+| [PICTURES_PIPELINE.md](PICTURES_PIPELINE.md) | The multi-session `modules/` pipeline (file discovery → quality → object detection → scene classification → person grouping), SQLite vs. Postgres, `file_metadata` vs. EXIF |
