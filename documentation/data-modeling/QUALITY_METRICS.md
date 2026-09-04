@@ -48,7 +48,7 @@ its own domain-standard direction instead of an artificial shared one.
 
 ## Status
 
-Designed 2026-09-04, in conversation. All three functions (`blur_percent`,
-`exposure_percent`, `saturation_percent`) implemented same day in
+Designed 2026-09-04, in conversation. All three functions (`check_blur`,
+`check_exposure`, `check_saturation`) implemented same day in
 `modules/quality.py` (renamed from `modules/blur_check.py`). The table itself —
 an actual `file_id`-keyed database — is still not built. See [TODO.md](TODO.md).
