@@ -44,7 +44,7 @@ written up here once done).
 
 | Area | What it detects | Why it matters | Status |
 | --- | --- | --- | --- |
-| Animal detection/species | Presence + rough species (dog, cat, bird...) | Feeds the animal entity category, [../tags/TAXONOMY.md](../tags/TAXONOMY.md) | researched |
+| Animal detection/species | Presence + rough species (dog, cat, bird...) | Feeds the animal entity category, [../tags/TAXONOMY.md](../tags/TAXONOMY.md) | researched — **built for free 2026-09-04**: `modules/objects.py`'s NanoDet-Plus build (area D) already covers all 10 COCO animal classes, no separate work needed. |
 | Pet identity matching | Which specific pet (same idea as face recognition, animal-flavoured) | The literal "same dog" example | researched — no pretrained model fits, resolved instead via a per-household trained classifier, see below |
 
 **Picks (researched 2026-08-03)**: **animal presence/coarse species** — no new model needed: area
@@ -88,7 +88,7 @@ section — not duplicated here.
 
 | Area | What it detects | Why it matters | Status |
 | --- | --- | --- | --- |
-| General object detection | Recurring things — a motorcycle, a boat, furniture | Feeds the objects entity category | researched |
+| General object detection | Recurring things — a motorcycle, a boat, furniture | Feeds the objects entity category | researched — **built 2026-09-04**: standalone `modules/objects.py` (no shared code with `detector/`, by design — see its README), NanoDet-Plus, returns pixel-coordinate bounding box + confidence per detection. |
 | Scene/venue classification | Beach, mountains, indoor/outdoor, ski resort | The literal "my countryside" example; also feeds the places category | researched |
 | Landmark/place recognition | A *specific* named place, not just a kind of place | [../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s "specific" place sub-case | queued |
 | Text/OCR in-frame | Signs, documents, whiteboards accidentally captured | Real privacy angle — a photographed ID card or letter is sensitive content hiding inside an otherwise ordinary photo | researched — mechanism sketched 2026-08-04, model pick done 2026-08-05 |
@@ -152,7 +152,7 @@ review" is all that decision needs).
 
 | Area | What it detects | Why it matters | Status |
 | --- | --- | --- | --- |
-| EXIF/GPS extraction | Where/when a photo was taken | Already built ([../../prototypes/differentiate_pictures/app/gpsdata.py](../../prototypes/differentiate_pictures/app/gpsdata.py)) | done (pre-existing) |
+| EXIF/GPS extraction | Where/when a photo was taken | Already built ([../../archive/prototypes/differentiate_pictures/app/gpsdata.py](../../archive/prototypes/differentiate_pictures/app/gpsdata.py) — link repointed 2026-09-04, broken since the `test_production1` archive move, see `archive/README.md`) | done (pre-existing, now archived) |
 | Human-friendly time labels | "Golden hour," "winter," from raw EXIF timestamp | Feeds the temporal/seasonal tag category without a vision model at all — cheap, no inference needed | **design note done 2026-08-05, ready to build**: no research needed, this is a deterministic lookup, not a pick — local solar time (sunrise/sunset via GPS lat/long + date, e.g. the standard NOAA solar-position algorithm) buckets "golden hour"/"blue hour"/"midday"/"night"; calendar month + hemisphere (from GPS latitude sign, correctly inverted south of the equator) buckets a season label. Only ever `queued` for lack of a session to write the bucket logic down. Buildable whenever DETECTORS.md's build-plan item is picked up. |
 | Weather at time/place | Sunny, rainy, snowy | Would need a weather API lookup by GPS+timestamp | **excluded, closed 2026-08-05**: no offline, fully self-hosted, worldwide-coverage historical-weather dataset exists at a size compatible with this project's resource-tight posture (reanalysis datasets like ERA5 are many terabytes of gridded global data, not a lightweight local lookup) — conflicts with closed-by-default/no-cloud-APIs per [../policies/POLICY.md](../policies/POLICY.md). Confirms the "likely excluded" guess rather than reversing it. |
 
