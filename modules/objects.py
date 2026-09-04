@@ -170,7 +170,12 @@ def _decode_detections(
 
 
 def _load_session() -> ort.InferenceSession:
-    return ort.InferenceSession(MODEL_PATH, providers=["CPUExecutionProvider"])
+    # This model's export leaves its own weight initializers redundantly
+    # listed as graph inputs - ONNX Runtime warns about every single one
+    # (harmless, just missed const-folding) unless silenced here.
+    options = ort.SessionOptions()
+    options.log_severity_level = 3  # 3 = Error - hides Warning-level noise, keeps real errors
+    return ort.InferenceSession(MODEL_PATH, sess_options=options, providers=["CPUExecutionProvider"])
 
 
 def detect_objects(
