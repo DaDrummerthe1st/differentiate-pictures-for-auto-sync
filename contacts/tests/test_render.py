@@ -111,6 +111,21 @@ def test_render_browse_page_shows_search_form_with_field_checkboxes():
     assert 'name="field" value="Organization Name" checked' not in html
 
 
+def test_render_browse_page_wraps_field_checkboxes_in_collapsed_advanced_search():
+    html = render_browse_page(
+        [], total_count=5, query="", selected_fields=["display_name", "emails"],
+        available_fields=["display_name", "emails", "Organization Name"],
+    )
+    assert "<summary>Advanced search</summary>" in html
+    assert "<details open" not in html
+    # The text box and submit stay outside/always visible - only the
+    # per-field checkboxes are gated behind "Advanced search".
+    before_advanced = html.split("<summary>Advanced search</summary>")[0]
+    assert 'name="q"' in before_advanced
+    assert 'type="submit"' in before_advanced
+    assert 'name="field"' not in before_advanced
+
+
 def test_render_browse_page_groups_field_checkboxes_into_collapsed_categories():
     html = render_browse_page(
         [], total_count=5, query="", selected_fields=["display_name", "emails"],

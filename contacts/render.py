@@ -19,7 +19,9 @@ nav a { margin-right: 1rem; }
 form.upload { margin: 1.5rem 0; padding: 1rem; border: 1px solid #ddd; border-radius: 6px; }
 button, input[type=submit] { padding: 0.5rem 1rem; cursor: pointer; }
 .summary { background: #f4f4f4; padding: 0.6rem; border-radius: 4px; margin-bottom: 1rem; }
-.search-fields { border: 1px solid #ddd; border-radius: 6px; margin-top: 0.6rem; }
+.advanced-search { margin-top: 0.6rem; }
+.advanced-search > summary { cursor: pointer; font-weight: bold; }
+.search-fields { border: 1px solid #ddd; border-radius: 6px; margin-top: 0.4rem; }
 .search-fields details { margin: 0.3rem 0.6rem; }
 .search-fields summary { cursor: pointer; font-weight: bold; }
 .search-fields label { display: inline-block; margin: 0.2rem 0.8rem 0.2rem 1.2rem; }
@@ -252,10 +254,13 @@ def _render_search_form(query: str, selected_fields: list[str], available_fields
   <input type="text" name="q" value="{escape_html(query)}" placeholder="Search...">
   <input type="submit" value="Search">
   <input type="hidden" name="submitted" value="1">
-  <fieldset class="search-fields">
-    <legend>Search in</legend>
-    {categories_html}
-  </fieldset>
+  <details class="advanced-search">
+    <summary>Advanced search</summary>
+    <fieldset class="search-fields">
+      <legend>Search in</legend>
+      {categories_html}
+    </fieldset>
+  </details>
 </form>"""
 
 
