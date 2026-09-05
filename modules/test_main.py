@@ -12,14 +12,14 @@ Usage: python3 -m modules.test_main
 import os
 import tkinter as tk
 from tkinter import filedialog, messagebox
-from PIL import ExifTags, Image, ImageDraw, ImageOps, ImageTk
+from PIL import ImageTk
 
-from modules.objects import DetectionResult, detect_objects
-from modules.quality import QualityResult, check_all
+from modules.findings import annotate, exif_lines
+from modules.objects import detect_objects
+from modules.quality import check_all
 
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".bmp", ".webp"}
 MAX_DISPLAY_WIDTH = 900
-BOX_COLOR = "red"
 IMAGES_PER_PAGE = 20  # rendering every photo in a large folder at once exhausts
 # the X server's pixmap allocation (hit 2026-09-04: BadAlloc on a 100-photo
 # folder) - a page's worth is torn down before the next is built, so memory
@@ -32,88 +32,6 @@ def _image_files(folder: str) -> list[str]:
         for name in os.listdir(folder)
         if os.path.splitext(name)[1].lower() in IMAGE_EXTENSIONS
     )
-
-
-def _format_exposure_time(seconds: float) -> str:
-    return f"{seconds:.1f}s" if seconds >= 1 else f"1/{round(1 / seconds)}s"
-
-
-def _gps_to_decimal(dms: tuple, ref: str) -> float | None:
-    if not dms or not ref:
-        return None
-    degrees, minutes, seconds = dms
-    decimal = float(degrees) + float(minutes) / 60 + float(seconds) / 3600
-    return -decimal if ref in ("S", "W") else decimal
-
-
-def _exif_lines(image_path: str) -> list[str]:
-    """Every commonly-useful EXIF field this photo actually has - camera,
-    capture settings, capture date, GPS - as plain-language lines."""
-    exif = Image.open(image_path).getexif()
-    if not exif:
-        return ["(none)"]
-
-    base = {ExifTags.TAGS.get(tag_id, tag_id): value for tag_id, value in exif.items()}
-    try:
-        sub = {ExifTags.TAGS.get(tag_id, tag_id): value for tag_id, value in exif.get_ifd(ExifTags.IFD.Exif).items()}
-    except Exception:
-        sub = {}
-
-    lines = []
-    if "Make" in base or "Model" in base:
-        lines.append(f"Camera: {base.get('Make', '')} {base.get('Model', '')}".strip())
-    if "DateTimeOriginal" in sub:
-        lines.append(f"Captured: {sub['DateTimeOriginal']}")
-    settings = []
-    if "ExposureTime" in sub:
-        settings.append(_format_exposure_time(sub["ExposureTime"]))
-    if "FNumber" in sub:
-        settings.append(f"f/{sub['FNumber']}")
-    if "ISOSpeedRatings" in sub:
-        settings.append(f"ISO {sub['ISOSpeedRatings']}")
-    if "FocalLength" in sub:
-        settings.append(f"{sub['FocalLength']}mm")
-    if settings:
-        lines.append("Settings: " + "  ".join(settings))
-
-    try:
-        gps = exif.get_ifd(ExifTags.IFD.GPSInfo)
-        lat = _gps_to_decimal(gps.get(2), gps.get(1))
-        lon = _gps_to_decimal(gps.get(4), gps.get(3))
-        if lat is not None and lon is not None:
-            lines.append(f"GPS: {lat:.6f}, {lon:.6f}")
-    except Exception:
-        pass
-
-    return lines or ["(none)"]
-
-
-def _annotate(image_path: str, result: DetectionResult) -> Image.Image:
-    """The photo, resized to fit the results window, with every detection's
-    bounding box and label drawn on top."""
-    # cv2.imread (modules/objects.py's detector) auto-rotates a JPEG per its
-    # EXIF orientation tag, so detect_objects()'s bboxes are in that rotated,
-    # upright coordinate space - PIL.Image.open does *not* auto-rotate, so
-    # this must match that rotation explicitly or boxes land on the wrong
-    # content entirely (found 2026-09-04: correct predictions, wrong places).
-    image = ImageOps.exif_transpose(Image.open(image_path)).convert("RGB")
-    assert (image.width, image.height) == (result.image_width, result.image_height), (
-        f"annotated image size {image.size} doesn't match detection's "
-        f"({result.image_width}, {result.image_height}) - EXIF rotation mismatch"
-    )
-    scale = min(1.0, MAX_DISPLAY_WIDTH / image.width)
-    if scale < 1.0:
-        image = image.resize((round(image.width * scale), round(image.height * scale)))
-
-    draw = ImageDraw.Draw(image)
-    for det in result.detections:
-        x1, y1, x2, y2 = (round(v * scale) for v in det.bbox)
-        draw.rectangle((x1, y1, x2, y2), outline=BOX_COLOR, width=2)
-        label = f"{det.class_name} {det.confidence:.0%}"
-        label_y = max(0, y1 - 14)
-        draw.rectangle((x1, label_y, x1 + 7 * len(label), label_y + 14), fill=BOX_COLOR)
-        draw.text((x1 + 2, label_y + 1), label, fill="white")
-    return image
 
 
 def _section(parent: tk.Widget, heading: str, lines: list[str]) -> None:
@@ -133,7 +51,7 @@ def _add_entry(parent: tk.Widget, path: str, photo_refs: list) -> None:
         quality = check_all(path)
         result = detect_objects(path)
 
-        _section(entry, "EXIF", _exif_lines(path))
+        _section(entry, "EXIF", exif_lines(path))
         _section(
             entry,
             "Quality",
@@ -145,7 +63,7 @@ def _add_entry(parent: tk.Widget, path: str, photo_refs: list) -> None:
             object_lines = ["(none detected)"]
         _section(entry, f"Objects ({result.image_width}x{result.image_height})", object_lines)
 
-        photo = ImageTk.PhotoImage(_annotate(path, result))
+        photo = ImageTk.PhotoImage(annotate(path, result, max_display_width=MAX_DISPLAY_WIDTH))
         photo_refs.append(photo)
         tk.Label(entry, image=photo).pack(pady=(8, 0))
     except Exception as exc:  # surfaced per-image, not a crash
