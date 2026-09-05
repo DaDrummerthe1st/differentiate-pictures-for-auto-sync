@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bildgalleri</title>
+<link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+<link rel="stylesheet" href="/vendor/material-symbols/material-symbols.css">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<div id="gallery" class="screen">
+  <div id="stickyHeader">
+    <div id="toolbar">
+      <button id="gridSizeBtn">Stora bilder</button>
+      <button id="voiceoverRecordBtn">&#127908; Spela in berättelse</button>
+      <button id="voiceoverListBtn">Berättelser</button>
+      <button id="helpBtn"><span class="material-symbols-outlined">help</span> Hjälp</button>
+      <button id="downloadFolderLabel" class="folder-label"></button>
+      <div id="moreActionsWrap">
+        <button id="moreActionsBtn" aria-haspopup="true" aria-expanded="false" title="Fler alternativ">&#8942;</button>
+        <div id="moreActionsMenu" class="hidden">
+          <button id="selectModeBtn">Markera bilder</button>
+          <button id="downloadAllBtn">Ladda ner all media</button>
+          <button id="uploadBtn">Ladda upp bilder</button>
+          <input type="file" id="uploadFileInput" accept="image/*" multiple class="hidden">
+          <button id="settingsBtn" class="hidden">Inställningar</button>
+        </div>
+      </div>
+    </div>
+    <div id="albumNavBar">
+      <nav id="albumNav"></nav>
+      <button id="albumNavToggle">Visa alla album &#9662;</button>
+    </div>
+  </div>
+  <div id="tree"></div>
+</div>
+
+<button id="downloadSelectedBtn" class="floating-btn hidden">Ladda ner markerade (0)</button>
+<button id="cancelDownloadBtn" class="floating-btn cancel-btn hidden">&#10005; Avbryt nedladdning</button>
+
+<div id="lightbox" class="hidden">
+  <button id="lbClose" class="lb-btn lb-close">&#10005;</button>
+  <button id="lbHelpBtn" class="lb-btn lb-help-icon" title="Allmän hjälp"><span class="material-symbols-outlined">help</span></button>
+  <button id="lbInfoBtn" class="lb-btn lb-info-icon" title="Bildinformation"><span class="material-symbols-outlined">info</span></button>
+  <button id="lbPrev" class="lb-btn lb-prev">&#10094;</button>
+  <div id="lbImageWrap">
+    <img id="lbImg" src="" draggable="false">
+    <div id="lbSpinner" class="hidden"></div>
+    <div id="lbBoxes"></div>
+    <div id="lbDrawingBox" class="hidden"></div>
+  </div>
+  <button id="lbNext" class="lb-btn lb-next">&#10095;</button>
+  <div id="lbTagChips"></div>
+  <button id="lbDownload" class="lb-btn lb-download">Ladda ner</button>
+  <button id="lbAddTagBtn" class="lb-btn lb-add-tag"><span class="material-symbols-outlined">sell</span> Tagga</button>
+  <button id="lbDrawBoxBtn" class="lb-btn lb-draw-box" aria-pressed="false">&#9645; Rita ruta</button>
+</div>
+
+<div id="photoInfoModal" class="hidden">
+  <div id="photoInfoModalBox">
+    <button id="photoInfoModalClose" class="lb-btn lb-close">&#10005;</button>
+    <h2>Bildinformation</h2>
+    <p id="photoInfoFilename"></p>
+    <div id="photoInfoTagList"></div>
+  </div>
+</div>
+
+<div id="tagForm" class="hidden">
+  <div id="tagFormBox">
+    <h2 id="tagFormTitle">Ny tagg</h2>
+    <label for="tagCategorySelect">Kategori</label>
+    <select id="tagCategorySelect">
+      <option value="people">Person</option>
+      <option value="places">Plats</option>
+      <option value="objects">Föremål</option>
+      <option value="animals">Djur</option>
+      <option value="occasion">Tillfälle</option>
+      <option value="generic">Övrigt</option>
+    </select>
+    <p id="tagCategoryHint" class="tag-form-hint hidden"></p>
+    <label for="tagValueInput">Namn/beskrivning</label>
+    <input type="text" id="tagValueInput" list="tagValueSuggestions" autocomplete="off">
+    <datalist id="tagValueSuggestions"></datalist>
+    <div id="tagFormButtons">
+      <button id="tagFormSave" class="big-btn">Spara</button>
+      <button id="tagFormDelete" class="big-btn danger hidden">Ta bort</button>
+      <button id="tagFormCancel" class="big-btn secondary">Avbryt</button>
+    </div>
+  </div>
+</div>
+
+<div id="settingsModal" class="hidden">
+  <div id="settingsModalBox">
+    <h2>Inställningar</h2>
+    <label for="photosSourceSelect">Bildkälla</label>
+    <select id="photosSourceSelect"></select>
+    <div id="settingsModalButtons">
+      <button id="settingsModalSave" class="big-btn">Spara</button>
+      <button id="settingsModalCancel" class="big-btn secondary">Avbryt</button>
+    </div>
+  </div>
+</div>
+
+<div id="uploadBanner" class="hidden">
+  <span id="uploadBannerText">Laddar upp bilder...</span>
+  <div id="uploadProgressTrack"><div id="uploadProgressFill"></div></div>
+</div>
+
+<div id="recordingBanner" class="hidden">
+  &#128308; Spelar in berättelse - bläddra och peka fritt på bilderna medan du pratar
+  <button id="voiceoverStopBtn">Stoppa inspelning</button>
+</div>
+
+<div id="voiceoverListModal" class="hidden">
+  <button id="voiceoverListClose" class="lb-btn lb-close">&#10005;</button>
+  <h2>Berättelser</h2>
+  <div id="voiceoverListItems"></div>
+</div>
+
+<div id="voiceoverPlayer" class="hidden">
+  <button id="voiceoverPlayerClose" class="lb-btn lb-close">&#10005;</button>
+  <div id="voiceoverPlayerImageWrap">
+    <img id="voiceoverPlayerImg" src="">
+    <div id="voiceoverPointerDot" class="hidden"></div>
+  </div>
+  <audio id="voiceoverPlayerAudio" controls></audio>
+</div>
+
+<div id="infoModal" class="hidden">
+  <div id="infoModalBox">
+    <h2 id="infoModalTitle"></h2>
+    <p id="infoModalBody"></p>
+    <label id="infoModalDontShowWrap"><input type="checkbox" id="infoModalDontShowAgain"> Visa inte detta igen</label>
+    <button id="infoModalClose" class="big-btn">Fortsätt</button>
+  </div>
+</div>
+
+<div id="helpModal" class="hidden">
+  <div id="helpModalBox">
+    <button id="helpModalClose" class="lb-btn lb-close">&#10005;</button>
+    <h2>Hjälp och information</h2>
+    <p>Meddelanden du tidigare stängt kan öppnas igen här.</p>
+    <div id="helpModalItems"></div>
+  </div>
+</div>
+
+<script src="/vendor/jquery/jquery.slim.min.js"></script>
+<script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

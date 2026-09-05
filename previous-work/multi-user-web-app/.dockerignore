@@ -1,0 +1,7 @@
+server/
+tools/
+documentation/
+.claude/
+.git/
+.venv/
+__pycache__/

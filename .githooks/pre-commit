@@ -3,27 +3,19 @@
 # commit, docs-only or not" rule — see documentation/bugs/claude-bugs/ for the
 # lapse this closes. Repointed from app/tests to modules/tests 2026-09-04 when
 # app/, server/, detector/, prototypes/ moved to archive/ on the
-# test_production1 branch — see documentation/data-modeling/. Not activated by
+# test_production1 branch — see documentation/data-modeling/. The test-suite
+# gates below were removed entirely 2026-09-05 when modules/ and contacts/
+# were themselves archived to previous-work/ during the native-app pivot
+# (documentation/plans/shimmering-wondering-swing.md) — no live product code
+# exists at repo root right now, so there is nothing to gate on; re-add a
+# gate here once real code (e.g. android/) exists again. Not activated by
 # default; see documentation/tooling/README.md for the one-time
 # `git config core.hooksPath .githooks` setup.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-echo "[pre-commit] running modules/tests (fast, in-process)..."
-if ! python3 -m pytest modules/tests -q; then
-  echo "[pre-commit] modules/tests failed — commit blocked. Fix the failure or use --no-verify (discouraged, see CLAUDE.md)." >&2
-  exit 1
-fi
-
-echo "[pre-commit] running contacts/tests (fast, in-process)..."
-if ! python3 -m pytest contacts/tests -q; then
-  echo "[pre-commit] contacts/tests failed — commit blocked. Fix the failure or use --no-verify (discouraged, see CLAUDE.md)." >&2
-  exit 1
-fi
-
 # Mechanizes the manual secrets-in-diff scan an AI session used to run by
-# hand before every commit (documentation/tooling/TODO.md, raised 2026-07-28)
-# — same self-enforcing rationale as the app/tests gate above.
+# hand before every commit (documentation/tooling/TODO.md, raised 2026-07-28).
 echo "[pre-commit] running secrets-in-diff scan..."
 if ! python3 tools/secrets_scan/run.py; then
   echo "[pre-commit] secrets scan failed — commit blocked. Remove the secret/file, or if it's a known-safe fixture, adjust tools/secrets_scan/scan.py (see CLAUDE.md's --no-verify guidance if this is a false positive you must bypass)." >&2

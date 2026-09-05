@@ -1,0 +1,439 @@
+import secrets
+from datetime import datetime, timedelta, timezone
+from unittest.mock import patch
+
+import jwt
+
+from app.accounts import create_account
+from app.config import load_auth_config
+from app.cookies import ACCESS_COOKIE, REFRESH_COOKIE
+from app.invites import create_invite
+from app.security import verify_password
+
+_GENERIC_ERROR = "Incorrect email or password"
+
+
+def _seed_user(
+    db_connection, email="member@example.test", password="correct horse battery staple", role="member"
+):
+    _, username = create_account(db_connection, email=email, password=password, role=role)
+    return username
+
+
+def _decode_access_cookie(response) -> dict:
+    token = response.cookies[ACCESS_COOKIE]
+    return jwt.decode(token, load_auth_config()["JWT_SECRET_KEY"], algorithms=["HS256"])
+
+
+def test_login_with_correct_credentials_sets_cookies_and_returns_200(client, db_connection):
+    username = _seed_user(db_connection)
+
+    response = client.post(
+        "/login",
+        json={"email": "member@example.test", "password": "correct horse battery staple"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"email": "member@example.test", "role": "member", "username": username}
+    assert ACCESS_COOKIE in response.cookies
+    assert REFRESH_COOKIE in response.cookies
+
+
+def test_login_cookies_have_expected_security_flags(client, db_connection):
+    _seed_user(db_connection, email="cookieflags@example.test")
+
+    response = client.post(
+        "/login",
+        json={"email": "cookieflags@example.test", "password": "correct horse battery staple"},
+    )
+
+    set_cookie_headers = response.headers.get_list("set-cookie")
+    assert len(set_cookie_headers) == 2
+    for header in set_cookie_headers:
+        lowered = header.lower()
+        assert "httponly" in lowered
+        assert "secure" in lowered
+        assert "samesite=strict" in lowered
+
+
+def test_login_access_cookie_embeds_the_users_role(client, db_connection):
+    # app/auth.py (the photo-viewer) trusts this claim directly from the
+    # token rather than querying a users table it doesn't have - see
+    # documentation/tags/SCHEMA.md's role-visibility note.
+    _seed_user(db_connection, email="admin-role@example.test", role="admin")
+
+    response = client.post(
+        "/login",
+        json={"email": "admin-role@example.test", "password": "correct horse battery staple"},
+    )
+
+    assert _decode_access_cookie(response)["role"] == "admin"
+
+
+def test_login_access_cookie_embeds_the_users_username(client, db_connection):
+    # app/auth.py scopes every photo endpoint to dpfas_media/<username>/
+    # (documentation/plans/deep-singing-firefly.md) - trusted directly
+    # from the token, same reasoning as the role claim above.
+    username = _seed_user(db_connection, email="username-claim@example.test")
+
+    response = client.post(
+        "/login",
+        json={"email": "username-claim@example.test", "password": "correct horse battery staple"},
+    )
+
+    assert _decode_access_cookie(response)["username"] == username
+
+
+def test_login_with_wrong_password_returns_401(client, db_connection):
+    _seed_user(db_connection, email="wrongpw@example.test")
+
+    response = client.post(
+        "/login", json={"email": "wrongpw@example.test", "password": "not the password"}
+    )
+
+    assert response.status_code == 401
+    assert response.json() == {"detail": _GENERIC_ERROR}
+
+
+def test_login_with_unknown_email_returns_401(client, db_connection):
+    response = client.post(
+        "/login", json={"email": "no-such-user@example.test", "password": "whatever"}
+    )
+
+    assert response.status_code == 401
+    assert response.json() == {"detail": _GENERIC_ERROR}
+
+
+def test_login_wrong_password_and_unknown_email_get_identical_response(client, db_connection):
+    _seed_user(db_connection, email="wrongpw2@example.test")
+
+    wrong_password_response = client.post(
+        "/login", json={"email": "wrongpw2@example.test", "password": "not the password"}
+    )
+    unknown_email_response = client.post(
+        "/login", json={"email": "still-no-such-user@example.test", "password": "whatever"}
+    )
+
+    assert wrong_password_response.status_code == unknown_email_response.status_code
+    assert wrong_password_response.json() == unknown_email_response.json()
+
+
+def test_login_always_calls_verify_password_regardless_of_whether_email_exists(
+    client, db_connection
+):
+    _seed_user(db_connection, email="timing@example.test")
+
+    with patch("app.auth_routes.verify_password", wraps=verify_password) as spy:
+        client.post("/login", json={"email": "timing@example.test", "password": "wrong"})
+        assert spy.call_count == 1
+
+        client.post(
+            "/login", json={"email": "no-such-timing-user@example.test", "password": "wrong"}
+        )
+        assert spy.call_count == 2
+
+
+def test_protected_route_without_cookie_returns_401(client):
+    response = client.get("/whoami")
+
+    assert response.status_code == 401
+
+
+def test_refresh_with_valid_cookie_rotates_tokens_and_returns_200(client, db_connection):
+    _seed_user(db_connection, email="refresh@example.test")
+    client.post(
+        "/login",
+        json={"email": "refresh@example.test", "password": "correct horse battery staple"},
+    )
+    old_refresh_cookie = client.cookies.get("photo_server_refresh")
+
+    response = client.post("/refresh")
+
+    assert response.status_code == 200
+    assert response.json() == {"message": "refreshed"}
+    # rotated: the client's cookie jar now holds a different refresh cookie
+    assert client.cookies.get("photo_server_refresh") != old_refresh_cookie
+    # and the new one actually works for a protected route
+    assert client.get("/whoami").status_code == 200
+
+
+def test_refresh_without_cookie_returns_401(client):
+    response = client.post("/refresh")
+
+    assert response.status_code == 401
+
+
+def test_refresh_reissues_access_token_with_current_role_from_db(client, db_connection):
+    _seed_user(db_connection, email="refresh-role@example.test", role="admin")
+    client.post(
+        "/login",
+        json={"email": "refresh-role@example.test", "password": "correct horse battery staple"},
+    )
+
+    response = client.post("/refresh")
+
+    assert _decode_access_cookie(response)["role"] == "admin"
+
+
+def test_refresh_reissues_access_token_with_the_users_username(client, db_connection):
+    username = _seed_user(db_connection, email="refresh-username@example.test")
+    client.post(
+        "/login",
+        json={"email": "refresh-username@example.test", "password": "correct horse battery staple"},
+    )
+
+    response = client.post("/refresh")
+
+    assert _decode_access_cookie(response)["username"] == username
+
+
+def test_refresh_after_account_deleted_returns_401(client, db_connection):
+    _seed_user(db_connection, email="deleted@example.test")
+    user_id = db_connection.execute(
+        "SELECT id FROM users WHERE email = %s", ("deleted@example.test",)
+    ).fetchone()[0]
+    client.post(
+        "/login",
+        json={"email": "deleted@example.test", "password": "correct horse battery staple"},
+    )
+    # audit_log.user_id references users(id) with no cascade - clear the
+    # login_success row this test's own login just wrote, or the delete
+    # below violates the FK constraint.
+    db_connection.execute("DELETE FROM audit_log WHERE user_id = %s", (user_id,))
+    db_connection.execute("DELETE FROM users WHERE id = %s", (user_id,))
+
+    response = client.post("/refresh")
+
+    assert response.status_code == 401
+
+
+def test_logout_revokes_refresh_token_and_clears_cookies(client, db_connection):
+    _seed_user(db_connection, email="logout@example.test")
+    client.post(
+        "/login",
+        json={"email": "logout@example.test", "password": "correct horse battery staple"},
+    )
+
+    logout_response = client.post("/logout")
+    refresh_response = client.post("/refresh")
+
+    assert logout_response.status_code == 200
+    assert refresh_response.status_code == 401
+
+
+def test_protected_route_with_valid_access_cookie_returns_200(client, db_connection):
+    _seed_user(db_connection, email="whoami@example.test")
+    client.post(
+        "/login",
+        json={"email": "whoami@example.test", "password": "correct horse battery staple"},
+    )
+
+    # the client's own cookie jar already carries the cookies login just set
+    response = client.get("/whoami")
+
+    assert response.status_code == 200
+    assert response.json()["email"] == "whoami@example.test"
+
+
+def test_failed_login_writes_one_audit_log_row(client, db_connection):
+    _seed_user(db_connection, email="audit-fail@example.test")
+
+    client.post(
+        "/login", json={"email": "audit-fail@example.test", "password": "wrong password"}
+    )
+
+    rows = db_connection.execute(
+        "SELECT user_id, action, details FROM audit_log WHERE action = 'login_failure'"
+    ).fetchall()
+
+    assert len(rows) == 1
+    user_id, action, details = rows[0]
+    assert action == "login_failure"
+    assert details == {"attempted_email": "audit-fail@example.test"}
+
+
+def test_failed_login_for_unknown_email_writes_null_user_id(client, db_connection):
+    client.post(
+        "/login", json={"email": "no-such-audit-user@example.test", "password": "whatever"}
+    )
+
+    rows = db_connection.execute(
+        "SELECT user_id, details FROM audit_log WHERE action = 'login_failure'"
+    ).fetchall()
+
+    assert len(rows) == 1
+    assert rows[0][0] is None
+
+
+def _login(client, email, password="correct horse battery staple"):
+    return client.post("/login", json={"email": email, "password": password})
+
+
+def test_admin_can_create_an_invite_with_granted_invites(client, db_connection):
+    _seed_user(db_connection, email="admin-invite@example.test", role="admin")
+    _login(client, "admin-invite@example.test")
+
+    response = client.post(
+        "/invites", json={"email": "invitee@example.test", "granted_invites": 3}
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["invitee_email"] == "invitee@example.test"
+    assert body["granted_invites"] == 3
+    assert len(body["token"]) > 0
+
+
+def test_creating_an_invite_attempts_to_send_an_email_with_the_accept_link(client, db_connection, monkeypatch):
+    monkeypatch.setenv("APP_ORIGIN", "https://photos.example.test")
+    _seed_user(db_connection, email="admin-mail@example.test", role="admin")
+    _login(client, "admin-mail@example.test")
+
+    with patch("app.auth_routes.send_invite_email") as mock_send:
+        response = client.post("/invites", json={"email": "mailed-invitee@example.test"})
+
+    token = response.json()["token"]
+    mock_send.assert_called_once_with(
+        "mailed-invitee@example.test",
+        f"https://photos.example.test/accept-invite?token={token}",
+    )
+
+
+def test_admin_creating_an_invite_does_not_touch_their_own_quota(client, db_connection):
+    _seed_user(db_connection, email="admin-quota@example.test", role="admin")
+    _login(client, "admin-quota@example.test")
+
+    client.post("/invites", json={"email": "one@example.test"})
+    client.post("/invites", json={"email": "two@example.test"})
+
+    row = db_connection.execute(
+        "SELECT invites_remaining FROM users WHERE email = %s", ("admin-quota@example.test",)
+    ).fetchone()
+    assert row == (0,)
+
+
+def test_member_without_quota_cannot_create_an_invite(client, db_connection):
+    _seed_user(db_connection, email="no-quota-member@example.test", role="member")
+    _login(client, "no-quota-member@example.test")
+
+    response = client.post("/invites", json={"email": "someone@example.test"})
+
+    assert response.status_code == 403
+
+
+def test_member_with_quota_can_create_an_invite_and_it_decrements(client, db_connection):
+    user_id, _ = create_account(
+        db_connection,
+        email="has-quota-member@example.test",
+        password="correct horse battery staple",
+        role="member",
+        invites_remaining=1,
+    )
+    _login(client, "has-quota-member@example.test")
+
+    response = client.post("/invites", json={"email": "someone-else@example.test"})
+
+    assert response.status_code == 201
+    row = db_connection.execute(
+        "SELECT invites_remaining FROM users WHERE id = %s", (user_id,)
+    ).fetchone()
+    assert row == (0,)
+
+
+def test_member_cannot_grant_invite_quota_even_with_their_own_quota(client, db_connection):
+    create_account(
+        db_connection,
+        email="tries-to-grant@example.test",
+        password="correct horse battery staple",
+        role="member",
+        invites_remaining=1,
+    )
+    _login(client, "tries-to-grant@example.test")
+
+    response = client.post(
+        "/invites", json={"email": "someone@example.test", "granted_invites": 1}
+    )
+
+    assert response.status_code == 403
+
+
+def test_creating_an_invite_for_an_already_registered_email_returns_409(client, db_connection):
+    _seed_user(db_connection, email="admin-dup@example.test", role="admin")
+    _seed_user(db_connection, email="already-registered@example.test")
+    _login(client, "admin-dup@example.test")
+
+    response = client.post("/invites", json={"email": "already-registered@example.test"})
+
+    assert response.status_code == 409
+
+
+def test_accepting_an_invite_creates_a_member_account_and_logs_them_in(client, db_connection):
+    _seed_user(db_connection, email="admin-accept@example.test", role="admin")
+    _login(client, "admin-accept@example.test")
+    token = client.post("/invites", json={"email": "accepted@example.test"}).json()["token"]
+    client.cookies.clear()
+
+    response = client.post(f"/invites/{token}/accept", json={"password": "a brand new password"})
+
+    assert response.status_code == 201
+    assert response.json()["email"] == "accepted@example.test"
+    assert response.json()["role"] == "member"
+    assert ACCESS_COOKIE in response.cookies
+    assert client.get("/whoami").status_code == 200
+
+
+def test_accepting_an_unknown_token_returns_404(client):
+    response = client.post("/invites/not-a-real-token/accept", json={"password": "whatever"})
+
+    assert response.status_code == 404
+
+
+def test_accepting_an_already_accepted_invite_returns_400(client, db_connection):
+    _seed_user(db_connection, email="admin-reaccept@example.test", role="admin")
+    _login(client, "admin-reaccept@example.test")
+    token = client.post("/invites", json={"email": "reaccept@example.test"}).json()["token"]
+    client.post(f"/invites/{token}/accept", json={"password": "first password"})
+    client.cookies.clear()
+
+    response = client.post(f"/invites/{token}/accept", json={"password": "second password"})
+
+    assert response.status_code == 400
+
+
+def test_accepting_an_expired_invite_returns_400(client, db_connection):
+    inviter_id = _seed_inviter_id(db_connection)
+    invite = create_invite(
+        db_connection,
+        inviter_id=inviter_id,
+        invitee_email="expired@example.test",
+        now=datetime.now(timezone.utc) - timedelta(days=8),
+    )
+
+    response = client.post(f"/invites/{invite.token}/accept", json={"password": "whatever"})
+
+    assert response.status_code == 400
+
+
+def _seed_inviter_id(db_connection):
+    user_id, _ = create_account(
+        db_connection,
+        email=f"expiring-inviter-{secrets.token_hex(4)}@example.test",
+        password="correct horse battery staple",
+        role="admin",
+    )
+    return user_id
+
+
+def test_successful_login_writes_one_audit_log_row(client, db_connection):
+    _seed_user(db_connection, email="audit-success@example.test")
+
+    client.post(
+        "/login",
+        json={"email": "audit-success@example.test", "password": "correct horse battery staple"},
+    )
+
+    rows = db_connection.execute(
+        "SELECT user_id, action FROM audit_log WHERE action = 'login_success'"
+    ).fetchall()
+
+    assert len(rows) == 1

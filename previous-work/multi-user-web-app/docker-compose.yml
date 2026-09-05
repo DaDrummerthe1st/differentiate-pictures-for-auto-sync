@@ -1,0 +1,112 @@
+# Local dev stack — mirrors docker-compose.prod.yml's shape (caddy +
+# photo-viewer + auth + postgres + redis, one shared origin so the
+# session cookie works for both services) but deliberately diverges
+# from it in two ways, both scoped to "this never leaves the dev
+# machine":
+#
+#   - Every credential below is a fixed, checked-in, obviously-fake
+#     value instead of ${VAR:?...} read from a .env file. There is
+#     nothing here worth protecting: no host port is published except
+#     via Caddy on localhost, and postgres/redis data lives in
+#     throwaway local volumes. Real secrets (prod's .env) never belong
+#     in this file - if that ever stops being true for some future
+#     local scenario, switch that piece back to a .env, don't just
+#     relax this one.
+#   - Caddy serves plain http://localhost instead of terminating real
+#     TLS. Chromium (which this app already requires for the File
+#     System Access folder-picker/mic anyway - see documentation/gui/
+#     README.md) treats http://localhost as a secure context, so the
+#     Secure-flagged session cookie (server/app/cookies.py) still
+#     works with no self-signed-cert warning to click through.
+#
+# Photos are read read-only from the real mammas_bilder library, mounted
+# under PHOTOS_LIBRARY_ROOT as the "momfiles" source (same subdirectory
+# name prod uses for the equivalent /tank/momfiles mount, so the admin
+# Installningar panel behaves identically locally) - downloads only copy
+# files out to the browser, this app never writes back into it. The
+# "dpfas_media" source (the default active one) is a throwaway named
+# volume here, not a real host directory - starts empty, same as prod's
+# /tank/dpfas_media, and is read-write (unlike momfiles above) since
+# POST /api/upload writes into it directly - same mount shape as prod.
+#
+# Usage: docker compose up -d, then open http://localhost:8420
+#        docker compose down when finished.
+
+services:
+  caddy:
+    image: caddy:2.11.4-alpine
+    ports:
+      - "127.0.0.1:8420:80"
+    volumes:
+      - ./Caddyfile.local:/etc/caddy/Caddyfile:ro
+    depends_on:
+      - photo-viewer
+      - auth
+    restart: "no"
+
+  photo-viewer:
+    build: .
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8420", "--no-server-header"]
+    environment:
+      JWT_SECRET_KEY: "local-dev-only-not-a-real-secret-32chars"
+      PHOTOS_LIBRARY_ROOT: /photo-library-root
+    volumes:
+      - /home/joakim/Pictures/mammas_bilder:/photo-library-root/momfiles:ro
+      - dpfas_media_dev:/photo-library-root/dpfas_media
+      - thumbcache:/thumbcache
+      - analytics_data:/data
+      - stories:/stories
+    restart: "no"
+
+  # Runs the detector models (quality trio + face detection/YuNet built so
+  # far - documentation/curation/TODO.md's build plan) called by
+  # photo-viewer, kept in its own container/image so opencv/onnxruntime's
+  # footprint never lands in photo-viewer's. No host port published -
+  # reachable only from other containers on this compose network, same
+  # pattern as auth/postgres/redis below.
+  detector:
+    build:
+      context: .
+      dockerfile: detector/Dockerfile
+    restart: "no"
+    # Starting conservative value, not measured yet - real per-model RAM
+    # use needs the "object-detection timing benchmark" item in
+    # documentation/curation/TODO.md once Phase 2+ actually loads models.
+    mem_limit: 768m
+
+  auth:
+    build: ./server
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: photo_server
+      POSTGRES_USER: photo_server
+      POSTGRES_PASSWORD: "local-dev-only"
+      REDIS_URL: "redis://:local-dev-only@redis:6379/0"
+      JWT_SECRET_KEY: "local-dev-only-not-a-real-secret-32chars"
+    depends_on:
+      - postgres
+      - redis
+    restart: "no"
+
+  redis:
+    image: redis:8.8-alpine
+    command: ["redis-server", "--requirepass", "local-dev-only"]
+    restart: "no"
+
+  postgres:
+    image: postgres:18.4-bookworm
+    environment:
+      POSTGRES_DB: photo_server
+      POSTGRES_USER: photo_server
+      POSTGRES_PASSWORD: "local-dev-only"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    restart: "no"
+
+volumes:
+  thumbcache:
+  analytics_data:
+  stories:
+  postgres_data:
+  dpfas_media_dev:

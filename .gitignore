@@ -1,7 +1,7 @@
 /venv/
-/archive/server/.venv/
+/previous-work/multi-user-web-app/server/.venv/
 /.idea/
-archive/prototypes/differentiate_pictures/app/local_mysql.py
+previous-work/multi-user-web-app/prototypes/differentiate_pictures/app/local_mysql.py
 /resources/potential_first_check_py_files
 resources/darknet
 /.claude/settings.local.json
@@ -9,7 +9,7 @@ tools/doc_metrics/metrics.db
 __pycache__/
 .pytest_cache/
 .venv-test/
-/archive/server/.env
+/previous-work/multi-user-web-app/server/.env
 /.env
 /resources/test_pictures/
 /databases/
