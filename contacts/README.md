@@ -44,7 +44,9 @@ not-yet-built feature.
   matches only within whichever fields are checked (case-insensitive substring). A fresh page load
   defaults to `display_name`+`emails`; once the form is submitted, exactly the checked boxes apply
   — unchecking everything and searching finds nothing, which is the point (search *these* fields,
-  not a fixed set).
+  not a fixed set). `categorize_fields()` groups the (potentially 100+, for a real Google export)
+  raw field names into Basic/Organization/Contact info/Name details/Other so the checkboxes render
+  as collapsed `<details>` per category, not one unusable flat list.
 - `multipart.py` — `extract_uploaded_file()`, a small `email`-module-based multipart/form-data
   parser (Python 3.13 removed the old `cgi` module this used to be done with) so a plain HTML
   `<form enctype="multipart/form-data">` can upload a file without any JS.

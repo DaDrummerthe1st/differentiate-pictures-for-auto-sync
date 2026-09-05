@@ -16,6 +16,33 @@ _BUILTIN_FIELDS = ["display_name", "emails"]
 DEFAULT_SEARCH_FIELDS = list(_BUILTIN_FIELDS)
 
 
+# Ordered so a checked field lands in the first category its name matches -
+# real exports (Google's CSV is 121 columns) need grouping to be usable as
+# checkboxes at all, not one flat list. Names are matched case-insensitively
+# as substrings, since raw field names vary by source (CSV column names vs.
+# vCard property names) - "Other" catches whatever no rule recognizes.
+_CATEGORY_RULES = [
+    ("Organization", ("organization",)),
+    ("Contact info", ("e-mail", "phone", "address", "website")),
+    ("Name details", ("name", "nickname", "prefix", "suffix", "file as")),
+]
+
+
+def categorize_fields(fields: list[str]) -> dict[str, list[str]]:
+    categories: dict[str, list[str]] = {"Basic": []}
+    for field in fields:
+        if field in ("display_name", "emails"):
+            categories["Basic"].append(field)
+            continue
+        lowered = field.lower()
+        category = next(
+            (name for name, keywords in _CATEGORY_RULES if any(k in lowered for k in keywords)),
+            "Other",
+        )
+        categories.setdefault(category, []).append(field)
+    return {name: group for name, group in categories.items() if group}
+
+
 def available_search_fields(contacts: list[StoredContact]) -> list[str]:
     raw_keys: dict[str, None] = {}
     for contact in contacts:

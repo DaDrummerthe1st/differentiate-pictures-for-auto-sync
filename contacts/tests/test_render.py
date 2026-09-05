@@ -111,6 +111,20 @@ def test_render_browse_page_shows_search_form_with_field_checkboxes():
     assert 'name="field" value="Organization Name" checked' not in html
 
 
+def test_render_browse_page_groups_field_checkboxes_into_collapsed_categories():
+    html = render_browse_page(
+        [], total_count=5, query="", selected_fields=["display_name", "emails"],
+        available_fields=["display_name", "emails", "Organization Name", "Middle Name", "Birthday"],
+    )
+    # Categories render as native <details>, collapsed by default (no "open" attribute
+    # on any of them - "Contact info", "Organization" etc. must not auto-expand).
+    assert "<summary>Basic</summary>" in html
+    assert "<summary>Organization</summary>" in html
+    assert "<summary>Name details</summary>" in html
+    assert "<summary>Other</summary>" in html
+    assert "<details open" not in html
+
+
 def test_render_browse_page_shows_no_match_message_when_search_finds_nothing():
     html = render_browse_page([], total_count=5, query="nobody-has-this-name")
     assert "no contacts match" in html.lower()

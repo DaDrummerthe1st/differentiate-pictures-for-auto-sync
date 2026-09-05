@@ -1,5 +1,5 @@
 from contacts.db import StoredContact
-from contacts.search import available_search_fields, filter_contacts
+from contacts.search import available_search_fields, categorize_fields, filter_contacts
 
 # Synthetic fixture data only, same convention as the rest of contacts/tests.
 
@@ -62,6 +62,45 @@ def test_available_search_fields_includes_display_name_and_emails_plus_raw_keys(
     assert fields[:2] == ["display_name", "emails"]
     assert "Organization Name" in fields
     assert "Notes" in fields
+
+
+def test_categorize_fields_puts_display_name_and_emails_in_basic():
+    categories = categorize_fields(["display_name", "emails"])
+    assert categories["Basic"] == ["display_name", "emails"]
+
+
+def test_categorize_fields_groups_organization_columns():
+    fields = ["display_name", "emails", "Organization Name", "Organization Title"]
+    categories = categorize_fields(fields)
+    assert categories["Organization"] == ["Organization Name", "Organization Title"]
+    assert "Organization Name" not in categories.get("Other", [])
+
+
+def test_categorize_fields_groups_contact_info_columns():
+    fields = ["E-mail 1 - Value", "Phone 1 - Value", "Address 1 - Formatted", "Website 1 - Value"]
+    categories = categorize_fields(fields)
+    assert set(categories["Contact info"]) == set(fields)
+
+
+def test_categorize_fields_groups_name_detail_columns():
+    fields = ["Middle Name", "Nickname", "Name Prefix", "File As"]
+    categories = categorize_fields(fields)
+    assert set(categories["Name details"]) == set(fields)
+
+
+def test_categorize_fields_puts_unrecognized_columns_in_other():
+    categories = categorize_fields(["Birthday", "Notes", "Custom Field 1 - Value"])
+    assert set(categories["Other"]) == {"Birthday", "Notes", "Custom Field 1 - Value"}
+
+
+def test_categorize_fields_every_input_field_appears_exactly_once():
+    fields = [
+        "display_name", "emails", "Organization Name", "E-mail 1 - Value",
+        "Middle Name", "Birthday",
+    ]
+    categories = categorize_fields(fields)
+    all_categorized = [f for group in categories.values() for f in group]
+    assert sorted(all_categorized) == sorted(fields)
 
 
 def test_available_search_fields_has_no_duplicates():

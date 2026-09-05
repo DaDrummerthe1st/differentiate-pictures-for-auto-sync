@@ -8,7 +8,7 @@ card) uses native <details>/<summary> - no JS needed for that either.
 import json
 
 from contacts.db import ClassifyResult, StoredContact
-from contacts.search import DEFAULT_SEARCH_FIELDS
+from contacts.search import DEFAULT_SEARCH_FIELDS, categorize_fields
 
 _PAGE_STYLE = """
 body { font-family: sans-serif; max-width: 760px; margin: 2rem auto; color: #222; }
@@ -19,6 +19,10 @@ nav a { margin-right: 1rem; }
 form.upload { margin: 1.5rem 0; padding: 1rem; border: 1px solid #ddd; border-radius: 6px; }
 button, input[type=submit] { padding: 0.5rem 1rem; cursor: pointer; }
 .summary { background: #f4f4f4; padding: 0.6rem; border-radius: 4px; margin-bottom: 1rem; }
+.search-fields { border: 1px solid #ddd; border-radius: 6px; margin-top: 0.6rem; }
+.search-fields details { margin: 0.3rem 0.6rem; }
+.search-fields summary { cursor: pointer; font-weight: bold; }
+.search-fields label { display: inline-block; margin: 0.2rem 0.8rem 0.2rem 1.2rem; }
 details.letter-group { border: 1px solid #ddd; border-radius: 4px; margin-bottom: 0.4rem; }
 details.letter-group > summary {
   cursor: pointer; font-weight: bold; padding: 0.5rem 0.7rem; background: #f0f0f0;
@@ -227,23 +231,30 @@ def render_saved_page(counts: dict) -> str:
 _FIELD_LABELS = {"display_name": "Display name", "emails": "Email(s)"}
 
 
-def _render_search_form(query: str, selected_fields: list[str], available_fields: list[str]) -> str:
+def _render_category(name: str, fields: list[str], selected_fields: list[str]) -> str:
     checkboxes = []
-    for field in available_fields:
+    for field in fields:
         checked = " checked" if field in selected_fields else ""
         label = _FIELD_LABELS.get(field, field)
         checkboxes.append(
             f'<label><input type="checkbox" name="field" value="{escape_html(field)}"{checked}> '
             f"{escape_html(label)}</label>"
         )
-    checkboxes_html = " ".join(checkboxes)
+    return f'<details><summary>{escape_html(name)}</summary>{" ".join(checkboxes)}</details>'
+
+
+def _render_search_form(query: str, selected_fields: list[str], available_fields: list[str]) -> str:
+    categories_html = "\n".join(
+        _render_category(name, fields, selected_fields)
+        for name, fields in categorize_fields(available_fields).items()
+    )
     return f"""<form method="get" action="/contacts">
   <input type="text" name="q" value="{escape_html(query)}" placeholder="Search...">
   <input type="submit" value="Search">
   <input type="hidden" name="submitted" value="1">
-  <fieldset>
+  <fieldset class="search-fields">
     <legend>Search in</legend>
-    {checkboxes_html}
+    {categories_html}
   </fieldset>
 </form>"""
 
