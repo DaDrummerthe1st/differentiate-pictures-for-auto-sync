@@ -9,6 +9,8 @@ from modules.pictures import (
     _is_valid_picture_file,
     _md5,
     _statx_birth_time,
+    get_location,
+    list_locations_under,
 )
 
 
@@ -200,3 +202,57 @@ def test_same_path_rehashed_when_content_changes(tmp_path):
     assert first[0].md5 != second[0].md5
     assert location_count == 1
     assert picture_count == 2
+
+
+def test_get_location_returns_the_matching_location(tmp_path):
+    folder = tmp_path / "folder"
+    folder.mkdir()
+    _save_photo(folder / "photo.jpg")
+    db_path = tmp_path / "pictures.db"
+    registered = GetListOfValidPictureFiles(str(folder), db_path=str(db_path))[0]
+
+    found = get_location(registered.location_id, db_path=str(db_path))
+
+    assert found == registered
+
+
+def test_get_location_returns_none_for_an_unknown_id(tmp_path):
+    db_path = tmp_path / "pictures.db"
+    GetListOfValidPictureFiles(str(tmp_path), db_path=str(db_path))
+
+    assert get_location("no-such-id", db_path=str(db_path)) is None
+
+
+def test_list_locations_under_returns_only_locations_within_that_folder(tmp_path):
+    inside = tmp_path / "inside"
+    outside = tmp_path / "outside"
+    inside.mkdir()
+    outside.mkdir()
+    _save_photo(inside / "a.jpg")
+    _save_photo(outside / "b.jpg")
+    db_path = tmp_path / "pictures.db"
+    GetListOfValidPictureFiles(str(tmp_path), db_path=str(db_path))
+
+    found = list_locations_under(str(inside), db_path=str(db_path))
+
+    assert [os.path.basename(loc.path) for loc in found] == ["a.jpg"]
+
+
+def test_list_locations_under_sorts_by_path(tmp_path):
+    folder = tmp_path / "folder"
+    folder.mkdir()
+    _save_photo(folder / "b.jpg", color=(1, 1, 1))
+    _save_photo(folder / "a.jpg", color=(2, 2, 2))
+    db_path = tmp_path / "pictures.db"
+    GetListOfValidPictureFiles(str(folder), db_path=str(db_path))
+
+    found = list_locations_under(str(folder), db_path=str(db_path))
+
+    assert [os.path.basename(loc.path) for loc in found] == ["a.jpg", "b.jpg"]
+
+
+def test_list_locations_under_returns_empty_for_no_matches(tmp_path):
+    db_path = tmp_path / "pictures.db"
+    GetListOfValidPictureFiles(str(tmp_path), db_path=str(db_path))
+
+    assert list_locations_under(str(tmp_path / "nothing-here"), db_path=str(db_path)) == []

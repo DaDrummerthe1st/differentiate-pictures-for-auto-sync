@@ -254,6 +254,57 @@ def _register_file(conn: sqlite3.Connection, path: str, source: str | None, now:
     )
 
 
+def _row_to_location(row: sqlite3.Row) -> PictureLocation:
+    return PictureLocation(
+        picture_id=row["picture_id"],
+        location_id=row["id"],
+        path=row["path"],
+        md5=row["md5"],
+        source=row["source"],
+        file_metadata=json.loads(row["file_metadata"]),
+    )
+
+
+def get_location(location_id: str, db_path: str = DEFAULT_DB_PATH) -> PictureLocation | None:
+    """The registered location with this id, or None if it isn't registered."""
+    conn = _connect(db_path)
+    try:
+        _init_db(conn)
+        row = conn.execute(
+            """
+            SELECT locations.id, locations.picture_id, locations.path, locations.source, locations.file_metadata,
+                   pictures.md5
+            FROM locations JOIN pictures ON pictures.id = locations.picture_id
+            WHERE locations.id = ?
+            """,
+            (location_id,),
+        ).fetchone()
+        return _row_to_location(row) if row is not None else None
+    finally:
+        conn.close()
+
+
+def list_locations_under(folder_path: str, db_path: str = DEFAULT_DB_PATH) -> list[PictureLocation]:
+    """Every registered location whose path is inside folder_path (recursively), sorted by path."""
+    conn = _connect(db_path)
+    try:
+        _init_db(conn)
+        prefix = folder_path.rstrip(os.sep) + os.sep
+        rows = conn.execute(
+            """
+            SELECT locations.id, locations.picture_id, locations.path, locations.source, locations.file_metadata,
+                   pictures.md5
+            FROM locations JOIN pictures ON pictures.id = locations.picture_id
+            WHERE locations.path LIKE ? ESCAPE '\\'
+            ORDER BY locations.path
+            """,
+            (prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%",),
+        ).fetchall()
+        return [_row_to_location(row) for row in rows]
+    finally:
+        conn.close()
+
+
 def GetListOfValidPictureFiles(
     folder_path: str, source: str | None = None, db_path: str = DEFAULT_DB_PATH
 ) -> list[PictureLocation]:
