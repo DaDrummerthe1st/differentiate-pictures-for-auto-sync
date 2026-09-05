@@ -28,6 +28,7 @@
 <button id="import-btn">Import CSV</button>
 <input type="file" id="file-input" accept=".csv" style="display:none">
 <button id="rename-btn" disabled>Simulate a rename (keeps same email)</button>
+<button id="reset-btn">Reset</button>
 
 <table id="contacts-table" hidden>
   <thead><tr><th>Display name</th><th>Email(s)</th></tr></thead>
@@ -112,6 +113,14 @@ document.getElementById('rename-btn').addEventListener('click', () => {
   render(new Set(renames.map(r => r.email)));
   setStatus(renames.map(r => `Detected rename: "${r.old_name}" -> "${r.new_name}" (matched by ${r.email})`).join('\n'));
   previousSnapshot = contacts.map(c => ({ display_name: c.display_name, emails: [...c.emails] }));
+});
+
+document.getElementById('reset-btn').addEventListener('click', () => {
+  contacts = [];
+  previousSnapshot = null;
+  document.getElementById('file-input').value = '';
+  render();
+  setStatus('No contacts loaded yet.');
 });
 
 // Mirrors contacts/matching.py's detect_renames — matches by email, never by name.
