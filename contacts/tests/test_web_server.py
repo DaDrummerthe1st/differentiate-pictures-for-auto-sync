@@ -63,11 +63,53 @@ def test_handle_browse_lists_saved_contacts(tmp_path):
         db_path=db_path,
     )
 
-    html = handle_browse(db_path=db_path)
+    html = handle_browse("", db_path=db_path)
 
     assert "Alice Andersson" in html
 
 
 def test_handle_browse_on_empty_db_says_so(tmp_path):
-    html = handle_browse(db_path=str(tmp_path / "app.db"))
+    html = handle_browse("", db_path=str(tmp_path / "app.db"))
     assert "no contacts" in html.lower()
+
+
+def test_handle_browse_filters_by_query_string(tmp_path):
+    db_path = str(tmp_path / "app.db")
+    save_contacts(
+        [
+            Contact(display_name="Alice Andersson", emails=["alice@example.com"], source="google_csv"),
+            Contact(display_name="Bo Bengtsson", emails=["bo@example.com"], source="google_csv"),
+        ],
+        db_path=db_path,
+    )
+
+    html = handle_browse("q=alice", db_path=db_path)
+
+    assert "Alice Andersson" in html
+    assert "Bo Bengtsson" not in html
+
+
+def test_handle_browse_respects_explicitly_submitted_field_selection(tmp_path):
+    db_path = str(tmp_path / "app.db")
+    save_contacts(
+        [Contact(display_name="Alice Andersson", emails=["alice@example.com"], source="google_csv")],
+        db_path=db_path,
+    )
+
+    # Searching "alice" but only in emails - display_name match is excluded.
+    html = handle_browse("submitted=1&q=alice&field=emails", db_path=db_path)
+
+    assert "1 of 1" in html
+
+
+def test_handle_browse_field_unchecked_and_submitted_excludes_it(tmp_path):
+    db_path = str(tmp_path / "app.db")
+    save_contacts(
+        [Contact(display_name="Alice Andersson", emails=["alice@example.com"], source="google_csv")],
+        db_path=db_path,
+    )
+
+    # "andersson" only in display_name; submitted with only "emails" checked.
+    html = handle_browse("submitted=1&q=andersson&field=emails", db_path=db_path)
+
+    assert "No contacts match" in html

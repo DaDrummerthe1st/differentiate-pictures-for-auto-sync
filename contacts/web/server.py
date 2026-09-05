@@ -13,13 +13,14 @@ Then open:    http://127.0.0.1:8765/
 import csv
 import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qsl
+from urllib.parse import parse_qs, parse_qsl, urlsplit
 
 from contacts.db import DEFAULT_DB_PATH, classify_contacts, list_all_contacts, save_contacts
 from contacts.google_csv_import import parse_google_csv
 from contacts.models import Contact
 from contacts.multipart import extract_uploaded_file
 from contacts.render import render_browse_page, render_preview_page, render_saved_page, render_upload_page
+from contacts.search import DEFAULT_SEARCH_FIELDS, available_search_fields, filter_contacts
 
 DEFAULT_PORT = 8765
 
@@ -42,8 +43,21 @@ def handle_save(contacts_json: str, db_path: str = DEFAULT_DB_PATH) -> str:
     return render_saved_page(counts)
 
 
-def handle_browse(db_path: str = DEFAULT_DB_PATH) -> str:
-    return render_browse_page(list_all_contacts(db_path=db_path))
+def handle_browse(query_string: str, db_path: str = DEFAULT_DB_PATH) -> str:
+    all_contacts = list_all_contacts(db_path=db_path)
+    params = parse_qs(query_string)
+    query = params.get("q", [""])[0]
+    available_fields = available_search_fields(all_contacts)
+    submitted = params.get("submitted", ["0"])[0] == "1"
+    selected_fields = params.get("field", []) if submitted else list(DEFAULT_SEARCH_FIELDS)
+    filtered = filter_contacts(all_contacts, query, selected_fields)
+    return render_browse_page(
+        filtered,
+        total_count=len(all_contacts),
+        query=query,
+        selected_fields=selected_fields,
+        available_fields=available_fields,
+    )
 
 
 class ContactsRequestHandler(BaseHTTPRequestHandler):
@@ -60,10 +74,11 @@ class ContactsRequestHandler(BaseHTTPRequestHandler):
         return self.rfile.read(length)
 
     def do_GET(self):
-        if self.path in ("/", "/index.html"):
+        split = urlsplit(self.path)
+        if split.path in ("/", "/index.html"):
             self._respond_html(render_upload_page())
-        elif self.path == "/contacts":
-            self._respond_html(handle_browse())
+        elif split.path == "/contacts":
+            self._respond_html(handle_browse(split.query))
         else:
             self.send_response(404)
             self.end_headers()

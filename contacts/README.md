@@ -37,7 +37,14 @@ not-yet-built feature.
   at all inserts a new contact. `classify_contacts()` is the read-only dry run of that same logic
   (what `save_contacts()` would do, without writing) — used to render a preview before committing.
 - `render.py` — pure-Python HTML rendering (grouping by first letter, per-contact diff view,
-  the three page templates) — no client-side JS, no template engine dependency.
+  the four page templates) — no client-side JS, no template engine dependency.
+- `search.py` — text search for `GET /contacts`, field-scoped rather than always-search-
+  everything: `available_search_fields()` offers `display_name`/`emails` plus every `raw` key seen
+  across stored contacts (organization, notes, phone, ...) as checkboxes; `filter_contacts()`
+  matches only within whichever fields are checked (case-insensitive substring). A fresh page load
+  defaults to `display_name`+`emails`; once the form is submitted, exactly the checked boxes apply
+  — unchecking everything and searching finds nothing, which is the point (search *these* fields,
+  not a fixed set).
 - `multipart.py` — `extract_uploaded_file()`, a small `email`-module-based multipart/form-data
   parser (Python 3.13 removed the old `cgi` module this used to be done with) so a plain HTML
   `<form enctype="multipart/form-data">` can upload a file without any JS.

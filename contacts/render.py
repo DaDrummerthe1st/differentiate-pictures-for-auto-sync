@@ -8,6 +8,7 @@ card) uses native <details>/<summary> - no JS needed for that either.
 import json
 
 from contacts.db import ClassifyResult, StoredContact
+from contacts.search import DEFAULT_SEARCH_FIELDS
 
 _PAGE_STYLE = """
 body { font-family: sans-serif; max-width: 760px; margin: 2rem auto; color: #222; }
@@ -223,12 +224,58 @@ def render_saved_page(counts: dict) -> str:
     return _page("Saved", body)
 
 
-def render_browse_page(contacts: list[StoredContact]) -> str:
-    if not contacts:
+_FIELD_LABELS = {"display_name": "Display name", "emails": "Email(s)"}
+
+
+def _render_search_form(query: str, selected_fields: list[str], available_fields: list[str]) -> str:
+    checkboxes = []
+    for field in available_fields:
+        checked = " checked" if field in selected_fields else ""
+        label = _FIELD_LABELS.get(field, field)
+        checkboxes.append(
+            f'<label><input type="checkbox" name="field" value="{escape_html(field)}"{checked}> '
+            f"{escape_html(label)}</label>"
+        )
+    checkboxes_html = " ".join(checkboxes)
+    return f"""<form method="get" action="/contacts">
+  <input type="text" name="q" value="{escape_html(query)}" placeholder="Search...">
+  <input type="submit" value="Search">
+  <input type="hidden" name="submitted" value="1">
+  <fieldset>
+    <legend>Search in</legend>
+    {checkboxes_html}
+  </fieldset>
+</form>"""
+
+
+def render_browse_page(
+    contacts: list[StoredContact],
+    total_count: int,
+    query: str = "",
+    selected_fields: list[str] | None = None,
+    available_fields: list[str] | None = None,
+) -> str:
+    selected_fields = selected_fields if selected_fields is not None else DEFAULT_SEARCH_FIELDS
+    available_fields = available_fields if available_fields is not None else DEFAULT_SEARCH_FIELDS
+
+    if total_count == 0:
         return _page("Browse contacts", "<h1>Browse contacts</h1><p>There are no contacts saved yet.</p>")
+
+    search_form = _render_search_form(query, selected_fields, available_fields)
+    summary = f'<p class="summary">{len(contacts)} of {total_count} contact(s) shown.</p>'
+
+    if not contacts:
+        body = f"""<h1>Browse contacts</h1>
+{search_form}
+{summary}
+<p>No contacts match your search.</p>
+"""
+        return _page("Browse contacts", body)
+
     groups_html = _render_groups(contacts, key=lambda c: c.display_name, render_card=_render_stored_card)
     body = f"""<h1>Browse contacts</h1>
-<p class="summary">{len(contacts)} contact(s) saved.</p>
+{search_form}
+{summary}
 {groups_html}
 """
     return _page("Browse contacts", body)

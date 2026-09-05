@@ -88,11 +88,42 @@ def test_render_browse_page_lists_stored_contacts():
             source="google_csv", raw={}, first_saved_at="t0", last_saved_at="t0",
         ),
     ]
-    html = render_browse_page(stored)
+    html = render_browse_page(stored, total_count=1)
     assert "Alice Andersson" in html
     assert "alice@example.com" in html
 
 
-def test_render_browse_page_on_empty_list_says_so():
-    html = render_browse_page([])
+def test_render_browse_page_on_empty_db_says_so():
+    html = render_browse_page([], total_count=0)
     assert "no contacts" in html.lower()
+
+
+def test_render_browse_page_shows_search_form_with_field_checkboxes():
+    html = render_browse_page(
+        [], total_count=5, query="", selected_fields=["display_name", "emails"],
+        available_fields=["display_name", "emails", "Organization Name"],
+    )
+    assert '<form' in html
+    assert 'name="q"' in html
+    assert 'value="Organization Name"' in html
+    assert 'name="field" value="display_name" checked' in html
+    assert 'name="field" value="Organization Name"' in html
+    assert 'name="field" value="Organization Name" checked' not in html
+
+
+def test_render_browse_page_shows_no_match_message_when_search_finds_nothing():
+    html = render_browse_page([], total_count=5, query="nobody-has-this-name")
+    assert "no contacts match" in html.lower()
+    # Distinguishes "no results for this search" from "database is empty".
+    assert "no contacts saved yet" not in html.lower()
+
+
+def test_render_browse_page_shows_count_summary():
+    stored = [
+        StoredContact(
+            id="1", display_name="Alice Andersson", emails=[],
+            source="google_csv", raw={}, first_saved_at="t0", last_saved_at="t0",
+        ),
+    ]
+    html = render_browse_page(stored, total_count=5, query="alice")
+    assert "1" in html and "5" in html
