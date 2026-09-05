@@ -21,8 +21,7 @@ Each check has a trigger condition. Most only apply when something specific happ
 
 | Check | Trigger | Source |
 | --- | --- | --- |
-| `app/tests` (fast, in-process) | before every commit, docs-only or not | local, mechanically enforced by `.githooks/pre-commit` — see below |
-| `server/tests` (container-based) | every commit touching `server/`/`app/` code; for a doc-only commit, only if it hasn't already run clean this session against the same code | local |
+| Product code test suite | before every commit touching live product code, docs-only or not | local. **None exists right now, 2026-09-05** — `modules/`/`contacts/` (what this row used to mean) were archived to `previous-work/` in the native-app pivot; `.githooks/pre-commit` no longer runs a test-suite gate. Re-add both this row and the hook's gate once real code (e.g. `android/`) exists again |
 | Secrets-in-diff scan | before every commit | local, mechanically enforced by `.githooks/pre-commit` via `tools/secrets_scan/` (see [SECRETS_SCAN.md](SECRETS_SCAN.md)) — see below |
 | `test_results` logging | after each `app/tests`/`server/tests` run, if tracking that run's trend is useful | local, see [TEST_RESULTS.md](TEST_RESULTS.md) |
 | `doc_metrics` logging | every commit touching a `*.md` file | local, mechanically enforced by `.githooks/post-commit` — see below |
@@ -39,7 +38,7 @@ Each check has a trigger condition. Most only apply when something specific happ
 | Forward-effectiveness note (one concrete note on what would make the next session cheaper) | every session close | global |
 | Systematic security-discovery pass (`pip-audit`, OWASP ZAP scan — see [PHOTO_SERVER's TODO.md](../photo-server/TODO.md)) | not diff-triggered — audits the live deployed surface, not a change; needs a real recurring schedule once built, not a per-session check | local, not built yet |
 
-## Pre-commit hook (`app/tests` + secrets scan + ledger coverage, mechanically enforced)
+## Pre-commit hook (secrets scan + ledger coverage, mechanically enforced)
 
 Added 2026-07-27 after an AI session committed twice in a row without running
 `app/tests` first, despite the rule above already saying to
@@ -50,6 +49,11 @@ on failure; it only reminds (doesn't block) about `server/tests` when a commit
 touches `server/`/`app/`, since that suite is container-based, slower, and the
 rule's "skip if already run clean this session" judgement call isn't
 mechanically checkable.
+
+**2026-09-05**: the test-suite gate described above is currently disabled — there is no live
+product test suite to run (`modules/`/`contacts/` were archived to `previous-work/` in the
+native-app pivot). Only the secrets scan and ledger-coverage gates below are currently active.
+Re-add a gate here once real code exists again.
 
 The same hook then runs `tools/secrets_scan/run.py` (added 2026-08-03, per
 [TODO.md](TODO.md)'s 2026-07-28 item) and blocks the commit on any finding —

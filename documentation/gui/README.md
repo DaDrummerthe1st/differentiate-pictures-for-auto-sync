@@ -1,5 +1,11 @@
 # documentation/gui/
 
+**Superseded 2026-09-05 by the native-app pivot** — see [../VISION.md](../VISION.md)'s
+2026-09-05 note. `app/` (and everything else this file describes) is archived,
+code-disregarded reference at
+[../../previous-work/multi-user-web-app/](../../previous-work/multi-user-web-app/README.md).
+Read as history of what was built, not as the current or planned GUI.
+
 The photo-server GUI's first working version — code name `mamma-photo-viewer`, built 2026-07-16. Despite prior GUI planning existing elsewhere in this repo (`documentation/photo-server/MOCKUP.md` and its TODO's GUI-coverage items), this is the first version that actually runs, so **this is the leading source for how the GUI is supposed to work** — treat those earlier planning docs as superseded where they conflict with what's built and documented here.
 
 Code lives at the repo root on `master` (`app/`, `Dockerfile`, `docker-compose.yml`, `requirements.txt`) rather than under a subdirectory, since it started as a separate repo before ending up here (see TODO.md's history note). The `mamma-photo-viewer` branch this work originally happened on was fully reconciled into `master` and deleted 2026-08-05 (see TODO.md's "Branch state" note) — `master` is now the only branch. Root `README.md` carries the normal project pitch plus a section pointing back here for this work.

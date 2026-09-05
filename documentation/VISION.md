@@ -21,9 +21,44 @@ hands rather than an operator's. Every granular tag-visibility/sharing/circle me
 
 **The system should help the user in any way it can, raised 2026-08-05** — not just via structured tagging/sharing controls above, but a genuine, standing channel for whatever a user wants to say that doesn't fit a tag: a bug, a wish, a question. First concrete mechanism: a free-text feedback channel, security considerations included from the start rather than bolted on — design sketch in [photo-server/DEFERRED.md](photo-server/DEFERRED.md), threat analysis in [security/THREATS.md](security/THREATS.md) #13.
 
+## Native-app pivot — 2026-09-05
+
+**Read this section first if you're starting a session on this project.** The client stops being
+a browser/PWA and becomes a native Android app: Joakim wants per-photo handling (quality/object
+detection) to run on-device *before* any server copy, plus a selective sync the user controls
+that triggers **automatically in the background** with no app open — no browser API reaches a
+closed OS photo library, so a PWA structurally can't do this (full reasoning:
+[curation/IDENTITY_MATCHING.md](curation/IDENTITY_MATCHING.md)'s "Reversed 2026-09-05" note,
+[plans/shimmering-wondering-swing.md](plans/shimmering-wondering-swing.md)). Distribution stays
+sideloaded (a plain APK, no Google Play/App Store) — the standing anti-platform-control reasoning
+that had this project avoiding a native app in the first place stays satisfied, not abandoned.
+iOS is a "consider it, don't build it" note for now; Android only.
+
+**What this does and doesn't change**: the long-term goal is unchanged — a fully FOSS,
+complete-data-ownership system where each user runs on her own hardware but can lend spare
+capacity to others on the network (Pillar 1, unchanged). What *is* downgraded to historical
+reference, not committed design: every specific implementation and most specific design choices
+built around a browser-based client — the old multi-user web server
+([photo-server/](photo-server/README.md)), the browser GUI ([gui/](gui/README.md)), and this
+file's own former "PWA-in-browser step" refinement of Pillar 2 below. Their code is archived,
+not deleted, at [previous-work/](../previous-work/README.md), organized by sub-project — treat
+any schema/architecture/library choice in there as something to weigh, not something already
+settled; ask before carrying one forward. A concrete server-side design (the "server in some
+user's home" piece the native app eventually syncs to) starts fresh when that work is scoped —
+it doesn't resume from photo-server/'s old schema.
+
+**Session-close context**: the session that made this pivot decision stopped mid-plan (scope
+had changed enough to warrant a fresh session) after only researching, not yet writing native
+code — see [plans/shimmering-wondering-swing.md](plans/shimmering-wondering-swing.md) for what
+that research already found (no `modules/pictures.py` on `master` pre-merge, no JDK/Android SDK
+on the dev machine, Docker available). The session immediately after this one did the archiving
+described above and merged this branch into `master`; the *next* session after that is expected
+to actually scope and start the native Android app, treating everything under `previous-work/`
+as reference/inspiration only.
+
 ## Current build vs. this vision
 
-[photo-server/](photo-server/README.md) — the deliverable for a specific Sunday memorial, see its README — is a deliberately narrow, **closed** slice of Pillar 2 only: two known accounts, no data leaves the server, no network sharing. None of the other three pillars are in scope for that build.
+**Superseded by the native-app pivot above, 2026-09-05.** [photo-server/](photo-server/README.md) — the deliverable for a specific Sunday memorial, see its README — is a deliberately narrow, **closed** slice of Pillar 2 only: two known accounts, no data leaves the server, no network sharing. None of the other three pillars are in scope for that build.
 
 **Reaffirmed 2026-07-27, generalized beyond just that one build**: this applies to *every* current design thread, not only photo-server specifically — [tags/](tags/README.md), [upload-and-share/](upload-and-share/README.md), all of it. The single VPS is the sole source of truth for all current work; nothing in today's design should assume or route through Pillar 1's DFS. Pillar 1 is a real, active pillar of this vision — not necessarily distant on the calendar — but it is not part of the current design phase, and no current schema/UX decision should be shaped around it prematurely. `distributed-sync/TODO.md`'s open questions (including the metadata-placement one raised this session) are legitimate to capture there for later, but nothing about them constrains work happening now.
 
@@ -68,4 +103,4 @@ As much of this as possible runs distributed across users' own NAS hardware rath
 
 ## Status
 
-All four pillars are open, none committed, none scheduled. Pillar 1's timeline is the "full roadmap addendum... still pending from Joakim" open question already tracked in [distributed-sync/TODO.md](distributed-sync/TODO.md). Pillars 2–4 don't have TODOs yet because nothing is being built against them. **Exception, 2026-07-26**: Pillars 1 and 3 got a real design pass — see [upload-and-share/](upload-and-share/README.md) (per-user ownership, strict/free sharing terms, event/party mode). Still not scheduled work (no TODO.md steps yet) — a design pass, not a committed build. **2026-08-05**: added the "Core differentiator" section and the "system should help the user" principle above — positioning statements, not scope changes.
+All four pillars are open, none committed, none scheduled. Pillar 1's timeline is the "full roadmap addendum... still pending from Joakim" open question already tracked in [distributed-sync/TODO.md](distributed-sync/TODO.md). Pillars 2–4 don't have TODOs yet because nothing is being built against them. **Exception, 2026-07-26**: Pillars 1 and 3 got a real design pass — see [upload-and-share/](upload-and-share/README.md) (per-user ownership, strict/free sharing terms, event/party mode). Still not scheduled work (no TODO.md steps yet) — a design pass, not a committed build. **2026-08-05**: added the "Core differentiator" section and the "system should help the user" principle above — positioning statements, not scope changes. **2026-09-05**: added the "Native-app pivot" section above — client moves from browser/PWA to a native Android app; every previous implementation archived to `previous-work/`, not deleted; the four pillars and the core differentiator above are unaffected by this, still the goal.

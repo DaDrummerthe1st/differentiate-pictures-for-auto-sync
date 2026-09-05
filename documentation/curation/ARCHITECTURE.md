@@ -179,7 +179,7 @@ Standard for this class of workload, no exotic mechanism needed:
 5. **One shared inference runtime, not one per model.** Prefer models available through ONNX Runtime
    (or a similarly lightweight runtime) over ones that each pull in their own heavy framework —
    keeps both RAM and disk footprint down across the whole detector set, not just per-model. The
-   existing prototype ([../../prototypes/differentiate_pictures/app/object_identification/obj_id.py](../../prototypes/differentiate_pictures/app/object_identification/obj_id.py))
+   existing prototype ([../../previous-work/multi-user-web-app/prototypes/differentiate_pictures/app/object_identification/obj_id.py](../../previous-work/multi-user-web-app/prototypes/differentiate_pictures/app/object_identification/obj_id.py))
    runs full YOLOv3 (~236MB) via OpenCV's DNN module — not the lightweight bar this design is
    setting; a replacement pick belongs in [DETECTORS.md](DETECTORS.md)'s object-detection row once
    that area is actually researched.
@@ -237,6 +237,13 @@ doesn't restate. Confirmed with Joakim 2026-08-02:
   not pursued if it requires a native app. Joakim's reasoning generalizes beyond this one feature —
   see [IDENTITY_MATCHING.md](IDENTITY_MATCHING.md)'s "Native app avoided as long as possible"
   section for the standing architectural stance this resolved into.
+  **Reversed later the same day**: a different capability (on-device photo handling before any
+  server copy, plus automatic background sync) hit exactly this section's own "no PWA-reachable
+  path" exception, so the stance flipped to native for Android — see
+  [IDENTITY_MATCHING.md](IDENTITY_MATCHING.md)'s "Reversed 2026-09-05" addendum and
+  [../VISION.md](../VISION.md). This bullet's "Next: a PWA doing inference client-side" plan above
+  is superseded for the mobile case by that same reversal; not yet revisited for desktop/other
+  clients.
 - **End goal (far away)**: Pi-3-class hardware as a router/NAS in every user's own home, running
   this same detection work locally — the target [../photo-server/TODO.md](../photo-server/TODO.md)'s
   "Raised 2026-07-29" stress-test item is queued against.

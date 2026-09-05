@@ -21,9 +21,9 @@ How automated tags actually get proposed (detector models, the embedding index, 
 correction layer) lives in [../curation/README.md](../curation/README.md), not here — this folder
 owns what a tag *means*, curation/ owns how one gets suggested automatically.
 
-Visual mockup: [prototypes/mockup/](../../prototypes/mockup/README.md), same
+Visual mockup: [prototypes/mockup/](../../previous-work/multi-user-web-app/prototypes/mockup/README.md), same
 in-memory-fake-database convention as
-[upload-and-share-mockup/](../../prototypes/upload-and-share-mockup/README.md) —
+[upload-and-share-mockup/](../../previous-work/multi-user-web-app/prototypes/upload-and-share-mockup/README.md) —
 a real clickable prototype covering all 12 categories, not a re-rendering of this
 written design. Illustrative UI only, no schema/endpoints implied.
 

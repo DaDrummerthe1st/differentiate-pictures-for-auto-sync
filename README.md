@@ -6,7 +6,14 @@ The overall idea: preserve and help rediscover old, forgotten pictures and movie
 
 ## Status
 
-The photo-viewer GUI (`app/`) is the live, working piece — see [documentation/gui/README.md](documentation/gui/README.md) for what it is, how to run it, and its current feature set; [documentation/gui/TODO.md](documentation/gui/TODO.md) for open work. The original file-differentiation/sort tool (object detection, MySQL-backed dedup) lives on as a prototype/reference for the planned server-side analysis backend — see [prototypes/differentiate_pictures/](prototypes/differentiate_pictures/).
+**2026-09-05**: clean slate — no live application code right now. Every previous implementation
+(a browser-based multi-user photo server, a local photo-differentiation/quality/object-detection
+pipeline with a findings viewer, a contacts-import library) is kept as design reference under
+[previous-work/](previous-work/README.md), not deleted, but none of it runs or is built on
+today. The project just pivoted from a phone-viewable PWA toward a native Android app (on-device
+photo handling before any server round-trip, automatic background sync — no browser API reaches
+that); see [documentation/VISION.md](documentation/VISION.md)'s 2026-09-05 note. Next session
+scopes the native app itself.
 
 ## Features (vision)
 

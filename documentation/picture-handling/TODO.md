@@ -6,7 +6,7 @@ The "what's the specific purpose" question below was answered: it's a multi-user
 
 ## Known drift
 
-All paths below are relative to [prototypes/differentiate_pictures/](../../prototypes/differentiate_pictures/), where this code now lives — see [README.md](README.md) for why.
+All paths below are relative to [prototypes/differentiate_pictures/](../../previous-work/multi-user-web-app/prototypes/differentiate_pictures/), where this code now lives — see [README.md](README.md) for why.
 
 - **Database engine mismatch**: `requirements.txt` and `app/database.py` currently target MySQL (`mysql-connector-python`), but the intended engine going forward is **PostgreSQL**. Treat the current MySQL code as a draft, not the target. Migrate when database work resumes — don't build new features on top of the MySQL layer without checking first. (photo-server/ is a fresh stack and made the Postgres choice independently — same conclusion, unrelated codebase.)
 - `app/local_mysql.py` (gitignored credentials module) will need renaming/replacing once the Postgres migration happens.

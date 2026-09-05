@@ -1,5 +1,16 @@
 # photo-server/
 
+**Superseded 2026-09-05 by the native-app pivot** — see [../VISION.md](../VISION.md)'s
+2026-09-05 note. This folder's implementation (the Postgres/FastAPI/Redis/Caddy stack) is
+archived, code-disregarded reference at
+[../../previous-work/multi-user-web-app/](../../previous-work/multi-user-web-app/README.md);
+nothing below describes a currently-planned build. The narrow content that survives the
+pivot (schema/data-dictionary ideas, deployment lessons) is historical design reference, not
+binding — a future server-side design (the "server in some of the user's home" piece of the
+native-app plan) starts fresh, doesn't resume from here. This session made no infrastructure
+change: if `photos.reuterborg.se` was still actually deployed, its real-world status is
+unaffected by this repo edit.
+
 The metadata-and-serving phase of the project: a small multi-user web server so Elisabeth (and Joakim) can browse, search, tag into albums, and download picks from photos already ingested onto this machine's ZFS pool. Distinct from [../picture-handling/](../picture-handling/README.md) (the existing single-machine, single-user Python sorting tool) and from [../distributed-sync/](../distributed-sync/README.md) (future multi-device P2P sync — not started, unaffected by this work).
 
 **Status (2026-08-05): live at last check (2026-07-19), but stale — not redeployed since, and this session's branch cleanup means the server's checkout needs to be moved onto `master` before the next deploy (see this repo's root for copyable commands).** Elisabeth can log in and browse at `https://photos.reuterborg.se`. All branch work (`mamma-photo-viewer` and everything else) is now reconciled into and served from `master` — no other branch exists. Since 2026-07-18: a full outage (aging switch, not the server — see `../bugs/repo/fixed/`), a since-fixed publicly-exposed Swagger/OpenAPI docs vulnerability, the Postgres schema-init + `Dockerfile` fixes, single-album view + DOM-unload of inactive albums, and the thumbnail silent-refresh fix below were all live in production as of the last redeploy.

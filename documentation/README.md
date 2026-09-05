@@ -9,9 +9,9 @@ Project documentation, organized by topic. Structure/maintenance rules: [CLAUDE.
 | [tags/](tags/README.md) | Cross-cutting: the tag taxonomy — categories, schema, sharing/privacy model — referenced by every topic below, not owned by one |
 | [curation/](curation/README.md) | Cross-cutting: how automated tags get proposed (detectors, embeddings, the Curator) and what the system does with them — VISION.md Pillar 2's automated-analysis/curation legs |
 | [data-modeling/](data-modeling/README.md) | Cross-cutting: table/column shapes and naming decisions for standalone or exploratory data not yet in a built schema |
-| [photo-server/](photo-server/README.md) | Current work: multi-user web server — browse, search, tag, download |
+| [photo-server/](photo-server/README.md) | **Superseded 2026-09-05** by the native-app pivot ([VISION.md](VISION.md)) — historical: multi-user web server design, browse/search/tag/download |
 | [upload-and-share/](upload-and-share/README.md) | Design work: per-user upload, ownership/sharing terms, event/party mode |
-| [gui/](gui/README.md) | The photo-server GUI's first working version (code name `mamma-photo-viewer`) |
+| [gui/](gui/README.md) | **Superseded 2026-09-05** by the native-app pivot ([VISION.md](VISION.md)) — historical: the photo-server GUI's first working version (code name `mamma-photo-viewer`) |
 | [picture-handling/](picture-handling/README.md) | Superseded single-machine sorting tool — resolved, moved to photo-server/ |
 | [distributed-sync/](distributed-sync/README.md) | Future work: multi-device sync, distributed storage/compute |
 | [income/](income/README.md) | Business/monetization ideas — rollout phases, revenue ideas, not committed design |
@@ -19,6 +19,10 @@ Project documentation, organized by topic. Structure/maintenance rules: [CLAUDE.
 | [bugs/](bugs/README.md) | Bug/incident reports and AI-session process-lapse tracking |
 | [changelog/](changelog/README.md) | One-file-per-entry changelog; old `CHANGELOG.md` frozen as [CHANGELOG_ARCHIVE.md](../CHANGELOG_ARCHIVE.md) |
 | [tooling/](tooling/README.md) | Project-wide dev utilities (`tools/`) — not topic-specific |
+
+Code that once belonged to a topic above but is now disregarded (superseded implementations, not
+deleted) lives at [previous-work/](../previous-work/README.md), one level up from this folder —
+see [VISION.md](VISION.md)'s "Native-app pivot" section for why, added 2026-09-05.
 
 [GLOSSARY.md](GLOSSARY.md) — plain-language definitions of every technical/business term this project's docs use. Built 2026-07-29; append to it (per [CLAUDE.md](../CLAUDE.md)'s non-negotiable rule) rather than re-explaining a term inline in a design doc.
 

@@ -4,7 +4,7 @@ Everything to do with viewing, sorting, labeling, deleting, and indexing picture
 
 ## What exists today
 
-Lives in [prototypes/differentiate_pictures/](../../prototypes/differentiate_pictures/) — the repo's original file-differentiation tool, kept as prototype/reference material for the photo-server's planned analysis backend (not the same thing as the live `app/` GUI photo-viewer, which took over the `app/` path when the `mamma-photo-viewer` and `master` branch histories were merged 2026-07-21 — see [photo-server/TODO.md](../photo-server/TODO.md)'s "Branch relationship" note). Paths below are relative to that folder.
+Lives in [prototypes/differentiate_pictures/](../../previous-work/multi-user-web-app/prototypes/differentiate_pictures/) — the repo's original file-differentiation tool, kept as prototype/reference material for the photo-server's planned analysis backend (not the same thing as the live `app/` GUI photo-viewer, which took over the `app/` path when the `mamma-photo-viewer` and `master` branch histories were merged 2026-07-21 — see [photo-server/TODO.md](../photo-server/TODO.md)'s "Branch relationship" note). Paths below are relative to that folder.
 
 - A directory picker (`app/utils/directory_picker.py`) and file-handling utilities (`app/file_handling.py`, `app/file_handling/`).
 - EXIF/GPS metadata extraction (`app/gpsdata.py`).

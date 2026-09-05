@@ -5,7 +5,7 @@ percentages, keyed by `file_id` (UUID, FK to a separate files table) — deliber
 decoupled from [tags/SCHEMA.md](../tags/SCHEMA.md)'s `tags` table and from
 `detector/quality.py`'s boolean/enum outputs, no shared code between the two by
 design. All three metric functions are implemented in
-[modules/quality.py](../../modules/quality.py); the table itself (this file's actual
+[modules/quality.py](../../previous-work/pictures-pipeline/quality.py); the table itself (this file's actual
 column list) is still design-only, no database wired up yet.
 
 | Column | Range | Low means | High means |

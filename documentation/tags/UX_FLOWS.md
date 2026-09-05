@@ -116,7 +116,7 @@ build-ready:
 
 ## Mockup coverage and simplifications
 
-[prototypes/mockup/](../../prototypes/mockup/README.md) is a clickable illustration of
+[prototypes/mockup/](../../previous-work/multi-user-web-app/prototypes/mockup/README.md) is a clickable illustration of
 every flow above (all 12 [TAXONOMY.md](TAXONOMY.md) categories, bounding-box tagging
 with the person/local-vs-linked badge, the invite CTA, the blur-preview review, and
 manual bounding-box tagging) against 10 seed photos, plus entity-owned relationship

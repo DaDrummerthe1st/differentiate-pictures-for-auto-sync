@@ -224,6 +224,17 @@ resolved, not the only one it applies to. A native app stays a last resort, cons
 future capability turns out to have no PWA-reachable path at all, not reached for on convenience
 grounds.
 
+**Reversed 2026-09-05**: exactly that "no PWA-reachable path" exception was hit — Joakim wants
+per-photo handling (quality/object detection) to run on-device *before* any server round-trip, plus a
+selective sync triggered automatically in the background with no app open; no browser API watches a
+closed OS photo library, so a native Android app is now required for that capability. The
+app-store-control concern this stance was built around stays resolved the same way: distribution
+stays sideloaded (a plain APK, no Google Play), so the binary is never republished through a platform
+that could alter it. Full reasoning: [documentation/plans/shimmering-wondering-swing.md](../plans/shimmering-wondering-swing.md),
+[../VISION.md](../VISION.md)'s 2026-09-05 note. This is a reversal of this section's conclusion, not a
+retraction of the concern that produced it — the concern (platform control over a published binary)
+is exactly why sideloading stays non-negotiable going forward.
+
 ## Contacts-import desktop fallback — CardDAV confirmed real, build deferred to a guided session
 
 Raised 2026-09-04/05 alongside the desktop Contact Picker gap ([../security/THREATS.md](../security/THREATS.md)
@@ -261,5 +272,6 @@ Split from [ARCHITECTURE.md](ARCHITECTURE.md) 2026-08-05 — content dates uncha
 through 2026-08-05), see each entry inline. **2026-09-05**: three design questions resolved with
 Joakim — person-entity disambiguation required at labeling time, native app avoided as a standing
 architectural stance (not just for redundancy-contribution), and CardDAV confirmed as the desktop
-contacts-fallback target design (build deferred to a guided session). Nothing here is built; no
-schema migration, no model integrated.
+contacts-fallback target design (build deferred to a guided session). **Later same day**: the
+native-app stance itself reversed — see this file's "Reversed 2026-09-05" addendum above and
+[../VISION.md](../VISION.md). Nothing here is built; no schema migration, no model integrated.

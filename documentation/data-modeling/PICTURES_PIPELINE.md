@@ -109,7 +109,7 @@ Work tree sketched by Joakim 2026-09-04, each stage its own standalone `modules/
 - **DB location**: `databases/app.db` at the project root, gitignored — it indexes real personal
   photo metadata, never committed. Named `app.db` rather than `pictures.db` (renamed 2026-09-05)
   since `contacts/db.py` shares this same file for its `contacts`/`contact_emails` tables — see
-  [contacts/README.md](../../contacts/README.md).
+  [contacts/README.md](../../previous-work/contacts-import/README.md).
 - **Out of scope, confirmed**: wiring `quality.py`/`objects.py` output into this register, and
   the prioritization heuristic (this file's item 3) are both later, separate passes — this
   session built only the register itself.
@@ -124,7 +124,12 @@ described above. Wiring `quality.py`/`objects.py` output into the register, the 
 heuristic (item 3), `LogScenery()`, and the group-same-person step remain unbuilt. See
 [TODO.md](TODO.md).
 
-**2026-09-05**: `modules/web/` (see [modules/README.md](../../modules/README.md)) added a
+**2026-09-05**: `modules/` archived to
+[previous-work/pictures-pipeline/](../../previous-work/pictures-pipeline/README.md) in the
+native-app pivot ([../VISION.md](../VISION.md)) — this schema is historical reference for that
+Python implementation, not necessarily the shape a future on-device Android register uses.
+
+**2026-09-05**: `modules/web/` (see [modules/README.md](../../previous-work/pictures-pipeline/README.md)) added a
 browser-based dev tool that browses this register and runs `quality.py`/`objects.py` live,
 per request, for display only — still not the same thing as wiring their output into the
 register as stored columns, which remains unbuilt as above. Two small read-only query
