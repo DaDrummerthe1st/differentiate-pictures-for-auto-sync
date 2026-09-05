@@ -106,8 +106,10 @@ Work tree sketched by Joakim 2026-09-04, each stage its own standalone `modules/
   returns a real birth time. Expected to report `birth_time_available=False` on sshfs/NAS mounts
   (not independently verified this session, no such mount available to test against) — the
   fallback path exists specifically for that multi-source case.
-- **DB location**: `databases/pictures.db` at the project root, gitignored — it indexes real
-  personal photo metadata, never committed.
+- **DB location**: `databases/app.db` at the project root, gitignored — it indexes real personal
+  photo metadata, never committed. Named `app.db` rather than `pictures.db` (renamed 2026-09-05)
+  since `contacts/db.py` shares this same file for its `contacts`/`contact_emails` tables — see
+  [contacts/README.md](../../contacts/README.md).
 - **Out of scope, confirmed**: wiring `quality.py`/`objects.py` output into this register, and
   the prioritization heuristic (this file's item 3) are both later, separate passes — this
   session built only the register itself.

@@ -34,7 +34,7 @@ from datetime import datetime, timezone
 from PIL import Image, UnidentifiedImageError
 
 DEFAULT_DB_PATH = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "databases", "pictures.db"
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "databases", "app.db"
 )
 
 VALID_EXTENSIONS = {".jpg", ".jpeg", ".png", ".heic", ".heif", ".bmp", ".tif", ".tiff", ".webp", ".gif"}
