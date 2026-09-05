@@ -40,3 +40,13 @@ def test_contact_with_no_email_gets_empty_list():
     vcard = "BEGIN:VCARD\nVERSION:3.0\nFN:No Email Nilsson\nEND:VCARD\n"
     contacts = parse_vcard(vcard)
     assert contacts[0].emails == []
+
+
+def test_raw_captures_other_vcard_properties_for_whole_record_comparison():
+    vcard = (
+        "BEGIN:VCARD\nVERSION:3.0\nFN:Alice Andersson\nEMAIL:alice@example.com\n"
+        "ORG:Acme\nNOTE:Met at conf\nEND:VCARD\n"
+    )
+    contacts = parse_vcard(vcard)
+    assert contacts[0].raw["ORG"] == "Acme"
+    assert contacts[0].raw["NOTE"] == "Met at conf"

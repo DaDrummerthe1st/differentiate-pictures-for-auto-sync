@@ -73,6 +73,22 @@ def test_notes_field_with_embedded_comma_does_not_shift_columns():
     assert contacts[0].emails == ["alice@example.com"]
 
 
+def test_raw_captures_the_full_source_row_for_whole_record_comparison():
+    # Contact only promotes display_name/emails/source to first-class fields;
+    # everything else in the export (phone, organization, notes, ...) needs to
+    # survive somewhere so dedup/merge can compare full records, not just two
+    # fields. `raw` is that full original row.
+    text = _csv_text({
+        "First Name": "Alice", "Last Name": "Andersson",
+        "Organization Name": "Acme", "Notes": "Met at conf",
+        "E-mail 1 - Value": "alice@example.com",
+    })
+    contacts = parse_google_csv(text)
+    assert contacts[0].raw["Organization Name"] == "Acme"
+    assert contacts[0].raw["Notes"] == "Met at conf"
+    assert contacts[0].raw["First Name"] == "Alice"
+
+
 def test_parses_multiple_rows():
     text = _csv_text(
         {"First Name": "Alice", "Last Name": "Andersson"},

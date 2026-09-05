@@ -26,5 +26,7 @@ def parse_google_csv(csv_text: str) -> list[Contact]:
             for key, value in row.items()
             if _EMAIL_VALUE_COLUMN.match(key) and value
         ]
-        contacts.append(Contact(display_name=display_name, emails=emails, source="google_csv"))
+        contacts.append(
+            Contact(display_name=display_name, emails=emails, source="google_csv", raw=dict(row))
+        )
     return contacts
