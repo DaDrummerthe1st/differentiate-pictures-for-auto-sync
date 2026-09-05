@@ -21,11 +21,11 @@ def parse_google_csv(csv_text: str) -> list[Contact]:
         display_name = " ".join(
             part for part in (row.get("First Name"), row.get("Last Name")) if part
         )
-        emails = [
+        emails = list(dict.fromkeys(
             value
             for key, value in row.items()
             if _EMAIL_VALUE_COLUMN.match(key) and value
-        ]
+        ))
         contacts.append(
             Contact(display_name=display_name, emails=emails, source="google_csv", raw=dict(row))
         )

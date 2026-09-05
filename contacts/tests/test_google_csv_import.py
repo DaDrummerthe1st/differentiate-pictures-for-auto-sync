@@ -89,6 +89,19 @@ def test_raw_captures_the_full_source_row_for_whole_record_comparison():
     assert contacts[0].raw["First Name"] == "Alice"
 
 
+def test_same_email_under_two_columns_is_not_duplicated():
+    # Real bug (2026-09-05, Joakim's actual export): a contact can have the
+    # same address under two "E-mail N - Value" columns (e.g. relabeled
+    # Home/Other) - crashed contacts/db.py's UNIQUE(contact_id, email) insert.
+    text = _csv_text({
+        "First Name": "Alice", "Last Name": "Andersson",
+        "E-mail 1 - Value": "alice@example.com",
+        "E-mail 2 - Value": "alice@example.com",
+    })
+    contacts = parse_google_csv(text)
+    assert contacts[0].emails == ["alice@example.com"]
+
+
 def test_parses_multiple_rows():
     text = _csv_text(
         {"First Name": "Alice", "Last Name": "Andersson"},

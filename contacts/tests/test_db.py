@@ -159,6 +159,27 @@ def test_merge_unions_emails_instead_of_replacing_them(tmp_path):
     conn.close()
 
 
+def test_a_contact_with_duplicate_emails_in_its_own_list_does_not_crash_the_insert(tmp_path):
+    # Defense in depth: contacts/google_csv_import.py dedupes at the source,
+    # but save_contacts() must not rely on every importer doing that -
+    # UNIQUE(contact_id, email) will reject a literal duplicate insert.
+    db_path = tmp_path / "app.db"
+    results = save_contacts(
+        [Contact(
+            display_name="Alice Andersson",
+            emails=["alice@example.com", "alice@example.com"],
+            source="google_csv",
+        )],
+        db_path=str(db_path),
+    )
+
+    assert results[0].status == "new"
+    conn = sqlite3.connect(str(db_path))
+    emails = [r[0] for r in conn.execute("SELECT email FROM contact_emails")]
+    assert emails == ["alice@example.com"]
+    conn.close()
+
+
 def test_classify_previews_without_writing_anything(tmp_path):
     db_path = tmp_path / "app.db"
     save_contacts(

@@ -146,7 +146,7 @@ def _classify(conn: sqlite3.Connection, contact: Contact) -> ClassifyResult:
     if contact_id is None:
         return ClassifyResult(
             contact=contact, status="new", matched_by=None, existing=None,
-            merged_raw=dict(contact.raw), merged_emails=list(contact.emails),
+            merged_raw=dict(contact.raw), merged_emails=list(dict.fromkeys(contact.emails)),
         )
 
     existing = _load_stored_contact(conn, contact_id)
