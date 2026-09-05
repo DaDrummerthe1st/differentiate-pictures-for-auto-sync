@@ -78,10 +78,11 @@ def render_scan_page(message: str | None = None) -> str:
     return _page_shell("modules/ pictures viewer", body)
 
 
-def _thumb_entry(location: PictureLocation, has_objects: bool) -> str:
+def _thumb_entry(location: PictureLocation, has_objects: bool, folder: str, page: int) -> str:
     badge = '<span class="has-objects-badge">objects</span>' if has_objects else ""
     filename = escape_html(os.path.basename(location.path))
-    return f"""<a class="thumb-entry" href="/picture/{escape_html(location.location_id)}">
+    detail_url = f"/picture/{location.location_id}?folder={quote(folder, safe='')}&page={page}"
+    return f"""<a class="thumb-entry" href="{escape_html(detail_url)}">
   {badge}
   <img src="/image/{escape_html(location.location_id)}?variant=thumb" alt="{filename}">
   <div class="filename">{filename}</div>
@@ -108,7 +109,7 @@ def render_grid_page(
     total_count: int,
 ) -> str:
     pager = _pager(folder, page, page_count, start_index, end_index, total_count)
-    grid = "\n".join(_thumb_entry(location, has_objects) for location, has_objects in entries)
+    grid = "\n".join(_thumb_entry(location, has_objects, folder, page) for location, has_objects in entries)
     body = f"""
 <h1>{escape_html(folder)}</h1>
 <p><a href="/">&lt; scan another folder</a></p>

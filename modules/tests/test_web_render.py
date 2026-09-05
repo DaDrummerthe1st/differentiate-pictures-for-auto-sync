@@ -38,7 +38,7 @@ def test_render_grid_page_links_each_thumbnail_to_its_detail_page():
         total_count=1,
     )
 
-    assert 'href="/picture/loc-1"' in html
+    assert 'href="/picture/loc-1?folder=%2Fphotos%2Fholiday&amp;page=0"' in html
     assert 'src="/image/loc-1?variant=thumb"' in html
     assert "beach.jpg" in html
 

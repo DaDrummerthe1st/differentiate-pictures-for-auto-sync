@@ -123,3 +123,9 @@ tests, all passing) — `GetListOfValidPictureFiles()`, the `pictures`/`location
 described above. Wiring `quality.py`/`objects.py` output into the register, the prioritization
 heuristic (item 3), `LogScenery()`, and the group-same-person step remain unbuilt. See
 [TODO.md](TODO.md).
+
+**2026-09-05**: `modules/web/` (see [modules/README.md](../../modules/README.md)) added a
+browser-based dev tool that browses this register and runs `quality.py`/`objects.py` live,
+per request, for display only — still not the same thing as wiring their output into the
+register as stored columns, which remains unbuilt as above. Two small read-only query
+helpers were added to `pictures.py` for it: `get_location()` and `list_locations_under()`.
