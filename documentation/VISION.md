@@ -101,11 +101,26 @@ At an event — a party, up to something enormous — attendees take pictures an
 
 **Open tension, not resolved**: this opt-in-for-privilege model sits against the closed-by-default posture required elsewhere — tracked as an open question in [policies/POLICY.md](policies/POLICY.md).
 
+**Raised 2026-09-06, flagged not designed — bigger scope than the event/QR-code mechanism above**:
+the native app should be **the go-to way to share, specifically cross-platform** (Android/iOS,
+between NASes) — sharing itself is a headline capability, not just the events mechanism. A new
+mechanic surfaced alongside this: **accepting a share could mean also contributing storage for
+it** — a recipient who opts into a shared picture's share options thereby takes part in holding a
+redundant copy of it, folding sharing directly into Pillar 1's DFS redundancy rather than treating
+them as separate systems. This also reframes Pillar 1's "spare storage" pool as spanning not just
+NASes but **phones too**, plus a **paid cloud-storage tier** sourced from that same pooled
+capacity — connects to [income/TODO.md](income/TODO.md)'s marketplace idea and
+[distributed-sync/OWNERSHIP.md](distributed-sync/OWNERSHIP.md)'s strict/leased/free tiers, but
+isn't reconciled with either yet. Joakim's own call: this needs revisiting once the native app's
+own system-design boundaries are clearer, not solved now.
+
 **Event/party mode, thoroughly discussed 2026-07-26** (full design: [upload-and-share/EVENTS.md](upload-and-share/EVENTS.md)): a host (wedding, funeral, birthday) generates a QR code that both invites uploads and auto-tags every photo contributed through it as belonging to that event — "do you have any pictures? upload them to us!" made concrete. Three independent axes, confirmed as separate rather than one combined preset: who may upload (free-for-all / pre-approved / register-then-approve), what invitees can see (every upload vs. a curated best-of, AI- and/or human-reviewed), and whether a live TV-screen wall displays the feed — any combination is possible. **Genuinely unresolved, flagged rather than guessed**: who owns a photo uploaded with no account at all (proposed: a claimable pending-owner record, same mechanism as the email-share invite, not yet confirmed), and the real legal reporting obligations this project likely takes on once true strangers can upload without identity verification (a lawyer question, not an engineering one). Venue hardware (whether the host needs a physical local device on-site vs. remote upload to her existing home NAS) is explicitly deferred to a later version, not designed now.
 
 ## Pillar 4 — Multi-angle event reconstruction
 
 Future possibility: reconstruct a full "movie" of an event from the separate angles/clips different attendees filmed at the same place and time. Least defined of the four — no design yet, not even a rough one.
+
+**Cross-reference, raised 2026-09-06**: whenever this pillar's design actually starts, it likely builds on Pillar 3's event/QR-code mechanism above for the "who was where, when" grouping, rather than needing its own separate discovery step — not designed, just a pointer so a future session doesn't reinvent that connection.
 
 ## Rollout phases — when and for whom
 
