@@ -14,9 +14,9 @@ __pycache__/
 /resources/test_pictures/
 /databases/
 
-# Android
+# Kotlin/Android (archived, previous-work/kotlin/ - see its README)
 /toolchain/
-android/local.properties
-android/.idea/
-android/.gradle/
-android/**/build/
+previous-work/kotlin/local.properties
+previous-work/kotlin/.idea/
+previous-work/kotlin/.gradle/
+previous-work/kotlin/**/build/

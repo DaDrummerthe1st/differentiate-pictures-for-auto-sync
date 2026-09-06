@@ -1,8 +1,15 @@
 # mobile/
 
-The native Android app (`android/` at repo root) — sideloaded only, no Google Play. Full
-background/reasoning for why a native app exists at all: [../VISION.md](../VISION.md)'s
-"Native-app pivot" section.
+**Superseded 2026-09-06 by the React-client pivot** — see [../VISION.md](../VISION.md)'s
+2026-09-06 note. The native Kotlin/Android app this file describes is archived, code-disregarded
+reference at [../../previous-work/kotlin/](../../previous-work/kotlin/README.md); nothing below
+describes a currently-planned build. The UI/UX goals it reached (photo grid, tap-to-fullscreen,
+swipe, pinch-to-zoom) are still the target — the next session starts the client over from scratch
+in React, not resuming this implementation.
+
+The native Android app (archived at `previous-work/kotlin/`, was `android/` at repo root) —
+sideloaded only, no Google Play. Full background/reasoning for why a native app existed at all:
+[../VISION.md](../VISION.md)'s "Native-app pivot" section.
 
 ## Status — 2026-09-06
 

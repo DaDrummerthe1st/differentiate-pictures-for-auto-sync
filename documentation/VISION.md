@@ -58,6 +58,20 @@ TDD throughout) was scrapped before any code was written — Joakim asked for a 
 cut instead, to see the Android toolchain work at all before investing in that fuller structure.
 See [mobile/README.md](mobile/README.md) for what actually got built.
 
+## React-client pivot — 2026-09-06
+
+The native Kotlin/Android client above is itself now superseded: after two sessions building it
+(photo grid, tap-to-fullscreen, swipe, pinch-to-zoom — all working, see
+[mobile/README.md](mobile/README.md)), Joakim decided to build the client in React instead,
+starting fresh next session on a new branch rather than continuing this implementation. The
+Kotlin work is archived, not deleted, at
+[previous-work/kotlin/](../previous-work/kotlin/README.md) — same convention as every other
+pivot in this file. **Deliberately left open**: whether "React" means React Native (a real mobile
+app, keeping the on-device-photo-library/background-sync access the 2026-09-05 native pivot was
+written to get) or a React web app/PWA (which would reintroduce the structural limitation that
+pivot specifically escaped) — not settled, not this session's call; the next session resolves it
+rather than inheriting an assumption either way.
+
 ## Current build vs. this vision
 
 **Superseded by the native-app pivot above, 2026-09-05.** [photo-server/](photo-server/README.md) — the deliverable for a specific Sunday memorial, see its README — is a deliberately narrow, **closed** slice of Pillar 2 only: two known accounts, no data leaves the server, no network sharing. None of the other three pillars are in scope for that build.

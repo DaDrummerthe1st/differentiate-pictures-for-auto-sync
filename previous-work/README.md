@@ -23,6 +23,9 @@ Ask before assuming any specific past choice still applies; don't re-derive the 
 - [`multi-user-web-app/`](multi-user-web-app/README.md) — the earlier Postgres/FastAPI/
   Redis/Caddy multi-user photo server, already disregarded once before (as top-level
   `archive/`, 2026-09-04) and folded in here for one consistent location.
+- [`kotlin/`](kotlin/README.md) — the native Android photo-browser app (Kotlin/Gradle, Coil,
+  `ViewPager2`+`PhotoView`), archived 2026-09-06 when the client pivoted to React. Formerly
+  `android/` at the repo root.
 - [`databases-schema.sql`](databases-schema.sql) — schema-only snapshot (no rows) of the
   real, gitignored `databases/app.db` these sub-projects wrote to. `databases/` itself keeps
   holding real personal photo/contact data and stays entirely untracked; this is the one
