@@ -188,6 +188,10 @@ Plain-language definitions of every technical/business term this project's desig
 - **Filesystem metadata / stat data**: the file-on-disk facts a POSIX `stat()` call returns (what Python's `os.stat()` wraps) — size, permission bits, and three timestamps that are easy to mix up: `mtime` (content last modified), `ctime` (metadata last *changed* — renamed, permissions altered, etc. — **not** creation time, a common misconception, especially on Linux), and `atime` (last accessed). A true creation/**birth** time exists only on some filesystems (ext4/xfs/btrfs), fetched via the `statx(2)` syscall's `STATX_BTIME` field — **not** a Python stdlib function despite "`os.statx`" being the shorthand this project used before building it: Python's `os.stat()` never exposes a birth time on Linux at all (only macOS/BSD do, via `st_birthtime`), so `modules/pictures.py` calls `statx(2)` directly through `ctypes` instead. Distinct from EXIF (metadata embedded in the image bytes themselves, e.g. camera-recorded capture date/GPS) — `documentation/data-modeling/PICTURES_PIPELINE.md`'s `file_metadata` column is this stat data, not EXIF.
 - **`uv`**: a fast Python package/dependency manager (an alternative to plain `pip`) that produces a lockfile (`uv.lock`) pinning exact resolved versions. Only `server/` (the auth stack) uses `uv` in this repo; `detector/` and the root app use plain `pip` with a hand-pinned `requirements.txt` instead — see `documentation/photo-server/TOOLCHAIN.md`.
 
+## Mobile / Android app
+
+- **`adb` (Android Debug Bridge)**: the command-line tool, bundled with the Android SDK/Android Studio, that talks to a phone over USB (or Wi-Fi) — used to install an APK onto it (`adb install`) or stream its logs. A Docker container that only builds the app still can't get the built APK onto a physical phone; that last step needs `adb` (or Android Studio itself) running on the machine the phone is plugged into.
+
 ## Status
 
 Created 2026-07-29. Living document — append new terms here as they come up in conversation, per `CLAUDE.md`'s non-negotiable rule, rather than letting an explanation exist only in chat.

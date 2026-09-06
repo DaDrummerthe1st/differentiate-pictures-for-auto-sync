@@ -6,8 +6,7 @@ gates commits against it anymore (see [../.githooks/pre-commit](../.githooks/pre
 
 Created 2026-09-05 when the project pivoted from a phone-viewable PWA to a native Android
 app (full reasoning: [../documentation/VISION.md](../documentation/VISION.md)'s 2026-09-05
-note, [../documentation/plans/shimmering-wondering-swing.md](../documentation/plans/shimmering-wondering-swing.md)).
-Joakim's framing: this is a clean slate on `master`, not a deletion — every previous
+note). Joakim's framing: this is a clean slate on `master`, not a deletion — every previous
 implementation stays available as design reference, divided below by sub-project, but no
 specific past design decision (schema, architecture, library pick) carries forward as
 already-settled. What *does* still stand, unchanged by this pivot: the long-term goal itself

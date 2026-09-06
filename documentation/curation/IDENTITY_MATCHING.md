@@ -230,8 +230,7 @@ selective sync triggered automatically in the background with no app open; no br
 closed OS photo library, so a native Android app is now required for that capability. The
 app-store-control concern this stance was built around stays resolved the same way: distribution
 stays sideloaded (a plain APK, no Google Play), so the binary is never republished through a platform
-that could alter it. Full reasoning: [documentation/plans/shimmering-wondering-swing.md](../plans/shimmering-wondering-swing.md),
-[../VISION.md](../VISION.md)'s 2026-09-05 note. This is a reversal of this section's conclusion, not a
+that could alter it. Full reasoning: [../VISION.md](../VISION.md)'s 2026-09-05 note. This is a reversal of this section's conclusion, not a
 retraction of the concern that produced it — the concern (platform control over a published binary)
 is exactly why sideloading stays non-negotiable going forward.
 
