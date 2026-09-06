@@ -41,6 +41,11 @@ Verified end-to-end on the `Motorola_Moto_G54_5G` AVD with real (private, gitign
 committed, see `resources/test_pictures/`) test photos: the grid shows and scrolls through all of
 them correctly, EXIF-rotated photos display right-side-up, and tap-to-fullscreen works.
 
+**Swipe/zoom added, same session**: `FullscreenPhotoActivity` now shows a swipeable `ViewPager2`
+across the whole photo list (not just the tapped photo), each page an `io.getstream.photoview`
+`PhotoView` for pinch-to-zoom/pan — see [TODO.md](TODO.md) for the library evaluation and current
+verification status (swipe confirmed via adb/logcat, pinch-zoom pending Joakim's manual check).
+
 **Known, accepted non-issue**: Coil's in-memory cache gets evicted under real memory pressure
 (this dev machine runs Gradle + the emulator simultaneously — unusually heavy; a real phone would
 see this far less), falling back to its disk cache (fast, not instant) rather than a full re-decode.
@@ -65,8 +70,11 @@ freshness again before the next real step, per [WORKFLOW.md](../policies/WORKFLO
 - `android/app/src/main/java/com/dpfas/photobrowser/PhotoAdapter.kt` — `GridView` adapter; delegates
   actual image loading/caching to Coil via an injectable `loadImage` lambda (real implementation in
   production, a recording fake in `PhotoAdapterTest.kt`).
-- `android/app/src/main/java/com/dpfas/photobrowser/FullscreenPhotoActivity.kt` — single-photo
-  fullscreen view, opened by tapping a grid thumbnail.
+- `android/app/src/main/java/com/dpfas/photobrowser/FullscreenPhotoActivity.kt` — fullscreen,
+  swipeable (`ViewPager2`) view across the whole photo list, opened at the tapped position.
+- `android/app/src/main/java/com/dpfas/photobrowser/FullscreenPhotoPagerAdapter.kt` — the
+  `ViewPager2`'s adapter; delegates loading into each page's `PhotoView` to the same kind of
+  injectable `loadImage` lambda pattern as `PhotoAdapter`.
 - `android/app/src/main/java/com/dpfas/photobrowser/PhotoBrowserApplication.kt` — configures Coil's
   singleton `ImageLoader` (debug-only logging via `BuildConfig.DEBUG`).
 

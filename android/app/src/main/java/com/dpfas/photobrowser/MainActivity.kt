@@ -91,7 +91,7 @@ class MainActivity : AppCompatActivity() {
         grid.visibility = View.VISIBLE
         grid.adapter = PhotoAdapter(this, uris)
         grid.setOnItemClickListener { _, _, position, _ ->
-            startActivity(FullscreenPhotoActivity.createIntent(this, uris[position]))
+            startActivity(FullscreenPhotoActivity.createIntent(this, uris, position))
         }
     }
 }
