@@ -114,6 +114,19 @@ build-ready:
   session's output feeds back into model training, both per-household and a narrower system-wide
   question. Full spec there, not repeated here.
 
+## Sync/backup privacy messaging — note for later, raised 2026-09-06
+
+Not build-ready, just a requirement to remember once the native app's sync/backup setup screen
+gets designed: the user must be told plainly, in plain language, what "privacy" means in this
+system specifically — by default **no other copy of her data exists anywhere**, not "we don't look
+at it" or "it's encrypted on our servers" (the closed-by-default posture already fixed in
+[../policies/POLICY.md](../policies/POLICY.md)). Whenever the UI offers to point the app's sync at
+a server, it should be equally plain that a **free, FOSS-licensed server application** is available
+for exactly that purpose — self-hosting her own copy is not a paid or proprietary add-on, it's the
+first-class option, consistent with [../VISION.md](../VISION.md)'s core-differentiator framing
+("your privacy depends on the strength of your password"). Where this screen actually lives and its
+exact wording is undesigned — parked here as a requirement, not a mockup.
+
 ## Mockup coverage and simplifications
 
 [prototypes/mockup/](../../previous-work/multi-user-web-app/prototypes/mockup/README.md) is a clickable illustration of

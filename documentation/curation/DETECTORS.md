@@ -10,6 +10,53 @@ Status values: **queued** (not looked at), **researching** (a background pass fr
 opening is mid-flight, see Status section below), **researched** (has a real model recommendation,
 written up here once done).
 
+## Mobile runtime — on-device inference engine (raised 2026-09-06)
+
+Cross-cutting, not one more lettered area: which library actually *executes* the models already
+picked below, now that [../VISION.md](../VISION.md)'s native-app pivot means every one of them
+needs to run inside a Kotlin (and later Swift) app instead of the archived Python prototype. The
+model picks themselves (NanoDet-Plus, YuNet, MobileFaceNet below) are unaffected by this — they're
+just `.onnx`/license artifacts, independent of whichever framework loads them.
+
+**Direction (Joakim's own framing, 2026-09-06)**: prefer a library over a hand-rolled or
+platform-proprietary path wherever one exists honoring this project's FOSS/privacy bar, and prefer
+*one* such library across every OS this project touches (Android, iOS later, Linux for the eventual
+home-server piece) over a different tool per platform. **OpenCV** is the pick this reasoning points
+to first — Apache-2.0, one C++/Java/Python codebase with official first-party packages for Android
+(AAR via Maven Central, actively maintained since OpenCV 4.9.0), iOS, and Linux, not a
+single-company-controlled SDK the way Google's ML Kit or TFLite are. It already cleanly covers two
+of the three pieces below with no caveat: area A's quality metrics (already plain pixel math) and
+face detection (YuNet is itself an OpenCV Zoo model built for OpenCV's own `FaceDetectorYN` API).
+
+**Open, evidence-checked, not yet resolved**: whether OpenCV's ONNX importer
+(`cv::dnn::readNetFromONNX`) can also run NanoDet-Plus (object detection) and MobileFaceNet (face
+embedding) without a separate runtime. Real, documented reservations found 2026-09-06, not a
+guess either way: OpenCV's ONNX importer has open GitHub issues for operator-coverage gaps on
+some PyTorch-exported models ([opencv/opencv#22787](https://github.com/opencv/opencv/issues/22787)),
+and Android GPU/NPU acceleration through OpenCV's DNN module is confirmed weaker/less mature than
+a mobile-first runtime's — no confirmed NNAPI backend, historical Mali-GPU OpenCL issues
+([opencv/opencv#15205](https://github.com/opencv/opencv/issues/15205)). **Fallback, narrowed to
+just these two models if the check below fails**: ONNX Runtime Mobile (MIT, official Android AAR
++ Swift package, NNAPI/Core ML execution providers) — not a second runtime for everything, only
+for whichever of the two models OpenCV can't cleanly run or accelerate.
+
+**TODO, before committing either way**: load the exact bundled NanoDet-Plus and MobileFaceNet
+`.onnx` files via `cv::dnn::readNetFromONNX` against one real test image on an Android target, and
+diff the output (box/label/confidence; the embedding vector) against the already-known-good result
+from the archived desktop OpenCV pipeline. Cheap, concrete, not yet done.
+
+**Face clustering — a new mechanism, distinct from the "face recognition/identity" pick in area B
+below**: recognition matches a face against an *already-named* entity; clustering groups faces that
+look similar to each other with **no identity involved yet** — the actual mechanism behind grouping
+unlabeled faces so a user can attach a phone contact to each group (the gamification drill,
+[../tags/UX_FLOWS.md](../tags/UX_FLOWS.md)'s "Gamified identity-labeling session"). No new model
+needed: **DBSCAN** over MobileFaceNet's existing 128-d embeddings (cosine distance) — small enough
+to hand-write directly in Kotlin (and later Swift) as plain math, no license question, no extra
+dependency. Epsilon/min-points thresholds need empirical tuning against real photos, not a
+borrowed default. For libraries growing over time, a cheap nearest-centroid check against existing
+clusters (before falling back to a full re-cluster pass) avoids re-running DBSCAN over every face
+on every new photo.
+
 ## A. Single-photo intrinsic quality
 
 | Area | What it detects | Why it matters (tied to real use cases above) | Status |
