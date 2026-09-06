@@ -30,6 +30,24 @@ User1 shares an album, **leased** tier, with User2, User3, and User4.
 - **User3 later "deletes" the album** — removes it from her own library/view, i.e. she no longer wants decrypt access or a local reference to it. This does not, by itself, mean her node stops hosting whatever encrypted shard(s) it was already contributing to the redundancy pool for that content: shard hosting is a storage-contribution fact, not an access-tier fact, and under erasure coding a single shard is meaningless without the others anyway. She keeps silently serving those pieces.
 - **User3 later wants the space back.** Only *now* does the storage-contribution question actually get resolved: the DFS has to place that shard on another node first (standard redundancy-factor rebalancing) before her space is actually freed — same mechanical problem any Storj/Filecoin-style network already solves, not something specific to ownership tiers.
 
+## Multiple people sharing one physical NAS (raised 2026-09-06)
+
+A family, or several friends who pooled money for a larger-capacity box hosted at one of their
+houses, is the same **leased**-tier problem above applied *within* one physical device instead of
+across several: each tenant needs her own key-gated encrypted volume, so the box's physical host —
+if it isn't her — structurally cannot decrypt another tenant's space even with full hardware
+access. Not a new mechanism, the existing tier's own rule ("decryption is gated by a key the owner
+holds") applied one level down; the concrete shape (one encrypted container/volume per tenant vs.
+one shared filesystem with app-level permissions) isn't designed here, but the isolation boundary
+should sit at the encryption layer, not just OS file permissions.
+
+**Real gap this doesn't cover — confidentiality vs. availability**: owner-keyed encryption stops
+the physical host from *reading* another tenant's data, but does nothing to stop him unplugging the
+box, letting a drive fail, or simply denying access — a friend-hosted box is a single point of
+failure for *availability* no matter how strong its encryption is. The mitigation is the same one
+this pillar already has for the general case: more redundant copies across more nodes, not a
+stronger crypto scheme on this one box.
+
 ## Status
 
 Paper design, 2026-07-28. Not built, not scheduled — Pillar 1 per [../VISION.md](../VISION.md)'s reaffirmed scope; nothing here should influence any current-phase schema/UX decision. Revisit alongside [TODO.md](TODO.md)'s other open questions once a second real node exists.
