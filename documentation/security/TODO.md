@@ -67,14 +67,18 @@ oversight, per this project's documentation-layout rule.
   built). Needs a real design pass (password hashing, rate limiting/lockout,
   session/token management, MFA) before any sharing/DFS feature ships for
   real. Raised 2026-07-28/29 during tag/sharing design; not resolved here.
-- **License-bar scope for general dependencies** (raised 2026-09-06,
-  [DEPENDENCIES.md](DEPENDENCIES.md)) — the MIT/Apache-2.0-only bar is currently
-  only written down in [curation/DETECTORS.md](../curation/DETECTORS.md), scoped
-  to vendored AI model code/weights. Asked Joakim whether it should extend to
-  general software dependencies; answer pending. Affects whether
-  `junit:junit:4.13.2` (EPL-1.0, test-only), `psycopg[binary]` (LGPL-3.0), and
-  `mysql-connector-python` (GPL-2.0 + Oracle's FOSS exception) need a
-  remediation plan or just stay documented as-is.
+- **License-bar scope for general dependencies — resolved 2026-09-06**
+  ([DEPENDENCIES.md](DEPENDENCIES.md), now recorded in
+  [POLICY.md](../policies/POLICY.md)): the MIT/Apache-2.0-only bar applies to
+  every dependency this project takes on, not just vendored AI model
+  code/weights. Confirms three violations still needing a **remediation plan**
+  (not yet decided — replace vs. a documented narrow exception):
+  `junit:junit:4.13.2` (EPL-1.0, `android/`, test-only — JUnit5/Jupiter is also
+  EPL, so it's not a compliant replacement; a real MIT/Apache-2.0 Android test
+  framework needs its own research pass), `psycopg[binary]` (LGPL-3.0,
+  superseded `previous-work/multi-user-web-app/server`), and
+  `mysql-connector-python` (GPL-2.0 + Oracle's FOSS exception, superseded
+  `previous-work/`).
 - **Dependabot ecosystem coverage gap** (raised 2026-09-06,
   [DEPENDENCIES.md](DEPENDENCIES.md)) — `.github/dependabot.yml` currently
   monitors a `pip`/`/modules` path that no longer exists post-pivot; a prior

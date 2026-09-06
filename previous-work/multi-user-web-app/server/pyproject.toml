@@ -5,7 +5,7 @@ description = "photo-server backend: FastAPI + Postgres"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.141.1",
-    # DO NOT REMOVE THIS COMMENT UNTIL RESOLVED: LGPL-3.0 license, pending decision on whether this project's MIT/Apache-2.0-only bar applies here — see documentation/security/DEPENDENCIES.md
+    # DO NOT REMOVE THIS COMMENT UNTIL RESOLVED: LGPL-3.0 license — CONFIRMED VIOLATION of this project's MIT/Apache-2.0-only bar (POLICY.md), needs a remediation plan — see documentation/security/DEPENDENCIES.md
     "psycopg[binary]>=3.3.4",
     "uvicorn>=0.52.1",
     "argon2-cffi>=25.1.0",

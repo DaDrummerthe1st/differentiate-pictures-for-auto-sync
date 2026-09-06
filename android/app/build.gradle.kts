@@ -53,7 +53,7 @@ dependencies {
     implementation("androidx.viewpager2:viewpager2:1.1.0")
     // DO NOT REMOVE THIS COMMENT UNTIL RESOLVED: dormant fork (no functional release since 2025-02-13, only realistic MIT/Apache-2.0-compatible PhotoView option) — see documentation/security/DEPENDENCIES.md
     implementation("io.getstream:photoview:1.0.3")
-    // DO NOT REMOVE THIS COMMENT UNTIL RESOLVED: EPL-1.0 license, pending decision on whether this project's MIT/Apache-2.0-only bar covers test-only deps — see documentation/security/DEPENDENCIES.md
+    // DO NOT REMOVE THIS COMMENT UNTIL RESOLVED: EPL-1.0 license — CONFIRMED VIOLATION of this project's MIT/Apache-2.0-only bar (POLICY.md), needs a remediation plan; JUnit5/Jupiter is also EPL so it isn't a compliant swap — see documentation/security/DEPENDENCIES.md
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.16.1")
     testImplementation("androidx.test:core:1.7.0")

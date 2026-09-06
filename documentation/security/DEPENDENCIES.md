@@ -16,15 +16,16 @@ inverse matters too: a repo with a high PR/commit volume that rarely merges anyt
 health signal than one with low but steady, actually-landing activity. Raised by Joakim 2026-09-06
 as a gap in this audit's first draft.
 
-**Correction to this audit's own starting premise**: [POLICY.md](../policies/POLICY.md)'s
-"## Licensing" section does **not** state a project-wide MIT/Apache-2.0-only bar — it only says no
-open-source license has been chosen *for this project itself* yet. The MIT/Apache-2.0-only bar
-referenced repeatedly below is a convention documented locally in
-[curation/DETECTORS.md](../curation/DETECTORS.md), explicitly scoped there to vendored AI model
-code/weights. Whether that bar should extend to general software dependencies (Python/Android
-libs, Docker images) is an **open question, asked of Joakim, answer pending** — see "Open items"
-below. Findings below that touch a non-MIT/Apache-2.0 license on a general dependency are reported
-factually, not asserted as violations, until that's resolved.
+**Correction to this audit's own starting premise, now resolved**:
+[POLICY.md](../policies/POLICY.md)'s "## Licensing" section originally didn't state a project-wide
+MIT/Apache-2.0-only bar — it only said no open-source license had been chosen *for this project
+itself* yet. The MIT/Apache-2.0-only bar referenced repeatedly below had, until this pass, only
+been written down in [curation/DETECTORS.md](../curation/DETECTORS.md), scoped there to vendored AI
+model code/weights. **Joakim resolved this 2026-09-06: the bar applies to every dependency this
+project takes on**, not just AI models — now recorded in POLICY.md itself. That makes three
+findings below **confirmed policy violations, not just factual notes**: `junit:junit:4.13.2`
+(EPL-1.0, test-only), `psycopg[binary]` (LGPL-3.0), and `mysql-connector-python` (GPL-2.0 +
+Oracle's FOSS exception) — each needs a remediation plan, see "Open items" below.
 
 ## Android / Gradle (`android/`)
 
@@ -45,11 +46,13 @@ open PRs at all. Raised by Joakim 2026-09-06 as the datapoint this table was mis
 | `com.google.android.material:material:1.12.0` | Apache-2.0 (confirmed via GitHub API) | Repo pushed 2026-06-22 | Google-backed, regular releases | None (OSV) |
 | `io.coil-kt.coil3:coil:3.1.0` | Apache-2.0 (confirmed) | 3.6.2 released 2026-09-04, days before this audit | Extremely active upstream — several minors ahead of the pin, which is deliberate ([mobile/README.md](../mobile/README.md): 3.2.0+ needs `compileSdk` 37), not stagnation | None (OSV) |
 | `io.getstream:photoview:1.0.3` | Apache-2.0 (verified via GitHub API) | Repo pushed as recently as 2026-09-01 | **The pattern to watch for**: pushes keep landing (CI/workflow housekeeping only), but no functional library release has shipped since 1.0.3 on 2025-02-13 — 19+ months. Looks alive by "last push" date alone; isn't, by "last real feature" date. See "PhotoView lineage" below | None (OSV) |
-| `junit:junit:4.13.2` (test) | **EPL-1.0** | N/A — junit-team declared JUnit4 **formal maintenance mode** | Deliberate, declared end-of-life-as-a-feature-line by its own maintainers (critical/security fixes only, new work goes to JUnit5) — a stated end-state, not neglect or a stalled PR queue | None (CVE-2020-15250 already fixed in 4.13.1) |
+| `junit:junit:4.13.2` (test) | **EPL-1.0 — CONFIRMED VIOLATION** | N/A — junit-team declared JUnit4 **formal maintenance mode** | Deliberate, declared end-of-life-as-a-feature-line by its own maintainers (critical/security fixes only, new work goes to JUnit5) — a stated end-state, not neglect or a stalled PR queue | None (CVE-2020-15250 already fixed in 4.13.1) |
 | `org.robolectric:robolectric:4.16.1` (test) | MIT (raw LICENSE file confirmed; GitHub's own detector mis-reports "NOASSERTION") | 4.17-beta already shipping | Fast-moving, community+org backed (Google, LinkedIn, Robolectric Foundation) | None (OSV) |
 | `androidx.test:core:1.7.0` (test) | Apache-2.0 | Repo pushed 2026-09-04 | Google/AndroidX, org-backed | None (OSV) |
 
-**License-bar-scope question applies to `junit:junit:4.13.2`** — see "Open items" below.
+**`junit:junit:4.13.2` is a confirmed MIT/Apache-2.0-bar violation** (resolved 2026-09-06 — see
+"Open items" below for the remediation plan; note JUnit5/Jupiter is EPL-2.0, so it isn't a
+compliant swap either).
 
 ### PhotoView lineage — doc correction made this pass
 
@@ -96,8 +99,8 @@ Same last-activity-vs-activity-pattern split as the Android table above.
 | `onnxruntime==1.28.0` | MIT | Current | Active — 1.28.0 is itself a hardening release | Signed-int/heap overflow fixes, CVE-2026-0994 protobuf bump — already applied |
 | `exif==1.6.1` | MIT | Not archived | **Thin, not stalled**: solo maintainer, low bandwidth — real but slow responsiveness, distinct from `vobject`'s genuinely dead pace | None found |
 | `python-magic==0.4.27` | MIT | No PyPI release since 2022-06-07 | **Confirmed genuinely latest, not neglect** — a small, feature-complete wrapper; quiet because finished, not abandoned mid-work | None found |
-| `mysql-connector-python==26.7.0` | **GPL-2.0 + Oracle's Universal FOSS Exception** | Current (Oracle re-based versioning to track MySQL Server 9.7.0 → connector 26.7.0) | Active, Oracle-maintained | Prior CVE-2024-21272 long fixed; nothing against 26.7.0 |
-| `psycopg[binary]>=3.3.4` | **LGPL-3.0** (binary variant) | Current | Active | None found for psycopg3 itself |
+| `mysql-connector-python==26.7.0` | **GPL-2.0 + Oracle's Universal FOSS Exception — CONFIRMED VIOLATION** | Current (Oracle re-based versioning to track MySQL Server 9.7.0 → connector 26.7.0) | Active, Oracle-maintained | Prior CVE-2024-21272 long fixed; nothing against 26.7.0 |
+| `psycopg[binary]>=3.3.4` | **LGPL-3.0 (binary variant) — CONFIRMED VIOLATION** | Current | Active | None found for psycopg3 itself |
 | `argon2-cffi>=25.1.0` | MIT | Current | Active | None found |
 | `redis>=8.1.0` (Python client) | MIT | Current | Active | None found (server-side Redis CVEs are separate, see Docker section) |
 | `slowapi>=0.1.10` | MIT | Released 2026-06-13, ending a ~2-year gap since 0.1.9 | **Watch this one** — confirmed real, but the multi-year gap before this release is a slower cadence than the others in this table, worth re-checking at the next audit | None found |
@@ -219,12 +222,19 @@ A working `dependabot.yml` would need, at minimum:
 
 ## Open items needing Joakim's decision
 
-1. **License-bar scope** (asked via AskUserQuestion this session, answer pending) — does the
-   MIT/Apache-2.0-only bar apply only to vendored AI model code/weights (as `DETECTORS.md` already
-   frames it), or should it extend to general dependencies? Affects whether `junit:junit:4.13.2`
-   (EPL-1.0, test-only), `psycopg[binary]` (LGPL-3.0), and `mysql-connector-python` (GPL-2.0 +
-   FOSS exception) get flagged as violations needing a remediation plan, or just stay documented
-   as-is.
+1. **License-bar scope — resolved 2026-09-06**: Joakim confirmed the MIT/Apache-2.0-only bar
+   applies to every dependency this project takes on, not just vendored AI model code/weights — now
+   recorded in [POLICY.md](../policies/POLICY.md). This makes three **confirmed violations**, each
+   needing its own remediation plan (not decided in this pass — replace, or document a deliberate,
+   narrow exception):
+   - `junit:junit:4.13.2` (EPL-1.0, `android/`, test-only) — the obvious next step, JUnit5/Jupiter,
+     is **also EPL (2.0)**, so it isn't a compliant swap; a real MIT/Apache-2.0-licensed Android
+     test framework needs its own research pass before anything gets replaced.
+   - `psycopg[binary]>=3.3.4` (LGPL-3.0, `previous-work/multi-user-web-app/server`) — superseded,
+     not deployed; lowest urgency of the three.
+   - `mysql-connector-python==26.7.0` (GPL-2.0 + Oracle's FOSS exception,
+     `previous-work/multi-user-web-app/prototypes/differentiate_pictures`) — also superseded, not
+     deployed.
 2. **Dependabot config** — see recommendation above; a real config change, not applied here.
 3. **`io.getstream:photoview` staleness** — no better MIT/Apache-2.0 alternative currently known;
    recommend monitoring rather than replacing.

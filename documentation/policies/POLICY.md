@@ -25,6 +25,7 @@ Hard, project-wide constraints. This is the one file where "hard rules live here
 ## Licensing
 
 - No open-source license has been chosen yet. Treat this as a private, personal project. Do not add a `LICENSE` file or make licensing claims until Joakim decides otherwise.
+- **Hard constraint (2026-09-06): every dependency this project takes on must be MIT or Apache-2.0 licensed** — not just vendored AI model code/weights, which is where this bar originally lived ([curation/DETECTORS.md](../curation/DETECTORS.md)). Resolved during the [dependency audit](../security/DEPENDENCIES.md) after that audit found the bar had never actually been written down here. **Confirmed violations as of that audit**, each needing a remediation plan rather than a silent grandfather-in: `junit:junit:4.13.2` (EPL-1.0, `android/`, test-only — note JUnit5/Jupiter is EPL-2.0, so it isn't a compliant replacement either, a real MIT/Apache-2.0 Android test framework needs its own research pass), `psycopg[binary]` (LGPL-3.0, `previous-work/multi-user-web-app/server`, superseded/not deployed), and `mysql-connector-python` (GPL-2.0 + Oracle's FOSS exception, `previous-work/multi-user-web-app/prototypes/differentiate_pictures`, also superseded/not deployed).
 
 ## Vendor lock-in and openness
 
