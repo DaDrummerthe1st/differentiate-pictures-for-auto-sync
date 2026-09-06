@@ -21,7 +21,7 @@ Each check has a trigger condition. Most only apply when something specific happ
 
 | Check | Trigger | Source |
 | --- | --- | --- |
-| Product code test suite | before every commit touching live product code, docs-only or not | local. **None exists right now, 2026-09-05** — `modules/`/`contacts/` (what this row used to mean) were archived to `previous-work/` in the native-app pivot; `.githooks/pre-commit` no longer runs a test-suite gate. Re-add both this row and the hook's gate once real code (e.g. `android/`) exists again |
+| Product code test suite | before every commit touching live product code, docs-only or not | local. **Still none, 2026-09-06** — `android/app` (first code since the native-app pivot archived `modules/`/`contacts/`) was written with an explicit, one-time TDD exception (Joakim's direction, disposable toolchain-check pass — see [mobile/README.md](../mobile/README.md)); `.githooks/pre-commit` still runs no test-suite gate. Re-add both this row and the hook's gate once `android/` gets real tests |
 | Secrets-in-diff scan | before every commit | local, mechanically enforced by `.githooks/pre-commit` via `tools/secrets_scan/` (see [SECRETS_SCAN.md](SECRETS_SCAN.md)) — see below |
 | `test_results` logging | after each `app/tests`/`server/tests` run, if tracking that run's trend is useful | local, see [TEST_RESULTS.md](TEST_RESULTS.md) |
 | `doc_metrics` logging | every commit touching a `*.md` file | local, mechanically enforced by `.githooks/post-commit` — see below |

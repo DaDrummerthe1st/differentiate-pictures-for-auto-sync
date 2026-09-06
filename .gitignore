@@ -13,3 +13,12 @@ __pycache__/
 /.env
 /resources/test_pictures/
 /databases/
+
+# Android
+/toolchain/
+android/local.properties
+android/.gradle/
+android/**/build/
+android/gradle/wrapper/gradle-wrapper.jar
+android/gradlew
+android/gradlew.bat
