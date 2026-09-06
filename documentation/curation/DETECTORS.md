@@ -18,6 +18,14 @@ needs to run inside a Kotlin (and later Swift) app instead of the archived Pytho
 model picks themselves (NanoDet-Plus, YuNet, MobileFaceNet below) are unaffected by this — they're
 just `.onnx`/license artifacts, independent of whichever framework loads them.
 
+**App-shell framework decided 2026-09-06: React Native**, not a pure-native Kotlin+Swift app — see
+[../GLOSSARY.md](../GLOSSARY.md)'s "App-shell framework decision" section for the full reasoning.
+This doesn't change anything below: OpenCV/ONNX Runtime Mobile still run as native Kotlin (Android)
+and Swift (iOS) code exactly as designed here, just wrapped as a small Turbo/Nitro Module bridge
+that the app's JS/TypeScript majority calls into, rather than being the whole app. "Runs inside a
+Kotlin (and later Swift) app" below should be read as "runs in the native module layer," not as
+implying the whole app is written in Kotlin.
+
 **Direction (Joakim's own framing, 2026-09-06)**: prefer a library over a hand-rolled or
 platform-proprietary path wherever one exists honoring this project's FOSS/privacy bar, and prefer
 *one* such library across every OS this project touches (Android, iOS later, Linux for the eventual
@@ -85,7 +93,7 @@ on every new photo.
 
 **Group/co-presence pick (researched 2026-08-05)**: no new model needed, same zero-added-cost pattern as area D's scene classification and area C's coarse species reuse. [../tags/TAXONOMY.md](../tags/TAXONOMY.md) already defines co-presence/group as a category that only links existing entities via `tag_references` — no entity record of its own, no bounding box. Once face recognition (MobileFaceNet, above) resolves *who* is in a photo, co-presence is a plain query: if 2+ known people-entities are matched in the same photo, emit a co-presence tag referencing both. Logic over already-computed identity matches, not a new detector stage.
 
-**Age/gender pick (researched 2026-08-05)**: **OpenVINO Open Model Zoo's `age-gender-recognition-retail-0013`** — Apache-2.0 code *and* weights (Intel's own `model.yml` explicitly assigns Apache-2.0 + Intel copyright to this exact file, the cleanest chain-of-custody found), 2.1M params, loads via `cv2.dnn.readNet()` — the same runtime path already used for YuNet, zero new inference-engine dependency. Age is a continuous regression, gender a binary softmax. Two honest caveats, not disqualifying: (1) an unresolved 2020 community ask for a clearer blanket "pretrained models = Apache-2.0" FAQ from Intel — the per-model `model.yml` assignment found here is stronger evidence than that thread, but it shows the ambiguity was real enough for someone with legal counsel to ask; (2) the model's own README states training only covered ages 18-75 and it does **not** apply to children — treat output as unreliable for anyone visually under ~18, worth surfacing in the UX rather than hiding. Runner-up: `onnx-community/age-gender-prediction-ONNX` (ViT-Base, more honest about its own accuracy disparity on children, but its Apache-2.0 claim sits on top of UTKFace's non-commercial-research dataset license — a weaker chain-of-custody, kept as fallback only). Excluded: InsightFace's `genderage.onnx` (non-commercial weights, same problem as the face-rec bundle), `deepface`'s heads (weights inherit VGG-Face's academic license), the classic Adience Caffe models (no license file at all). Flagged, not picked: FairFace (CC BY 4.0 — commercially usable and purpose-built for fairness, but not MIT/Apache-2.0 on the letter of this project's bar; a real judgment call, not a clean exclusion). Full survey: `2026-08-05-age-gender-estimation-model-survey.md` in the `research-findings` repo.
+**Age/gender pick (researched 2026-08-05)**: **OpenVINO Open Model Zoo's `age-gender-recognition-retail-0013`** — Apache-2.0 code *and* weights (Intel's own `model.yml` explicitly assigns Apache-2.0 + Intel copyright to this exact file, the cleanest chain-of-custody found), 2.1M params, loads via `cv2.dnn.readNet()` — the same runtime path already used for YuNet, zero new inference-engine dependency. Age is a continuous regression, gender a binary softmax. Two honest caveats, not disqualifying: (1) an unresolved 2020 community ask for a clearer blanket "pretrained models = Apache-2.0" FAQ from Intel — the per-model `model.yml` assignment found here is stronger evidence than that thread, but it shows the ambiguity was real enough for someone with legal counsel to ask; (2) the model's own README states training only covered ages 18-75 and it does **not** apply to children — treat output as unreliable for anyone visually under ~18, worth surfacing in the UX rather than hiding. Runner-up: `onnx-community/age-gender-prediction-ONNX` (ViT-Base, more honest about its own accuracy disparity on children, but its Apache-2.0 claim sits on top of UTKFace's non-commercial-research dataset license — a weaker chain-of-custody, kept as fallback only). Excluded: InsightFace's `genderage.onnx` (non-commercial weights, same problem as the face-rec bundle), `deepface`'s heads (weights inherit VGG-Face's academic license), the classic Adience Caffe models (no license file at all). Flagged, not picked: FairFace (CC BY 4.0 — commercially usable and purpose-built for fairness, but not MIT/Apache-2.0 on the letter of this project's bar; a real judgment call, not a clean exclusion). Full survey: `2026-08-05-age-gender-estimation-model-survey.md` in the `research-findings` repo. **Maintenance flag, 2026-09-06**: Intel has since deprecated the Open Model Zoo repository this model file is sourced from, pointing users to Hugging Face instead — the license/chain-of-custody reasoning above is unaffected (it was checked against the model's own `model.yml`, not the repo's ongoing existence), but the file's continued reachability at its original location needs re-verifying, and whether it's mirrored somewhere actively maintained before this pick is actually built against. Handed to the cross-session dependency audit rather than resolved here.
 
 ## C. Animals
 
@@ -279,16 +287,25 @@ a single photo (waving, hugging, jumping, sitting), a finer grain than either.
 | --- | --- | --- | --- |
 | Human action/pose recognition | What a specific person is doing in-frame | New dimension Joakim asked to add; distinct from occasion-level activity tags already in [../tags/TAXONOMY.md](../tags/TAXONOMY.md) | researched |
 
-**Pick (researched 2026-08-05)**: genuinely a two-stage problem — pose/keypoint estimation, then
-action classification over those keypoints. **Stage 1: MediaPipe Pose (BlazePose)** — Apache-2.0 code
-and weights, actively maintained by Google into 2026, first-party single-image API, Lite variant only
-3MB and runs easily on the i5-650, returns 33 3D landmarks (more signal than COCO-17 alternatives).
-Only wart: no official ONNX export, so it stays on the TFLite runtime rather than joining this
-project's other ONNX-based picks. Runner-up: **RTMPose** (OpenMMLab) — more CPU-efficient and has a
-first-class ONNX path, but an unresolved community GitHub issue (`mmpose#2106`) flags real uncertainty
-over whether its COCO-trained checkpoint weights are as unambiguously clean as its Apache-2.0 code;
-treat as a fallback only if MediaPipe's lack of ONNX becomes a real integration blocker, not a co-pick.
-Excluded: CMU OpenPose (non-commercial, $25k/yr commercial license) and Ultralytics YOLO-pose
+**Pick, revised 2026-09-06 — RTMPose promoted over MediaPipe**: genuinely a two-stage problem —
+pose/keypoint estimation, then action classification over those keypoints. **Stage 1: RTMPose**
+(OpenMMLab/MMPose) is now the lead pick, reversing the original 2026-08-05 order. Reasoning: Joakim
+raised a standing preference for a broader, community-governed "model handler" over a single
+company's SDK (the same class of concern already applied to ML Kit/TFLite elsewhere in this file) —
+MMPose is an open, community-maintained toolkit spanning many pose models, not one company's product,
+and RTMPose ships a genuine ONNX export, keeping this project on its one shared ONNX Runtime instead
+of adding TFLite as a second runtime just for pose. The `mmpose#2106` licensing question (COCO/AIC-
+trained checkpoint weights) that previously kept RTMPose as only a runner-up was **re-checked
+2026-09-06 via GitHub's API directly** (not just search snippets): a real OpenMMLab maintainer
+(`ly015`) responded the same day the issue was opened with a good-faith, honestly-hedged answer
+("should be allowed... consult legal experts for a definitive answer") and closed it as resolved —
+the same "believed fine, a lawyer should confirm before real commercial exposure" posture already
+accepted for other picks in this file (MobileFaceNet's training-data nuance, the ANPR/OCR privacy
+flags), not a unique blocker. MMPose itself is actively released (v1.3.2 current as of this check).
+**MediaPipe Pose (BlazePose)** — Apache-2.0, Google-maintained, 33 3D landmarks, no ONNX export (stays
+on TFLite) — is kept as the fallback if RTMPose's real-world Android/OpenCV integration hits a wall
+RTMPose can't clear. Excluded: CMU OpenPose (non-commercial, $25k/yr commercial license) and
+Ultralytics YOLO-pose
 (AGPL-3.0, same pattern already rejected for YOLO26n).
 
 **Stage 2: no confident pretrained pick — same honest conclusion this project already reached for
@@ -379,3 +396,8 @@ instead, same shape of finding as area C's pet-identity conclusion. Landmark/pla
 image captioning remain queued, not attempted this session. Full surveys:
 `2026-08-05-ocr-in-frame-engine-survey.md`, `2026-08-05-age-gender-estimation-model-survey.md`,
 `2026-08-05-human-action-pose-recognition-survey.md` in the `research-findings` repo.
+**2026-09-06**: area J's pose pick reversed to RTMPose over MediaPipe (re-verified license, see that
+section); the app-shell framework decision (React Native, [../GLOSSARY.md](../GLOSSARY.md)) recorded
+in the Mobile runtime section above — model picks unaffected, just now wrapped as native modules
+rather than the whole app; the age/gender pick's source repository (Intel Open Model Zoo) flagged as
+deprecated by Intel, re-sourcing/re-verification needed before it's built against.

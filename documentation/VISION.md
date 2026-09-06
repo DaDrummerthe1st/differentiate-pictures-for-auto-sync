@@ -34,6 +34,13 @@ sideloaded (a plain APK, no Google Play/App Store) — the standing anti-platfor
 that had this project avoiding a native app in the first place stays satisfied, not abandoned.
 iOS is a "consider it, don't build it" note for now; Android only.
 
+**App-shell framework decided 2026-09-06: React Native**, not a pure-native Kotlin+Swift build —
+full reasoning (governance/vendor-neutrality comparison against Flutter/Compose Multiplatform/Kotlin
+Multiplatform, the native-module hybrid architecture this implies for OpenCV/WireGuard) lives in
+[GLOSSARY.md](GLOSSARY.md)'s "App-shell framework decision" section, not repeated here. Doesn't
+change the "iOS: consider it, don't build it" scoping above — it does mean iOS is now cheaper to
+actually build once scope allows, since the same React Native codebase already targets it.
+
 **What this does and doesn't change**: the long-term goal is unchanged — a fully FOSS,
 complete-data-ownership system where each user runs on her own hardware but can lend spare
 capacity to others on the network (Pillar 1, unchanged). What *is* downgraded to historical
@@ -137,4 +144,4 @@ As much of this as possible runs distributed across users' own NAS hardware rath
 
 ## Status
 
-All four pillars are open, none committed, none scheduled. Pillar 1's timeline is the "full roadmap addendum... still pending from Joakim" open question already tracked in [distributed-sync/TODO.md](distributed-sync/TODO.md). Pillars 2–4 don't have TODOs yet because nothing is being built against them. **Exception, 2026-07-26**: Pillars 1 and 3 got a real design pass — see [upload-and-share/](upload-and-share/README.md) (per-user ownership, strict/free sharing terms, event/party mode). Still not scheduled work (no TODO.md steps yet) — a design pass, not a committed build. **2026-08-05**: added the "Core differentiator" section and the "system should help the user" principle above — positioning statements, not scope changes. **2026-09-05**: added the "Native-app pivot" section above — client moves from browser/PWA to a native Android app; every previous implementation archived to `previous-work/`, not deleted; the four pillars and the core differentiator above are unaffected by this, still the goal.
+All four pillars are open, none committed, none scheduled. Pillar 1's timeline is the "full roadmap addendum... still pending from Joakim" open question already tracked in [distributed-sync/TODO.md](distributed-sync/TODO.md). Pillars 2–4 don't have TODOs yet because nothing is being built against them. **Exception, 2026-07-26**: Pillars 1 and 3 got a real design pass — see [upload-and-share/](upload-and-share/README.md) (per-user ownership, strict/free sharing terms, event/party mode). Still not scheduled work (no TODO.md steps yet) — a design pass, not a committed build. **2026-08-05**: added the "Core differentiator" section and the "system should help the user" principle above — positioning statements, not scope changes. **2026-09-05**: added the "Native-app pivot" section above — client moves from browser/PWA to a native Android app; every previous implementation archived to `previous-work/`, not deleted; the four pillars and the core differentiator above are unaffected by this, still the goal. **2026-09-06**: the native-app pivot's app-shell framework decided (React Native, see that section) — a refinement of *how* the pivot is built, not a change to its scope or the pillars.

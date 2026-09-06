@@ -91,6 +91,23 @@ visible to each other, not a default). No unlockable features gated behind it, n
 If a future commercial phase ever wants to gate something behind engagement, that's a distinct
 decision for whoever designs that phase, not assumed here.
 
+## The payoff must be visible, not just true — raised 2026-09-06
+
+Everything above designs the credit *mechanic* correctly (tied to training value, no dark patterns)
+but doesn't yet require that a user ever actually **sees** the result of her own contribution.
+Joakim's framing: she should always feel like usage pays off — tag a few pictures and the app visibly
+gets more accurate; share a few and the app visibly gets better at knowing what's safe to suggest
+deleting. This is a concrete, buildable extension of this file's existing running-tally idea ("You've
+helped identify 230 photos") above, not a new mechanic: the tally should be accompanied by real,
+specific after-the-fact outcomes tied to what she actually did — "thanks to labeling Fido, we found 12
+more photos of him you'd forgotten about" (the Smart Album mechanism, [../tags/TAXONOMY.md](../tags/TAXONOMY.md)'s
+"Smart Albums" section, surfacing a concrete result) or "sharing that album helped confirm which of
+these near-duplicates are safe to suggest removing." Same "never applies silently, always shows why"
+principle already governing every Curator suggestion — applied here to the *feedback* a user gets
+about her own past actions, not just to a new suggestion. Not designed further here: the actual UI
+for surfacing this (a notification, an in-session message, a dedicated feed) — flagged as a
+requirement future UX work on this file's session screens must satisfy, not a mockup.
+
 ## Session and event logging — reuses `audit_log`, not a new table
 
 Every round's outcome (which finding, what the user did, and the credit awarded) is exactly the kind
@@ -157,4 +174,5 @@ reward design UX_FLOWS.md had left open, and fold in the model-training question
 and system-wide). Nothing here is built — no schema migration (the `audit_log` reuse above is a
 design choice, not a migration), no endpoints. See UX_FLOWS.md for the interaction-level round detail
 this file doesn't repeat, and IDENTITY_MATCHING.md for the classifier mechanics this file's rounds
-feed into.
+feed into. **2026-09-06**: added the "payoff must be visible" requirement — the existing credit
+mechanic needs to surface concrete, specific outcomes back to the user, not just a running tally.

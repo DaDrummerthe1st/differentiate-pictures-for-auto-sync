@@ -172,6 +172,42 @@ Not designed further here: the actual UI for creating/editing a circle, and whet
 "public" tier (everyone, not a specific named circle) is itself just a special built-in circle or a
 separate concept — flagged, not resolved.
 
+## Smart Albums — a saved dynamic query, not a tag category or a new schema concept
+
+Raised 2026-09-06: Joakim's "folders" idea — automatic groupings for a place/person the user seems
+to care about (his own example: pictures and clips from Blidö, or of a specific person she often
+returns to) — resolves the same way this file's "Audience circles" section above did: not a new
+category (the enum stays closed at 12), not a new schema concept at all. A
+**Smart Album** (the term this file adopts — the same one Apple Photos/Adobe Lightroom use for
+exactly this shape of feature) is simply a **saved query** over tags/entities/embeddings already
+designed above: "person = Anders AND place = Blidö," ranked by embedding similarity via the same
+nearest-neighbor mechanism [../curation/ARCHITECTURE.md](../curation/ARCHITECTURE.md) already
+designs. It runs wherever that query engine runs — the NAS webapp and the native app equally, not an
+iOS-only or Android-only construct — per [../distributed-sync/METADATA.md](../distributed-sync/METADATA.md)'s
+federated per-device search design (`sqlite-vec` on the phone, `pgvector` on the NAS, same query
+logic either side).
+
+**Surfaced inside ordinary browsing, never a separate destination**: a Smart Album should appear as
+a rail/shelf inside the normal photo grid — the way a "memories" carousel sits above a normal
+chronological grid elsewhere — not a walled-off tab. This is a direct instance of
+[../VISION.md](../VISION.md) Pillar 2's existing "motivated tagging, not a chore" principle, extended
+here to browsing itself: normal chronological/folder browsing, fully sortable and filterable however
+the user wants (include/exclude, custom sort order), stays the default and is never narrowed or
+gated by what a Smart Album chooses to surface. A Smart Album is one optional additional lens on the
+same data, easy to ignore, never a constraint on how she's allowed to look at her own library.
+
+**How "interest" is inferred without requiring an intrusive relationship label**: naming *why* a
+person matters (father, ex-partner) is never required to get a Smart Album's benefit. Instead this
+reuses [../curation/IDENTITY_MATCHING.md](../curation/IDENTITY_MATCHING.md)'s already-designed
+**usage-intent score** (repeat-view, share, and search-engagement frequency) — the system infers
+"you seem to care about Anders and Blidö photos" from behavior alone. An explicit relationship tag
+(this file's Relationships category, above) stays available for a user who *wants* to state one, but
+nothing about Smart Albums requires labeling an emotionally loaded category just to get surfaced.
+
+Not designed further here: the actual query-definition UI, how many Smart Albums exist at once, and
+whether a Smart Album can itself be shared as an album (per the section immediately below — likely
+yes, since a Smart Album's result set is just another tag/entity query, but not confirmed).
+
 ## Every tag is a shareable album — with a visual pre-share review
 
 Any tag, of any category, can be shared as an album, not just origin/event tags —
@@ -193,4 +229,6 @@ Designed 2026-07-27, taxonomy only — no schema migration, no endpoints. Supers
 "Future tag schema" and "Tag dimensions" sections outright. **2026-08-04**:
 provenance/usage-disclosure principle added. **2026-08-05**: category-enum-boundedness
 clarified, custom privacy categories added, audience circles designed (as an `entities`
-type, not a 13th category — see that section for the correction).
+type, not a 13th category — see that section for the correction). **2026-09-06**: Smart
+Albums designed (a saved query, not a new category or schema concept, same resolution
+pattern as audience circles).

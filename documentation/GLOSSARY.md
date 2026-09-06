@@ -28,6 +28,12 @@ Plain-language definitions of every technical/business term this project's desig
 - **Blockchain**: a shared, tamper-evident ledger multiple parties agree on without a central authority — solves "who agrees on what's true," a different problem from a DHT's "who has this file."
 - **Marketplace** (as used in this project's docs): any system where money changes hands for content or storage — e.g. Adobe Stock selling photographers' work, or Filecoin/Storj renting out spare disk space for payment. Not a reference to Facebook's product of the same name.
 - **Tahoe-LAFS**: an existing open-source "Least-Authority File Store" using erasure coding + encryption specifically so no single storage node can read your data and only a threshold of shards is needed to reconstruct it — see [distributed-sync/NETWORK_MECHANISM.md](distributed-sync/NETWORK_MECHANISM.md) for the full research on whether it fits this project.
+- **NAT (Network Address Translation)**: the mechanism a home router uses to let every device on a household's private network share one public internet address — the reason most home NAS boxes aren't directly reachable from the internet by a fixed address, and the whole reason STUN/TURN/rendezvous below are needed at all.
+- **STUN (Session Traversal Utilities for NAT)**: a small, lightweight protocol that just tells a device what its own public address looks like from the outside, so two devices behind different NATs (a phone on mobile data, a NAS at home) can learn enough about each other to attempt a direct connection — the server's job ends once that's exchanged; no data ever flows through it. This project's pick for the coordination role is **Headscale**, below.
+- **TURN (Traversal Using Relays around NAT)**: STUN's fallback for the NAT types a direct connection genuinely can't punch through — a TURN server relays the actual data between the two devices instead of just helping them find each other. Relaying real bandwidth costs real money, unlike STUN's brief handshake, which is why this project treats free STUN-equivalent rendezvous and paid-tier TURN-equivalent relay as sitting on opposite sides of a free/paid line ([distributed-sync/README.md](distributed-sync/README.md)).
+- **WireGuard**: a modern, open-source VPN tunnel protocol (already this project's pick for phone↔NAS traffic) — small codebase, fast, and its handshake is stateless, so a connection re-establishes automatically after either side reboots or changes network with no manual reconnect step.
+- **Headscale**: a self-hosted, open-source (BSD-3-Clause), Tailscale-protocol-compatible coordination server — this project's STUN-equivalent pick. It only ever helps a phone and the user's own NAS discover each other's address and exchange WireGuard keys, then steps aside once the direct tunnel is up; it never sees the data flowing over that tunnel.
+- **coturn**: the standard open-source implementation of both a STUN and a TURN server ("what everyone runs" per the WebRTC ecosystem) — this project's candidate for the paid-tier relay role, since genuinely free public STUN exists but no meaningful free public TURN service does.
 
 ## Security and privacy
 
@@ -67,6 +73,7 @@ Plain-language definitions of every technical/business term this project's desig
 - **Face detection vs. face recognition vs. re-identification**: three distinct, often-confused tasks. **Detection** just finds "is there a face here, and where" (a bounding box, no identity). **Recognition/identification** matches a detected face against a *known* identity (an `entities` record, [tags/SCHEMA.md](tags/SCHEMA.md)) — this project does it via a face embedding + nearest-neighbor/classifier, not literally "reading" the face. **Re-identification (re-id)** is the same matching idea applied to non-human subjects (a specific dog, not just "a dog") — see the existing "Animal re-identification" entry below. "Personal detection," as a phrase, doesn't map to a standard term in this space — one of the three above is almost always what's actually meant.
 - **Tag provenance / usage disclosure**: a per-tag transparency principle raised 2026-08-04 ([tags/TAXONOMY.md](tags/TAXONOMY.md)) — any tag should be inspectable down to what produced it, its confidence, exactly who can see it, and exactly what it's used for, rather than asking a user to trust an unverifiable claim about her own data.
 - **Audience circle**: a reusable, named list of sharing recipients ("Close Friends") a user can share things to as a unit instead of typing each recipient every time — designed 2026-08-05 as its own `entities` type (`entity_type='circle'`), not a tag, precisely because it isn't something the system found out about a photo, distinct from the existing "co-presence/group" tag category (who's *depicted together in a photo*, a content fact, not a sharing target). See [tags/TAXONOMY.md](tags/TAXONOMY.md).
+- **Smart Album**: a saved dynamic query over existing tags/entities/embeddings (e.g. "person = Anders AND place = Blidö," ranked by embedding similarity) — not a new tag category or schema concept, same resolution pattern as the audience-circle entry above. The term is borrowed from Apple Photos/Adobe Lightroom, which use it for exactly this shape of feature (a rule-based collection that re-populates itself, as opposed to a manually curated one). Raised 2026-09-06 — see [tags/TAXONOMY.md](tags/TAXONOMY.md)'s "Smart Albums" section.
 - **ANPR (automatic number plate recognition)**: detecting and reading a vehicle's license plate out of an image — a specific, legally distinct sub-case of OCR-in-frame ([curation/DETECTORS.md](curation/DETECTORS.md) area D), since a plate resolves to a registered keeper via the national vehicle registry.
 - **DPIA (Data Protection Impact Assessment)**: a GDPR-required *process* (not a ban) a data *controller* must carry out before starting processing likely to pose a high risk to people's rights — e.g. combining data from multiple sources in unexpected ways, or using new identification technology. A procedural obligation on whoever controls a given deployment's data, not a statement that the underlying activity is illegal.
 - **Zero-shot classification**: sorting something into a category it was never explicitly trained on, by comparing its embedding against a category described only in a text prompt at the moment of use (e.g. "a photo of a blueprint") rather than a fixed label list baked in during training. This is what makes a genuinely **custom**, user-defined category possible with no new model or training pass — see [tags/TAXONOMY.md](tags/TAXONOMY.md)'s custom privacy categories.
@@ -148,12 +155,97 @@ Plain-language definitions of every technical/business term this project's desig
 - **Distribution Focal Loss (DFL) decode**: how `modules/objects.py`'s NanoDet-Plus model expresses a box edge's position — instead of directly predicting one distance value, it predicts a small probability distribution over discrete distance "bins" (0 to `reg_max`, here 7) via softmax, and the actual distance used is that distribution's weighted average. Four such distributions (one per side: left/top/right/bottom) plus a grid-cell center position produce one box. More expressive than a single regressed number, at the cost of needing this extra decode step.
 - **Letterbox (resize)**: resizing an image to fit a model's fixed input size (here 416x416) while preserving its original aspect ratio — scale until the longer side fits, then pad the shorter side with black to fill the rest, centered. Keeps the image from being squashed/stretched, at the cost of needing to track the padding/scale afterward to map results back to the original image's coordinates.
 
+## App-shell framework decision — 2026-09-06
+
+**Superseded the pure-native-Kotlin framing below**: after comparing Flutter, Compose Multiplatform,
+Kotlin Multiplatform (native UI per platform), and React Native against this project's actual
+constraints, **React Native was chosen** as the app shell for Android + iOS + (potentially) the
+NAS-webapp surface. Reasoning chain, in order: (1) Flutter introduces Dart as a new language and is
+still Google-primary-funded; (2) Compose Multiplatform stays entirely in Kotlin but is
+JetBrains-primary; (3) **React Native's governance moved to a neutral React Foundation under the
+Linux Foundation in October 2025**, with founding members Amazon, Microsoft, Huawei, Vercel, Expo,
+Callstack, and Software Mansion alongside Meta — the most multi-vendor governance of the four
+options, which this project's standing vendor-neutrality principle weighs in its favor despite
+introducing JavaScript/TypeScript as a second language. **Language licenses independently verified,
+2026-09-06**: Kotlin (Apache-2.0, JetBrains), Swift (Apache-2.0 with a Runtime Library Exception,
+Apple, open-sourced 2015), and React/React Native itself (MIT — re-licensed from the original,
+controversial "BSD + Patents" license on 2018-02-16, following public pressure including WordPress
+Gutenberg dropping React over it) all independently clear this project's MIT/Apache-2.0-only bar.
+
+**The hybrid architecture this implies**: roughly 90%+ of the app (UI, navigation, Smart Album
+logic, sync/business logic) stays plain JS/TypeScript. A small number of **Turbo Modules** (or the
+newer, faster **Nitro Modules**) — thin Kotlin (Android) + Swift (iOS) bridges — wrap the native
+libraries with no official JS binding: OpenCV's DNN calls (no official React Native OpenCV binding
+exists) and WireGuard (`wireguard-android`/its iOS equivalent have only community-maintained RN
+wrappers, less proven than calling the official libraries directly). This is the standard,
+recommended React Native pattern for heavy/native-hardware work, not a workaround — see this file's
+Turbo Modules/JSI/Nitro Modules entries below. ONNX Runtime Mobile needs no bridge at all: Microsoft
+ships an official `onnxruntime-react-native` package directly.
+
+## Mobile app libraries (React Native app shell — supersedes the pure-native-Kotlin picks this section
+originally listed, kept below with a superseded note since some concepts still apply where noted)
+
+- **React Native**: Meta-originated, now multi-vendor-governed (see above) cross-platform app
+  framework — JavaScript/TypeScript UI and business logic compiled to genuinely native components on
+  each platform (not a WebView), with an extension point (native modules, below) for anything needing
+  direct platform/hardware access. MIT-licensed.
+- **Turbo Modules / JSI (JavaScript Interface)**: React Native's "New Architecture" mechanism for
+  calling native Kotlin/Swift code from JavaScript — JSI lets JS hold direct references to native
+  objects/functions and call them synchronously, avoiding the older bridge's JSON-serialization
+  overhead. The standard, recommended pattern for wrapping a native library with no first-party JS
+  binding (this project's case for OpenCV and WireGuard): keep heavy computation native-side, return
+  only small, already-processed results to JS.
+- **Nitro Modules**: a newer (2026), even-faster alternative to Turbo Modules for the same
+  native-bridging purpose — direct C++-to-Swift interop (skipping Objective-C) and build-time-static
+  JSI bindings, benchmarked well ahead of Turbo Modules specifically for numerical/native-heavy
+  workloads (e.g. a face-embedding call) — the more specialized pick if a Turbo Module's overhead
+  ever becomes measurable for this project's detector calls.
+- **op-sqlite**: the actively-maintained (2026) JSI-based SQLite binding for React Native, chosen
+  over the now-unmaintained `react-native-sqlite`/older alternatives — supports loading SQLite
+  extensions (needed for `sqlite-vec`, [distributed-sync/METADATA.md](distributed-sync/METADATA.md)).
+  **Real, unresolved caveat found 2026-09-06**: Apple disables extension loading on iOS's *embedded*
+  system SQLite for security reasons — whether op-sqlite routes around this with its own
+  statically-linked SQLite build, or whether `sqlite-vec` on iOS needs a different approach entirely,
+  is not yet verified. Flagged as an open risk against the "sqlite-vec on every device" design, not
+  resolved.
+- **react-native-background-fetch** (Transistorsoft): MIT-licensed, actively maintained since 2015
+  (updated as recently as April 2026), wraps Android's WorkManager and iOS's BGTaskScheduler behind
+  one JS API — described as the 2026 industry-standard choice for this. Removes background sync from
+  the list of things needing a custom native bridge.
+- **react-native-video** (TheWidlarzGroup): the actively-maintained standard video-playback component
+  for React Native — the `Media3 (ExoPlayer)` entry below was this project's pre-React-Native pick
+  for the same need and no longer applies directly, though the same GPL-2.0 VLC-exclusion reasoning
+  carries over (no genuinely open, license-clean alternative changes by switching frameworks).
+- **react-native-zoom-toolkit**: the leading candidate (2026) for pinch-to-zoom/pan on a photo in
+  React Native — actively developed. **Not yet independently license/health-verified** the way this
+  project's other picks are — flagged as a candidate, not a confirmed pick, pending that check
+  (belongs in the cross-session dependency-audit prompt already handed off).
+- ~~**PhotoView**~~: **superseded — do not use.** Originally picked for the pure-native-Kotlin plan;
+  independently verified 2026-09-06 to be **archived since October 2022, no active maintainer, last
+  release 2015** — would have been a bad pick even without the framework change. Kept here as a
+  record of the correction, not a live recommendation.
+- **Gradle**: Android's build system and dependency manager — still relevant for the native
+  Kotlin/Swift module side of the React Native app, just no longer the delivery mechanism for the
+  whole app's dependencies (npm/Yarn covers the JS 90%).
+- **AndroidX / Jetpack**: Google's own first-party Android support-library suite — still relevant
+  wherever a Kotlin native module needs it (e.g. `WorkManager` under the hood of
+  `react-native-background-fetch` above), no longer the whole app's UI toolkit under React Native.
+- **Coil**, **Subsampling Scale Image View**, **Room**, **WorkManager** (direct use): superseded by
+  the React Native picks above for this project's chosen app shell — kept as a record of what a
+  pure-native-Kotlin build would have used, not a live recommendation. See each entry's own text
+  above this section for what replaced it.
+- **Media3 (ExoPlayer)**: superseded by `react-native-video` above for the app itself; still the right
+  pick if a Kotlin native module ever needs direct playback control outside the RN layer.
+- **WorkManager**: AndroidX's guaranteed background-task scheduler (Apache-2.0) — survives app restarts and reboots, respects battery/Doze-mode constraints, and is the standard mechanism for the "syncs automatically in the background with no app open" requirement that drove the native-app pivot itself ([VISION.md](VISION.md)).
+
 ## Licensing (model/code)
 
 - **MIT / Apache-2.0**: two of the most permissive open-source licenses — anyone can use, modify, and sell software (or a model's weights) built on them, including commercially, with no obligation to share their own changes back. This project's hard bar for any third-party model it uses ([curation/TODO.md](curation/TODO.md)'s 2026-08-03 decision), given its own roadmap toward selling hardware/software later.
 - **AGPL-3.0 / copyleft / "network-use clause"**: a stricter open-source license family — using AGPL-licensed code, even just running it as a network service other people connect to (not distributing the code itself), legally obligates releasing your own full source code too. This project excludes every AGPL-licensed model/library it finds (e.g. NudeNet, YOLO26n/YOLO-pose) specifically because that obligation becomes real once its own roadmap reaches selling hardware/software commercially.
 - **OpenRAIL-M**: a licensing model used by some newer AI releases — freely usable up to a stated funding or revenue threshold, then a paid commercial license is required past it. Treated the same as AGPL by this project's license bar: a real future obligation given its commercialize roadmap, not a low risk today.
 - **ODbL (Open Database License)**: a share-alike license for *databases* specifically, not code or model weights — any database built using ODbL-licensed data must itself stay open under the same terms. Whether that obligation carries over to a *model trained on* an ODbL dataset is legally unresolved, which is why this project treats a model card's self-applied "Apache-2.0" tag as unverified until the underlying training-dataset's own license is checked separately (this exact gap surfaced in the 2026-08-05 action-recognition survey).
+- **CC BY 4.0**: a Creative Commons license requiring only attribution — permissive in spirit, but still a separate, distinct license from MIT/Apache-2.0 with its own attribution term to satisfy. The COCO dataset's own annotations carry this license (the images themselves separately fall under Flickr's Terms of Use); same unresolved "does a dataset license constrain the trained model's weights" question as the ODbL entry above, raised 2026-09-06 re: RTMPose ([curation/DETECTORS.md](curation/DETECTORS.md) area J) — an open GitHub issue on the model's own repo (`open-mmlab/mmpose#2106`) shows a user asking this exact question with no clear maintainer resolution found.
+- **GPL-2.0 / LGPL / copyleft on distribution (distinct from AGPL's network-use clause above)**: plain GPL's copyleft obligation triggers on *distributing* the software (e.g. shipping an app that bundles GPL code to a user's device) rather than only on running it as a network service — relevant to a native app specifically, since an APK handed to a user's phone is a distribution regardless of whether the app ever talks to a network at all. LGPL relaxes this for *dynamic* linking (a separate shared library can stay proprietary) but not static/bundled linking. This is why, e.g., a GPL-licensed video-playback library (`libvlc`/VLC-Android) doesn't clear this project's MIT/Apache-2.0 bar even though nothing about it involves a server.
 
 ## Legal / business
 
