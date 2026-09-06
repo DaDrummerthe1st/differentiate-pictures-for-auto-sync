@@ -70,7 +70,26 @@ Torrent-style distributed file system across users' own NAS devices; each user's
 
 **Ownership groundwork laid 2026-07-26** (see [upload-and-share/OWNERSHIP.md](upload-and-share/OWNERSHIP.md)) — **deliberately scoped to one server, not this pillar's network**: a photo's "strict" (revocable, view-only) vs. "free" (irrevocable, full transfer) sharing terms are designed and reserved in schema now, enforced today as a plain live permission check with no second node involved. The real open tension this pillar will eventually have to resolve — a revocable strict share vs. sharees' hardware contributing durable, creditable storage — is named in that doc but explicitly **not designed there**; it stays this pillar's problem, unstarted. Prior art already checked for when that design happens: Storj (erasure coding, no replication) and Filecoin (replication + on-chain proof) for the redundancy/credit trade-off; SyncThing, rejected as a base to build *on* (no ownership/sharing/credit concept in it to reuse) but a candidate for raw device-to-device transport once a second real node exists.
 
+**Beyond photos — a general home-hub platform (raised 2026-09-06, idea only, not designed)**:
+once a user's home NAS/server exists for this pillar's photo-storage purpose, the same box is a
+natural place to run other personal-data agents too — calendar, contacts, and "all sorts of stuff"
+in Joakim's own words — over **open, standard data formats** (e.g. CalDAV/CardDAV, already this
+project's own choice for contacts sync) rather than proprietary ones, specifically so syncing
+between the user's own devices and services stays easy. The further idea this opens: a genuine
+**third-party developer ecosystem** building against that same open-format home hub (Joakim's own
+example: someone building a smart-mirror device) — the NAS becomes a platform other people's
+hardware/software can integrate with, not just this project's own client. Purely a future direction
+flagged for later — no design, no chosen agent framework, no committed scope.
+
 ## Pillar 2 — Metadata, search, and curation
+
+**Finding people is a core USP, raised 2026-09-06** — searching for a specific person, across both
+still photos and video clips (a sampled clip frame runs through the same face pipeline as a still,
+[tags/UX_FLOWS.md](tags/UX_FLOWS.md)), federated across every device the user owns rather than
+bottlenecked on one central index ([distributed-sync/METADATA.md](distributed-sync/METADATA.md)'s
+"Extended to multiple devices" section), is one of the most-emphasized capabilities to the end user,
+not a secondary search filter among many. Worth keeping front-of-mind when this pillar's UX gets
+designed for real, not just a technical detail.
 
 The standing goal: get users to generate metadata around each photo's vectorized representation, through three UX paths — search/filter (what [photo-server/](photo-server/README.md) builds first, narrowly, for one household), manual tagging (the concrete category model: [tags/TAXONOMY.md](tags/TAXONOMY.md)), and automated analysis via on-device face/object recognition (DPFAS phase, not started). Inference for that third path runs on the phone — only derived tags and, later, embeddings sync back to the server via pgvector, so raw photos never need to leave it. Longer-term: the system suggests photos to remove, learned globally across the network and personalized per user. **Given a real design pass 2026-08-02**: see [curation/](curation/README.md) for the detector/embedding-index/Curator architecture behind that longer-term goal, and a refinement of "runs on the phone" into a concrete PWA-in-browser step after the current central-server phase, rather than a native app — not edited into this paragraph directly since curation/ is the more specific, later-dated source for that detail.
 
