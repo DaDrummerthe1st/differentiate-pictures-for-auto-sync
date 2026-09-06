@@ -28,8 +28,8 @@ a browser/PWA and becomes a native Android app: Joakim wants per-photo handling 
 detection) to run on-device *before* any server copy, plus a selective sync the user controls
 that triggers **automatically in the background** with no app open — no browser API reaches a
 closed OS photo library, so a PWA structurally can't do this (full reasoning:
-[curation/IDENTITY_MATCHING.md](curation/IDENTITY_MATCHING.md)'s "Reversed 2026-09-05" note,
-[plans/shimmering-wondering-swing.md](plans/shimmering-wondering-swing.md)). Distribution stays
+[curation/IDENTITY_MATCHING.md](curation/IDENTITY_MATCHING.md)'s "Reversed 2026-09-05" note).
+Distribution stays
 sideloaded (a plain APK, no Google Play/App Store) — the standing anti-platform-control reasoning
 that had this project avoiding a native app in the first place stays satisfied, not abandoned.
 iOS is a "consider it, don't build it" note for now; Android only.
@@ -49,12 +49,14 @@ it doesn't resume from photo-server/'s old schema.
 
 **Session-close context**: the session that made this pivot decision stopped mid-plan (scope
 had changed enough to warrant a fresh session) after only researching, not yet writing native
-code — see [plans/shimmering-wondering-swing.md](plans/shimmering-wondering-swing.md) for what
-that research already found (no `modules/pictures.py` on `master` pre-merge, no JDK/Android SDK
-on the dev machine, Docker available). The session immediately after this one did the archiving
-described above and merged this branch into `master`; the *next* session after that is expected
-to actually scope and start the native Android app, treating everything under `previous-work/`
-as reference/inspiration only.
+code — that research found no `modules/pictures.py` on `master` pre-merge, no JDK/Android
+SDK/Gradle on the dev machine, Docker available. The session immediately after this one did the
+archiving described above and merged this branch into `master`.
+
+**2026-09-06**: the detailed multi-slice plan that session drafted (Kotlin/Compose/Robolectric,
+TDD throughout) was scrapped before any code was written — Joakim asked for a much smaller first
+cut instead, to see the Android toolchain work at all before investing in that fuller structure.
+See [mobile/README.md](mobile/README.md) for what actually got built.
 
 ## Current build vs. this vision
 

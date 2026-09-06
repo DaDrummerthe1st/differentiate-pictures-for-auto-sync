@@ -6,14 +6,16 @@ The overall idea: preserve and help rediscover old, forgotten pictures and movie
 
 ## Status
 
-**2026-09-05**: clean slate — no live application code right now. Every previous implementation
-(a browser-based multi-user photo server, a local photo-differentiation/quality/object-detection
+**2026-09-06**: first native Android code exists — `android/app`, a single-Activity Kotlin app that
+lists the device's photos via `MediaStore`, deliberately minimal to prove the toolchain works before
+anything bigger gets built on it (not yet confirmed to actually build/run — see
+[documentation/mobile/README.md](documentation/mobile/README.md)). Every previous implementation (a
+browser-based multi-user photo server, a local photo-differentiation/quality/object-detection
 pipeline with a findings viewer, a contacts-import library) is kept as design reference under
-[previous-work/](previous-work/README.md), not deleted, but none of it runs or is built on
-today. The project just pivoted from a phone-viewable PWA toward a native Android app (on-device
-photo handling before any server round-trip, automatic background sync — no browser API reaches
-that); see [documentation/VISION.md](documentation/VISION.md)'s 2026-09-05 note. Next session
-scopes the native app itself.
+[previous-work/](previous-work/README.md), not deleted, but none of it runs or is built on today.
+The project pivoted from a phone-viewable PWA toward a native Android app (on-device photo handling
+before any server round-trip, automatic background sync — no browser API reaches that); see
+[documentation/VISION.md](documentation/VISION.md)'s 2026-09-05 note.
 
 ## Features (vision)
 

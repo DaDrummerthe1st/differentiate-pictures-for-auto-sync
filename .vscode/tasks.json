@@ -1,0 +1,36 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Android: Install debug build",
+      "type": "shell",
+      "command": "./gradlew",
+      "args": ["installDebug"],
+      "options": {
+        "cwd": "${workspaceFolder}/android",
+        "env": {
+          "JAVA_HOME": "${env:HOME}/.jdks/jbr-21.0.11",
+          "ANDROID_HOME": "${env:HOME}/Android/Sdk"
+        }
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: Launch app",
+      "type": "shell",
+      "command": "${env:HOME}/Android/Sdk/platform-tools/adb",
+      "args": ["shell", "am", "start", "-n", "com.dpfas.photobrowser/.MainActivity"],
+      "problemMatcher": []
+    },
+    {
+      "label": "Android: Run app (install + launch)",
+      "dependsOn": ["Android: Install debug build", "Android: Launch app"],
+      "dependsOrder": "sequence",
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
+}

@@ -1,22 +1,26 @@
 # tooling/ — open work
 
+- **Wire an `android/` test-suite gate into `.githooks/pre-commit`.** Raised 2026-09-06: `android/app`
+  now has a real Robolectric test suite (`PhotoAdapterTest`/`FullscreenPhotoActivityTest`, see
+  [mobile/README.md](../mobile/README.md)), so the "no live product code to gate on" reason the
+  gate was removed 2026-09-05 no longer holds for this directory. Needs `./gradlew
+  testDebugUnitTest` run with `JAVA_HOME=~/.jdks/jbr-21.0.11` specifically (this machine's
+  Android-Studio-bundled JBR 25 crashes Gradle 8.14.5's embedded Kotlin compiler) — that JDK
+  pinning needs to be handled robustly (not hardcoded to one machine's home directory) before
+  wiring it in. Not started, deliberately deferred rather than rushed into an already-large
+  session.
 - **A real database, not several separate append-only `.jsonl` files.** Raised 2026-07-19: `doc_metrics`, `commit_cost`, and `test_results` each keep their own ledger, which makes cross-cutting questions (e.g. "what did session X cost across docs, commits, and tests combined") require stitching multiple files together by hand. Each tool already keeps a gitignored SQLite mirror of its own jsonl for fast queries - the open question is whether to consolidate into one shared database instead. Explicitly deferred - not started, no design done yet.
 - **No shorthand names, as a hard rule going forward** - raised 2026-07-19: `doc_metrics` itself is an example of a name that isn't self-explanatory ("documentation metrics" abbreviated in a way that doesn't parse on sight). Whether to actually rename `doc_metrics` (and its `tools/doc_metrics/` directory, `DOC_METRICS.md`, every reference to it) to something fully spelled out is an open question, not decided - a rename touches every file that references it, so it needs a deliberate pass, not a reflexive edit. Applies to new names going forward regardless of whether the rename happens.
 - **Stamp each `bugs/claude-bugs/` entry with cumulative session token usage at the moment the lapse happened**, raised 2026-08-03 by Joakim. Feasible in principle — `commit_cost`'s `log.py` already proves the mechanism (parse the session's transcript JSONL, sum real `message.usage` between two points); the same approach could sum from session start to the point a bug report is filed instead of between two commits. Purpose: test whether lapses (e.g. the recurring "asked inline instead of AskUserQuestion" pattern, [documentation/bugs/claude-bugs/under_process/2026-07-19-asked-inline-instead-of-using-askuserquestion-for-a-real-user-decision.md](../bugs/claude-bugs/under_process/2026-07-19-asked-inline-instead-of-using-askuserquestion-for-a-real-user-decision.md)) correlate with long-context pressure, not just recur randomly. Not started — needs its own TDD pass (extending `tools/create_bug_report`'s script), not squeezed into unrelated work.
-- **A `catchup_commit.sh` wrapper for the `commit_cost`/`doc_metrics` ledger catch-up**, raised
-  2026-08-05 (session wrap-up forward-effectiveness note): this session hit the pre-commit coverage
-  gate three separate times (expected — the one-commit lag means it fires on roughly every real
-  content commit, per [DOC_METRICS.md](DOC_METRICS.md)'s "One-commit lag" section), and correctly
-  followed [WRAPUP_CHECKLIST.md](WRAPUP_CHECKLIST.md)'s documented manual procedure each time
-  (`git status --short`, unstage anything else, catch-up commit alone, then re-stage and commit the
-  real change separately) — but that procedure is currently a written instruction a session has to
-  remember and execute correctly every single time, the same failure mode that already caused one
-  real incident (`documentation/bugs/claude-bugs/fixed/2026-08-05-doc-content-changes-bundled-into-a-mislabeled-commit-cost-catch-up-commit.md`).
-  A small script that runs the log step, verifies the index is ledger-file-only before committing
-  (refusing/aborting instead of silently committing whatever else is staged), and commits with the
-  standard message would make this mechanical rather than memory-dependent — same "mechanize what a
-  script actually can check" principle `tools/wrapup_checklist/` already applies elsewhere. Not
-  started — offered to Joakim mid-session, no go-ahead yet.
+Resolved 2026-09-06, differently than proposed: the manual catch-up-commit procedure this item was
+about mechanizing (`git status --short`, unstage anything else, catch-up commit alone, re-stage and
+commit the real change separately) is gone entirely, not just scripted — `.githooks/pre-commit` now
+self-heals any doc_metrics/commit_cost gap and folds it straight into the commit already being made,
+so there's no separate catch-up commit left to get wrong. See
+`documentation/tooling/README.md`'s "Self-healing doc_metrics/commit_cost logging" section and
+`documentation/bugs/repo/fixed/2026-09-06-post-commit-catch-up-commit-skips-logging-the-code-commit-it-exists-to-log-SOLVED.md`
+for why a `catchup_commit.sh` wrapper (the original proposal) would only have papered over a design
+that had a real structural gap.
 - **No documented, reliable way to get the current session's `session_id` for a `research_log.jsonl` entry.** Raised 2026-08-03 (session wrap-up forward-effectiveness note): the global `research_log.md` convention (`~/.claude` dotfiles repo, not this one) names `session_id` as a required field but doesn't say how to obtain it mid-session — this session had to infer it from the scratchpad directory path shown in the system prompt, a workaround rather than a documented method. Fix belongs in that global convention file (a different repo — needs its own session/confirmation before editing there), not this repo's own docs; noted here so it isn't lost. Not started.
 
 Resolved 2026-08-03: **compact per-run test-result ledger** — built as `tools/test_results/`, same append-only jsonl shape as `doc_metrics`/`commit_cost`. See [TEST_RESULTS.md](TEST_RESULTS.md).

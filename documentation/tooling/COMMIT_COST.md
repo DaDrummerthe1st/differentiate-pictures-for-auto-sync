@@ -27,8 +27,8 @@ Raw components (`input_tokens`, `output_tokens`, per-TTL cache-creation, cache-r
 - **Subagent (sidechain) turns** carry their own real `usage` and are included in the sum — real spend attributable to the same commit, whichever session/thread produced it.
 - **The `~/.claude/projects/<slug>/` directory-naming convention is undocumented, inferred empirically** (repo's absolute path with `/` replaced by `-`). If Claude Code changes this convention, `log.py`'s default transcript-directory lookup breaks silently (finds nothing, reports 100% human-only) — override with `--transcripts-dir` if that ever happens.
 - **A commit resolved via a transcript file that no longer exists** (past the `cleanupPeriodDays` retention window) is indistinguishable from a genuine human-only commit — both log as a real `0`. This is a real historical-accuracy gap for very old commits, not something this tool can detect or flag differently.
-- **A `git commit` invoked from inside `.githooks/post-commit`'s own nested `git commit`** (auto-logging the previous commit) prints its confirmation line *before* the outer, directly-invoked commit's own line — git only prints the outer commit's line after all of its hooks finish. `find_commit_boundaries` takes the *last* `[branch hash]` match in a `tool_result`, not the first, so it always resolves to the real outer commit, not the free nested one. Found and fixed 2026-08-04 — see `documentation/bugs/repo/fixed/2026-08-04-post-commit-hook-misattributed-commit-cost-due-to-transcript-timing-and-nested-commit-boundary-matching-SOLVED.md`.
-- **`log.py` invoked from inside the same Bash tool call that just made the commit it would resolve** (i.e. from `.githooks/post-commit` itself) can never find that commit's transcript boundary — the harness only appends the enclosing Bash call's `tool_result` after the whole call, hook included, finishes. `--exclude-current-head` defers that one commit to the *next* commit's hook run instead of falsely logging it as human/`$0`. Same bug report as above.
+- **A `git commit` invoked from inside `.githooks/post-commit`'s own nested `git commit`** (historical: `post-commit` used to auto-commit a ledger catch-up right after every commit, until 2026-09-06 — see below) prints its confirmation line *before* the outer, directly-invoked commit's own line — git only prints the outer commit's line after all of its hooks finish. `find_commit_boundaries` takes the *last* `[branch hash]` match in a `tool_result`, not the first, so it always resolves to the real outer commit, not the free nested one. Found and fixed 2026-08-04 — see `documentation/bugs/repo/fixed/2026-08-04-post-commit-hook-misattributed-commit-cost-due-to-transcript-timing-and-nested-commit-boundary-matching-SOLVED.md`. Kept even though `post-commit` no longer nests a commit going forward — still correct, and still needed to parse this repo's pre-2026-09-06 history.
+- **`log.py` invoked from inside the same Bash tool call that just made the commit it would resolve** can never find that commit's transcript boundary — the harness only appends the enclosing Bash call's `tool_result` after the whole call, hook included, finishes. `--exclude-current-head` defers that one commit to the *next* commit's hook run instead of falsely logging it as human/`$0`. This flag is no longer invoked by either hook (see below) — `.githooks/pre-commit` never hits this case at all, since it calls `log.py` for the *previous* commit, whose transcript boundary is already fully written by then — but the flag itself still exists on `log.py` for manual use.
 
 ## Privacy
 
@@ -52,6 +52,13 @@ logged row at all (as opposed to a real, correctly-logged `0` for a human-author
 above). Run it as part of session wrap-up (full `run.py`, which excludes the current in-progress
 HEAD) or let it run automatically, blocking, in `.githooks/pre-commit` (`--coverage-only`, which
 doesn't need that exclusion — see README.md's wrap-up table) — that catches a gap at the very next
-commit instead of only when a session remembers to run the full checklist. As of 2026-08-04,
-`.githooks/post-commit` runs `log.py` itself right after every commit, so in normal use this gate
-should rarely find anything to catch at all — see README.md's "Post-commit hook" section.
+commit instead of only when a session remembers to run the full checklist.
+
+**2026-09-06**: `.githooks/pre-commit` now runs `log.py` itself, unconditionally, before that
+coverage check even runs — logging whatever the previous commit is still missing and folding the
+result straight into the commit already being made — so in normal use the coverage check should
+never find anything to catch at all; it stays as a safety net, not the primary mechanism. This
+replaced an earlier design (2026-08-04–2026-09-06) where `.githooks/post-commit` ran `log.py` right
+after every commit and auto-committed the result separately — retired after it turned out to have a
+structural gap of its own: see
+`documentation/bugs/repo/fixed/2026-09-06-post-commit-catch-up-commit-skips-logging-the-code-commit-it-exists-to-log-SOLVED.md`.

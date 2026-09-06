@@ -13,3 +13,10 @@ __pycache__/
 /.env
 /resources/test_pictures/
 /databases/
+
+# Android
+/toolchain/
+android/local.properties
+android/.idea/
+android/.gradle/
+android/**/build/
