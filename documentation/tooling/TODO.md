@@ -1,5 +1,14 @@
 # tooling/ — open work
 
+- **Wire an `android/` test-suite gate into `.githooks/pre-commit`.** Raised 2026-09-06: `android/app`
+  now has a real Robolectric test suite (`PhotoAdapterTest`/`FullscreenPhotoActivityTest`, see
+  [mobile/README.md](../mobile/README.md)), so the "no live product code to gate on" reason the
+  gate was removed 2026-09-05 no longer holds for this directory. Needs `./gradlew
+  testDebugUnitTest` run with `JAVA_HOME=~/.jdks/jbr-21.0.11` specifically (this machine's
+  Android-Studio-bundled JBR 25 crashes Gradle 8.14.5's embedded Kotlin compiler) — that JDK
+  pinning needs to be handled robustly (not hardcoded to one machine's home directory) before
+  wiring it in. Not started, deliberately deferred rather than rushed into an already-large
+  session.
 - **A real database, not several separate append-only `.jsonl` files.** Raised 2026-07-19: `doc_metrics`, `commit_cost`, and `test_results` each keep their own ledger, which makes cross-cutting questions (e.g. "what did session X cost across docs, commits, and tests combined") require stitching multiple files together by hand. Each tool already keeps a gitignored SQLite mirror of its own jsonl for fast queries - the open question is whether to consolidate into one shared database instead. Explicitly deferred - not started, no design done yet.
 - **No shorthand names, as a hard rule going forward** - raised 2026-07-19: `doc_metrics` itself is an example of a name that isn't self-explanatory ("documentation metrics" abbreviated in a way that doesn't parse on sight). Whether to actually rename `doc_metrics` (and its `tools/doc_metrics/` directory, `DOC_METRICS.md`, every reference to it) to something fully spelled out is an open question, not decided - a rename touches every file that references it, so it needs a deliberate pass, not a reflexive edit. Applies to new names going forward regardless of whether the rename happens.
 - **Stamp each `bugs/claude-bugs/` entry with cumulative session token usage at the moment the lapse happened**, raised 2026-08-03 by Joakim. Feasible in principle — `commit_cost`'s `log.py` already proves the mechanism (parse the session's transcript JSONL, sum real `message.usage` between two points); the same approach could sum from session start to the point a bug report is filed instead of between two commits. Purpose: test whether lapses (e.g. the recurring "asked inline instead of AskUserQuestion" pattern, [documentation/bugs/claude-bugs/under_process/2026-07-19-asked-inline-instead-of-using-askuserquestion-for-a-real-user-decision.md](../bugs/claude-bugs/under_process/2026-07-19-asked-inline-instead-of-using-askuserquestion-for-a-real-user-decision.md)) correlate with long-context pressure, not just recur randomly. Not started — needs its own TDD pass (extending `tools/create_bug_report`'s script), not squeezed into unrelated work.

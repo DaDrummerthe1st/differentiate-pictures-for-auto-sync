@@ -20,6 +20,3 @@ android/local.properties
 android/.idea/
 android/.gradle/
 android/**/build/
-android/gradle/wrapper/gradle-wrapper.jar
-android/gradlew
-android/gradlew.bat

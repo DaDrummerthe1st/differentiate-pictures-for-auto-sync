@@ -6,26 +6,45 @@ background/reasoning for why a native app exists at all: [../VISION.md](../VISIO
 
 ## Status — 2026-09-06
 
-First cut, built this session: `android/app` is a single-Activity Kotlin app that requests photo
-access and shows a grid of the device's photos via `MediaStore` — nothing else. Joakim asked for
-this deliberately small, to prove the Android/Kotlin/Gradle toolchain actually works on this
-machine before investing in anything bigger. A fuller multi-slice plan (Jetpack Compose,
-Robolectric-based TDD, on-device quality/object detection, sync) was drafted the session before
-this one and then explicitly scrapped, unbuilt, at Joakim's request — treat this app as a
-from-scratch first cut, not a continuation of that plan.
+Built this session as a deliberately small first cut to prove the Android/Kotlin/Gradle toolchain
+works on this machine, then confirmed working end-to-end and extended: `android/app` is a
+single-Activity Kotlin app that requests photo access, shows a grid of the device's photos via
+`MediaStore`, and supports tapping a photo to view it fullscreen. Image loading, memory/disk
+caching, and EXIF rotation are handled by [Coil](https://coil-kt.github.io/coil/) rather than
+hand-rolled `BitmapFactory` code — see the Layout section below and the fixed bug report linked
+there for why. The originally-planned Robolectric-based TDD (part of a fuller multi-slice plan
+drafted the session before this one, then explicitly scrapped) is now in place after all —
+`android/app/src/test/` covers `PhotoAdapter`/`FullscreenPhotoActivity`'s own wiring logic via an
+injectable-seam pattern rather than exercising Coil's real async engine in tests.
 
-**Deliberate exception to this repo's TDD rule**: no tests were written for this pass, by Joakim's
-explicit direction — this is a disposable toolchain check, not a foundation to build on carefully.
-Flagging it here rather than silently skipping the rule; the next real slice of Android work
-should return to normal TDD practice.
+**Toolchain notes**:
+- The Gradle wrapper (`gradlew`/`gradle-wrapper.jar`) is now committed — it had never actually
+  been generated before this session despite `gradle-wrapper.properties` existing, and was
+  previously gitignored (regenerated via a one-off Gradle 8.14.5 install pointed at the project).
+- Gradle 8.14.5 needs a JDK it can actually run under: this machine's Android-Studio-bundled JBR 25
+  crashes Gradle's embedded Kotlin compiler (fails parsing the version string) — build with
+  `JAVA_HOME=~/.jdks/jbr-21.0.11` (a separate, already-present JBR 21) instead.
+- A `.vscode/tasks.json` task ("Android: Run app (install + launch)", bound to VS Code's default
+  build task / Ctrl+Shift+B) wraps `./gradlew installDebug` + `adb shell am start` for running from
+  VS Codium.
 
-**Not yet verified to actually build or run.** Written before Android Studio/an SDK existed on this
-machine; Joakim has since installed both (self-contained, per the toolchain note below) and is
-working through first-sync errors as they surface — two fixed so far without ever running a build:
-`kotlinOptions { jvmTarget = "17" }` is a hard error under Kotlin 2.4.0's Gradle plugin (migrated to
-the `kotlin { compilerOptions { ... } }` DSL), and the Gradle wrapper was bumped from 8.13 to 8.14.5
-(latest patch, includes two security fixes) after a deprecation warning. First real step once sync
-succeeds: confirm the app actually installs and runs on a real device before changing anything else.
+**Bugs hit and fixed this session**: the photo grid initially rendered as solid blank cells for
+every photo, always — a Kotlin elvis-operator (`?:`) gotcha in the original hand-rolled decode
+code; root-caused and fixed, see
+[documentation/bugs/repo/fixed/2026-09-06-photo-grid-always-blank-bounds-decode-null-trips-elvis-always-returns-null-thumbnail-SOLVED.md](../bugs/repo/fixed/2026-09-06-photo-grid-always-blank-bounds-decode-null-trips-elvis-always-returns-null-thumbnail-SOLVED.md).
+Separately, Coil's default memory-cache key requires an *exact* size match to reuse a cached
+bitmap — fixed by requesting thumbnails at a fixed size with `Precision.INEXACT` so a
+larger-cached version (e.g. from viewing the same photo fullscreen) still counts as a hit; see
+`PhotoAdapter.kt`'s comments.
+
+Verified end-to-end on the `Motorola_Moto_G54_5G` AVD with real (private, gitignored — never
+committed, see `resources/test_pictures/`) test photos: the grid shows and scrolls through all of
+them correctly, EXIF-rotated photos display right-side-up, and tap-to-fullscreen works.
+
+**Known, accepted non-issue**: Coil's in-memory cache gets evicted under real memory pressure
+(this dev machine runs Gradle + the emulator simultaneously — unusually heavy; a real phone would
+see this far less), falling back to its disk cache (fast, not instant) rather than a full re-decode.
+Joakim explicitly accepted this as fine.
 
 ## Toolchain note
 
@@ -34,14 +53,21 @@ from the self-contained `.tar.gz` (developer.android.com/studio → Linux) into 
 directory, and the SDK via Studio's own SDK Manager into `~/Android/Sdk` — no `apt`/snap package, no
 sudo beyond the one-time 32-bit compatibility libraries the emulator itself needs on Ubuntu. Pinned
 versions in `android/`: Android Gradle Plugin 8.13.0, Kotlin 2.4.0, Gradle 8.14.5, `compileSdk`/
-`targetSdk` 36 — current stable as of 2026-09-06; check freshness again before the next real step,
-per [WORKFLOW.md](../policies/WORKFLOW.md).
+`targetSdk` 36 — current stable as of 2026-09-06. Coil is deliberately pinned to 3.1.0 rather than
+the latest 3.6.2: 3.2.0+ requires `compileSdk` 37, which needs a newer Android Gradle Plugin than
+8.13.0 supports — bumping that whole chain wasn't warranted for a routine freshness check. Check
+freshness again before the next real step, per [WORKFLOW.md](../policies/WORKFLOW.md).
 
 ## Layout
 
 - `android/app/src/main/java/com/dpfas/photobrowser/MainActivity.kt` — permission request, kicks
-  off the `MediaStore` query on a background thread.
-- `android/app/src/main/java/com/dpfas/photobrowser/PhotoAdapter.kt` — `GridView` adapter,
-  decodes downsampled thumbnails off the main thread with a small in-memory cache.
+  off the `MediaStore` query on a background thread, wires tap-to-fullscreen.
+- `android/app/src/main/java/com/dpfas/photobrowser/PhotoAdapter.kt` — `GridView` adapter; delegates
+  actual image loading/caching to Coil via an injectable `loadImage` lambda (real implementation in
+  production, a recording fake in `PhotoAdapterTest.kt`).
+- `android/app/src/main/java/com/dpfas/photobrowser/FullscreenPhotoActivity.kt` — single-photo
+  fullscreen view, opened by tapping a grid thumbnail.
+- `android/app/src/main/java/com/dpfas/photobrowser/PhotoBrowserApplication.kt` — configures Coil's
+  singleton `ImageLoader` (debug-only logging via `BuildConfig.DEBUG`).
 
 See [TODO.md](TODO.md) for what's next.

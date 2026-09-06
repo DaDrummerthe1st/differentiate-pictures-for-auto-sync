@@ -90,5 +90,8 @@ class MainActivity : AppCompatActivity() {
         statusText.visibility = View.GONE
         grid.visibility = View.VISIBLE
         grid.adapter = PhotoAdapter(this, uris)
+        grid.setOnItemClickListener { _, _, position, _ ->
+            startActivity(FullscreenPhotoActivity.createIntent(this, uris[position]))
+        }
     }
 }
