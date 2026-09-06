@@ -1,53 +1,20 @@
 #!/usr/bin/env bash
-# Mechanizes "log doc_metrics/commit_cost for the commit just made, then
-# push" — the pattern this repo's history otherwise depends on an AI
-# session remembering to do by hand every time (see
-# documentation/tooling/README.md). .githooks/pre-commit's coverage gate
-# already blocks the *next* commit if this was ever skipped; this closes
-# the gap at the source instead of waiting for that bounce.
+# Pushes the branch just committed to. doc_metrics/commit_cost ledger
+# logging used to happen here, via a separate auto-generated catch-up
+# commit — moved to .githooks/pre-commit instead 2026-09-06, folded
+# straight into the commit already being made rather than a follow-up
+# commit of its own. See documentation/tooling/DOC_METRICS.md /
+# COMMIT_COST.md, and
+# documentation/bugs/repo/fixed/2026-09-06-post-commit-catch-up-commit-skips-logging-the-code-commit-it-exists-to-log-SOLVED.md
+# for why: the old design's recursion guard, needed to stop the auto-commit
+# from re-triggering itself forever, also skipped the one logging call that
+# was supposed to close the gap for the *real* commit before it — a
+# structural gap on every single use, not an edge case.
 #
 # Not activated by default — same one-time `git config core.hooksPath
 # .githooks` setup as pre-commit.
 set -uo pipefail
 cd "$(git rev-parse --show-toplevel)"
-source .githooks/catch_up_titles.sh
-
-LOG_COMMIT_MSG="Log doc metrics and commit cost for the previous commit"
-DOC_METRICS_JSONL="tools/doc_metrics/metrics.jsonl"
-COMMIT_COST_JSONL="tools/commit_cost/commit_costs.jsonl"
-
-# A commit can never carry a ledger row about its own not-yet-computed
-# hash (the hash is computed *from* the tree, so the tree can't already
-# contain it) — see documentation/tooling/DOC_METRICS.md's "One-commit
-# lag" section. So the logging commit this hook creates below is itself
-# always exactly one commit behind; skip re-logging when HEAD already
-# *is* a catch-up commit (this hook's own, or a manually-made one under
-# any of the three titles catch_up_titles.sh recognizes), or this would
-# either recurse into itself forever or spuriously wrap a valid manual
-# catch-up in a redundant follow-up commit.
-if ! is_catch_up_title "$(git log -1 --format=%s)"; then
-  echo "[post-commit] logging doc_metrics/commit_cost for this commit..."
-  log_failed=0
-  python3 tools/doc_metrics/log.py || log_failed=1
-  # --exclude-current-head: this commit's own git-commit tool_result hasn't
-  # been written to the live transcript yet (we're still inside that same
-  # Bash tool call) - resolving it now would misread "no session found
-  # yet" as "genuinely human" and log a false, permanent 0. Deferred to
-  # the *next* commit's hook run, by which point the transcript boundary
-  # exists - see documentation/tooling/COMMIT_COST.md.
-  python3 tools/commit_cost/log.py --exclude-current-head || log_failed=1
-
-  if [ "$log_failed" -eq 1 ]; then
-    echo "[post-commit] WARNING: doc_metrics/commit_cost logging failed — .githooks/pre-commit's coverage gate will catch the gap on the next commit attempt." >&2
-  elif ! git diff --quiet -- "$DOC_METRICS_JSONL" "$COMMIT_COST_JSONL"; then
-    git add "$DOC_METRICS_JSONL" "$COMMIT_COST_JSONL"
-    # Recursively re-triggers this same hook — HEAD's message will match
-    # LOG_COMMIT_MSG on that run, so it skips straight to the push below.
-    if ! git commit -m "$LOG_COMMIT_MSG"; then
-      echo "[post-commit] WARNING: auto-commit of ledger updates failed — commit them manually." >&2
-    fi
-  fi
-fi
 
 if ! git symbolic-ref -q HEAD >/dev/null; then
   echo "[post-commit] detached HEAD — skipping push." >&2

@@ -191,6 +191,8 @@ Plain-language definitions of every technical/business term this project's desig
 ## Mobile / Android app
 
 - **`adb` (Android Debug Bridge)**: the command-line tool, bundled with the Android SDK/Android Studio, that talks to a phone over USB (or Wi-Fi) — used to install an APK onto it (`adb install`) or stream its logs. A Docker container that only builds the app still can't get the built APK onto a physical phone; that last step needs `adb` (or Android Studio itself) running on the machine the phone is plugged into.
+- **Gradle**: the build tool Android projects use — reads `build.gradle.kts` files to work out what to compile, which dependencies to fetch, and in what order, then produces the actual APK. The Android/Java-world equivalent of a Makefile or a JS project's `package.json` + build script combined. Android Studio delegates to Gradle rather than compiling directly, which is why Gradle/Android-Gradle-Plugin/JDK version compatibility (e.g. Gradle 8.13 needing a JDK between 8 and 23) is a real thing to get right, not an IDE detail.
+- **Android Gradle Plugin (AGP)**: the specific Gradle plugin that teaches plain Gradle how to build an *Android* app (APK packaging, resource merging, manifest handling) — Gradle alone is a generic build tool with no Android-specific knowledge until this plugin is applied. Pinned as a version in `android/build.gradle.kts`; each AGP version supports a specific range of Gradle versions and `compileSdk` levels (checked before pinning 8.13.0 for this project's `android/` app, 2026-09-06).
 
 ## Status
 

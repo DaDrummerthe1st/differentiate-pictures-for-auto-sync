@@ -5,12 +5,11 @@
 # app/, server/, detector/, prototypes/ moved to archive/ on the
 # test_production1 branch — see documentation/data-modeling/. The test-suite
 # gates below were removed entirely 2026-09-05 when modules/ and contacts/
-# were themselves archived to previous-work/ during the native-app pivot
-# (documentation/plans/shimmering-wondering-swing.md) — no live product code
-# exists at repo root right now, so there is nothing to gate on; re-add a
-# gate here once real code (e.g. android/) exists again. Not activated by
-# default; see documentation/tooling/README.md for the one-time
-# `git config core.hooksPath .githooks` setup.
+# were themselves archived to previous-work/ during the native-app pivot —
+# no live product code exists at repo root right now, so there is nothing to
+# gate on; re-add a gate here once real code (e.g. android/) gets real tests.
+# Not activated by default; see documentation/tooling/README.md for the
+# one-time `git config core.hooksPath .githooks` setup.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
@@ -22,14 +21,24 @@ if ! python3 tools/secrets_scan/run.py; then
   exit 1
 fi
 
-# Catches a commit_cost/doc_metrics logging gap at the very next commit
-# attempt instead of relying on a session remembering to run the wrap-up
-# checklist (see documentation/tooling/WRAPUP_CHECKLIST.md's "Scaling"
-# section — replaces the retired per-ledger check_coverage.sh scripts).
-# Runs before this commit exists, so git log here still ends at the
-# *previous* commit, which should already be logged.
-echo "[pre-commit] running commit_cost/doc_metrics coverage check..."
+# Self-healing doc_metrics/commit_cost catch-up. HEAD at this point is still
+# the *previous* commit (the one about to be made doesn't exist yet), and
+# that previous commit's own git-commit tool call already completed in an
+# earlier turn, so its transcript is fully written — safe to log its real
+# cost here, not the "still in-flight" case COMMIT_COST.md's one-commit-lag
+# note is about. log.py in both tools/ is idempotent (dedupes by
+# commit_hash), so running it on every commit is safe even when there's
+# nothing new to catch up. Folding the result straight into the commit
+# already in progress replaces a separate auto-generated catch-up commit,
+# which had a structural gap every time its own recursion guard fired — see
+# documentation/bugs/repo/fixed/2026-09-06-post-commit-catch-up-commit-skips-logging-the-code-commit-it-exists-to-log-SOLVED.md.
+echo "[pre-commit] logging any missing doc_metrics/commit_cost rows..."
+python3 tools/doc_metrics/log.py
+python3 tools/commit_cost/log.py
+git add tools/doc_metrics/metrics.jsonl tools/commit_cost/commit_costs.jsonl
+
+echo "[pre-commit] verifying ledger coverage..."
 if ! python3 tools/wrapup_checklist/run.py --coverage-only; then
-  echo "[pre-commit] coverage gap found — commit blocked. Run tools/commit_cost/log.py and/or tools/doc_metrics/log.py to catch up, then retry." >&2
+  echo "[pre-commit] coverage gap remains even after self-healing — this shouldn't happen; investigate tools/doc_metrics/log.py or tools/commit_cost/log.py directly." >&2
   exit 1
 fi
