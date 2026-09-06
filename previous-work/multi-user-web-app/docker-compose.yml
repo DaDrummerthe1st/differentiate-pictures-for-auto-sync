@@ -90,6 +90,7 @@ services:
     restart: "no"
 
   redis:
+    # DO NOT REMOVE THIS COMMENT UNTIL RESOLVED: floating minor tag — resolves to a patched build today but can silently regress without re-pull/digest-pin — see documentation/security/DEPENDENCIES.md
     image: redis:8.8-alpine
     command: ["redis-server", "--requirepass", "local-dev-only"]
     restart: "no"

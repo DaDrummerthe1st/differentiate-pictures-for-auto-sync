@@ -1,5 +1,6 @@
 # syntax=docker/dockerfile:1
 FROM python:3.12-slim-bookworm AS builder
+# DO NOT REMOVE THIS COMMENT UNTIL RESOLVED: unpinned floating tag, not reproducible/auditable — pin to a specific uv version + digest — see documentation/security/DEPENDENCIES.md
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app

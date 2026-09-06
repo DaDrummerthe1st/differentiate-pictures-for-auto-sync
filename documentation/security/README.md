@@ -22,6 +22,7 @@ of them are the product.
 | --- | --- |
 | [THREATS.md](THREATS.md) | Concrete concerns identified so far, one row per concern: what it is, where it applies, current status |
 | [TODO.md](TODO.md) | Open items needing real resolution — including one that needs external research, not guessing |
+| [DEPENDENCIES.md](DEPENDENCIES.md) | Full-repo external-dependency inventory: license, maintenance health, CVE status per dependency, plus the CI dependency-freshness-guard coverage gap. Built 2026-09-06 after the native-app pivot. |
 
 ## Status
 

@@ -140,6 +140,7 @@ services:
   # that risk is accepted for now (2026-08-14), verify actual delivery
   # once DNS is in place rather than assuming it works.
   smtp:
+    # DO NOT REMOVE THIS COMMENT UNTIL RESOLVED: stagnant image lineage ("feature complete", legacy OpenDKIM) — evaluate the Chainguard boky-postfix alternative — see documentation/security/DEPENDENCIES.md
     image: boky/postfix@sha256:aafc772384232497bed875e1eb66b4d3e54ba1ebc86e2e185a6dc1dbc48182ef
     environment:
       ALLOWED_SENDER_DOMAINS: photos.reuterborg.se
@@ -150,6 +151,7 @@ services:
     restart: unless-stopped
 
   redis:
+    # DO NOT REMOVE THIS COMMENT UNTIL RESOLVED: floating minor tag — resolves to a patched build today but can silently regress without re-pull/digest-pin — see documentation/security/DEPENDENCIES.md
     image: redis:8.8-alpine
     # --appendonly fsyncs every write (refresh-token SET/DEL) to
     # redis_data, so a restart (crash, host reboot, docker compose

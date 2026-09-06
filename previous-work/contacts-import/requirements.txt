@@ -1,1 +1,2 @@
+# DO NOT REMOVE THIS COMMENT UNTIL RESOLVED: unmaintained (no release in 12+ months, legacy Python-2-compat line) — see documentation/security/DEPENDENCIES.md
 vobject==0.9.9

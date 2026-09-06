@@ -8,8 +8,13 @@
 - **Built 2026-09-06, needs Joakim's manual gesture check**: `FullscreenPhotoActivity` now uses a
   `ViewPager2` (backed by a new `FullscreenPhotoPagerAdapter`) instead of a single `ImageView`, so
   swiping left/right moves to the previous/next photo across the whole grid, not just the one
-  tapped. Each page is an `io.getstream.photoview.PhotoView` (Maven Central, actively-maintained
-  fork of the abandoned `chrisbanes/PhotoView`, chosen over the also-Maven-Central but
+  tapped. Each page is an `io.getstream.photoview.PhotoView` (Maven Central, Stream's fork of
+  `chrisbanes/PhotoView` — **corrected 2026-09-06, dependency audit**: the original wasn't
+  GitHub-archived, it was transferred to `Baseflow/PhotoView` and has had no commit since
+  2022-03-25; Stream's own fork is maintained-but-dormant on actual library code too — CI/tooling
+  commits continue, but no functional release since 1.0.3 on 2025-02-13 — the least-stale of the
+  realistic options, not a clean "actively maintained" story; see
+  [security/DEPENDENCIES.md](../security/DEPENDENCIES.md)), chosen over the also-Maven-Central but
   unmaintained-since-2021 `com.jsibbold:zoomage` — see
   [GLOSSARY.md](../GLOSSARY.md)) for pinch-to-zoom/pan, since `PhotoView` is a drop-in `ImageView`
   subclass Coil loads into exactly like before. Covered by Robolectric tests for the wiring
