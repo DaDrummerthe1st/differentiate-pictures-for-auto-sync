@@ -43,8 +43,8 @@ them correctly, EXIF-rotated photos display right-side-up, and tap-to-fullscreen
 
 **Swipe/zoom added, same session**: `FullscreenPhotoActivity` now shows a swipeable `ViewPager2`
 across the whole photo list (not just the tapped photo), each page an `io.getstream.photoview`
-`PhotoView` for pinch-to-zoom/pan — see [TODO.md](TODO.md) for the library evaluation and current
-verification status (swipe confirmed via adb/logcat, pinch-zoom pending Joakim's manual check).
+`PhotoView` for pinch-to-zoom/pan — see [TODO.md](TODO.md) for the library evaluation. Both swipe
+and pinch-to-zoom confirmed working by Joakim on the emulator.
 
 **Known, accepted non-issue**: Coil's in-memory cache gets evicted under real memory pressure
 (this dev machine runs Gradle + the emulator simultaneously — unusually heavy; a real phone would
