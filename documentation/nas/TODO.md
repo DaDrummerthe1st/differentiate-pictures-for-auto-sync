@@ -13,6 +13,8 @@
 - **Pilot-usage-learning vs. no-telemetry tension, flagged not resolved** — see [ARCHITECTURE.md](ARCHITECTURE.md)'s Open tension section and [../policies/POLICY.md](../policies/POLICY.md)'s Open questions. Needs Joakim's explicit call before any usage-analytics mechanism is designed.
 - **Coordinate `SYNC_CONTRACT.md` with the mobile session** — the pairing flow and queue-polling model both assume specific phone-side behavior (Keystore-held device key, a background sync worker that polls `/sync/queue`) that session hasn't seen or agreed to yet. **2026-09-07**: Joakim will relay this himself rather than this session messaging the peer directly.
 
+- **Phone's off-LAN sync path — not designed**: [ARCHITECTURE.md](ARCHITECTURE.md)'s LAN+WireGuard exposure decision (2026-09-07) covers the PWA and implies the phone needs the same kind of tunnel when off home wifi, likely a second WireGuard peer alongside the existing Lenovo-workstation one — not designed in any detail, needs its own pass (and probably the mobile session's input, since it's phone-side config).
+
 ## Not designed at all yet
 
 - Actual detector porting (code) — [ARCHITECTURE.md](ARCHITECTURE.md)'s Detector porting section says where NAS-side inference code will live and what it writes ([DATA_MODEL.md](DATA_MODEL.md)'s `detector_runs`), but no code exists; model choice itself stays [../curation/DETECTORS.md](../curation/DETECTORS.md)'s call, not redecided here.
