@@ -35,9 +35,15 @@ reasoning/explanation step, not a single "AI" doing everything at once.
   with an eye toward the eventual Raspberry Pi 3 stress-test target
   ([../photo-server/TODO.md](../photo-server/TODO.md)'s "Raised 2026-07-29" section).
 - **On-device phone inference stays the long-term Pillar 2 architecture**
-  ([../VISION.md](../VISION.md)) — unaffected by this folder. This folder's near-term design targets
-  the V1 rollout note ("also runs and saves AI model output on every picture") which is concretely
-  server-side, since no phone app shell exists yet. Confirmed with Joakim 2026-08-02, not assumed.
+  ([../VISION.md](../VISION.md)) — unaffected by this folder. This folder's near-term design (2026-08-02
+  through 08-05) targeted the V1 rollout note ("also runs and saves AI model output on every picture")
+  which was concretely server-side, since no phone app shell existed yet. **Stale as of 2026-09-06**:
+  a phone app shell now exists ([../mobile/README.md](../mobile/README.md)) — this folder's model
+  picks (NanoDet-Plus, CLIP zero-shot scene classification, MobileFaceNet, etc.) and data-model
+  concepts (usage-intent scoring, gamified sessions) still hold, but wherever a section here assumes
+  server-side storage/schema (`audit_log`, `tags`/`entities` tables), the on-device equivalent
+  (a local Room/SQLite table, same log-then-recompute shape) needs porting, not re-deriving — see
+  [../mobile/TODO.md](../mobile/TODO.md).
 - **Motivated tagging, not silent automation** ([../VISION.md](../VISION.md) Pillar 2's design
   principle): every automated suggestion this folder designs must be shown to the user for
   review/confirmation, never applied silently — applies to curation suggestions exactly as it

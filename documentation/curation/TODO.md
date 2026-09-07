@@ -326,6 +326,20 @@ or other disposable fixtures without asking first** per the high-blast-radius ru
 against real `/tank` content (Joakim's own or otherwise) needs his go-ahead each time, same as it
 already does for `momfiles`.
 
+## Ambiguous/tied scoring — raised 2026-09-07, not designed
+
+Joakim's question, while scoping the phone app's future suggestion logic: can the Curator's
+scoring get "stuck" when a photo scores equally under two competing signals — e.g. a near-tie
+between delete-candidate and keep-candidate evidence — leaving it unclear what to suggest? Not
+addressed by the existing usage-intent-score design
+([IDENTITY_MATCHING.md](IDENTITY_MATCHING.md)) or [ARCHITECTURE.md](ARCHITECTURE.md)'s Curator
+section, both of which describe how a score is computed but not what the UI does at a genuine
+near-tie. Related but distinct from the already-flagged "undo events are an ambiguous signal"
+item above (that's about interpreting one past action; this is about what happens when the
+*current* suggestion itself has no clear winner). Open for a future session — no direction picked
+yet (options like "surface both candidates for the user to break the tie" vs. "suppress the
+suggestion until more signal accumulates" haven't been evaluated).
+
 ## Status
 
 Opened 2026-08-02, alongside [README.md](README.md)/[ARCHITECTURE.md](ARCHITECTURE.md)/
