@@ -11,21 +11,16 @@ No SSH, no `ping`, no `curl` against `192.168.1.10` from an AI session — Joaki
 ## Inventory pass (run by Joakim, 2026-09-07) — real findings, not assumptions
 
 - **Docker is present and current**: 29.8.0, Compose v5.5.1. No install step needed.
-- **The old photo-server stack is still live in production, not decommissioned** — `caddy`, `photo-viewer`, `postgres`, `redis`, `detector` containers all "Up 3 days," actively serving real traffic (`caddy` is bound to `0.0.0.0:80`/`:443`, almost certainly what `photos.reuterborg.se` resolves to). **`auth` is crash-looping** ("Restarting (3)") — a live, currently-broken piece of that real service, unrelated to this NAS design work and out of scope for this session to touch or fix.
-- **Ports already taken**: `22` (SSH), `25` (Postfix mail), `80`/`443` (Caddy, the live stack). The fresh NAS app needs a different port, or its own Caddy site block on the existing reverse proxy — the latter means editing a live production config, Joakim's call, not drafted blind here.
+- **The old photo-server stack was live at inventory time** — `caddy`, `photo-viewer`, `postgres`, `redis`, `detector` containers all "Up 3 days," actively serving real traffic (`caddy` bound to `0.0.0.0:80`/`:443`), with `auth` crash-looping ("Restarting (3)"). **Retired same day** — see "Old photo-server stack — retired 2026-09-07" below.
+- **Ports**: `22` (SSH), `25` (Postfix mail, loopback-only) remain. `80`/`443` are now free following the retirement below — no live Caddy config to work around anymore.
 - **Existing checkout**: `/home/joakim/differentiate-pictures-for-auto-sync` is the live deployed checkout that stack runs from. The NAS's fresh code needs its own separate directory on `.10` — never this one.
 - **Real, live data already exists on this box**: a `differentiate-pictures-for-auto-sync_postgres_data` Docker volume backing the live stack, plus `/tank` (2.65TB free of 3.6TB) and a separate `/media/master_copy` NTFS backup (497GB free). **None of this is "clean slate" territory** — clean-slate applies to the NAS's own fresh code/schema, never to this pre-existing live data; nothing in this design touches that volume.
 
-## Retiring the old photo-server stack (optional, Joakim's own action)
+## Old photo-server stack — retired 2026-09-07
 
-Confirmed 2026-09-07: `photos.reuterborg.se`'s stack is obsolete and can come down — frees `80`/`443` and removes the crash-looping `auth` container along with it. Not urgent, no deadline attached; run whenever convenient, from `/home/joakim/differentiate-pictures-for-auto-sync` (the live checkout the inventory pass found):
+Confirmed obsolete and taken down by Joakim, same day: `docker compose down` from `/home/joakim/differentiate-pictures-for-auto-sync` removed all 6 containers (`caddy` included — the reverse proxy itself, not just the backend services) and the project's Docker network. Verified externally: `photos.reuterborg.se` now fails to connect in a browser, as expected. `80`/`443` are free; the crash-looping `auth` container is gone with it, moot rather than fixed.
 
-```bash
-cd /home/joakim/differentiate-pictures-for-auto-sync
-docker compose down
-```
-
-(Read the compose file first if unsure this covers every container the inventory pass listed — `docker ps -a` again afterward to confirm nothing's left running.)
+**Not removed, deliberately**: the underlying volumes (`differentiate-pictures-for-auto-sync_postgres_data`, `_caddy_data` holding the Let's Encrypt cert, etc.) — `docker compose down` without `-v` leaves them on disk, dormant. Real data (the old photo library's database) lived in that volume; nothing here suggests deleting it, that stays Joakim's own call if it's ever needed.
 
 ## Network exposure — LAN + WireGuard, no public hostname
 
