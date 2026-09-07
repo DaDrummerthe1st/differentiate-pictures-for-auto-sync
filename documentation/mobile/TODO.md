@@ -54,4 +54,35 @@
   on-device suggestion/scoring logic get stuck when a photo scores equally under two competing
   signals (e.g. "keep" and "delete" candidates tie)? Logged as new, unresolved — see
   [../curation/TODO.md](../curation/TODO.md)'s matching entry.
+- **Backlog raised 2026-09-07, none designed or scoped yet** (deliberately logged, not built: a
+  second AI session was concurrently active on this same branch/checkout at the time, with no
+  worktree isolation between them, so building blind risked a real file collision — and the list
+  itself was too large for one session regardless):
+  - **Swipe-to-triage gesture** on the grid/fullscreen view (left/right for delete-vs-archive one
+    way, tag-vs-add-to-album the other; up/down considered if intuitive). **Hard rule, not
+    negotiable**: the user must always be able to recover a wrong swipe, even after any undo-timeout
+    window has passed and even after several further actions happened in between — "one-way" only
+    means the default flow feels irreversible in the moment, never that recovery is actually
+    unavailable. UX rules for this get their own doc dimension (a `mobile/UX_FLOWS.md`, parallel to
+    [../tags/UX_FLOWS.md](../tags/UX_FLOWS.md)) once this is actually designed, not folded into
+    architecture notes.
+  - **Bounding boxes surfaced in the grid view itself**, not just the fullscreen view, once
+    object detection is on-device — needs a concrete visual treatment, not just "draw a box."
+  - **Sort/order control**, user-chosen, always available — not a fixed default ordering.
+  - **Folder-usage-frequency signal** — track which folders/albums get used more, no concrete use
+    identified yet, logged as a hint for future visualization decisions.
+  - **Storage-transparency dashboard**: total storage used across device/NAS/cloud/paid tiers,
+    shown plainly so the user stays in control of what to delete and where — explicitly positioned
+    against services that obscure this to keep usage growing. Central to why deletion-focused
+    curation works at all (seeing the real number is what makes "delete more" feel possible).
+  - **Confidence-score-driven NAS request flow** (depends on the NAS/backup-sync work below): once
+    a NAS exists, it computes a confidence score per photo and requests upload of specifically the
+    photos it's least confident about, rather than the phone pushing everything. A file present on
+    both phone and NAS independently needs to be flagged/reconciled, not treated as two unrelated
+    copies.
+  - **NAS/backup-sync structure — recommended as its own session, own branch, own worktree**: a
+    genuinely separate subsystem (targets `192.168.1.10` directly, no expensive SSD/RPi storage
+    needed) with no file overlap with `android/`, so it's also the cleanest fix for this session's
+    concurrent-editing concern — a different worktree means a different directory, not just a
+    different branch checked out in the same one.
 - iOS: still a "consider it, don't build it" note, unchanged.
