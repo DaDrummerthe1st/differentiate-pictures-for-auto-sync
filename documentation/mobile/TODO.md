@@ -50,6 +50,7 @@
   place it deviates from a `curation/` doc's server-side assumption inline in that doc, same
   convention already used elsewhere (e.g. `curation/IDENTITY_MATCHING.md`'s "Reversed 2026-09-05"
   note), rather than silently diverging.
+- **On-device runtime pick — researched 2026-09-07, not yet decided**: `com.microsoft.onnxruntime:onnxruntime-android` (Maven Central, MIT, currently 1.27.0) is the direct on-device counterpart to the server-side picks (same `.onnx` files, NNAPI/XNNPACK hardware acceleration on Android). Two real mobile-purpose-built alternatives exist that also consume ONNX models (via import/conversion, not direct execution): **ncnn** (Tencent, BSD-3-Clause, lighter footprint, NanoDet-Plus's own official repo ships an ncnn deployment path specifically) and **MNN** (Alibaba, Apache-2.0). Correction to an initial framing: neither is meaningfully "more open source" than ONNX Runtime — all three are single-company-led OSS with similarly permissive licenses; the real trade-off is mobile-optimized footprint/speed vs. ONNX Runtime's broader format compatibility and reuse of the exact same server-side model files with zero conversion step. Not decided — worth a real footprint/speed comparison once object-detection porting actually starts.
 - **Open design question, raised 2026-09-07, not addressed anywhere in `curation/` yet**: can the
   on-device suggestion/scoring logic get stuck when a photo scores equally under two competing
   signals (e.g. "keep" and "delete" candidates tie)? Logged as new, unresolved — see

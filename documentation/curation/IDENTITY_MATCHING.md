@@ -234,6 +234,14 @@ that could alter it. Full reasoning: [../VISION.md](../VISION.md)'s 2026-09-05 n
 retraction of the concern that produced it — the concern (platform control over a published binary)
 is exactly why sideloading stays non-negotiable going forward.
 
+## Same person, her own multiple devices — a distinct, easier case than cross-household linking, raised 2026-09-07, not designed
+
+Everything above ("Cross-household reuse," "Two Per Holmgrens") solves *different households* independently identifying the *same* real person. A different question, genuinely not covered by that design: **one person's own devices** — Joakim tagging "Dad" on his phone, his own future iPad, and his NAS — need to converge on one identity too, but without the consent/authentication complexity cross-household linking has (there's no second party to authenticate against; it's the same household's own data everywhere).
+
+**Why this isn't just "copy the embeddings over"**: the 128-number face vector itself is trivially portable (plain numbers, no Android-specific encoding), but the row around it — local auto-generated IDs, this device's own photo references — isn't. Raw file/database copying between devices would collide, not merge. The NAS (already the planned sync hub for this project, [distributed-sync/](../distributed-sync/README.md)) is the natural reconciliation point: each device reports `(locally-known entity, embedding)` under a stable identity (a UUID for "Dad," not a local row number), and the NAS's job includes merging same-person entities across one household's own devices — plausibly the same merge mechanism [../tags/TODO.md](../tags/TODO.md)'s entity-merge-dedup design already sketches for the *inverse* problem (one person mistakenly split into two entities on one device), reused rather than redesigned. **Not designed further here** — flagged for whenever the NAS-sync branch actually starts.
+
+**A separate, related problem also raised the same day**: the same *photo file* existing on both a phone and the NAS needs to be flagged and connected too — that's file-identity (hashing/matching), independent of person-identity reconciliation above. Both need real design, neither exists yet.
+
 ## Contacts-import desktop fallback — CardDAV confirmed real, build deferred to a guided session
 
 Raised 2026-09-04/05 alongside the desktop Contact Picker gap ([../security/THREATS.md](../security/THREATS.md)
@@ -273,4 +281,6 @@ Joakim — person-entity disambiguation required at labeling time, native app av
 architectural stance (not just for redundancy-contribution), and CardDAV confirmed as the desktop
 contacts-fallback target design (build deferred to a guided session). **Later same day**: the
 native-app stance itself reversed — see this file's "Reversed 2026-09-05" addendum above and
-[../VISION.md](../VISION.md). Nothing here is built; no schema migration, no model integrated.
+[../VISION.md](../VISION.md). **2026-09-07**: flagged same-person-multiple-devices identity
+reconciliation as a new, genuinely undesigned gap, distinct from the cross-household case above —
+see this file's new section. Nothing here is built; no schema migration, no model integrated.

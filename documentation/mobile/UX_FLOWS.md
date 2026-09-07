@@ -112,3 +112,29 @@ on-device detection is actually being built, not before.
 
 Opened 2026-09-07, not built. Depends on on-device object detection existing at all
 ([TODO.md](TODO.md)'s NanoDet-Plus porting item).
+
+## Reviewing AI suggestions and discovering settings — "the user always decides," applied to UI
+
+Confirmed with Joakim 2026-09-07 answering a NAS-sync question, generalized in
+[../VISION.md](../VISION.md) to the whole app: no feature runs, reorganizes, or reconfigures
+itself without the user opting in; presets/recommendations stay reachable, never forced. Two
+concrete UI surfaces this shapes, for object/face/scene tags alike:
+
+**Reviewing an AI guess**: reuses the confirm/correct/skip round already designed in
+[../curation/GAMIFICATION.md](../curation/GAMIFICATION.md) rather than inventing a new pattern —
+one item at a time, never an auto-accept, "I don't know"/skip always legitimate and credited, not
+a failure state. The grid badge (above) is the entry point: tapping it opens this review, it never
+triggers acceptance by itself.
+
+**Settings surfaced contextually, not as one upfront wall**: a feature's own moment of relevance is
+where its toggle/preset first appears — e.g. once a user has manually organized several photos by
+location, *then* offer "auto-suggest albums by place?" right there, rather than a checkbox she'd
+have had to already know to look for. A conventional, searchable Settings screen still exists as
+the durable home for everything (nothing stays *only* discoverable contextually), but contextual
+surfacing is the primary path to a first encounter with any feature — Joakim's own framing:
+"correct information at the right place at the right time."
+
+### Status
+
+Opened 2026-09-07. This is the standing rule future screens (swipe settings, sort/order, storage
+dashboard, NAS-sync preferences) have to satisfy — no concrete screens designed yet.
