@@ -88,3 +88,27 @@ Opened 2026-09-07. Both open questions confirmed with Joakim same day: right=kee
 direction mapping, and manual-only-by-default purge with an opt-in timer. Nothing built yet — next
 step is translating this into an actual build slice (gesture detection, the Removed-bin schema on
 top of the Room table already decided in [TODO.md](TODO.md), the undo snackbar).
+
+## Bounding boxes in the grid view — don't draw them there
+
+Raised 2026-09-07: once on-device object detection exists, how should the grid (a "contact sheet,"
+[GLOSSARY.md](../GLOSSARY.md)) show that a photo has detections? **Researched real precedent**:
+neither Google Photos nor Apple Photos draws box outlines over grid thumbnails — Apple's People &
+Pets and Google's face-grouping both use a *separate* browsing view (cropped face thumbnails, a
+dedicated collection), and Google's "Photo Stacks" grouping uses a small badge icon on the grid
+tile, never a drawn box.
+
+**Proposed, matching that precedent and this project's own existing design**: don't draw boxes in
+the grid at all — a thumbnail is too small for an outline to read as anything but clutter, and
+[../tags/UX_FLOWS.md](../tags/UX_FLOWS.md) already designed box-level interaction (tap a box, confirm/
+name it) for the **fullscreen** per-photo view, which is the right screen for that level of detail
+anyway. The grid's own job (fast visual scanning, per the contact-sheet's whole point) is better
+served by a small, subtle **corner badge** — e.g. a face/object-count icon — signaling "this photo
+has detections to review" without drawing over the image itself. Exact badge design (icon set,
+placement, whether it distinguishes people vs. objects) not decided — flagged for whenever
+on-device detection is actually being built, not before.
+
+### Status
+
+Opened 2026-09-07, not built. Depends on on-device object detection existing at all
+([TODO.md](TODO.md)'s NanoDet-Plus porting item).
