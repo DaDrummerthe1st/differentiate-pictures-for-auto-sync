@@ -35,6 +35,7 @@ see [VISION.md](VISION.md)'s "Native-app pivot" section for why, added 2026-09-0
 - Root `README.md` is the public-facing GitHub landing page (short pitch + pointer here); [CLAUDE.md](../CLAUDE.md) is the working agreement for whoever — human or AI — is doing the work.
 - **No hard-wrapping prose to a fixed column width** — one paragraph/list-item/blockquote per line, let the viewer soft-wrap. **Why:** measured against the real corpus 2026-07-19 — hard-wrap cost more characters than it saved; full measurement in `CHANGELOG_ARCHIVE.md`'s 2026-07-19T04:39:12+00:00 entry.
 - **All documentation lives under `documentation/`** — code directories (`server/`, `tools/*/`) get at most a one-line stub `README.md` pointing here, never real content. Decided 2026-07-16 after `server/README.md` and two `tools/*/README.md`s drifted into real content — moved and replaced with stubs.
+- **When a bulk rename/repoint pass updates every mention of a renamed file, skip historical narrative** — a bug report's quoted git commands, a changelog entry describing what a past commit did, or any "as of point-in-time X" claim where the old name was factually correct then. Only repoint current-state claims (a live pointer, a convention statement). Decided 2026-07-23 after a mechanical repoint pass rewrote a bug report's quoted `git show <rev>:OLDNAME` command to the new name, making it literally fail (the path didn't exist at that revision). When unsure, check the git revision the sentence is anchored to rather than assuming today's filename always applies.
 
 ## Keeping docs current
 

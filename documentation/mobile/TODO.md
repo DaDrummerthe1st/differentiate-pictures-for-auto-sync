@@ -84,3 +84,4 @@
     concurrent-editing concern — a different worktree means a different directory, not just a
     different branch checked out in the same one.
 - iOS: still a "consider it, don't build it" note, unchanged.
+- **Dev conventions, standing**: development/testing defaults to the emulator (`Motorola_Moto_G54_5G` AVD) only — never install/launch on Joakim's physical phone unless he explicitly asks, even if it was previously sideloaded for a demo. Debug GUI behavior via logcat/instrumentation (`Log.d`, `dumpsys`, `uiautomator dump`), not screenshots — see `WORKFLOW.md`'s Debugging discipline section, applies here too.

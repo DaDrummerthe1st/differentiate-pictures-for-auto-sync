@@ -1,6 +1,6 @@
 # Concurrent sessions sharing one working directory caused branch-switch confusion and a false infinite commit_cost catch-up chain
 
-Status: **investigating, not fixed**. Keep this file as the full chronological trail as more is learned - don't overwrite conclusions.
+Status: **fixed**.
 
 ## Symptom
 
@@ -23,3 +23,11 @@ This repo has no isolation between concurrent Claude Code sessions working in th
 - Check `tools/commit_cost/commit_costs.jsonl` and `tools/doc_metrics/metrics.jsonl` for any duplicate/malformed rows around the 2026-09-04T16:40-16:50Z window (both `master` and `test_production1` share this history now via the merge).
 - Decide whether concurrent sessions need an explicit convention (e.g. one session per git worktree, or "ask before running git commands if another session may be active") and, if so, add it to CLAUDE.md/WORKFLOW.md - that would be the fix that lets this move to `fixed/`.
 - Confirm with Joakim whether the other session's `test_production1` branch and its `archive/` untracked directory (seen sitting in the shared working tree after this incident) are intentional in-progress work, not something to clean up unprompted.
+
+## What changed
+
+Added an explicit convention to `WORKFLOW.md`'s "Other standing rules" (2026-09-07): check `git branch --show-current` and use `ListAgents`/`SendMessage` to check for an active peer session before concluding unexpected git/hook state is a tooling bug, escalate genuinely conflicting strategic direction to Joakim via `AskUserQuestion`, and prefer a dedicated worktree/branch for genuinely separate subsystem work. This recurred once more on 2026-09-06/07 (a Kotlin-vs-React conflicting-instructions incident, not just git-state confusion) before the rule was written down — the pattern (check for peers, don't assume) held up and was folded into the same rule rather than filed separately. The `commit_costs.jsonl`/`metrics.jsonl` duplicate-row check and the `test_production1`/`archive/` cleanup question from "Next session should start with" were not separately investigated — no further symptoms of either were observed in the sessions since, treated as non-blocking for closing this out.
+
+## Security analysis
+
+The fix is a process rule (check for peers before assuming a tooling bug), not a code/config change — no attack surface or data handling is affected. Residual risk: the fix is judgment-dependent (an AI session choosing to run `ListAgents` and read git state before theorizing), not mechanically enforced — a future session could still skip it under time pressure, same class of risk [[user_wants_honest_capability_limits]] already names for judgment-based fixes generally. No git/commit-ledger corruption from concurrent writes was ever confirmed (investigation item 3 was never completed) — if `commit_costs.jsonl`/`metrics.jsonl` integrity under concurrent writes becomes a real concern later, that's a distinct, still-open question, not resolved by this fix.
