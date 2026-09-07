@@ -22,9 +22,10 @@ Joakim's framing, 2026-09-07: four possible storage areas exist in a user's netw
 | [DATA_MODEL.md](DATA_MODEL.md) | The Postgres schema new to the NAS (`photos`, `devices`, `sync_queue`, `detector_runs`, `embeddings`) — reuses [../tags/SCHEMA.md](../tags/SCHEMA.md) unchanged for everything tag-related. |
 | [SYNC_CONTRACT.md](SYNC_CONTRACT.md) | The phone↔NAS interaction contract — pairing/auth, endpoints, the user-controlled sync-priority model. **Proposal, not settled** — needs the mobile session's buy-in before either side builds against it. |
 | [UX_FLOWS.md](UX_FLOWS.md) | Vision-level sketch of the NAS PWA's own screens — pairing/devices, browse/triage, sync-priority flagging, storage dashboard, curation review. |
+| [NETWORK.md](NETWORK.md) | Topology diagram — how the phone reaches the NAS on the home LAN vs. away (WireGuard, two ISPs). |
 | [DEPLOY.md](DEPLOY.md) | The `.10` target, what `nas/deploy.sh` does, and why this session never runs it itself. |
 | [TODO.md](TODO.md) | What's designed vs. still open. |
 
 ## Status
 
-Design + framework scaffolding pass, opened and done 2026-09-07. No code deployed anywhere; nothing has run against the real `.10` server.
+**Design-only pass, opened 2026-09-07 — no code written.** Joakim corrected an early attempt at code scaffolding mid-session: this folder is architecture/schema/UX-flow documentation, not an implementation. No code deployed anywhere; nothing has run against the real `.10` server beyond the read-only inventory Joakim ran himself (folded into [DEPLOY.md](DEPLOY.md)). See [TODO.md](TODO.md) for what's open, including a `.10` security follow-up unrelated to the NAS design itself.
