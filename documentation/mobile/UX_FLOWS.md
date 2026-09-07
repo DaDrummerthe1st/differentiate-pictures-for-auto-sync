@@ -40,8 +40,8 @@ probably the single most widely learned swipe association today (right = keep/ye
 reject/no), which argues for **right = organize/keep, left = remove**. Email apps (Gmail-style
 swipe-to-archive/delete) don't offer a consistent counter-precedent — that mapping is commonly
 user-configurable rather than fixed, so it isn't a competing "standard" so much as evidence there
-isn't one. **Proposed**: right = organize/keep, left = remove, matching Tinder's more universally
-learned pattern — needs Joakim's confirmation, not assumed.
+isn't one. **Confirmed with Joakim 2026-09-07**: right = organize/keep, left = remove, matching Tinder's more
+universally learned pattern.
 
 **Up/down, raised as a maybe**: no gesture is assigned yet. Given the two-way collapse above
 already covers both named use cases, up/down isn't load-bearing for the core interaction — proposed
@@ -77,13 +77,14 @@ design for this app, adapting that shape**:
    non-negotiable, not "recoverable for a while." The "Removed" bin's total reclaimable size feeds
    directly into the storage-transparency dashboard (`TODO.md`'s backlog item) — "empty this to
    free 2.3GB" becomes a visible, explicit choice the user makes, not a timer running quietly in
-   the background. **Open for Joakim to weigh in on**: whether an *optional*, user-configured
-   auto-purge timer (e.g. modeled on Apple's 30-day default) should exist as a convenience for
-   users who want it, on top of the always-available manual "empty now" — not designed further
-   here, since it isn't needed for the core rule to hold.
+   the background. **Confirmed with Joakim 2026-09-07**: manual-only by default (no timer runs
+   unless the user turns one on), with an *optional* user-configured auto-purge timer (e.g.
+   modeled on Apple's 30-day default) available for anyone who'd rather not manage it by hand —
+   exact settings-UI treatment not designed here, just the default/opt-in split.
 
 ### Status
 
-Opened 2026-09-07. Nothing built. Two things need Joakim's confirmation before this is
-build-ready: the left/right direction mapping, and whether an optional auto-purge timer is wanted
-alongside the manual-only default.
+Opened 2026-09-07. Both open questions confirmed with Joakim same day: right=keep/left=remove
+direction mapping, and manual-only-by-default purge with an opt-in timer. Nothing built yet — next
+step is translating this into an actual build slice (gesture detection, the Removed-bin schema on
+top of the Room table already decided in [TODO.md](TODO.md), the undo snackbar).
