@@ -18,8 +18,10 @@ Joakim's framing, 2026-09-07: four possible storage areas exist in a user's netw
 
 | File | What's there |
 | --- | --- |
-| [ARCHITECTURE.md](ARCHITECTURE.md) | Tech stack, why the NAS can resume the original server-side-inference design the native pivot moved off the phone, storage layout, the DFS/marketplace extension seam. |
+| [ARCHITECTURE.md](ARCHITECTURE.md) | Tech stack, why the NAS can resume the original server-side-inference design the native pivot moved off the phone, storage layout, detector porting, the DFS/marketplace extension seam. |
+| [DATA_MODEL.md](DATA_MODEL.md) | The Postgres schema new to the NAS (`photos`, `devices`, `sync_queue`, `detector_runs`, `embeddings`) — reuses [../tags/SCHEMA.md](../tags/SCHEMA.md) unchanged for everything tag-related. |
 | [SYNC_CONTRACT.md](SYNC_CONTRACT.md) | The phone↔NAS interaction contract — pairing/auth, endpoints, the user-controlled sync-priority model. **Proposal, not settled** — needs the mobile session's buy-in before either side builds against it. |
+| [UX_FLOWS.md](UX_FLOWS.md) | Vision-level sketch of the NAS PWA's own screens — pairing/devices, browse/triage, sync-priority flagging, storage dashboard, curation review. |
 | [DEPLOY.md](DEPLOY.md) | The `.10` target, what `nas/deploy.sh` does, and why this session never runs it itself. |
 | [TODO.md](TODO.md) | What's designed vs. still open. |
 
