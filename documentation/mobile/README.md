@@ -78,4 +78,5 @@ freshness again before the next real step, per [WORKFLOW.md](../policies/WORKFLO
 - `android/app/src/main/java/com/dpfas/photobrowser/PhotoBrowserApplication.kt` — configures Coil's
   singleton `ImageLoader` (debug-only logging via `BuildConfig.DEBUG`).
 
-See [TODO.md](TODO.md) for what's next.
+See [TODO.md](TODO.md) for what's next, [UX_FLOWS.md](UX_FLOWS.md) for interaction-level UX design
+(swipe gestures, undo/recovery rules).

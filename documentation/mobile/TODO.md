@@ -58,14 +58,11 @@
   second AI session was concurrently active on this same branch/checkout at the time, with no
   worktree isolation between them, so building blind risked a real file collision — and the list
   itself was too large for one session regardless):
-  - **Swipe-to-triage gesture** on the grid/fullscreen view (left/right for delete-vs-archive one
-    way, tag-vs-add-to-album the other; up/down considered if intuitive). **Hard rule, not
-    negotiable**: the user must always be able to recover a wrong swipe, even after any undo-timeout
-    window has passed and even after several further actions happened in between — "one-way" only
-    means the default flow feels irreversible in the moment, never that recovery is actually
-    unavailable. UX rules for this get their own doc dimension (a `mobile/UX_FLOWS.md`, parallel to
-    [../tags/UX_FLOWS.md](../tags/UX_FLOWS.md)) once this is actually designed, not folded into
-    architecture notes.
+  - **Swipe-to-triage gesture** — design discussion started 2026-09-07, see
+    [UX_FLOWS.md](UX_FLOWS.md): a two-way swipe (remove-from-view vs. organize/tag), a two-tier
+    recoverability model (immediate undo + a durable, never-auto-purged-by-default "Removed" bin)
+    satisfying Joakim's hard always-recoverable rule. Awaiting his confirmation on the left/right
+    direction mapping before this is build-ready.
   - **Bounding boxes surfaced in the grid view itself**, not just the fullscreen view, once
     object detection is on-device — needs a concrete visual treatment, not just "draw a box."
   - **Sort/order control**, user-chosen, always available — not a fixed default ordering.
