@@ -242,6 +242,10 @@ Everything above ("Cross-household reuse," "Two Per Holmgrens") solves *differen
 
 **A separate, related problem also raised the same day**: the same *photo file* existing on both a phone and the NAS needs to be flagged and connected too — that's file-identity (hashing/matching), independent of person-identity reconciliation above. Both need real design, neither exists yet.
 
+**A user with no NAS/server at all is a first-class case, not degraded — raised 2026-09-07**: consistent with [../policies/POLICY.md](../policies/POLICY.md)'s closed-by-default stance and the native-app pivot's own premise (on-device processing before any server exists), a user running the app on two devices without ever buying a NAS or cloud tier must not lose core functionality — each device works fully standalone regardless. **Confirmed with Joakim**: cross-device sync in that case should happen via direct device-to-device **autosync over a local network, no server required** — real, already-vetted prior art exists for exactly this: **Syncthing** ([../distributed-sync/NETWORK_MECHANISM.md](../distributed-sync/NETWORK_MECHANISM.md)'s own words, researched for a different purpose there: "continuous sync between devices... lightweight, under 30MB RAM, not requiring a central server"). Pairing is one-time and explicit (QR-code device-ID scan, Syncthing's own existing mechanism — not a new protocol to design), automatic after that, consistent with "the user always decides" applying to the *pairing* decision, not to every sync event after.
+
+**Real limitation, not solved**: this only syncs when both devices share a reachable network at the same time — a NAS/cloud tier remains the only always-on option regardless of network overlap. **Also confirmed with Joakim**: sync scope must be choosable per picture/folder/tag, not one blanket "sync with this device" toggle — this is a real mismatch with Syncthing's own native model (its sync unit is the **folder**, not individual files or tags within one), left as an **open fork, not decided**: either work within Syncthing's real model (organize synced content into folders that mirror sync-scope choices) or build custom sync logic on top of/instead of Syncthing for true per-item granularity. Flagged for the NAS/sync session, not resolved here.
+
 ## Contacts-import desktop fallback — CardDAV confirmed real, build deferred to a guided session
 
 Raised 2026-09-04/05 alongside the desktop Contact Picker gap ([../security/THREATS.md](../security/THREATS.md)
@@ -282,5 +286,8 @@ architectural stance (not just for redundancy-contribution), and CardDAV confirm
 contacts-fallback target design (build deferred to a guided session). **Later same day**: the
 native-app stance itself reversed — see this file's "Reversed 2026-09-05" addendum above and
 [../VISION.md](../VISION.md). **2026-09-07**: flagged same-person-multiple-devices identity
-reconciliation as a new, genuinely undesigned gap, distinct from the cross-household case above —
-see this file's new section. Nothing here is built; no schema migration, no model integrated.
+reconciliation as a new, genuinely undesigned gap, distinct from the cross-household case above;
+confirmed no-NAS users are first-class and cross-device autosync should use Syncthing-style
+local-network device-to-device sync with QR-code pairing, per-item sync-scope granularity flagged
+as an open fork against Syncthing's real folder-level model. Nothing here is built; no schema
+migration, no model integrated.
