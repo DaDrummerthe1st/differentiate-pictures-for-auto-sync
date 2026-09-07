@@ -9,7 +9,7 @@
 
 ## Open, blocking further work
 
-- **Inventory pass on `.10` not yet run** — see [DEPLOY.md](DEPLOY.md). Blocks `deploy.sh` and any real port/volume/Docker assumption.
+- **Inventory pass on `.10` — done 2026-09-07**, see [DEPLOY.md](DEPLOY.md). `deploy.sh` itself still not written — the remaining blocker is the port/cert choice (self-signed vs. local CA), not missing inventory data anymore.
 - **Pilot-usage-learning vs. no-telemetry tension, flagged not resolved** — see [ARCHITECTURE.md](ARCHITECTURE.md)'s Open tension section and [../policies/POLICY.md](../policies/POLICY.md)'s Open questions. Needs Joakim's explicit call before any usage-analytics mechanism is designed.
 - **Coordinate `SYNC_CONTRACT.md` with the mobile session** — the pairing flow and queue-polling model both assume specific phone-side behavior (Keystore-held device key, a background sync worker that polls `/sync/queue`) that session hasn't seen or agreed to yet. **2026-09-07**: Joakim will relay this himself rather than this session messaging the peer directly.
 
@@ -31,4 +31,4 @@
 
 ## Status
 
-Opened 2026-09-07.
+Opened 2026-09-07. By session close: architecture/schema/UX/network design done, `.10` inventory done, old public stack retired and verified down, security/access audit commands handed off but results not yet seen. Design-only throughout — no code written.
