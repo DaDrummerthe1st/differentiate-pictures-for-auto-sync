@@ -42,7 +42,8 @@ reasoning/explanation step, not a single "AI" doing everything at once.
   picks (NanoDet-Plus, CLIP zero-shot scene classification, MobileFaceNet, etc.) and data-model
   concepts (usage-intent scoring, gamified sessions) still hold, but wherever a section here assumes
   server-side storage/schema (`audit_log`, `tags`/`entities` tables), the on-device equivalent
-  (a local Room/SQLite table, same log-then-recompute shape) needs porting, not re-deriving — see
+  (a local Room/SQLite table) should keep the same log-then-recompute *shape* as design
+  inspiration, built fresh for Kotlin/Android — not a schema or code to port verbatim — see
   [../mobile/TODO.md](../mobile/TODO.md).
 - **Motivated tagging, not silent automation** ([../VISION.md](../VISION.md) Pillar 2's design
   principle): every automated suggestion this folder designs must be shown to the user for

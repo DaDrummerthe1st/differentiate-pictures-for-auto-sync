@@ -22,11 +22,13 @@
   pressure (this dev machine runs Gradle + the emulator simultaneously, which is unusually heavy;
   a real phone would see this far less) — falls back to its disk cache (fast, not instant) rather
   than a full re-decode. Joakim explicitly accepted this as fine; don't "fix" it without cause.
-- **Resume the deferred roadmap once swipe/zoom is settled**: on-device quality scoring (port of
-  `previous-work/pictures-pipeline/quality.py`), on-device object detection (port of
-  `objects.py`), user-driven sync to a server, automatic background trigger. None of this is
-  scoped yet — treat `previous-work/pictures-pipeline/` as reference only, not a plan to resume
-  verbatim, per [../../previous-work/README.md](../../previous-work/README.md).
+- **Resume the deferred roadmap once swipe/zoom is settled**: on-device quality scoring and
+  on-device object detection, designed fresh for Kotlin/Android and taking
+  `previous-work/pictures-pipeline/quality.py`/`objects.py` only as design inspiration (the
+  scoring approach, the model choice) — not code to port, adapt, or otherwise build on top of.
+  User-driven sync to a server, automatic background trigger: also none of this scoped yet.
+  `previous-work/` is archived, disregarded-as-code reference only, per
+  [../../previous-work/README.md](../../previous-work/README.md).
 - **On-device storage — architecture decided, nothing built, 2026-09-07**: the app has no local
   database at all today, just a live `MediaStore` query. Once it needs to save anything (quality/
   object-detection output, an event log of what the user does with a photo), the pick is **Room**
@@ -44,12 +46,13 @@
   (beach, indoor/outdoor, etc.) **researched** (zero-shot CLIP against text prompts, no new model).
   `IDENTITY_MATCHING.md` already has usage-intent scoring (the "why did the user do X" question)
   and CardDAV contacts-linking research done, build deferred. `GAMIFICATION.md` is a full spec for
-  the credit/confidence-display mechanic. The real work porting any of this on-device is schema/
-  runtime porting (Room instead of Postgres, on-device ONNX Runtime for Android instead of a
-  server-side Python process), not fresh design — when that porting actually happens, flag any
-  place it deviates from a `curation/` doc's server-side assumption inline in that doc, same
-  convention already used elsewhere (e.g. `curation/IDENTITY_MATCHING.md`'s "Reversed 2026-09-05"
-  note), rather than silently diverging.
+  the credit/confidence-display mechanic. Bringing any of this on-device is a fresh Kotlin/Android
+  build guided by that design (Room instead of Postgres, on-device ONNX Runtime/MNN instead of a
+  server-side Python process) — `curation/`'s server-side notes and `previous-work/`'s Python code
+  are both design inspiration, not something to port or copy from. When the on-device build
+  happens, flag any place it deviates from a `curation/` doc's server-side assumption inline in
+  that doc, same convention already used elsewhere (e.g. `curation/IDENTITY_MATCHING.md`'s
+  "Reversed 2026-09-05" note), rather than silently diverging.
 - **On-device runtime pick — researched 2026-09-07, not yet decided**: `com.microsoft.onnxruntime:onnxruntime-android` (Maven Central, MIT, currently 1.27.0) is the direct on-device counterpart to the server-side picks (same `.onnx` files, NNAPI/XNNPACK hardware acceleration on Android). Two real mobile-purpose-built alternatives exist that also consume ONNX models (via import/conversion, not direct execution): **ncnn** (Tencent, BSD-3-Clause, lighter footprint, NanoDet-Plus's own official repo ships an ncnn deployment path specifically) and **MNN** (Alibaba, Apache-2.0). Correction to an initial framing: neither is meaningfully "more open source" than ONNX Runtime — all three are single-company-led OSS with similarly permissive licenses; the real trade-off is mobile-optimized footprint/speed vs. ONNX Runtime's broader format compatibility and reuse of the exact same server-side model files with zero conversion step. **Decided 2026-09-07: MNN** over ncnn — both fit fine on pure permissiveness, but MNN's Apache-2.0 matches the license family already used everywhere else in this project (NanoDet-Plus, RapidOCR) rather than adding a third distinct license (ncnn's BSD-3-Clause) with no demonstrated technical reason yet, and Apache-2.0's explicit patent grant is a real extra protection BSD-3-Clause lacks. All three runtimes' research notes kept for reference, not discarded. Still worth a real footprint/speed comparison once object-detection porting actually starts.
 - **Open design question, raised 2026-09-07, not addressed anywhere in `curation/` yet**: can the
   on-device suggestion/scoring logic get stuck when a photo scores equally under two competing

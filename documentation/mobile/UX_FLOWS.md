@@ -111,7 +111,8 @@ on-device detection is actually being built, not before.
 ### Status
 
 Opened 2026-09-07, not built. Depends on on-device object detection existing at all
-([TODO.md](TODO.md)'s NanoDet-Plus porting item).
+([TODO.md](TODO.md)'s on-device object detection item, built fresh, NanoDet-Plus as design
+inspiration only).
 
 ## Reviewing AI suggestions and discovering settings — "the user always decides," applied to UI
 

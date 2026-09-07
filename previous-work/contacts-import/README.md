@@ -1,5 +1,7 @@
 # contacts/
 
+Archived, per [../README.md](../README.md): disregarded as code — reference and inspiration only, not built on top of, not imported from, not deployed. Description below is historical (kept in present tense as it was written, not a live API).
+
 A standalone contacts-import library — the file-based, zero-external-connection fallback for
 [documentation/tags/TODO.md](../../documentation/tags/TODO.md)'s "Contacts import" feature (name
 suggestions while face-labeling, see
