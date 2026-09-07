@@ -208,6 +208,10 @@ Plain-language definitions of every technical/business term this project's desig
 - **Maven Central vs. JitPack**: two different places an Android/Java library's compiled `.aar`/`.jar` can be published for Gradle to download. Maven Central is the long-established, vetted central repository (`mavenCentral()` in `build.gradle.kts`); JitPack builds a package on-demand straight from a GitHub repo/tag, which is more convenient for library authors but means Gradle is trusting a third-party build service rather than a published artifact — this project deliberately avoids adding JitPack as a dependency source without discussing it first, favoring Maven Central even if it narrows the library choices.
 - **`io.getstream:photoview`**: the Maven-Central-published, actively-maintained fork (by Stream) of the once-popular but now-abandoned `chrisbanes/PhotoView` library, providing `PhotoView` — a drop-in `ImageView` subclass that adds pinch-to-zoom and pan gesture handling. Chosen over `com.jsibbold:zoomage` (also on Maven Central and also an `ImageView` subclass, but with no commits since 2021) for `FullscreenPhotoActivity`'s per-photo zoom/pan, 2026-09-06 — see [mobile/README.md](mobile/README.md) for the evaluation.
 
+## NAS and sync
+
+- **Device pairing**: a one-time exchange (a pairing code/QR shown by an already-logged-in device, scanned or entered by the new one) that issues a long-lived credential to a *device* rather than a human re-typing a password — used here so the phone and NAS can authenticate every sync request to each other without a login screen each time. Distinct from a human's own browser login (JWT, see this file's Security and privacy section) — a device credential is per-device, revocable independently, and never expires on its own. See [nas/SYNC_CONTRACT.md](nas/SYNC_CONTRACT.md).
+
 ## Status
 
 Created 2026-07-29. Living document — append new terms here as they come up in conversation, per `CLAUDE.md`'s non-negotiable rule, rather than letting an explanation exist only in chat.

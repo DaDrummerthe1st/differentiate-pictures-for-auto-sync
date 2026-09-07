@@ -10,6 +10,7 @@ Project documentation, organized by topic. Structure/maintenance rules: [CLAUDE.
 | [curation/](curation/README.md) | Cross-cutting: how automated tags get proposed (detectors, embeddings, the Curator) and what the system does with them — VISION.md Pillar 2's automated-analysis/curation legs |
 | [data-modeling/](data-modeling/README.md) | Cross-cutting: table/column shapes and naming decisions for standalone or exploratory data not yet in a built schema |
 | [mobile/](mobile/README.md) | The native Android app (`android/`) — sideloaded, no Play Store; current live code |
+| [nas/](nas/README.md) | The server-side NAS application (`nas/`) — a standalone peer to the phone app, own PWA, targets Joakim's real `192.168.1.10` home server |
 | [photo-server/](photo-server/README.md) | **Superseded 2026-09-05** by the native-app pivot ([VISION.md](VISION.md)) — historical: multi-user web server design, browse/search/tag/download |
 | [upload-and-share/](upload-and-share/README.md) | Design work: per-user upload, ownership/sharing terms, event/party mode |
 | [gui/](gui/README.md) | **Superseded 2026-09-05** by the native-app pivot ([VISION.md](VISION.md)) — historical: the photo-server GUI's first working version (code name `mamma-photo-viewer`) |
