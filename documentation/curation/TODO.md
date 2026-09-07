@@ -340,6 +340,15 @@ item above (that's about interpreting one past action; this is about what happen
 yet (options like "surface both candidates for the user to break the tie" vs. "suppress the
 suggestion until more signal accumulates" haven't been evaluated).
 
+## Logistic regression for usage-intent classification — raised 2026-09-07, not designed
+
+Joakim's note: worth discussing whether logistic regression is a fit for predicting *what a user
+would use a given file for* — i.e. a lightweight classifier feeding the usage-intent score
+([IDENTITY_MATCHING.md](IDENTITY_MATCHING.md)) rather than the score's current hand-weighted
+signal-combination approach. Not evaluated yet — no comparison against the existing design, no
+feature list, no decision on whether this replaces or supplements the current scoring. Open for a
+future session.
+
 ## Status
 
 Opened 2026-08-02, alongside [README.md](README.md)/[ARCHITECTURE.md](ARCHITECTURE.md)/
