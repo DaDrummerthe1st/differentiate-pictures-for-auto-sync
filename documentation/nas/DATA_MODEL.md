@@ -41,7 +41,7 @@ The NAS→phone request queue [SYNC_CONTRACT.md](SYNC_CONTRACT.md) describes —
 | id | pk |
 | content_hash | which photo's original is being requested (may not have a `photos` row yet if only the phone knows about it so far) |
 | device_id | FK → `devices.id` — which phone this request targets |
-| reason | `user-flagged` (an explicit choice, from either device) \| `preset-low-confidence` (an enabled preset, never on by default) \| `explicit-backup` (the eventual "get everything" tail) |
+| reason | `user-flagged` (an explicit choice, from either device) \| `preset-low-confidence` (an enabled preset, never on by default) \| `preset-full-backup` (an enabled "back up everything in this album/tag/folder" preset, also never on by default — **renamed from `explicit-backup` 2026-09-09**, see [SYNC_CONTRACT.md](SYNC_CONTRACT.md), since the old name/description implied an automatic eventual-everything fallback that contradicted the user-always-decides rule) |
 | priority_rank | nullable int — orders `user-flagged` rows against each other; presets sort after all user-flagged rows regardless of their own rank |
 | requested_at, fulfilled_at | fulfilled_at nullable until the phone actually uploads the bytes |
 

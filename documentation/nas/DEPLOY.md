@@ -35,7 +35,7 @@ A script Joakim runs from his own machine — never executed by this session. Wh
 3. Run `docker compose up -d --build` on `.10` over SSH, binding only to the LAN interface (or `10.10.10.1`, the WireGuard tunnel address) — never `0.0.0.0` on a port meant to stay off the public internet.
 4. Print the resulting LAN URL (`https://192.168.1.10:<port>`) for Joakim to open and check by hand.
 
-Not written yet — one small open item remains: the actual port number and cert approach (self-signed vs. a local CA Joakim already trusts on his devices), neither of which is a live-production-touching decision anymore now that exposure is LAN/VPN-only.
+Not written yet — one small open item remains: the actual port number and domain to issue a cert for. **Cert approach decided 2026-09-09** (see [ARCHITECTURE.md](ARCHITECTURE.md)'s "Network exposure" section): Let's Encrypt via DNS-01 challenge, not self-signed/local-CA — this needs no open port and no public hostname resolving to `.10`, so it doesn't reopen the LAN/VPN-only exposure decision, and it avoids a per-device manual trust step for every phone/browser that syncs from an arbitrary network. Still open: which subdomain to request the cert for, which DNS provider's API the ACME client authenticates against, and where the renewal automation runs (Joakim's own machine, presumably, given this session's no-touch rule on `.10` itself) — Joakim's call, not designed further here.
 
 ## Status
 
