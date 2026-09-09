@@ -79,4 +79,4 @@ No `unique` constraint — a later run for the same `(photo_id, source, detector
 
 ## Status
 
-Designed 2026-09-07. No migration written, nothing created in a real database.
+Designed 2026-09-07. No migration written, nothing created in a real database. **2026-09-09**: renamed `sync_queue.reason`'s `explicit-backup` value to `preset-full-backup` to match [SYNC_CONTRACT.md](SYNC_CONTRACT.md)'s corrected fully-selective backup model — see that file's Status section for the full correction.

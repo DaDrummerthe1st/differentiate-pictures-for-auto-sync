@@ -43,4 +43,6 @@ Joakim asked for this backlog tracked as a running list, starting execution this
 
 ## Status
 
-Opened 2026-09-07. By session close: architecture/schema/UX/network design done, `.10` inventory done, old public stack retired and verified down, security/access audit commands handed off but results not yet seen. Design-only throughout — no code written.
+Opened 2026-09-07. By that session's close: architecture/schema/UX/network design done, `.10` inventory done, old public stack retired and verified down, security/access audit commands handed off but results not yet seen. Design-only throughout — no code written.
+
+**2026-09-09** (separate session, `worktree-nas-server-design` continued in-place per Joakim's own choice, no other worktree touched): fixed `SYNC_CONTRACT.md`'s backup-selectivity contradiction and a devices-revocation inconsistency; decided the NAS's cert approach (Let's Encrypt via DNS-01, `photos.reuterborg.se` reused, ACME on-box); added the Session TODO list above tracking the four items still open, all still open at close — off-LAN WireGuard phone-side design and `.10` security audit results are blocked on the mobile session/Joakim respectively, detector porting and PWA wireframes not started. Still design-only, no code written.

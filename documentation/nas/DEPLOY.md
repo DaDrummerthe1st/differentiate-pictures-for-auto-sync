@@ -39,4 +39,4 @@ Not written yet — one small open item remains: the actual port number and doma
 
 ## Status
 
-Opened 2026-09-07. Real inventory findings and the LAN-only exposure decision folded in same-day. `deploy.sh` still not written, pending the port/cert choice above.
+Opened 2026-09-07. Real inventory findings and the LAN-only exposure decision folded in same-day. **2026-09-09**: cert approach decided (Let's Encrypt via DNS-01, reusing `photos.reuterborg.se`, ACME on-box) — `deploy.sh` itself still not written; only the actual port number remains open, no longer a design blocker.

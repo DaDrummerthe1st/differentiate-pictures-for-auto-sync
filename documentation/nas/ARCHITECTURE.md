@@ -41,4 +41,4 @@ Raised by Joakim 2026-09-07, discussing sync-priority UX: he wants pilot users e
 
 ## Status
 
-Designed 2026-09-07, alongside the framework scaffolding under `nas/`. No migration has run against a real database; nothing is deployed.
+Designed 2026-09-07, alongside the framework scaffolding under `nas/`. No migration has run against a real database; nothing is deployed. **2026-09-09**: corrected the Network exposure section's Let's Encrypt-avoidance reasoning (DNS-01 needs no open port) and decided the cert approach for `.10`; flagged the cert-issuance-at-scale question for a real multi-NAS product as not designed, see [TODO.md](TODO.md).
