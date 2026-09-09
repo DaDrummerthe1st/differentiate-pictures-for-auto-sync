@@ -23,6 +23,36 @@
   - [ ] Ambiguous/tied scoring — open question: what happens when two competing signals tie.
   - [ ] *(deferred, own session/worktree)* NAS/backup-sync structure.
   - [ ] *(standing, not a task)* iOS — "consider it, don't build it."
+- **NAS sync-contract review — started, not finished, 2026-09-09** (`android-app-test1`, no code
+  touched this pass): the nas-design session's `documentation/nas/SYNC_CONTRACT.md` (exists only
+  on `worktree-nas-server-design`, not merged here — read read-only from this branch via
+  `git show worktree-nas-server-design:documentation/nas/SYNC_CONTRACT.md`) asks in its own
+  Status section for this topic to review it before either side builds against it. Session was
+  paused before finishing — pick back up by reading that file fresh (or messaging the nas-design
+  session directly if still live, see below) rather than re-deriving the below from memory:
+  - Wrongly framed the review as blocked on client direction (native Kotlin vs. the 2026-09-06
+    React-client pivot) by diffing `SYNC_CONTRACT.md`'s native-Android assumptions (background
+    sync worker, Android Keystore device-key storage) against **master's** stale copy of
+    [../VISION.md](../VISION.md). That was this session's own mistake, caught before acting on
+    it: *this branch's* VISION.md already resolved client direction 2026-09-07 ("Decision: stay
+    on native Kotlin/`android-app-test1`", its iOS-parity note) — master just hasn't merged that
+    reversal yet, ordinary branch divergence, not an open question. Reconcile master's
+    "React-client pivot" section with this branch's later decision when this branch merges;
+    don't overwrite one with the other blind.
+  - [ ] **Real remaining work, not started**: check `SYNC_CONTRACT.md`'s native-Android
+    assumptions against this branch's actual Kotlin code. The nas-design session's own 2026-09-09
+    self-review already fixed two internal contradictions before handoff — don't re-flag these as
+    new: (1) selective backup vs. an earlier line claiming every original eventually lands on the
+    NAS regardless of user choice, corrected to fully selective/user-chosen; (2) device revocation
+    hard-deleting the `devices` row vs. DATA_MODEL.md's soft `revoked_at`, resolved in favor of
+    soft-revoke. Also renamed the `explicit-backup` sync-queue reason to `preset-full-backup` to
+    match. Two sub-questions the nas-design session explicitly left open for this review: no
+    expiry/single-use/rate-limit specified on the one-time pairing code (`POST /pairing/claim`),
+    and no path to cancel a queued `/sync/queue` request if the phone deletes a photo locally
+    before uploading its original.
+  - [ ] If the nas-design session is still live when this resumes, message it directly
+    (`ListAgents`) instead of re-deriving the contract from the doc alone — cross-session
+    `SendMessage` is available now, no longer strictly a hand-it-to-Joakim-by-hand process.
 - **Confirmed working, 2026-09-06** (see README.md's Status section): builds, installs, shows and
   scrolls all device photos correctly, tap-to-fullscreen works. Decided to keep iterating on the
   current `MainActivity`/`PhotoAdapter`/`FullscreenPhotoActivity` split rather than rewrite —
