@@ -1,5 +1,28 @@
 # mobile/ TODO
 
+- **Backlog snapshot, 2026-09-09** (design/discussion session, `android-app-test1`, no code touched):
+  consolidated the open backlog into one checklist for session planning — not new information, just
+  a pointer list. Written here as plain markdown rather than a TodoWrite-tracked list because
+  TodoWrite is currently unavailable in this session — tracked as a claude-bug in the separate
+  `claudefiles` repo (`documentation/bugs/claude-bugs/under_process/2026-09-07-todowrite-tool-silently-disappeared-after-extension-autoupdate.md`,
+  not linked directly since it's a different git repository); confirmed 2026-09-09 that the applied
+  mitigation is active but did not restore the tool, likely a hard upstream gate.
+  - [ ] Swipe-to-triage build slice — design confirmed (right=keep/left=remove, manual-purge
+    default); next step is a concrete build plan (gesture detection, Removed-bin schema on the Room
+    table, undo snackbar) — see [UX_FLOWS.md](UX_FLOWS.md).
+  - [ ] Bounding-box grid badge — corner-badge treatment proposed, icon/placement undecided;
+    blocked on on-device object detection existing.
+  - [ ] Sort/order control — user-chosen ordering, not designed at all yet.
+  - [ ] Folder-usage-frequency signal — logged as a hint only, no concrete use or UX direction.
+  - [ ] Storage-transparency dashboard — device/NAS/cloud/paid breakdown, not designed.
+  - [ ] On-device object detection — design fresh for Kotlin/Android, NanoDet-Plus/MNN as
+    inspiration only.
+  - [ ] Logistic regression for usage-intent — newly raised in
+    [../curation/TODO.md](../curation/TODO.md), not yet evaluated against the existing hand-weighted
+    scoring design in [../curation/IDENTITY_MATCHING.md](../curation/IDENTITY_MATCHING.md).
+  - [ ] Ambiguous/tied scoring — open question: what happens when two competing signals tie.
+  - [ ] *(deferred, own session/worktree)* NAS/backup-sync structure.
+  - [ ] *(standing, not a task)* iOS — "consider it, don't build it."
 - **Confirmed working, 2026-09-06** (see README.md's Status section): builds, installs, shows and
   scrolls all device photos correctly, tap-to-fullscreen works. Decided to keep iterating on the
   current `MainActivity`/`PhotoAdapter`/`FullscreenPhotoActivity` split rather than rewrite —
