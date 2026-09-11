@@ -6,13 +6,27 @@ background/reasoning for why a native app exists at all: [../VISION.md](../VISIO
 
 ## Status — 2026-09-11
 
-A NAS sync-contract review (of `worktree-nas-server-design`'s `SYNC_CONTRACT.md` against this
-branch's native Android assumptions) was started and paused before finishing — see
-[TODO.md](TODO.md)'s matching entry for the real remaining work. Separately, that session hit and
+Fixed a real bug in similar-faces search: `SimilarFacesActivity` never excluded the tapped face from
+its own results (and couldn't have, as written, since it only ever sees a `ScannedFace`
+*reconstructed* from `Intent` extras, never the same instance `FaceScanCache` holds, while the old
+exclusion check compared by reference) — so every tap's top "match" was really just the same face
+matching itself at ~1.0 similarity. Fixed by excluding by value instead (`ScannedFace`'s existing
+structural equality) and passing the full tapped face, not just its embedding, through the Intent.
+Got real similarity-score data for the first time on the open
+[2026-09-09 similar-faces bug](../bugs/repo/under_process/2026-09-09-similar-faces-search-returns-increasingly-wrong-matches-past-the-first-result.md)
+by driving the emulator end to end via `adb`/`uiautomator` (no screenshots): visually confirmed
+against the real on-device photos that ranked matches stayed correct through a good stretch of
+results (similarity ~0.69 down to ~0.33), degrading only below ~0.3 — better than the original
+report suggested, once the self-match bug's bogus top result is out of the picture. 82/82 tests
+green (up from 78; added `FaceScanCache.clear()` for test isolation and two regression tests). Bug
+file still open pending Joakim re-testing the fixed build.
+
+Separately, a different session started (then paused) a NAS sync-contract review (of
+`worktree-nas-server-design`'s `SYNC_CONTRACT.md` against this branch's native Android assumptions)
+— see [TODO.md](TODO.md)'s matching entry for the real remaining work. That session also hit and
 fixed a shared-checkout git-index collision (a staged doc edit got swept into a different peer
-session's commit); full note at
-[HANDOFF_2026-09-11.md](HANDOFF_2026-09-11.md), the fix itself now a standing rule in
-[../policies/WORKFLOW.md](../policies/WORKFLOW.md).
+session's commit); full note at [HANDOFF_2026-09-11.md](HANDOFF_2026-09-11.md), the fix itself now a
+standing rule in [../policies/WORKFLOW.md](../policies/WORKFLOW.md).
 
 ## Status — 2026-09-09
 

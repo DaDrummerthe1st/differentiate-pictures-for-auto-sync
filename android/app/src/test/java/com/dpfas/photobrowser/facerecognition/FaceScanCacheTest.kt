@@ -39,6 +39,17 @@ class FaceScanCacheTest {
     }
 
     @Test
+    fun `clear empties the cache`() {
+        val uri = Uri.parse("content://media/external/images/media/5")
+        FaceScanCache.put(uri, listOf(ScannedFace(NormalizedFaceBox(0f, 0f, 1f, 1f), floatArrayOf(1f))))
+
+        FaceScanCache.clear()
+
+        assertNull(FaceScanCache.get(uri))
+        assertEquals(emptyMap<Uri, List<ScannedFace>>(), FaceScanCache.snapshot())
+    }
+
+    @Test
     fun `snapshot returns every scanned photo's faces`() {
         val uri1 = Uri.parse("content://media/external/images/media/3")
         val uri2 = Uri.parse("content://media/external/images/media/4")

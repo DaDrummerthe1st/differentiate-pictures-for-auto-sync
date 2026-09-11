@@ -21,4 +21,7 @@ object FaceScanCache {
 
     /** A point-in-time copy of every scanned photo's faces, for a similarity search over the whole gallery. */
     fun snapshot(): Map<Uri, List<ScannedFace>> = facesByUri.toMap()
+
+    /** Empties the cache - since this is a process-lifetime singleton, tests need this to isolate from each other. */
+    fun clear() = facesByUri.clear()
 }

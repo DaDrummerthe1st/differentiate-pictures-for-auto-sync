@@ -110,17 +110,23 @@ class FullscreenPhotoActivityTest {
     }
 
     @Test
-    fun `the default onFaceTapped opens the similar-faces grid for that face's embedding`() {
+    fun `the default onFaceTapped opens the similar-faces grid for that face`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intent = FullscreenPhotoActivity.createIntent(context, uris, startPosition = 0)
         val embedding = floatArrayOf(1f, 2f, 3f)
+        val box = NormalizedFaceBox(0f, 0f, 1f, 1f)
 
         val controller = Robolectric.buildActivity(FullscreenPhotoActivity::class.java, intent)
         controller.create()
-        controller.get().onFaceTapped(ScannedFace(NormalizedFaceBox(0f, 0f, 1f, 1f), embedding))
+        controller.get().onFaceTapped(ScannedFace(box, embedding))
 
         val started = shadowOf(controller.get()).nextStartedActivity
         assertEquals(SimilarFacesActivity::class.java.name, started.component?.className)
         assertArrayEquals(embedding, started.getFloatArrayExtra(SimilarFacesActivity.EXTRA_QUERY_EMBEDDING)!!, 0f)
+        assertArrayEquals(
+            floatArrayOf(box.left, box.top, box.right, box.bottom),
+            started.getFloatArrayExtra(SimilarFacesActivity.EXTRA_QUERY_BOX)!!,
+            0f,
+        )
     }
 }

@@ -14,10 +14,14 @@
   Runtime / YuNet terms already defined there.
   - **Known simplification, not yet built**: face crops for embedding use a plain axis-aligned
     box-plus-margin crop, not the landmark-based ArcFace 5-point similarity-transform alignment
-    MobileFaceNet-family models are trained on. Leading (unconfirmed) suspect for
-    `documentation/bugs/repo/under_process/2026-09-09-similar-faces-search-returns-increasingly-wrong-matches-past-the-first-result.md` —
-    real embedding-score data needed before deciding whether to build it; see that bug file's
-    "next session should start with" section.
+    MobileFaceNet-family models are trained on. Was the leading (unconfirmed) suspect for
+    `documentation/bugs/repo/under_process/2026-09-09-similar-faces-search-returns-increasingly-wrong-matches-past-the-first-result.md`
+    — **2026-09-11**: real data now gathered (see that bug file). A separate, confirmed-and-fixed
+    bug (`SimilarFacesActivity` never excluded the tapped face from its own results, so it always
+    self-matched at ~1.0 similarity as a bogus top hit) explains at least part of the original
+    report; ranking quality past that turned out substantially better than expected in the one real
+    tap sampled. This landmark-alignment theory is still unconfirmed either way — awaiting a fresh
+    bad-case report from Joakim against the fixed build before it's worth scoping.
   - Two throwaway swipe-triage grid demos also added this session (`triage/` package, reachable
     via the main grid's overflow menu) — fake Toast/log persistence only, matching the Option
     A/B comparison spec in [UX_FLOWS.md](UX_FLOWS.md); not polished, not a real build.
