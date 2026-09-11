@@ -2,11 +2,12 @@ package com.dpfas.photobrowser
 
 import android.content.Context
 import android.net.Uri
-import android.widget.CheckBox
+import android.widget.ImageButton
 import androidx.test.core.app.ApplicationProvider
 import androidx.viewpager2.widget.ViewPager2
 import com.dpfas.photobrowser.facerecognition.NormalizedFaceBox
 import com.dpfas.photobrowser.facerecognition.ScannedFace
+import com.dpfas.photobrowser.settings.AppSettings
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -21,6 +22,14 @@ import org.robolectric.annotation.Config
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35])
 class FullscreenPhotoActivityTest {
+
+    /**
+     * Robolectric doesn't shadow [ImageButton]/[android.widget.ImageView], so the resource id
+     * passed to `setImageResource` isn't directly observable - compare the resulting `Drawable`'s
+     * `constantState` instead, which Android shares across every load of the same resource id.
+     */
+    private fun ImageButton.showsDrawableFor(context: Context, resId: Int): Boolean =
+        drawable?.constantState == context.getDrawable(resId)?.constantState
 
     private val uris = listOf(
         Uri.parse("content://media/external/images/media/1"),
@@ -73,7 +82,7 @@ class FullscreenPhotoActivityTest {
     }
 
     @Test
-    fun `face boxes are off by default and the checkbox turns them on`() {
+    fun `face boxes are off by default, tapping the toggle turns them on and persists that`() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val intent = FullscreenPhotoActivity.createIntent(context, uris, startPosition = 0)
 
@@ -83,10 +92,53 @@ class FullscreenPhotoActivityTest {
         val pager = controller.get().findViewById<ViewPager2>(R.id.fullscreen_pager)
         val adapter = pager.adapter as FullscreenPhotoPagerAdapter
         assertFalse(adapter.showFaceBoxes)
+        assertTrue(
+            controller.get().findViewById<ImageButton>(R.id.show_face_boxes_toggle)
+                .showsDrawableFor(context, R.drawable.ic_detect_boxes_off),
+        )
 
-        controller.get().findViewById<CheckBox>(R.id.show_face_boxes_checkbox).isChecked = true
+        controller.get().findViewById<ImageButton>(R.id.show_face_boxes_toggle).performClick()
 
         assertTrue(adapter.showFaceBoxes)
+        assertTrue(
+            controller.get().findViewById<ImageButton>(R.id.show_face_boxes_toggle)
+                .showsDrawableFor(context, R.drawable.ic_detect_boxes_on),
+        )
+        assertTrue(AppSettings(context).showFaceBoxes)
+    }
+
+    @Test
+    fun `a previously-persisted show-boxes setting is restored on the next full screen view`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        AppSettings(context).showFaceBoxes = true
+        val intent = FullscreenPhotoActivity.createIntent(context, uris, startPosition = 0)
+
+        val controller = Robolectric.buildActivity(FullscreenPhotoActivity::class.java, intent)
+        controller.create()
+
+        val pager = controller.get().findViewById<ViewPager2>(R.id.fullscreen_pager)
+        val adapter = pager.adapter as FullscreenPhotoPagerAdapter
+        assertTrue(adapter.showFaceBoxes)
+        assertTrue(
+            controller.get().findViewById<ImageButton>(R.id.show_face_boxes_toggle)
+                .showsDrawableFor(context, R.drawable.ic_detect_boxes_on),
+        )
+    }
+
+    @Test
+    fun `tapping the toggle again turns face boxes back off and persists that`() {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        AppSettings(context).showFaceBoxes = true
+        val intent = FullscreenPhotoActivity.createIntent(context, uris, startPosition = 0)
+
+        val controller = Robolectric.buildActivity(FullscreenPhotoActivity::class.java, intent)
+        controller.create()
+        controller.get().findViewById<ImageButton>(R.id.show_face_boxes_toggle).performClick()
+
+        val pager = controller.get().findViewById<ViewPager2>(R.id.fullscreen_pager)
+        val adapter = pager.adapter as FullscreenPhotoPagerAdapter
+        assertFalse(adapter.showFaceBoxes)
+        assertFalse(AppSettings(context).showFaceBoxes)
     }
 
     @Test

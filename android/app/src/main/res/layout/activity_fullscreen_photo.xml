@@ -9,14 +9,15 @@
         android:layout_height="match_parent"
         android:background="@android:color/black" />
 
-    <CheckBox
-        android:id="@+id/show_face_boxes_checkbox"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <ImageButton
+        android:id="@+id/show_face_boxes_toggle"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
         android:layout_gravity="top|end"
         android:layout_margin="16dp"
-        android:text="@string/show_detected_faces"
-        android:textColor="@android:color/white"
-        android:buttonTint="@android:color/white" />
+        android:padding="12dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/show_detected_faces"
+        android:src="@drawable/ic_detect_boxes_off" />
 
 </FrameLayout>

@@ -1,5 +1,15 @@
 # mobile/ TODO
 
+- **Confirmed working, 2026-09-11** (`android-app-test1`, 83/83 unit tests): "Show detected faces"
+  is now a persistent icon toggle rather than a session-only `CheckBox` — Joakim asked for this
+  pattern (filled/outline icon reflecting on/off state, and the choice surviving both swiping
+  between photos and a full app restart) to apply to **every** toggleable setting built from now
+  on, not just this one. Added `android/app/src/main/java/com/dpfas/photobrowser/settings/AppSettings.kt`,
+  a small `SharedPreferences`-backed class - new persistent settings should be added there as
+  another property rather than reading/writing preferences ad hoc elsewhere. `FullscreenPhotoActivity`
+  reads the persisted value on `onCreate` and writes it back on every toggle tap; the icon itself
+  is a rounded-rectangle `<shape>` drawable (`ic_detect_boxes_on`/`_off`, filled vs. outlined) rather
+  than a `CheckBox`, echoing the setting's own subject (a bounding box).
 - **Confirmed working, 2026-09-09** (`android-app-test1`, build green, 78/78 tests, verified on
   `Motorola_Moto_G54_5G` emulator): on-device face detection + embedding pipeline
   (`android/app/src/main/java/com/dpfas/photobrowser/facerecognition/` —

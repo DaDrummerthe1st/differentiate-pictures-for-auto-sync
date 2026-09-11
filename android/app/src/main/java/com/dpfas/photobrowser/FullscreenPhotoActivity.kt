@@ -4,12 +4,13 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.widget.CheckBox
+import android.widget.ImageButton
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
 import coil3.load
 import com.dpfas.photobrowser.facerecognition.ScannedFace
+import com.dpfas.photobrowser.settings.AppSettings
 
 /**
  * Shows a single photo full-screen, opened by tapping a thumbnail in the grid. Swiping moves
@@ -51,8 +52,21 @@ class FullscreenPhotoActivity : AppCompatActivity() {
             setCurrentItem(startPosition, false)
         }
 
-        findViewById<CheckBox>(R.id.show_face_boxes_checkbox).setOnCheckedChangeListener { _, checked ->
-            pagerAdapter.showFaceBoxes = checked
+        val settings = AppSettings(this)
+        val toggle = findViewById<ImageButton>(R.id.show_face_boxes_toggle)
+
+        fun applyShowFaceBoxes(enabled: Boolean) {
+            pagerAdapter.showFaceBoxes = enabled
+            toggle.setImageResource(
+                if (enabled) R.drawable.ic_detect_boxes_on else R.drawable.ic_detect_boxes_off,
+            )
+        }
+
+        applyShowFaceBoxes(settings.showFaceBoxes)
+        toggle.setOnClickListener {
+            val enabled = !pagerAdapter.showFaceBoxes
+            settings.showFaceBoxes = enabled
+            applyShowFaceBoxes(enabled)
         }
     }
 }

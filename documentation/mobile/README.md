@@ -82,7 +82,12 @@ freshness again before the next real step, per [WORKFLOW.md](../policies/WORKFLO
   actual image loading/caching to Coil via an injectable `loadImage` lambda (real implementation in
   production, a recording fake in `PhotoAdapterTest.kt`).
 - `android/app/src/main/java/com/dpfas/photobrowser/FullscreenPhotoActivity.kt` — fullscreen,
-  swipeable (`ViewPager2`) view across the whole photo list, opened at the tapped position.
+  swipeable (`ViewPager2`) view across the whole photo list, opened at the tapped position. The
+  "show detected faces" toggle here reads/writes its state via `AppSettings` so it persists across
+  photos and app restarts (see below).
+- `android/app/src/main/java/com/dpfas/photobrowser/settings/AppSettings.kt` — `SharedPreferences`-
+  backed persistent app settings. The established pattern for any future toggleable setting: add a
+  property here rather than reading/writing preferences elsewhere.
 - `android/app/src/main/java/com/dpfas/photobrowser/FullscreenPhotoPagerAdapter.kt` — the
   `ViewPager2`'s adapter; delegates loading into each page's `PhotoView` to the same kind of
   injectable `loadImage` lambda pattern as `PhotoAdapter`.
