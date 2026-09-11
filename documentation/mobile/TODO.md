@@ -45,36 +45,49 @@
   - [ ] Ambiguous/tied scoring — open question: what happens when two competing signals tie.
   - [ ] *(deferred, own session/worktree)* NAS/backup-sync structure.
   - [ ] *(standing, not a task)* iOS — "consider it, don't build it."
-- **NAS sync-contract review — started, not finished, 2026-09-09** (`android-app-test1`, no code
-  touched this pass): the nas-design session's `documentation/nas/SYNC_CONTRACT.md` (exists only
-  on `worktree-nas-server-design`, not merged here — read read-only from this branch via
-  `git show worktree-nas-server-design:documentation/nas/SYNC_CONTRACT.md`) asks in its own
-  Status section for this topic to review it before either side builds against it. Session was
-  paused before finishing — pick back up by reading that file fresh (or messaging the nas-design
-  session directly if still live, see below) rather than re-deriving the below from memory:
-  - Wrongly framed the review as blocked on client direction (native Kotlin vs. the 2026-09-06
-    React-client pivot) by diffing `SYNC_CONTRACT.md`'s native-Android assumptions (background
-    sync worker, Android Keystore device-key storage) against **master's** stale copy of
-    [../VISION.md](../VISION.md). That was this session's own mistake, caught before acting on
-    it: *this branch's* VISION.md already resolved client direction 2026-09-07 ("Decision: stay
-    on native Kotlin/`android-app-test1`", its iOS-parity note) — master just hasn't merged that
-    reversal yet, ordinary branch divergence, not an open question. Reconcile master's
-    "React-client pivot" section with this branch's later decision when this branch merges;
-    don't overwrite one with the other blind.
-  - [ ] **Real remaining work, not started**: check `SYNC_CONTRACT.md`'s native-Android
-    assumptions against this branch's actual Kotlin code. The nas-design session's own 2026-09-09
-    self-review already fixed two internal contradictions before handoff — don't re-flag these as
-    new: (1) selective backup vs. an earlier line claiming every original eventually lands on the
-    NAS regardless of user choice, corrected to fully selective/user-chosen; (2) device revocation
-    hard-deleting the `devices` row vs. DATA_MODEL.md's soft `revoked_at`, resolved in favor of
-    soft-revoke. Also renamed the `explicit-backup` sync-queue reason to `preset-full-backup` to
-    match. Two sub-questions the nas-design session explicitly left open for this review: no
-    expiry/single-use/rate-limit specified on the one-time pairing code (`POST /pairing/claim`),
-    and no path to cancel a queued `/sync/queue` request if the phone deletes a photo locally
-    before uploading its original.
-  - [ ] If the nas-design session is still live when this resumes, message it directly
-    (`ListAgents`) instead of re-deriving the contract from the doc alone — cross-session
-    `SendMessage` is available now, no longer strictly a hand-it-to-Joakim-by-hand process.
+- **NAS sync-contract review — completed 2026-09-11** (`android-app-test1`, no code touched):
+  the nas-design session's `documentation/nas/SYNC_CONTRACT.md` (exists only on
+  `worktree-nas-server-design`, not merged here — read read-only from this branch via
+  `git show worktree-nas-server-design:documentation/nas/SYNC_CONTRACT.md`) asked in its own
+  Status section for this topic to review it before either side builds against it. Two earlier
+  passes (2026-09-09, then a 2026-09-11 pass documented in
+  [HANDOFF_2026-09-11.md](HANDOFF_2026-09-11.md)) got sidetracked or paused before finishing;
+  this pass closes it out.
+  - Earlier misstep, kept for context: the 2026-09-09 pass wrongly framed the review as blocked
+    on client direction (native Kotlin vs. the 2026-09-06 React-client pivot) by diffing
+    `SYNC_CONTRACT.md`'s native-Android assumptions (background sync worker, Android Keystore
+    device-key storage) against **master's** stale copy of [../VISION.md](../VISION.md). That was
+    a mistake, caught before acting on it: *this branch's* VISION.md already resolved client
+    direction 2026-09-07 ("Decision: stay on native Kotlin/`android-app-test1`", its iOS-parity
+    note) — master just hadn't merged that reversal yet, ordinary branch divergence, not an open
+    question. Reconcile master's "React-client pivot" section with this branch's later decision
+    when this branch merges; don't overwrite one with the other blind.
+  - [x] **Kotlin-code check, done 2026-09-11**: `SYNC_CONTRACT.md` assumes a phone-side background
+    sync worker (polling `GET /sync/queue`) and Android Keystore-backed device-key storage.
+    Checked via a full listing of `android/app/src/main/java` plus
+    `grep -rli "keystore\|WorkManager\|SyncWorker\|background.*sync\|CoroutineWorker"` over it and
+    `androidx.work` over `app/build.gradle.kts`: **none of it exists yet** — no WorkManager
+    dependency, no networking library (no Retrofit/OkHttp), no Keystore usage anywhere, no local
+    database (Room is still only "architecture decided, nothing built," per this file's own
+    On-device storage entry above). So there's nothing in the real code for the contract's
+    assumptions to contradict — they're forward-looking, not presently wrong. Nothing to fix on
+    this branch now; re-check once the sync worker actually gets built.
+  - [x] **Two open sub-questions, answered 2026-09-11** (the nas-design session wasn't live in
+    `ListAgents` to hand these to directly — recorded here for whoever next resumes
+    `worktree-nas-server-design` to fold into `SYNC_CONTRACT.md`):
+    - Pairing-code expiry/rate-limit: short TTL (10-15 min), single-use (the code is invalidated
+      on the first successful `POST /pairing/claim`, or on expiry, whichever comes first), and a
+      per-code claim-attempt cap (e.g. 5 tries) to block brute-forcing a short human-typed code —
+      the same shape as an ordinary email/SMS one-time-code flow, nothing native-Android-specific
+      about it.
+    - Cancelling a queued sync request: a `DELETE /sync/queue/{content_hash}` endpoint the phone
+      calls when it locally deletes a photo it had queued but not yet uploaded; the NAS should
+      treat a late `POST /sync/photos/original` for a hash no longer in the queue as a harmless
+      no-op (idempotent) rather than an error, to tolerate the race where the phone's cancel and
+      its own in-flight upload cross paths.
+    - Neither answer touches a file this branch owns — `SYNC_CONTRACT.md` itself only exists on
+      `worktree-nas-server-design`, so the actual doc edit is that session's to make; this entry
+      is the mobile-side sign-off its own Status section asked for.
 - **Confirmed working, 2026-09-06** (see README.md's Status section): builds, installs, shows and
   scrolls all device photos correctly, tap-to-fullscreen works. Decided to keep iterating on the
   current `MainActivity`/`PhotoAdapter`/`FullscreenPhotoActivity` split rather than rewrite —
