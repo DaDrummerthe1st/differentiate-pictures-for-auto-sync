@@ -9,8 +9,11 @@ background/reasoning for why a native app exists at all: [../VISION.md](../VISIO
 On-device face recognition landed this session: detection (YuNet) + embedding (MobileFaceNet)
 via ONNX Runtime Mobile, a fullscreen-only bounding-box overlay toggle, tap-a-face similar-faces
 search, and two throwaway swipe-triage grid demos. Full detail, known simplifications, and the
-still-unresolved OpenCV-vs-MNN-vs-ONNX runtime conflict: see [TODO.md](TODO.md)'s 2026-09-09
-entries — kept there rather than duplicated here.
+OpenCV-vs-MNN-vs-ONNX runtime conflict (resolved as "defer, revisit later" — not "most-code-wins"):
+see [TODO.md](TODO.md)'s 2026-09-09 entries — kept there rather than duplicated here. The session
+that built this was asked to terminate abruptly mid-handoff; its full handoff note is preserved at
+[HANDOFF_2026-09-09.md](HANDOFF_2026-09-09.md) for reference, though this file and TODO.md are the
+actual current source of truth if the two ever disagree.
 
 ## Status — 2026-09-06
 
