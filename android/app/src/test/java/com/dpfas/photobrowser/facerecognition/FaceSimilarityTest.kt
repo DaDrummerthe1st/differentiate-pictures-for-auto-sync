@@ -50,6 +50,24 @@ class FaceSimilarityTest {
     }
 
     @Test
+    fun `findSimilar excludes a value-equal but distinct instance of the queried face`() {
+        // Regression test: a ScannedFace reconstructed from an Intent extra (SimilarFacesActivity)
+        // is never the same object reference as the one in FaceScanCache, only equal by value -
+        // reference-only exclusion silently let the tapped face match itself at ~1.0 similarity.
+        val query = floatArrayOf(1f, 0f)
+        val uri = Uri.parse("content://media/external/images/media/1")
+        val cached = ScannedFace(NormalizedFaceBox(0f, 0f, 1f, 1f), floatArrayOf(1f, 0f))
+        val reconstructedSelf = ScannedFace(NormalizedFaceBox(0f, 0f, 1f, 1f), floatArrayOf(1f, 0f))
+        val other = ScannedFace(NormalizedFaceBox(0f, 0f, 1f, 1f), floatArrayOf(0.5f, 0.5f))
+        val candidates = mapOf(uri to listOf(cached, other))
+
+        val results = FaceSimilarity.findSimilar(query, candidates, excludeSelf = reconstructedSelf)
+
+        assertEquals(1, results.size)
+        assertFalse(results.any { it.face == reconstructedSelf })
+    }
+
+    @Test
     fun `findSimilar caps results at topK`() {
         val query = floatArrayOf(1f, 0f)
         val uri = Uri.parse("content://media/external/images/media/1")

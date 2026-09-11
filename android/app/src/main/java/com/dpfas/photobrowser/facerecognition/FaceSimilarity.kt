@@ -23,8 +23,9 @@ object FaceSimilarity {
 
     /**
      * Ranks every face across [candidates] by similarity to [query], most similar first.
-     * [excludeSelf], when given, is dropped from the results by reference - so the tapped face
-     * doesn't trivially rank first against itself.
+     * [excludeSelf], when given, is dropped from the results by value (not reference - a caller
+     * across an Activity/Intent boundary only has a reconstructed, distinct ScannedFace instance,
+     * never the original) - so the tapped face doesn't trivially rank first against itself.
      */
     fun findSimilar(
         query: FloatArray,
@@ -34,7 +35,7 @@ object FaceSimilarity {
     ): List<FaceMatch> =
         candidates.asSequence()
             .flatMap { (uri, faces) -> faces.asSequence().map { uri to it } }
-            .filter { (_, face) -> face !== excludeSelf }
+            .filter { (_, face) -> face != excludeSelf }
             .map { (uri, face) -> FaceMatch(uri, face, cosineSimilarity(query, face.embedding)) }
             .sortedByDescending { it.similarity }
             .take(topK)

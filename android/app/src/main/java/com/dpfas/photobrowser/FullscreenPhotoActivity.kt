@@ -32,7 +32,7 @@ class FullscreenPhotoActivity : AppCompatActivity() {
     var loadImage: (ImageView, Uri) -> Unit = { imageView, uri -> imageView.load(uri) }
 
     var onFaceTapped: (ScannedFace) -> Unit = { face ->
-        startActivity(SimilarFacesActivity.createIntent(this, face.embedding))
+        startActivity(SimilarFacesActivity.createIntent(this, face))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
