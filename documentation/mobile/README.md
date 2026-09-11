@@ -4,6 +4,16 @@ The native Android app (`android/` at repo root) — sideloaded only, no Google 
 background/reasoning for why a native app exists at all: [../VISION.md](../VISION.md)'s
 "Native-app pivot" section.
 
+## Status — 2026-09-11
+
+A NAS sync-contract review (of `worktree-nas-server-design`'s `SYNC_CONTRACT.md` against this
+branch's native Android assumptions) was started and paused before finishing — see
+[TODO.md](TODO.md)'s matching entry for the real remaining work. Separately, that session hit and
+fixed a shared-checkout git-index collision (a staged doc edit got swept into a different peer
+session's commit); full note at
+[HANDOFF_2026-09-11.md](HANDOFF_2026-09-11.md), the fix itself now a standing rule in
+[../policies/WORKFLOW.md](../policies/WORKFLOW.md).
+
 ## Status — 2026-09-09
 
 On-device face recognition landed this session: detection (YuNet) + embedding (MobileFaceNet)
