@@ -6,12 +6,25 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.GridView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.dpfas.photobrowser.facerecognition.FaceRecognitionPipeline
+import com.dpfas.photobrowser.facerecognition.FaceScanCache
+import com.dpfas.photobrowser.facerecognition.FaceScanRunner
+import com.dpfas.photobrowser.facerecognition.MobileFaceNetEmbedder
+import com.dpfas.photobrowser.facerecognition.PhotoBitmapLoader
+import com.dpfas.photobrowser.facerecognition.YuNetFaceDetector
+import com.dpfas.photobrowser.facerecognition.toScannedFace
+import com.dpfas.photobrowser.triage.TriageMultiSelectActivity
+import com.dpfas.photobrowser.triage.TriageSwipeActivity
 
 /**
  * Slice 0: the smallest thing that proves the toolchain works end to end.
@@ -19,6 +32,12 @@ import androidx.core.content.ContextCompat
  * analysis - see documentation/mobile/TODO.md for what comes next.
  */
 class MainActivity : AppCompatActivity() {
+
+    companion object {
+        private const val TAG = "FaceScan"
+    }
+
+    private var currentUris: List<Uri> = emptyList()
 
     private val readImagesPermission =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -77,6 +96,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showPhotos(uris: List<Uri>) {
+        currentUris = uris
         val statusText = findViewById<TextView>(R.id.status_text)
         val grid = findViewById<GridView>(R.id.photo_grid)
 
@@ -93,5 +113,56 @@ class MainActivity : AppCompatActivity() {
         grid.setOnItemClickListener { _, _, position, _ ->
             startActivity(FullscreenPhotoActivity.createIntent(this, uris, position))
         }
+
+        startFaceScan(uris)
     }
+
+    /**
+     * Detection + embedding, plus a subtle box overlay in the fullscreen viewer (via
+     * [FaceScanCache]) - no identity-confirmation UI yet, see documentation/mobile/TODO.md. Runs
+     * once per launch over the currently visible photos; progress is visible via Logcat and a
+     * summary Toast, meant purely to verify the pipeline works end to end on-device.
+     */
+    private fun startFaceScan(uris: List<Uri>) {
+        Thread {
+            val pipeline = FaceRecognitionPipeline(YuNetFaceDetector(this), MobileFaceNetEmbedder(this))
+            val runner = FaceScanRunner(
+                loadBitmap = { uri -> PhotoBitmapLoader.load(this, uri) },
+                scan = { bitmap -> pipeline.scan(bitmap) },
+                onPhotoScanned = { uri, index, total, imageWidth, imageHeight, results ->
+                    if (imageWidth > 0 && imageHeight > 0) {
+                        FaceScanCache.put(uri, results.map { it.toScannedFace(imageWidth, imageHeight) })
+                    }
+                    Log.d(TAG, "photo ${index + 1}/$total: ${results.size} face(s)")
+                },
+            )
+            val totalFaces = runner.scanAll(uris)
+            Log.d(TAG, "done: $totalFaces face(s) across ${uris.size} photo(s)")
+            runOnUiThread {
+                Toast.makeText(
+                    this,
+                    "Face scan: $totalFaces face(s) across ${uris.size} photo(s)",
+                    Toast.LENGTH_LONG,
+                ).show()
+            }
+        }.start()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean =
+        when (item.itemId) {
+            R.id.menu_triage_multiselect -> {
+                startActivity(TriageMultiSelectActivity.createIntent(this, currentUris))
+                true
+            }
+            R.id.menu_triage_swipe -> {
+                startActivity(TriageSwipeActivity.createIntent(this, currentUris))
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
 }

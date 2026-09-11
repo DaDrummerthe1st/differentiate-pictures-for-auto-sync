@@ -22,6 +22,15 @@
         <activity
             android:name=".FullscreenPhotoActivity"
             android:exported="false" />
+        <activity
+            android:name=".SimilarFacesActivity"
+            android:exported="false" />
+        <activity
+            android:name=".triage.TriageMultiSelectActivity"
+            android:exported="false" />
+        <activity
+            android:name=".triage.TriageSwipeActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

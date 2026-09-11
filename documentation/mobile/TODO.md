@@ -1,5 +1,27 @@
 # mobile/ TODO
 
+- **Confirmed working, 2026-09-09** (`android-app-test1`, build green, 78/78 tests, verified on
+  `Motorola_Moto_G54_5G` emulator): on-device face detection + embedding pipeline
+  (`android/app/src/main/java/com/dpfas/photobrowser/facerecognition/` —
+  `YuNetFaceDetector`/`MobileFaceNetEmbedder` via ONNX Runtime Mobile, decode math ported from
+  OpenCV's `face_detect.cpp`, preprocessing verified against InsightFace's own `inference.py`,
+  vendored models + license notes in `android/app/src/main/assets/models/LICENSES.md`), an
+  off-by-default "Show detected faces" box overlay in the fullscreen viewer only (grid stays
+  untouched, per the existing badge-not-boxes decision), and tap-a-face similar-faces search
+  (`SimilarFacesActivity`, cosine similarity over the 512-d embeddings, ranked via
+  `FaceSimilarity.findSimilar`). Runs automatically over the visible gallery on launch, logs to
+  Logcat (`FaceScan` tag), shows a summary Toast. See [../GLOSSARY.md](../GLOSSARY.md) for ONNX
+  Runtime / YuNet terms already defined there.
+  - **Known simplification, not yet built**: face crops for embedding use a plain axis-aligned
+    box-plus-margin crop, not the landmark-based ArcFace 5-point similarity-transform alignment
+    MobileFaceNet-family models are trained on. Leading (unconfirmed) suspect for
+    `documentation/bugs/repo/under_process/2026-09-09-similar-faces-search-returns-increasingly-wrong-matches-past-the-first-result.md` —
+    real embedding-score data needed before deciding whether to build it; see that bug file's
+    "next session should start with" section.
+  - Two throwaway swipe-triage grid demos also added this session (`triage/` package, reachable
+    via the main grid's overflow menu) — fake Toast/log persistence only, matching the Option
+    A/B comparison spec in [UX_FLOWS.md](UX_FLOWS.md); not polished, not a real build.
+  - No entity/naming UI yet — similar-faces is "find more like this," not "who is this."
 - **Backlog snapshot, 2026-09-09** (design/discussion session, `android-app-test1`, no code touched):
   consolidated the open backlog into one checklist for session planning — not new information, just
   a pointer list. Written here as plain markdown rather than a TodoWrite-tracked list because
@@ -107,6 +129,7 @@
   that doc, same convention already used elsewhere (e.g. `curation/IDENTITY_MATCHING.md`'s
   "Reversed 2026-09-05" note), rather than silently diverging.
 - **On-device runtime pick — researched 2026-09-07, not yet decided**: `com.microsoft.onnxruntime:onnxruntime-android` (Maven Central, MIT, currently 1.27.0) is the direct on-device counterpart to the server-side picks (same `.onnx` files, NNAPI/XNNPACK hardware acceleration on Android). Two real mobile-purpose-built alternatives exist that also consume ONNX models (via import/conversion, not direct execution): **ncnn** (Tencent, BSD-3-Clause, lighter footprint, NanoDet-Plus's own official repo ships an ncnn deployment path specifically) and **MNN** (Alibaba, Apache-2.0). Correction to an initial framing: neither is meaningfully "more open source" than ONNX Runtime — all three are single-company-led OSS with similarly permissive licenses; the real trade-off is mobile-optimized footprint/speed vs. ONNX Runtime's broader format compatibility and reuse of the exact same server-side model files with zero conversion step. **Decided 2026-09-07: MNN** over ncnn — both fit fine on pure permissiveness, but MNN's Apache-2.0 matches the license family already used everywhere else in this project (NanoDet-Plus, RapidOCR) rather than adding a third distinct license (ncnn's BSD-3-Clause) with no demonstrated technical reason yet, and Apache-2.0's explicit patent grant is a real extra protection BSD-3-Clause lacks. All three runtimes' research notes kept for reference, not discarded. Still worth a real footprint/speed comparison once object-detection porting actually starts.
+  - **Unresolved conflict, surfaced 2026-09-09**: an entirely separate worktree branch, `worktree-android-native-ai-stack` (commit `8dfac99`, 2026-09-06, one day *before* the MNN decision above), independently picked **OpenCV** as the on-device runtime (one codebase across Android/iOS/Linux, DBSCAN face clustering designed against it) — with no cross-reference either direction. Neither branch's session knew about the other's pick; no doc or bug file recorded a resolution (confirmed 2026-09-09 by a peer session searching this repo's own history). Separately, this session found the MNN Maven AAR has **no usable Java API on this x86_64 emulator** — its artifact only ships arm64/armv7 native `.so` files, no x86_64 build — so it can't even be evaluated here as-is. The face-recognition pipeline built this session (`android/app/src/main/java/com/dpfas/photobrowser/facerecognition/`) therefore used a **third** runtime, `onnxruntime-android` 1.29.0, purely as the pragmatic unblocking choice, not a resolution of the conflict. **Joakim's call, 2026-09-09: defer** — don't standardize now, keep ONNX Runtime Mobile under the working code as-is, revisit runtime strategy (OpenCV vs. MNN vs. ONNX Runtime Mobile, and whether "one runtime" is even the right frame vs. per-model picks) in a dedicated session. Whoever picks this up next should treat this as still fully open, not settled by precedent of "most code currently uses ONNX."
 - **Open design question, raised 2026-09-07, not addressed anywhere in `curation/` yet**: can the
   on-device suggestion/scoring logic get stuck when a photo scores equally under two competing
   signals (e.g. "keep" and "delete" candidates tie)? Logged as new, unresolved — see

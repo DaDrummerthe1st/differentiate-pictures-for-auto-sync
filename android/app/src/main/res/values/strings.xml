@@ -3,4 +3,12 @@
     <string name="requesting_permission">Requesting photo access…</string>
     <string name="permission_denied">Photo access denied. Grant it in Settings to browse your pictures.</string>
     <string name="no_photos">No photos found.</string>
+    <string name="show_detected_faces">Show detected faces</string>
+    <string name="no_similar_faces">No similar faces found yet - try scanning more photos first.</string>
+    <string name="triage_cancel_selection">✕</string>
+    <string name="triage_remove">Remove</string>
+    <string name="triage_organize">Organize</string>
+    <string name="triage_selected_count">%1$d selected</string>
+    <string name="triage_try_multiselect">Triage demo: multi-select</string>
+    <string name="triage_try_swipe">Triage demo: swipe</string>
 </resources>

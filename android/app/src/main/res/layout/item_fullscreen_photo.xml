@@ -1,8 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<io.getstream.photoview.PhotoView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/fullscreen_photo"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@android:color/black"
-    android:scaleType="fitCenter"
-    android:contentDescription="@null" />
+    android:layout_height="match_parent">
+
+    <io.getstream.photoview.PhotoView
+        android:id="@+id/fullscreen_photo"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black"
+        android:scaleType="fitCenter"
+        android:contentDescription="@null" />
+
+    <com.dpfas.photobrowser.facerecognition.BoundingBoxOverlayView
+        android:id="@+id/face_box_overlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+</FrameLayout>

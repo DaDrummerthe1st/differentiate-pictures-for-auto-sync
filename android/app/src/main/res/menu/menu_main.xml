@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_triage_multiselect"
+        android:title="@string/triage_try_multiselect"
+        android:showAsAction="never" />
+    <item
+        android:id="@+id/menu_triage_swipe"
+        android:title="@string/triage_try_swipe"
+        android:showAsAction="never" />
+</menu>

@@ -4,10 +4,12 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.widget.CheckBox
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.viewpager2.widget.ViewPager2
 import coil3.load
+import com.dpfas.photobrowser.facerecognition.ScannedFace
 
 /**
  * Shows a single photo full-screen, opened by tapping a thumbnail in the grid. Swiping moves
@@ -28,6 +30,10 @@ class FullscreenPhotoActivity : AppCompatActivity() {
 
     var loadImage: (ImageView, Uri) -> Unit = { imageView, uri -> imageView.load(uri) }
 
+    var onFaceTapped: (ScannedFace) -> Unit = { face ->
+        startActivity(SimilarFacesActivity.createIntent(this, face.embedding))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_fullscreen_photo)
@@ -35,9 +41,18 @@ class FullscreenPhotoActivity : AppCompatActivity() {
         val uris = intent.getParcelableArrayListExtra(EXTRA_PHOTO_URIS, Uri::class.java) ?: return
         val startPosition = intent.getIntExtra(EXTRA_START_POSITION, 0)
 
+        val pagerAdapter = FullscreenPhotoPagerAdapter(
+            uris,
+            loadImage = { imageView, uri -> loadImage(imageView, uri) },
+            onFaceTapped = { face -> onFaceTapped(face) },
+        )
         findViewById<ViewPager2>(R.id.fullscreen_pager).apply {
-            adapter = FullscreenPhotoPagerAdapter(uris) { imageView, uri -> loadImage(imageView, uri) }
+            adapter = pagerAdapter
             setCurrentItem(startPosition, false)
+        }
+
+        findViewById<CheckBox>(R.id.show_face_boxes_checkbox).setOnCheckedChangeListener { _, checked ->
+            pagerAdapter.showFaceBoxes = checked
         }
     }
 }

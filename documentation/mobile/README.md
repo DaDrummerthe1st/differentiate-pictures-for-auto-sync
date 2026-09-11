@@ -4,6 +4,14 @@ The native Android app (`android/` at repo root) — sideloaded only, no Google 
 background/reasoning for why a native app exists at all: [../VISION.md](../VISION.md)'s
 "Native-app pivot" section.
 
+## Status — 2026-09-09
+
+On-device face recognition landed this session: detection (YuNet) + embedding (MobileFaceNet)
+via ONNX Runtime Mobile, a fullscreen-only bounding-box overlay toggle, tap-a-face similar-faces
+search, and two throwaway swipe-triage grid demos. Full detail, known simplifications, and the
+still-unresolved OpenCV-vs-MNN-vs-ONNX runtime conflict: see [TODO.md](TODO.md)'s 2026-09-09
+entries — kept there rather than duplicated here.
+
 ## Status — 2026-09-06
 
 Built this session as a deliberately small first cut to prove the Android/Kotlin/Gradle toolchain
